@@ -1,5 +1,6 @@
 import re
 from typing import List
+
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -16,7 +17,7 @@ def _parse_transaction_line(line: str):
     price = None
     if m:
         try:
-            price = float(m.group(1).replace(',', ''))
+            price = float(m.group(1).replace(",", ""))
         except Exception:
             price = None
     return {"date": date, "action": action, "price": price}
@@ -35,13 +36,13 @@ def plot_price_with_trades(df: pd.DataFrame, transactions: List[str], ticker: st
     df_plot.index = pd.to_datetime(df_plot.index)
 
     # Prefer Close column
-    if 'Close' in df_plot.columns:
-        price_series = df_plot['Close']
-    elif 'Adj Close' in df_plot.columns:
-        price_series = df_plot['Adj Close']
+    if "Close" in df_plot.columns:
+        price_series = df_plot["Close"]
+    elif "Adj Close" in df_plot.columns:
+        price_series = df_plot["Adj Close"]
     else:
         # fallback to first numeric column
-        price_series = df_plot.select_dtypes(include=['number']).iloc[:, 0]
+        price_series = df_plot.select_dtypes(include=["number"]).iloc[:, 0]
 
     buys_x = []
     buys_y = []
@@ -50,33 +51,33 @@ def plot_price_with_trades(df: pd.DataFrame, transactions: List[str], ticker: st
 
     for line in transactions:
         parsed = _parse_transaction_line(line)
-        if not parsed or not parsed.get('date'):
+        if not parsed or not parsed.get("date"):
             continue
         try:
-            dt = pd.to_datetime(parsed['date'])
+            dt = pd.to_datetime(parsed["date"])
         except Exception:
             continue
-        price = parsed.get('price')
+        price = parsed.get("price")
         # if price missing, try to lookup close price for that date
         if price is None:
             try:
                 price = float(price_series.loc[dt])
             except Exception:
                 price = None
-        if parsed.get('action') == 'BUY':
+        if parsed.get("action") == "BUY":
             buys_x.append(dt)
             buys_y.append(price)
-        elif parsed.get('action') == 'SELL':
+        elif parsed.get("action") == "SELL":
             sells_x.append(dt)
             sells_y.append(price)
 
     fig, ax = plt.subplots(figsize=(12, 6))
-    ax.plot(price_series.index, price_series.values, label=f"{ticker} Close", color='blue')
+    ax.plot(price_series.index, price_series.values, label=f"{ticker} Close", color="blue")
 
     if buys_x:
-        ax.scatter(buys_x, buys_y, color='red', marker='o', s=50, zorder=5, label='BUYS')
+        ax.scatter(buys_x, buys_y, color="red", marker="o", s=50, zorder=5, label="BUYS")
     if sells_x:
-        ax.scatter(sells_x, sells_y, color='green', marker='o', s=50, zorder=5, label='SELLS')
+        ax.scatter(sells_x, sells_y, color="green", marker="o", s=50, zorder=5, label="SELLS")
 
     ax.set_title(f"{ticker} price with trade markers")
     ax.set_xlabel("Date")

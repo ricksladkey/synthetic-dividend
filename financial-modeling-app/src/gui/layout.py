@@ -3,14 +3,16 @@
 Provides visual interface for running trading algorithms with input fields
 for ticker, dates, strategy selection, and displays transaction log with summary statistics.
 """
+
 import tkinter as tk
-from tkinter import ttk, messagebox
 from datetime import date, datetime, timedelta
-from typing import List, Dict, Any, Optional
+from tkinter import messagebox, ttk
+from typing import Any, Dict, List
+
 import pandas as pd
 
 from data.fetcher import HistoryFetcher
-from models.backtest import run_algorithm_backtest, build_algo_from_name, Transaction
+from models.backtest import build_algo_from_name, run_algorithm_backtest
 
 # Default parameter values for GUI initialization
 DEFAULT_TICKER: str = "NVDA"
@@ -21,12 +23,12 @@ DEFAULT_START: date = DEFAULT_END - timedelta(days=365)
 
 class FinancialModelingApp:
     """Main GUI application for backtesting trading strategies.
-    
+
     Provides input fields for:
     - Ticker symbol and quantity
     - Start/end date range
     - Strategy selection (buy-and-hold, synthetic dividend variants)
-    
+
     Displays:
     - Transaction log (scrollable list)
     - Summary statistics (returns, holdings, bank balance)
@@ -34,7 +36,7 @@ class FinancialModelingApp:
 
     def __init__(self, master: tk.Tk) -> None:
         """Initialize GUI with default values and layout.
-        
+
         Args:
             master: Root Tkinter window
         """
@@ -66,35 +68,49 @@ class FinancialModelingApp:
         # Row 0: Ticker and Quantity
         ttk.Label(input_frame, text="Ticker:").grid(row=0, column=0, sticky="w")
         self.ticker_var = tk.StringVar(value=DEFAULT_TICKER)
-        ttk.Entry(input_frame, textvariable=self.ticker_var, width=12).grid(row=0, column=1, sticky="w")
+        ttk.Entry(input_frame, textvariable=self.ticker_var, width=12).grid(
+            row=0, column=1, sticky="w"
+        )
 
         ttk.Label(input_frame, text="Quantity:").grid(row=0, column=2, sticky="w", padx=(10, 0))
         self.qty_var = tk.IntVar(value=DEFAULT_QTY)
-        ttk.Entry(input_frame, textvariable=self.qty_var, width=12).grid(row=0, column=3, sticky="w")
+        ttk.Entry(input_frame, textvariable=self.qty_var, width=12).grid(
+            row=0, column=3, sticky="w"
+        )
 
         # Row 1: Start and End dates (ISO format: YYYY-MM-DD)
-        ttk.Label(input_frame, text="Start Date (YYYY-MM-DD):").grid(row=1, column=0, sticky="w", pady=(5, 0))
+        ttk.Label(input_frame, text="Start Date (YYYY-MM-DD):").grid(
+            row=1, column=0, sticky="w", pady=(5, 0)
+        )
         self.start_var = tk.StringVar(value=DEFAULT_START.isoformat())
-        ttk.Entry(input_frame, textvariable=self.start_var, width=15).grid(row=1, column=1, sticky="w", pady=(5, 0))
+        ttk.Entry(input_frame, textvariable=self.start_var, width=15).grid(
+            row=1, column=1, sticky="w", pady=(5, 0)
+        )
 
-        ttk.Label(input_frame, text="End Date (YYYY-MM-DD):").grid(row=1, column=2, sticky="w", padx=(10, 0), pady=(5, 0))
+        ttk.Label(input_frame, text="End Date (YYYY-MM-DD):").grid(
+            row=1, column=2, sticky="w", padx=(10, 0), pady=(5, 0)
+        )
         self.end_var = tk.StringVar(value=DEFAULT_END.isoformat())
-        ttk.Entry(input_frame, textvariable=self.end_var, width=15).grid(row=1, column=3, sticky="w", pady=(5, 0))
+        ttk.Entry(input_frame, textvariable=self.end_var, width=15).grid(
+            row=1, column=3, sticky="w", pady=(5, 0)
+        )
 
         # Row 2: Strategy dropdown and Run button
         ttk.Label(input_frame, text="Strategy:").grid(row=2, column=0, sticky="w", pady=(8, 0))
         # Strategy identifiers: parameters embedded in string (e.g., "sd/9.15%/50%")
         self.strategy_var = tk.StringVar(value="buy-and-hold")
         strategy_box: ttk.Combobox = ttk.Combobox(
-            input_frame, 
-            textvariable=self.strategy_var, 
+            input_frame,
+            textvariable=self.strategy_var,
             state="readonly",
-            values=["buy-and-hold", "sd/9.15%/50%"]
+            values=["buy-and-hold", "sd/9.15%/50%"],
         )
         strategy_box.grid(row=2, column=1, sticky="w", pady=(8, 0))
 
         # Run button triggers backtest execution
-        ttk.Button(input_frame, text="Back-Test", command=self.run_backtest).grid(row=2, column=3, sticky="e", pady=(8, 0))
+        ttk.Button(input_frame, text="Back-Test", command=self.run_backtest).grid(
+            row=2, column=3, sticky="e", pady=(8, 0)
+        )
 
         # Results area: two-column layout for transactions and summary
         results_frame: ttk.Frame = ttk.Frame(self.frame)
@@ -106,9 +122,11 @@ class FinancialModelingApp:
 
         self.trans_listbox = tk.Listbox(trans_frame)
         self.trans_listbox.pack(side="left", fill="both", expand=True)
-        
+
         # Vertical scrollbar for transaction list
-        trans_scroll: ttk.Scrollbar = ttk.Scrollbar(trans_frame, orient="vertical", command=self.trans_listbox.yview)
+        trans_scroll: ttk.Scrollbar = ttk.Scrollbar(
+            trans_frame, orient="vertical", command=self.trans_listbox.yview
+        )
         trans_scroll.pack(side="right", fill="y")
         self.trans_listbox.config(yscrollcommand=trans_scroll.set)
 
@@ -121,19 +139,19 @@ class FinancialModelingApp:
 
     def run_backtest(self) -> None:
         """Event handler for Back-Test button click.
-        
+
         Workflow:
         1. Validate and parse user inputs (ticker, quantity, dates)
         2. Fetch historical price data via HistoryFetcher
         3. Build algorithm instance from strategy string
         4. Execute backtest via run_algorithm_backtest()
         5. Display transaction log and summary statistics in GUI
-        
+
         Shows error dialogs for invalid inputs or execution failures.
         """
         # Parse ticker symbol (uppercase, trimmed)
         ticker: str = self.ticker_var.get().strip().upper()
-        
+
         # Parse quantity as integer
         try:
             qty: int = int(self.qty_var.get())
@@ -163,17 +181,21 @@ class FinancialModelingApp:
 
         # Validate data availability
         if df is None or df.empty:
-            messagebox.showerror("Data error", f"No price data available for {ticker} in that range.")
+            messagebox.showerror(
+                "Data error", f"No price data available for {ticker} in that range."
+            )
             return
 
         # Build algorithm instance from strategy identifier string
         algo_inst = build_algo_from_name(self.strategy_var.get())
-        
+
         # Execute backtest and collect results
         try:
             transactions: List[str]
             summary: Dict[str, Any]
-            transactions, summary = run_algorithm_backtest(df, ticker, qty, start_date, end_date, algo=algo_inst)
+            transactions, summary = run_algorithm_backtest(
+                df, ticker, qty, start_date, end_date, algo=algo_inst
+            )
         except Exception as e:
             messagebox.showerror("Backtest error", str(e))
             return
@@ -209,7 +231,7 @@ class FinancialModelingApp:
 def main() -> None:
     """Entry point: create root window and start Tkinter event loop."""
     root: tk.Tk = tk.Tk()
-    app: FinancialModelingApp = FinancialModelingApp(root)
+    FinancialModelingApp(root)  # noqa: F841
     root.mainloop()
 
 

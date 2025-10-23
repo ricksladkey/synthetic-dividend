@@ -1,10 +1,6 @@
 [flake8]
-# Flake8 configuration
-
-# Maximum line length
 max-line-length = 100
 
-# Exclude patterns
 exclude = 
     .git,
     __pycache__,
@@ -14,12 +10,11 @@ exclude =
     dist,
     *.egg-info
 
-# Ignore specific errors
 ignore = 
-    E203,  # Whitespace before ':' (conflicts with black)
-    E501,  # Line too long (handled by black)
-    W503,  # Line break before binary operator (conflicts with black)
+    E203,
+    E501,
+    W503
 
-# Per-file ignores
 per-file-ignores =
-    __init__.py:F401  # Allow unused imports in __init__
+    __init__.py:F401
+    src/compare/runner.py:E402

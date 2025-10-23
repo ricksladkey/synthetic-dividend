@@ -6,7 +6,7 @@ printing transaction log and performance summary.
 
 Usage:
     python run_model.py TICKER START END STRATEGY [options]
-    
+
 Examples:
     python run_model.py NVDA 10/22/2024 10/22/2025 buy-and-hold
     python run_model.py NVDA 2024-10-22 2025-10-22 sd/9.05%/50% --qty 10000
@@ -16,21 +16,23 @@ Date formats: MM/DD/YYYY or YYYY-MM-DD
 Strategy formats: buy-and-hold, sd/X%/Y%, sd-ath-only/X%/Y%
 """
 import argparse
-import sys
 import os
+import sys
 from datetime import date, datetime
 from typing import List, Optional
+
+import pandas as pd
 
 
 def parse_date(s: str) -> date:
     """Parse date string in MM/DD/YYYY or YYYY-MM-DD format.
-    
+
     Args:
         s: Date string
-        
+
     Returns:
         date object
-        
+
     Raises:
         ValueError: If format not recognized
     """
@@ -44,10 +46,10 @@ def parse_date(s: str) -> date:
 
 def main(argv: List[str]) -> int:
     """Execute backtest from command-line arguments.
-    
+
     Args:
         argv: Command-line arguments (excluding program name)
-        
+
     Returns:
         Exit code (0 = success, >0 = error)
     """
@@ -60,22 +62,31 @@ Examples:
   python run_model.py NVDA 10/22/2024 10/22/2025 buy-and-hold
   python run_model.py NVDA 2024-10-22 2025-10-22 sd/9.05%/50% --qty 10000
   python run_model.py NVDA 10/22/2024 10/22/2025 sd/9.05%/50% --reference-asset SPY --risk-free-asset BIL
-        """
+        """,
     )
-    
+
     parser.add_argument("ticker", help="Stock ticker symbol (e.g., NVDA)")
     parser.add_argument("start_date", help="Start date (MM/DD/YYYY or YYYY-MM-DD)")
     parser.add_argument("end_date", help="End date (MM/DD/YYYY or YYYY-MM-DD)")
     parser.add_argument("strategy", help="Strategy name (e.g., buy-and-hold, sd/9.05%%/50%%)")
-    parser.add_argument("--qty", type=int, default=10000, 
-                       help="Initial quantity of shares (default: 10000)")
-    parser.add_argument("--reference-asset", type=str, default="VOO",
-                       help="Reference asset for opportunity cost (default: VOO)")
-    parser.add_argument("--risk-free-asset", type=str, default="BIL",
-                       help="Risk-free asset for cash interest (default: BIL)")
-    
+    parser.add_argument(
+        "--qty", type=int, default=10000, help="Initial quantity of shares (default: 10000)"
+    )
+    parser.add_argument(
+        "--reference-asset",
+        type=str,
+        default="VOO",
+        help="Reference asset for opportunity cost (default: VOO)",
+    )
+    parser.add_argument(
+        "--risk-free-asset",
+        type=str,
+        default="BIL",
+        help="Risk-free asset for cash interest (default: BIL)",
+    )
+
     args = parser.parse_args(argv)
-    
+
     # Parse dates
     ticker: str = args.ticker
     try:
@@ -84,7 +95,7 @@ Examples:
     except ValueError as e:
         print("Error parsing dates:", e)
         return 2
-    
+
     strategy: str = args.strategy
     qty: int = args.qty
     reference_asset: str = args.reference_asset
@@ -98,7 +109,7 @@ Examples:
     # Import runtime dependencies
     try:
         from src.data.fetcher import HistoryFetcher
-        from src.models.backtest import run_algorithm_backtest, build_algo_from_name
+        from src.models.backtest import build_algo_from_name, run_algorithm_backtest
     except Exception as e:
         print("Failed to import runtime modules:", e)
         return 3
@@ -108,31 +119,35 @@ Examples:
     try:
         # Fetch main ticker
         df = hf.get_history(ticker, start, end)
-        
+
         # Fetch reference and risk-free assets
         reference_df: Optional[pd.DataFrame] = None
         risk_free_df: Optional[pd.DataFrame] = None
-        
+
         if reference_asset:
             try:
                 reference_df = hf.get_history(reference_asset, start, end)
                 if reference_df.empty:
-                    print(f"Warning: No data for reference asset {reference_asset}, using fallback rate")
+                    print(
+                        f"Warning: No data for reference asset {reference_asset}, using fallback rate"
+                    )
                     reference_df = None
             except Exception as e:
                 print(f"Warning: Failed to fetch {reference_asset}: {e}")
                 reference_df = None
-        
+
         if risk_free_asset:
             try:
                 risk_free_df = hf.get_history(risk_free_asset, start, end)
                 if risk_free_df.empty:
-                    print(f"Warning: No data for risk-free asset {risk_free_asset}, using fallback rate")
+                    print(
+                        f"Warning: No data for risk-free asset {risk_free_asset}, using fallback rate"
+                    )
                     risk_free_df = None
             except Exception as e:
                 print(f"Warning: Failed to fetch {risk_free_asset}: {e}")
                 risk_free_df = None
-                
+
     except Exception as e:
         print("Fetcher error:", e)
         return 4
@@ -142,25 +157,22 @@ Examples:
         print("No price data available for", ticker, "in that range.")
         return 5
 
-    # Import pandas for type hints
-    try:
-        import pandas as pd
-    except Exception:
-        print("Failed to import pandas")
-        return 3
-
     # Build algorithm instance from string identifier
     algo_inst = build_algo_from_name(strategy)
-    
+
     # Execute backtest with financial adjustment assets
     try:
         transactions, summary = run_algorithm_backtest(
-            df, ticker, qty, start, end, 
+            df,
+            ticker,
+            qty,
+            start,
+            end,
             algo=algo_inst,
             reference_asset_df=reference_df,
             risk_free_asset_df=risk_free_df,
             reference_asset_ticker=reference_asset,
-            risk_free_asset_ticker=risk_free_asset
+            risk_free_asset_ticker=risk_free_asset,
         )
     except Exception as e:
         print("Backtest error:", e)
@@ -192,10 +204,14 @@ Examples:
     print()
     print(f"Opportunity Cost ({reference_asset}): {summary.get('opportunity_cost', 0.0):.2f}")
     print(f"Risk-Free Gains ({risk_free_asset}): {summary.get('risk_free_gains', 0.0):.2f}")
-    print(f"Net Financial Adjustment: {summary.get('risk_free_gains', 0.0) - summary.get('opportunity_cost', 0.0):.2f}")
+    print(
+        f"Net Financial Adjustment: {summary.get('risk_free_gains', 0.0) - summary.get('opportunity_cost', 0.0):.2f}"
+    )
     print()
     print(f"Total return: {summary['total_return']*100:.2f}%")
-    print(f"Annualized return: {summary['annualized']*100:.2f}% (over {summary['years']:.3f} years)")
+    print(
+        f"Annualized return: {summary['annualized']*100:.2f}% (over {summary['years']:.3f} years)"
+    )
 
     return 0
 
