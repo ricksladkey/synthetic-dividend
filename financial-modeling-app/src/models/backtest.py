@@ -1,5 +1,10 @@
+"""Backtest engine for algorithmic trading strategies.
+
+Provides abstract base for strategy implementations and execution framework
+for backtesting against historical OHLC price data.
+"""
 from datetime import date
-from typing import Dict, List, Tuple, Optional, Callable
+from typing import Dict, List, Tuple, Optional, Callable, Any, Union
 from dataclasses import dataclass
 import pandas as pd
 from abc import ABC, abstractmethod
@@ -11,7 +16,7 @@ def calculate_synthetic_dividend_orders(
     last_transaction_price: float,
     rebalance_size: float,
     profit_sharing: float
-) -> dict:
+) -> Dict[str, Union[float, int]]:
     """Pure function to calculate synthetic dividend buy/sell orders.
     
     The formulas ensure perfect symmetry: if you buy Q shares at price P_low,
@@ -34,13 +39,15 @@ def calculate_synthetic_dividend_orders(
     Returns:
         Dict with keys: next_buy_price, next_buy_qty, next_sell_price, next_sell_qty
     """
-    # Calculate next buy price and quantity
-    next_buy_price = last_transaction_price / (1 + rebalance_size)
-    next_buy_qty = int(rebalance_size * holdings * profit_sharing + 0.5)
+    # Buy at r% below last price
+    next_buy_price: float = last_transaction_price / (1 + rebalance_size)
+    # Buy quantity: r * H * s, rounded to nearest integer
+    next_buy_qty: int = int(rebalance_size * holdings * profit_sharing + 0.5)
     
-    # Calculate next sell price and quantity
-    next_sell_price = last_transaction_price * (1 + rebalance_size)
-    next_sell_qty = int(rebalance_size * holdings * profit_sharing / (1 + rebalance_size) + 0.5)
+    # Sell at r% above last price
+    next_sell_price: float = last_transaction_price * (1 + rebalance_size)
+    # Sell quantity: symmetric formula ensures roundtrip balance
+    next_sell_qty: int = int(rebalance_size * holdings * profit_sharing / (1 + rebalance_size) + 0.5)
     
     return {
         "next_buy_price": next_buy_price,
@@ -52,24 +59,28 @@ def calculate_synthetic_dividend_orders(
 
 @dataclass
 class Transaction:
+    """Represents a single buy or sell transaction."""
     action: str  # 'BUY' or 'SELL'
-    qty: int
-    notes: str = ""
+    qty: int     # Number of shares
+    notes: str = ""  # Optional explanation or metadata
 
 
-def _get_close_scalar(df: pd.DataFrame, idx, col_name="Close") -> float:
-    """Return a scalar close price for df.loc[idx][col]. Handles both single-value and Series results."""
+def _get_close_scalar(df: pd.DataFrame, idx: Any, col_name: str = "Close") -> float:
+    """Extract scalar float from DataFrame at given index/column.
+    
+    Handles multi-index columns and Series-wrapped values.
+    """
     val = df.loc[idx]
     if isinstance(val, pd.Series):
-        # if multiindexed columns, val may be a Series; try to find Close
+        # Multi-index columns: try to find the requested column
         if col_name in val.index:
             v = val[col_name]
         else:
-            # fallback to the first numeric value
+            # Fallback: first numeric value
             v = val.iloc[0]
     else:
         v = val
-    # If v is a Series (e.g., single-column DataFrame row), take iloc[0]
+    # Unwrap Series if needed
     if hasattr(v, "iloc"):
         try:
             return float(v.iloc[0])
@@ -79,15 +90,15 @@ def _get_close_scalar(df: pd.DataFrame, idx, col_name="Close") -> float:
 
 
 def _get_price_scalar_from_row(price_row: pd.Series, col_name: str) -> Optional[float]:
-    """Extract a float scalar from a price_row Series for the given column name.
+    """Extract scalar float from Series row for given column.
 
-    Handles cases where price_row[col_name] may itself be a Series (e.g., multi-index or
-    when a single-row DataFrame is returned). Returns None if the column isn't present.
+    Handles multi-index scenarios where value may itself be a Series.
+    Returns None if column missing or conversion fails.
     """
     if col_name not in price_row.index:
         return None
     val = price_row[col_name]
-    # If val is a Series (e.g., labelled by ticker), take the first numeric value
+    # Unwrap Series if ticker-labeled or multi-indexed
     if hasattr(val, 'iloc'):
         try:
             return float(val.iloc[0])
@@ -103,83 +114,144 @@ def _get_price_scalar_from_row(price_row: pd.Series, col_name: str) -> Optional[
 
 
 class AlgorithmBase(ABC):
-    """Algorithm instance that can maintain state across days.
+    """Abstract base class for trading algorithms.
 
-    Implement on_day(date, price_row, holdings, bank, history) -> Optional[Transaction]
+    Subclasses must implement three lifecycle hooks:
+    - on_new_holdings: Called after initial purchase
+    - on_day: Called each trading day, returns Transaction or None
+    - on_end_holding: Called at end of backtest period
     """
 
-    def __init__(self, params: Optional[dict] = None):
-        self.params = params or {}
+    def __init__(self, params: Optional[Dict[str, Any]] = None) -> None:
+        """Initialize with optional parameters dict."""
+        self.params: Dict[str, Any] = params or {}
 
     @abstractmethod
     def on_new_holdings(self, holdings: int, current_price: float) -> None:
+        """Initialize algorithm state after initial purchase.
+        
+        Args:
+            holdings: Initial share count
+            current_price: Price at initial purchase
+        """
         pass
 
     @abstractmethod
-    def on_day(self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame) -> Optional[Transaction]:
+    def on_day(
+        self, 
+        date_: date, 
+        price_row: pd.Series, 
+        holdings: int, 
+        bank: float, 
+        history: pd.DataFrame
+    ) -> Optional[Transaction]:
+        """Process one trading day, optionally return transaction.
+        
+        Args:
+            date_: Current date
+            price_row: OHLC prices for current day
+            holdings: Current share count
+            bank: Current cash balance (may be negative)
+            history: All price data up to previous day
+            
+        Returns:
+            Transaction to execute, or None to hold
+        """
         pass
 
     @abstractmethod
     def on_end_holding(self) -> None:
+        """Cleanup/reporting after backtest completes."""
         pass
 
 
 class BuyAndHoldAlgorithm(AlgorithmBase):
-    """Buy-and-hold algorithm: never issues further transactions after initial buy.
-    """
-    def __init__(self, rebalance_size_pct: float = 0.0, profit_sharing_pct: float = 0.0, params: Optional[dict] = None):
+    """Passive buy-and-hold strategy: no trades after initial purchase."""
+    
+    def __init__(
+        self, 
+        rebalance_size_pct: float = 0.0, 
+        profit_sharing_pct: float = 0.0, 
+        params: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """Initialize (params ignored for compatibility)."""
         super().__init__(params)
 
     def on_new_holdings(self, holdings: int, current_price: float) -> None:
+        """No-op: no initialization needed."""
         pass
 
-    def on_day(self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame) -> Optional[Transaction]:
+    def on_day(
+        self, 
+        date_: date, 
+        price_row: pd.Series, 
+        holdings: int, 
+        bank: float, 
+        history: pd.DataFrame
+    ) -> Optional[Transaction]:
+        """Always returns None: hold position."""
         return None
 
     def on_end_holding(self) -> None:
+        """No-op: no cleanup needed."""
         pass
 
 
 class SyntheticDividendAlgorithm(AlgorithmBase):
-    """Unified Synthetic Dividend algorithm with optional buyback feature.
-
+    """Volatility harvesting algorithm that generates synthetic dividends.
+    
+    Operates in two modes:
+    1. Full (buyback_enabled=True): Buy on dips, sell on rises
+    2. ATH-only (buyback_enabled=False): Only sell at new all-time highs
+    
     Parameters:
-      - rebalance_size_pct: float (e.g. 9.15 for 9.15%)
-      - profit_sharing_pct: float (e.g. 50 for 50%)
-      - buyback_enabled: bool (True = full algorithm with buybacks, False = ATH-only sells)
-
+        rebalance_size_pct: Rebalance threshold (e.g. 9.15 for 9.15%)
+        profit_sharing_pct: Portion of rebalance to trade (e.g. 50 for 50%)
+        buyback_enabled: True for full algorithm, False for ATH-only
+        
     Examples:
-      - Full: SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=True)
-      - ATH-only: SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=False)
+        Full: SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=True)
+        ATH-only: SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=False)
     """
 
-    def __init__(self, rebalance_size_pct: float = 0.0, profit_sharing_pct: float = 0.0, 
-                 buyback_enabled: bool = True, params: Optional[dict] = None):
+    def __init__(
+        self, 
+        rebalance_size_pct: float = 0.0, 
+        profit_sharing_pct: float = 0.0, 
+        buyback_enabled: bool = True, 
+        params: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """Initialize algorithm with strategy parameters."""
         super().__init__(params)
 
-        self.rebalance_size = float(rebalance_size_pct)/100.0
-        self.profit_sharing = float(profit_sharing_pct)/100.0
-        self.buyback_enabled = buyback_enabled
+        # Convert percentages to decimals
+        self.rebalance_size: float = float(rebalance_size_pct) / 100.0
+        self.profit_sharing: float = float(profit_sharing_pct) / 100.0
+        self.buyback_enabled: bool = buyback_enabled
 
+        # Cumulative alpha from volatility harvesting (full mode only)
         self.total_volatility_alpha: float = 0.0
 
-        # Track all-time high (for ATH-only mode)
+        # All-time high tracker (ATH-only mode)
         self.ath_price: float = 0.0
 
+        # State for pending orders
         self.last_transaction_price: float
-
         self.next_buy_price: float
-        self.next_buy_qty: float
+        self.next_buy_qty: int
         self.next_sell_price: float
-        self.next_sell_qty: float
+        self.next_sell_qty: int
 
 
-    def place_orders(self, holdings, current_price: float) -> None:
-        """Update internal state with new orders based on current price."""
-        # Record the last transaction price
+    def place_orders(self, holdings: int, current_price: float) -> None:
+        """Calculate and set next buy/sell orders based on current state.
+        
+        Updates instance variables with new order prices and quantities.
+        """
+        # Anchor next orders to this transaction price
         self.last_transaction_price = current_price
 
-        # Use pure function to calculate orders
+        # Calculate symmetric buy/sell orders
         orders = calculate_synthetic_dividend_orders(
             holdings=holdings,
             last_transaction_price=current_price,
@@ -187,11 +259,13 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             profit_sharing=self.profit_sharing
         )
         
+        # Update order state
         self.next_buy_price = orders["next_buy_price"]
         self.next_buy_qty = orders["next_buy_qty"]
         self.next_sell_price = orders["next_sell_price"]
         self.next_sell_qty = orders["next_sell_qty"]
 
+        # Debug output
         if self.buyback_enabled:
             print(f"Placing orders for last transaction price: ${self.last_transaction_price}")
             print(f"  Next BUY: {self.next_buy_qty} @ ${self.next_buy_price:.2f} = ${self.next_buy_price * self.next_buy_qty:.2f}")
@@ -202,96 +276,111 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
 
     def on_new_holdings(self, holdings: int, current_price: float) -> None:
-        # Initialize ATH tracker for ATH-only mode
+        """Initialize algorithm state after initial purchase."""
+        # ATH-only mode: seed with initial price as baseline
         if not self.buyback_enabled:
             self.ath_price = current_price
         
-        # Initialize the first orders
+        # Calculate first set of orders
         self.place_orders(holdings, current_price)
 
 
-    def on_day(self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame) -> Optional[Transaction]:
+    def on_day(
+        self, 
+        date_: date, 
+        price_row: pd.Series, 
+        holdings: int, 
+        bank: float, 
+        history: pd.DataFrame
+    ) -> Optional[Transaction]:
+        """Evaluate day's price action and conditionally trigger buy/sell.
+        
+        Logic:
+        - ATH-only mode: Sell only at new all-time highs
+        - Full mode: Buy on dips (price ≤ buy_price), sell on rises (price ≥ sell_price)
+        - Orders placed as limit orders; actual price may differ due to gaps
+        """
         try:
+            # Extract OHLC prices as scalars
+            open_price: Optional[float] = _get_price_scalar_from_row(price_row, 'Open')
+            high: Optional[float] = _get_price_scalar_from_row(price_row, 'High')
+            low: Optional[float] = _get_price_scalar_from_row(price_row, 'Low')
+            close: Optional[float] = _get_price_scalar_from_row(price_row, 'Close')
 
-            # Retrieve high and low prices for the day as float scalars.
-            open = _get_price_scalar_from_row(price_row, 'Open')
-            high = _get_price_scalar_from_row(price_row, 'High')
-            low = _get_price_scalar_from_row(price_row, 'Low')
-            close = _get_price_scalar_from_row(price_row, 'Close')
+            # Require high/low to evaluate orders
+            if low is None or high is None:
+                return None
 
-            # Validate and execute buy/sell orders based on price thresholds.
-            if low is not None and high is not None:
+            # Debug output (disabled by default)
+            if False:
+                low_s = f"{low:.2f}"
+                high_s = f"{high:.2f}"
+                print(f"Evaluating orders on {date_.isoformat()}: Low=${low_s}, High=${high_s}")
 
-                if False:  # Set to True to enable debug output
-
-                    # Evaluate buy/sell orders based on the day's price range
-                    # Format as numeric floats for clearer debug output
-                    low_s = f"{low:.2f}" if low is not None else "N/A"
-                    high_s = f"{high:.2f}" if high is not None else "N/A"
-                    print(f"Evaluating orders on {date_.isoformat()}: Low=${low_s}, High=${high_s}")
-
-                # ATH-only mode: only process sells at new all-time highs
-                if not self.buyback_enabled:
-                    if high > self.ath_price:
-                        # Update ATH
-                        self.ath_price = high
+            # ATH-only mode: only sell at new peaks
+            if not self.buyback_enabled:
+                if high > self.ath_price:
+                    # Record new ATH
+                    self.ath_price = high
+                    
+                    # Execute sell if threshold reached
+                    if high >= self.next_sell_price:
+                        # Use open if market gapped up, else use limit price
+                        actual_price = max(self.next_sell_price, open_price) if open_price is not None else self.next_sell_price
+                        notes = f"ATH-only sell: limit price = {self.next_sell_price:.2f}, actual price = {actual_price:.2f}, new ATH = {self.ath_price:.2f}"
+                        transaction = Transaction(action="SELL", qty=self.next_sell_qty, notes=notes)
                         
-                        # Check if we should execute the sell order
-                        if high >= self.next_sell_price:
-                            # Account for market gapping up
-                            actual_price = max(self.next_sell_price, open) if open is not None else self.next_sell_price
-                            notes = f"ATH-only sell: limit price = {self.next_sell_price:.2f}, actual price = {actual_price:.2f}, new ATH = {self.ath_price:.2f}"
-                            transaction = Transaction(action="SELL", qty=self.next_sell_qty, notes=notes)
-                            
-                            # Place next sell order with UPDATED holdings (after the sell)
-                            updated_holdings = holdings - self.next_sell_qty
-                            self.place_orders(updated_holdings, self.next_sell_price)
-                            
-                            return transaction
-                    return None
+                        # Update orders with reduced holdings
+                        updated_holdings = holdings - self.next_sell_qty
+                        self.place_orders(updated_holdings, self.next_sell_price)
+                        
+                        return transaction
+                return None
 
-                # Full mode with buybacks: check for both buy and sell opportunities
-                # Check for buy opportunity
-                if low <= self.next_buy_price:
+            # Full mode: check both buy (on dip) and sell (on rise)
+            
+            # Buy trigger: price dropped to or below buy threshold
+            if low <= self.next_buy_price:
+                # Fill at open if market gapped down, else at limit price
+                actual_price = min(self.next_buy_price, open_price) if open_price is not None else self.next_buy_price
+                
+                # Calculate alpha: profit from buying back cheaper shares
+                current_value = holdings * actual_price
+                profit = (self.last_transaction_price - actual_price) * self.next_buy_qty
+                alpha = (profit / current_value) * 100 if current_value != 0 else 0.0
+                self.total_volatility_alpha += alpha
+                
+                notes = f"Buying back: limit price = {self.next_buy_price:.2f}, actual price = {actual_price:.2f}"
+                transaction = Transaction(action="BUY", qty=self.next_buy_qty, notes=notes)
 
-                    # Account for market gapping down, assuming
-                    # a standing limit order at next_buy_price.
-                    actual_price = min(self.next_buy_price, open)
-                    current_value = holdings * actual_price
-                    profit = (self.last_transaction_price - actual_price) * self.next_buy_qty
-                    alpha = (profit / current_value) * 100 if current_value != 0 else 0.0
-                    self.total_volatility_alpha += alpha
-                    notes = f"Buying back: limit price = {self.next_buy_price:.2f}, actual price = {actual_price:.2f}"
-                    transaction = Transaction(action="BUY", qty=self.next_buy_qty, notes=notes)
+                # Recompute orders with increased holdings
+                updated_holdings = holdings + self.next_buy_qty
+                self.place_orders(updated_holdings, self.next_buy_price)
 
-                    # Place orders again with UPDATED holdings (after the buy)
-                    updated_holdings = holdings + self.next_buy_qty
-                    self.place_orders(updated_holdings, self.next_buy_price)
+                return transaction
 
-                    return transaction
+            # Sell trigger: price rose to or above sell threshold
+            if high >= self.next_sell_price:
+                # Fill at open if market gapped up, else at limit price
+                actual_price = max(self.next_sell_price, open_price) if open_price is not None else self.next_sell_price
+                
+                notes = f"Taking profits: limit price = {self.next_sell_price:.2f}, actual price = {actual_price:.2f}"
+                transaction = Transaction(action="SELL", qty=self.next_sell_qty, notes=notes)
 
+                # Recompute orders with reduced holdings
+                updated_holdings = holdings - self.next_sell_qty
+                self.place_orders(updated_holdings, self.next_sell_price)
 
-                # Check for sell opportunity
-                if high >= self.next_sell_price:
-
-                    # Account for market gapping up, assuming
-                    # a standing limit order at next_sell_price.
-                    actual_price = max(self.next_sell_price, open)
-                    notes = f"Taking profits: limit price = {self.next_sell_price:.2f}, actual price = {actual_price:.2f}"
-                    transaction = Transaction(action="SELL", qty=self.next_sell_qty, notes=notes)
-
-                    # Place orders again with UPDATED holdings (after the sell)
-                    updated_holdings = holdings - self.next_sell_qty
-                    self.place_orders(updated_holdings, self.next_sell_price)
-
-                    return transaction
+                return transaction
 
         except Exception:
+            # Silently ignore errors (e.g., missing price data)
             pass
         return None
 
 
     def on_end_holding(self) -> None:
+        """Print summary statistics after backtest completes."""
         if self.buyback_enabled:
             print(f"Synthetic Dividend Algorithm total volatility alpha: {self.total_volatility_alpha:.2f}%")
         else:
@@ -299,38 +388,45 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
 
 def build_algo_from_name(name: str) -> AlgorithmBase:
-    """Parse strategy name identifiers into algorithm instances.
-
-    Examples:
-      - 'buy-and-hold' -> BuyAndHoldAlgorithm()
-      - 'sd/9.15%/50%' -> SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=True)
-      - 'sd-ath-only/9.15%/50%' -> SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=False)
+    """Factory: parse string identifier into algorithm instance.
     
-    Legacy names also supported:
-      - 'synthetic-dividend/...' same as 'sd/...'
-      - 'synthetic-dividend-ath-only/...' same as 'sd-ath-only/...'
+    Supported formats:
+        'buy-and-hold' → BuyAndHoldAlgorithm()
+        'sd/9.15%/50%' → SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=True)
+        'sd-ath-only/9.15%/50%' → SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=False)
+    
+    Legacy names (backward compatibility):
+        'synthetic-dividend/...' → same as 'sd/...'
+        'synthetic-dividend-ath-only/...' → same as 'sd-ath-only/...'
     """
     name = name.strip()
-
-    # Record the strategy name supplied by the user
     print(f"Building algorithm from name: {name}")
 
+    # Buy-and-hold baseline
     if name == "buy-and-hold":
         return BuyAndHoldAlgorithm()
 
-    # Match ATH-only variant (with both sd and synthetic-dividend)
+    # ATH-only variant: accepts 'sd' or 'synthetic-dividend' prefix
     m = re.match(r"^(sd|synthetic-dividend)-ath-only/(\d+(?:\.\d+)?)%/(\d+(?:\.\d+)?)%$", name)
     if m:
         rebalance = float(m.group(2))
         profit = float(m.group(3))
-        return SyntheticDividendAlgorithm(rebalance_size_pct=rebalance, profit_sharing_pct=profit, buyback_enabled=False)
+        return SyntheticDividendAlgorithm(
+            rebalance_size_pct=rebalance, 
+            profit_sharing_pct=profit, 
+            buyback_enabled=False
+        )
 
-    # Match full algorithm (with both sd and synthetic-dividend)
+    # Full algorithm: accepts 'sd' or 'synthetic-dividend' prefix
     m = re.match(r"^(sd|synthetic-dividend)/(\d+(?:\.\d+)?)%/(\d+(?:\.\d+)?)%$", name)
     if m:
         rebalance = float(m.group(2))
         profit = float(m.group(3))
-        return SyntheticDividendAlgorithm(rebalance_size_pct=rebalance, profit_sharing_pct=profit, buyback_enabled=True)
+        return SyntheticDividendAlgorithm(
+            rebalance_size_pct=rebalance, 
+            profit_sharing_pct=profit, 
+            buyback_enabled=True
+        )
 
     raise ValueError(f"Unrecognized strategy name: {name}")
 
@@ -341,126 +437,169 @@ def run_algorithm_backtest(
     initial_qty: int,
     start_date: date,
     end_date: date,
-    algo: Optional[object] = None,
-    algo_params: Optional[dict] = None,
-) -> Tuple[List[str], Dict[str, object]]:
-    """Run a generic per-day algorithmic backtest.
+    algo: Optional[Union[AlgorithmBase, Callable]] = None,
+    algo_params: Optional[Dict[str, Any]] = None,
+) -> Tuple[List[str], Dict[str, Any]]:
+    """Execute backtest of trading algorithm against historical price data.
 
-    Behavior:
-    - Performs an initial BUY of `initial_qty` shares on the first available trading day >= start_date.
-    - For each subsequent trading day up to end_date, calls `algo(date, price_row, holdings, bank, history, algo_params)`
-      which may return a Transaction (BUY/SELL) or None.
-    - SELL increases bank by qty * close_price (qty capped at holdings).
-    - BUY decreases bank by qty * close_price and increases holdings (bank may go negative).
-
-    Returns (transactions, summary)
+    Flow:
+    1. Initial BUY of initial_qty shares on first trading day ≥ start_date
+    2. Each day: call algo.on_day() which may return Transaction or None
+    3. SELL: increases bank, decreases holdings (capped at current holdings)
+    4. BUY: decreases bank (may go negative), increases holdings
+    5. Compute final portfolio value and returns vs buy-and-hold baseline
+    
+    Args:
+        df: Historical OHLC price data (indexed by date)
+        ticker: Stock symbol for reporting
+        initial_qty: Number of shares to purchase initially
+        start_date: Backtest start date (inclusive)
+        end_date: Backtest end date (inclusive)
+        algo: Algorithm instance or callable (defaults to buy-and-hold)
+        algo_params: Optional parameters dict (for callable algos)
+        
+    Returns:
+        Tuple of (transaction_strings, summary_dict)
+        - transaction_strings: List of human-readable transaction logs
+        - summary_dict: Metrics including returns, holdings, bank, baseline comparison
     """
     if df is None or df.empty:
         raise ValueError("Empty price data")
 
+    # Normalize index to date objects for consistent lookup
     df_indexed = df.copy()
     df_indexed.index = pd.to_datetime(df_indexed.index).date
 
+    # Find first and last trading days within requested range
     try:
         first_idx = min(d for d in df_indexed.index if d >= start_date)
         last_idx = max(d for d in df_indexed.index if d <= end_date)
     except ValueError:
         raise ValueError("No overlapping trading days in requested date range.")
 
-    # determine close column / value for first and last
-    start_price = _get_close_scalar(df_indexed, first_idx, "Close")
-    end_price = _get_close_scalar(df_indexed, last_idx, "Close")
+    # Extract start/end prices for return calculations
+    start_price: float = _get_close_scalar(df_indexed, first_idx, "Close")
+    end_price: float = _get_close_scalar(df_indexed, last_idx, "Close")
 
     transactions: List[str] = []
 
-    # Set the initial conditions for the backtesting of the algorithm
-    holdings = int(initial_qty)
-    bank = 0.0
+    # Initialize portfolio state
+    holdings: int = int(initial_qty)
+    bank: float = 0.0  # Cash balance (may go negative)
 
+    # Record initial purchase
     start_value = holdings * start_price
-    transactions.append(f"{first_idx.isoformat()} BUY {holdings} {ticker} @ {start_price:.2f} = {start_value:.2f}")
+    transactions.append(
+        f"{first_idx.isoformat()} BUY {holdings} {ticker} @ {start_price:.2f} = {start_value:.2f}"
+    )
 
-    # iterate through subsequent trading days and call the algo
+    # Prepare sorted list of all trading days in range
     dates = sorted(d for d in df_indexed.index if d >= first_idx and d <= last_idx)
-    # history will be the price DataFrame up to but not including current day when passed
-    # normalize algo into an object with on_day(date, price_row, holdings, bank, history)
+    
+    # Normalize algo to AlgorithmBase interface
     if algo is None:
-        algo_obj = BuyAndHoldAlgorithm()
+        algo_obj: AlgorithmBase = BuyAndHoldAlgorithm()
     elif isinstance(algo, AlgorithmBase):
         algo_obj = algo
     elif callable(algo):
-        # adapt a simple callable to AlgorithmBase
+        # Wrap legacy callable in adapter
         class _FuncAdapter(AlgorithmBase):
-            def __init__(self, fn):
+            def __init__(self, fn: Callable) -> None:
                 super().__init__()
                 self.fn = fn
 
-            def on_day(self, date_, price_row, holdings, bank, history):
+            def on_new_holdings(self, holdings: int, current_price: float) -> None:
+                pass
+
+            def on_day(
+                self, 
+                date_: date, 
+                price_row: pd.Series, 
+                holdings: int, 
+                bank: float, 
+                history: pd.DataFrame
+            ) -> Optional[Transaction]:
                 return self.fn(date_, price_row, holdings, bank, history, algo_params)
+
+            def on_end_holding(self) -> None:
+                pass
 
         algo_obj = _FuncAdapter(algo)
     else:
         raise ValueError("algo must be AlgorithmBase instance or callable")
 
-    # tell algo about initial holdings
+    # Initialize algorithm with starting position
     algo_obj.on_new_holdings(holdings, start_price)
 
-    # iterate through dates
+    # Main backtest loop: process each trading day
     for i, d in enumerate(dates):
+        # Skip initial purchase day (already processed above)
         if d == first_idx:
-            # skip calling algo on the initial buy day (per spec: buy then call for consecutive days)
             continue
 
+        # Get current day's prices
         price_row = df_indexed.loc[d]
-        price = _get_close_scalar(df_indexed, d, "Close")
+        price: float = _get_close_scalar(df_indexed, d, "Close")
 
-        # pass history up to previous day
+        # History includes all data up to previous day
         history = df_indexed.loc[:dates[i - 1]] if i > 0 else df_indexed.loc[:d]
 
+        # Let algorithm evaluate the day
         try:
-
-            # give algo the day to process
-            tx = algo_obj.on_day(d, price_row, holdings, bank, history)
-
+            tx: Optional[Transaction] = algo_obj.on_day(d, price_row, holdings, bank, history)
         except Exception as e:
             raise RuntimeError(f"Algorithm raised an error on {d}: {e}")
 
+        # No transaction requested
         if tx is None:
             continue
 
+        # Validate transaction type
         if not isinstance(tx, Transaction):
             raise ValueError("Algorithm must return a Transaction or None")
 
+        # Execute SELL transaction
         if tx.action.upper() == "SELL":
-            sell_qty = min(int(tx.qty), holdings)
+            sell_qty = min(int(tx.qty), holdings)  # Cap at available holdings
             proceeds = sell_qty * price
             holdings -= sell_qty
             bank += proceeds
-            transactions.append(f"{d.isoformat()} SELL {sell_qty} {ticker} @ {price:.2f} = {proceeds:.2f}, holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}")
+            transactions.append(
+                f"{d.isoformat()} SELL {sell_qty} {ticker} @ {price:.2f} = {proceeds:.2f}, "
+                f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
+            )
+        # Execute BUY transaction
         elif tx.action.upper() == "BUY":
             buy_qty = int(tx.qty)
             cost = buy_qty * price
             holdings += buy_qty
-            bank -= cost
-            transactions.append(f"{d.isoformat()} BUY {buy_qty} {ticker} @ {price:.2f} = {cost:.2f}, holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}")
+            bank -= cost  # May go negative (margin)
+            transactions.append(
+                f"{d.isoformat()} BUY {buy_qty} {ticker} @ {price:.2f} = {cost:.2f}, "
+                f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
+            )
         else:
             raise ValueError("Transaction action must be 'BUY' or 'SELL'")
 
-    # final values
+    # Calculate final portfolio metrics
     final_price = end_price
-    end_value = holdings * final_price
-    total = bank + end_value
+    end_value = holdings * final_price  # Market value of remaining shares
+    total = bank + end_value  # Total portfolio value
 
+    # Time-based calculations
     days = (last_idx - first_idx).days
     years = days / 365.25 if days > 0 else 0.0
     start_val = initial_qty * start_price
+    
+    # Returns calculation
     total_return = (total - start_val) / start_val if start_val != 0 else 0.0
     if years > 0 and start_val > 0:
         annualized = (total / start_val) ** (1.0 / years) - 1.0
     else:
         annualized = 0.0
 
-    summary = {
+    # Build summary dict
+    summary: Dict[str, Any] = {
         "ticker": ticker,
         "start_date": first_idx,
         "start_price": start_price,
@@ -476,19 +615,19 @@ def run_algorithm_backtest(
         "years": years,
     }
 
-    # Notify the algorithm that the holding period has ended
-    # Compute a buy-and-hold baseline on the same date range for simple alpha comparison.
+    # Compute buy-and-hold baseline for alpha comparison
     try:
-        # baseline holdings = initial_qty, baseline end value = initial_qty * end_price
+        # Baseline: hold initial_qty shares, no trading
         baseline_end_value = initial_qty * final_price
-        baseline_total = baseline_end_value  # bank is zero for buy-and-hold
+        baseline_total = baseline_end_value  # No cash, just shares
         baseline_total_return = (baseline_total - start_val) / start_val if start_val != 0 else 0.0
+        
         if years > 0 and start_val > 0:
             baseline_annualized = (baseline_total / start_val) ** (1.0 / years) - 1.0
         else:
             baseline_annualized = 0.0
 
-        baseline_summary = {
+        baseline_summary: Dict[str, Any] = {
             "start_date": first_idx,
             "end_date": last_idx,
             "start_price": start_price,
@@ -500,15 +639,17 @@ def run_algorithm_backtest(
             "annualized": baseline_annualized,
         }
 
-        # volatility_alpha defined as difference in total_return vs buy-and-hold baseline
+        # Alpha = algorithm return - baseline return
         volatility_alpha = total_return - baseline_total_return
 
         summary["baseline"] = baseline_summary
         summary["volatility_alpha"] = volatility_alpha
     except Exception:
-        # Do not fail the backtest if baseline computation has an edge-case; omit alpha
+        # Gracefully handle edge cases in baseline computation
         summary["baseline"] = None
         summary["volatility_alpha"] = None
+    
+    # Notify algorithm of completion
     algo_obj.on_end_holding()
 
     return transactions, summary
