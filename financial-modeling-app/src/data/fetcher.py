@@ -52,7 +52,12 @@ class HistoryFetcher:
         df = yf.download(ticker, start=start_dt.strftime("%Y-%m-%d"), end=end_dt.strftime("%Y-%m-%d"), progress=False)
         if df is None or df.empty:
             return pd.DataFrame()
-        df = df[["Close"]].dropna()
+        # keep Open/High/Low/Close to support strategies that use intraday extremes
+        cols = [c for c in ("Open", "High", "Low", "Close") if c in df.columns]
+        if not cols:
+            return pd.DataFrame()
+        # drop rows that have no price data at all
+        df = df[cols].dropna(how="all")
         return df
 
     def get_history(self, ticker, start_date, end_date):
