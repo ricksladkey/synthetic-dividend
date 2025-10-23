@@ -1,5 +1,5 @@
 """
-Compare full synthetic-dividend with ATH-only variant.
+Compare full sd with ATH-only variant.
 
 This script validates the symmetry property: at every new ATH,
 both algorithms should have the same share count.
@@ -90,7 +90,7 @@ def compare_algorithms(
     profit_pct: float,
     initial_qty: int = 10000
 ) -> Dict:
-    """Compare full synthetic-dividend with ATH-only variant."""
+    """Compare full sd with ATH-only variant."""
     
     # Fetch price data
     fetcher = HistoryFetcher()
@@ -100,15 +100,15 @@ def compare_algorithms(
         raise ValueError(f"No price data for {ticker}")
     
     # Build algorithm identifiers
-    full_algo_name = f"synthetic-dividend/{rebalance_pct}%/{profit_pct}%"
-    ath_algo_name = f"synthetic-dividend-ath-only/{rebalance_pct}%/{profit_pct}%"
+    full_algo_name = f"sd/{rebalance_pct}%/{profit_pct}%"
+    ath_algo_name = f"sd-ath-only/{rebalance_pct}%/{profit_pct}%"
     
     print(f"\n{'='*80}")
     print(f"COMPARISON: {ticker} from {start_date} to {end_date}")
     print(f"Parameters: rebalance={rebalance_pct}%, profit_sharing={profit_pct}%")
     print(f"{'='*80}\n")
     
-    # Run full synthetic-dividend
+    # Run full sd algorithm
     print(f"Running FULL algorithm: {full_algo_name}")
     print("-" * 80)
     full_algo = build_algo_from_name(full_algo_name)

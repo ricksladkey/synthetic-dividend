@@ -38,14 +38,14 @@ max_acceptable_diff = max(3, int(qty * 0.06))
 
 ## Algorithm Comparison (NVDA 10/22/2024 - 10/22/2025)
 
-### Full Synthetic-Dividend (9.05%/50%)
+### Full SD (9.05%/50%)
 - **Transactions**: 26 (11 buybacks + 14 profit-taking + 1 initial)
 - **Final Holdings**: 899 shares
 - **Bank**: $23,615
 - **Total Return**: 29.35%
 - **Volatility Alpha**: 5.27%
 
-### ATH-Only (9.05%/50%)
+### SD ATH-Only (9.05%/50%)
 - **Transactions**: 4 (3 sells at ATH + 1 initial)
 - **Final Holdings**: 881 shares
 - **Bank**: $20,273
@@ -105,8 +105,8 @@ python -m pytest tests/test_synthetic_dividend.py -v
 python -m src.compare.validator NVDA 10/22/2024 10/22/2025 9.05 50
 
 # Run algorithms
-.\test-synthetic-dividend.bat
-.\test-ath-only.bat
+.\test-sd.bat
+.\test-sd-ath-only.bat
 .\compare-algorithms.bat
 ```
 

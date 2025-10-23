@@ -47,7 +47,7 @@ class FinancialModelingApp:
         # strategy identifiers; parameters can be embedded in the identifier string
         self.strategy_var = tk.StringVar(value="buy-and-hold")
         strategy_box = ttk.Combobox(input_frame, textvariable=self.strategy_var, state="readonly",
-                        values=["buy-and-hold", "synthetic-dividend/9.15%/50%"])
+                        values=["buy-and-hold", "sd/9.15%/50%"])
         strategy_box.grid(row=2, column=1, sticky="w", pady=(8, 0))
 
         ttk.Button(input_frame, text="Back-Test", command=self.run_backtest).grid(row=2, column=3, sticky="e", pady=(8, 0))

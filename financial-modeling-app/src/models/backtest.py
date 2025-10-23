@@ -303,8 +303,12 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
 
     Examples:
       - 'buy-and-hold' -> BuyAndHoldAlgorithm()
-      - 'synthetic-dividend/9.15%/50%' -> SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=True)
-      - 'synthetic-dividend-ath-only/9.15%/50%' -> SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=False)
+      - 'sd/9.15%/50%' -> SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=True)
+      - 'sd-ath-only/9.15%/50%' -> SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=False)
+    
+    Legacy names also supported:
+      - 'synthetic-dividend/...' same as 'sd/...'
+      - 'synthetic-dividend-ath-only/...' same as 'sd-ath-only/...'
     """
     name = name.strip()
 
@@ -314,18 +318,18 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
     if name == "buy-and-hold":
         return BuyAndHoldAlgorithm()
 
-    # Match ATH-only variant first (more specific pattern)
-    m = re.match(r"^synthetic-dividend-ath-only/(\d+(?:\.\d+)?)%/(\d+(?:\.\d+)?)%$", name)
+    # Match ATH-only variant (with both sd and synthetic-dividend)
+    m = re.match(r"^(sd|synthetic-dividend)-ath-only/(\d+(?:\.\d+)?)%/(\d+(?:\.\d+)?)%$", name)
     if m:
-        rebalance = float(m.group(1))
-        profit = float(m.group(2))
+        rebalance = float(m.group(2))
+        profit = float(m.group(3))
         return SyntheticDividendAlgorithm(rebalance_size_pct=rebalance, profit_sharing_pct=profit, buyback_enabled=False)
 
-    # Match full synthetic-dividend
-    m = re.match(r"^synthetic-dividend/(\d+(?:\.\d+)?)%/(\d+(?:\.\d+)?)%$", name)
+    # Match full algorithm (with both sd and synthetic-dividend)
+    m = re.match(r"^(sd|synthetic-dividend)/(\d+(?:\.\d+)?)%/(\d+(?:\.\d+)?)%$", name)
     if m:
-        rebalance = float(m.group(1))
-        profit = float(m.group(2))
+        rebalance = float(m.group(2))
+        profit = float(m.group(3))
         return SyntheticDividendAlgorithm(rebalance_size_pct=rebalance, profit_sharing_pct=profit, buyback_enabled=True)
 
     raise ValueError(f"Unrecognized strategy name: {name}")

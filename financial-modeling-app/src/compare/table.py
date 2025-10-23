@@ -1,7 +1,7 @@
 """
 Generate comparison table for different algorithms.
 
-Compares buy-and-hold, synthetic-dividend (full), and synthetic-dividend-ath-only
+Compares buy-and-hold, sd (full), and sd-ath-only
 showing ending shares, value, bank, and total for easy analysis.
 """
 import sys
@@ -64,8 +64,8 @@ def run_comparison_table(
     # Algorithm configurations
     algorithms = [
         ("Buy and Hold", "buy-and-hold"),
-        (f"Synthetic Dividend ({rebalance_pct}%/{profit_pct}%)", f"synthetic-dividend/{rebalance_pct}%/{profit_pct}%"),
-        (f"SD ATH-Only ({rebalance_pct}%/{profit_pct}%)", f"synthetic-dividend-ath-only/{rebalance_pct}%/{profit_pct}%"),
+        (f"SD ({rebalance_pct}%/{profit_pct}%)", f"sd/{rebalance_pct}%/{profit_pct}%"),
+        (f"SD ATH-Only ({rebalance_pct}%/{profit_pct}%)", f"sd-ath-only/{rebalance_pct}%/{profit_pct}%"),
     ]
     
     for algo_name, algo_id in algorithms:
