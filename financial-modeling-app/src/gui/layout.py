@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from data.fetcher import HistoryFetcher
+from models.backtest import buy_and_hold_backtest
 
 DEFAULT_TICKER = "NVDA"
 DEFAULT_QTY = 1000
@@ -101,49 +102,31 @@ class FinancialModelingApp:
             messagebox.showerror("Data error", f"No price data available for {ticker} in that range.")
             return
 
-        df_indexed = df.copy()
-        df_indexed.index = pd.to_datetime(df_indexed.index).date
-
         try:
-            first_idx = min(d for d in df_indexed.index if d >= start_date)
-            last_idx = max(d for d in df_indexed.index if d <= end_date)
-        except ValueError:
-            messagebox.showerror("Data error", "No overlapping trading days in requested date range.")
+            transactions, summary = buy_and_hold_backtest(df, ticker, qty, start_date, end_date)
+        except Exception as e:
+            messagebox.showerror("Backtest error", str(e))
             return
 
-        start_price = float(df_indexed.loc[first_idx]["Close"])
-        end_price = float(df_indexed.loc[last_idx]["Close"])
-
-        start_value = qty * start_price
-        end_value = qty * end_price
-        total_return = (end_value - start_value) / start_value if start_value != 0 else 0.0
-
-        days = (last_idx - first_idx).days
-        years = days / 365.25 if days > 0 else 0.0
-        if years > 0 and start_value > 0:
-            annualized = (end_value / start_value) ** (1.0 / years) - 1.0
-        else:
-            annualized = 0.0
-
-        # Transactions: initial buy only
+        # Transactions list
         self.trans_listbox.delete(0, tk.END)
-        buy_line = f"{first_idx.isoformat()} BUY {qty} {ticker} @ {start_price:.2f} = {start_value:.2f}"
-        self.trans_listbox.insert(tk.END, buy_line)
+        for t in transactions:
+            self.trans_listbox.insert(tk.END, t)
 
-        # Summary output
+        # Summary output (match previous formatting)
         self.summary_text.delete("1.0", tk.END)
         lines = [
-            f"Ticker: {ticker}",
-            f"Start Date: {first_idx.isoformat()}",
-            f"Start Price: {start_price:.2f}",
-            f"Start Value: {start_value:.2f}",
+            f"Ticker: {summary['ticker']}",
+            f"Start Date: {summary['start_date'].isoformat()}",
+            f"Start Price: {summary['start_price']:.2f}",
+            f"Start Value: {summary['start_value']:.2f}",
             "",
-            f"End Date: {last_idx.isoformat()}",
-            f"End Price: {end_price:.2f}",
-            f"End Value: {end_value:.2f}",
+            f"End Date: {summary['end_date'].isoformat()}",
+            f"End Price: {summary['end_price']:.2f}",
+            f"End Value: {summary['end_value']:.2f}",
             "",
-            f"Total return: {total_return*100:.2f}%",
-            f"Annualized return: {annualized*100:.2f}% (over {years:.3f} years)",
+            f"Total return: {summary['total_return']*100:.2f}%",
+            f"Annualized return: {summary['annualized']*100:.2f}% (over {summary['years']:.3f} years)",
         ]
         self.summary_text.insert("1.0", "\n".join(lines))
 
