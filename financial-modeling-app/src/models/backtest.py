@@ -6,6 +6,50 @@ from abc import ABC, abstractmethod
 import re
 
 
+def calculate_synthetic_dividend_orders(
+    holdings: int,
+    last_transaction_price: float,
+    rebalance_size: float,
+    profit_sharing: float
+) -> dict:
+    """Pure function to calculate synthetic dividend buy/sell orders.
+    
+    The formulas ensure perfect symmetry: if you buy Q shares at price P_low,
+    then from P_low you can sell exactly Q shares back at price P_current.
+    
+    Derivation:
+    - Buy price: P_buy = P / (1 + r)
+    - Sell price: P_sell = P * (1 + r)
+    - Buy quantity: Q_buy = r * H * s
+    - Sell quantity: Q_sell = r * H * s / (1 + r)
+    
+    Where r = rebalance_size, H = holdings, s = profit_sharing
+    
+    Args:
+        holdings: Current number of shares held
+        last_transaction_price: Price of last transaction
+        rebalance_size: Rebalance threshold as decimal (e.g., 0.0905 for 9.05%)
+        profit_sharing: Profit sharing ratio as decimal (e.g., 0.5 for 50%)
+    
+    Returns:
+        Dict with keys: next_buy_price, next_buy_qty, next_sell_price, next_sell_qty
+    """
+    # Calculate next buy price and quantity
+    next_buy_price = last_transaction_price / (1 + rebalance_size)
+    next_buy_qty = int(rebalance_size * holdings * profit_sharing + 0.5)
+    
+    # Calculate next sell price and quantity
+    next_sell_price = last_transaction_price * (1 + rebalance_size)
+    next_sell_qty = int(rebalance_size * holdings * profit_sharing / (1 + rebalance_size) + 0.5)
+    
+    return {
+        "next_buy_price": next_buy_price,
+        "next_buy_qty": next_buy_qty,
+        "next_sell_price": next_sell_price,
+        "next_sell_qty": next_sell_qty,
+    }
+
+
 @dataclass
 class Transaction:
     action: str  # 'BUY' or 'SELL'
@@ -124,19 +168,22 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
 
     def place_orders(self, holdings, current_price: float) -> None:
-
+        """Update internal state with new orders based on current price."""
         # Record the last transaction price
         self.last_transaction_price = current_price
 
-        # Calculate next buy price and quantity
-        self.next_buy_price = self.last_transaction_price / (1 + self.rebalance_size)
-        next_buy_amount = (self.last_transaction_price - self.next_buy_price) * holdings / (1 + self.rebalance_size) * self.profit_sharing
-        self.next_buy_qty = int(next_buy_amount / self.next_buy_price + 0.5)
-
-        # Calculate next sell price and quantity
-        self.next_sell_price = self.last_transaction_price * (1 + self.rebalance_size)
-        next_sell_amount = (self.next_sell_price - self.last_transaction_price) * holdings * self.profit_sharing
-        self.next_sell_qty = int(next_sell_amount / self.next_sell_price + 0.5)
+        # Use pure function to calculate orders
+        orders = calculate_synthetic_dividend_orders(
+            holdings=holdings,
+            last_transaction_price=current_price,
+            rebalance_size=self.rebalance_size,
+            profit_sharing=self.profit_sharing
+        )
+        
+        self.next_buy_price = orders["next_buy_price"]
+        self.next_buy_qty = orders["next_buy_qty"]
+        self.next_sell_price = orders["next_sell_price"]
+        self.next_sell_qty = orders["next_sell_qty"]
 
         print(f"Placing orders for last transaction price: ${self.last_transaction_price}")
         print(f"  Next BUY: {self.next_buy_qty} @ ${self.next_buy_price:.2f} = ${self.next_buy_price * self.next_buy_qty:.2f}")
@@ -182,8 +229,9 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     notes = f"Buying back: limit price = {self.next_buy_price:.2f}, actual price = {actual_price:.2f}"
                     transaction = Transaction(action="BUY", qty=self.next_buy_qty, notes=notes)
 
-                    # Place orders again to update next prices/quantities
-                    self.place_orders(holdings, self.next_buy_price)
+                    # Place orders again with UPDATED holdings (after the buy)
+                    updated_holdings = holdings + self.next_buy_qty
+                    self.place_orders(updated_holdings, self.next_buy_price)
 
                     return transaction
 
@@ -197,8 +245,9 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     notes = f"Taking profits: limit price = {self.next_sell_price:.2f}, actual price = {actual_price:.2f}"
                     transaction = Transaction(action="SELL", qty=self.next_sell_qty, notes=notes)
 
-                    # Place orders again to update next prices/quantities
-                    self.place_orders(holdings, self.next_sell_price)
+                    # Place orders again with UPDATED holdings (after the sell)
+                    updated_holdings = holdings - self.next_sell_qty
+                    self.place_orders(updated_holdings, self.next_sell_price)
 
                     return transaction
 
@@ -209,6 +258,90 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
     def on_end_holding(self) -> None:
         print(f"Synthetic Dividend Algorithm total volatility alpha: {self.total_volatility_alpha:.2f}%")
+
+
+class SyntheticDividendATHOnlyAlgorithm(AlgorithmBase):
+    """ATH-only variant: sells only at all-time highs, never buybacks.
+    
+    This serves as a baseline to validate the full SyntheticDividendAlgorithm.
+    At every new ATH, both algorithms should have the same share count.
+    The full algorithm makes additional buyback/resell cycles that should net to zero.
+    
+    Parameters parsed from name (example): 'synthetic-dividend-ath-only/9.15%/50%'
+      - rebalance_size_pct: float (e.g. 9.15)
+      - profit_sharing_pct: float (0-100)
+    """
+
+    def __init__(self, rebalance_size_pct: float = 0.0, profit_sharing_pct: float = 0.0, params: Optional[dict] = None):
+        super().__init__(params)
+
+        self.rebalance_size = float(rebalance_size_pct)/100.0
+        self.profit_sharing = float(profit_sharing_pct)/100.0
+
+        # Track all-time high price
+        self.ath_price: float = 0.0
+        
+        # Order state (only for sell orders at ATH)
+        self.last_transaction_price: float
+        self.next_sell_price: float
+        self.next_sell_qty: int
+
+    def place_orders(self, holdings: int, current_price: float) -> None:
+        """Calculate next sell order at new ATH."""
+        self.last_transaction_price = current_price
+        
+        # Use same formula as full algorithm for sell orders
+        orders = calculate_synthetic_dividend_orders(
+            holdings=holdings,
+            last_transaction_price=current_price,
+            rebalance_size=self.rebalance_size,
+            profit_sharing=self.profit_sharing
+        )
+        
+        self.next_sell_price = orders["next_sell_price"]
+        self.next_sell_qty = orders["next_sell_qty"]
+        
+        print(f"ATH-only: New ATH at ${current_price:.2f}, placing sell order:")
+        print(f"  Next SELL: {self.next_sell_qty} @ ${self.next_sell_price:.2f} = ${self.next_sell_price * self.next_sell_qty:.2f}")
+
+    def on_new_holdings(self, holdings: int, current_price: float) -> None:
+        # Initialize ATH and place first sell order
+        self.ath_price = current_price
+        self.place_orders(holdings, current_price)
+
+    def on_day(self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame) -> Optional[Transaction]:
+        try:
+            # Retrieve prices for the day
+            open_price = _get_price_scalar_from_row(price_row, 'Open')
+            high = _get_price_scalar_from_row(price_row, 'High')
+            low = _get_price_scalar_from_row(price_row, 'Low')
+            close = _get_price_scalar_from_row(price_row, 'Close')
+
+            if high is not None:
+                # Check if we reached a new ATH
+                if high > self.ath_price:
+                    # Update ATH
+                    self.ath_price = high
+                    
+                    # Check if we should execute the sell order
+                    if high >= self.next_sell_price:
+                        # Account for market gapping up
+                        actual_price = max(self.next_sell_price, open_price) if open_price is not None else self.next_sell_price
+                        notes = f"ATH-only sell: limit price = {self.next_sell_price:.2f}, actual price = {actual_price:.2f}, new ATH = {self.ath_price:.2f}"
+                        transaction = Transaction(action="SELL", qty=self.next_sell_qty, notes=notes)
+                        
+                        # Place next sell order with UPDATED holdings (after the sell)
+                        updated_holdings = holdings - self.next_sell_qty
+                        self.place_orders(updated_holdings, self.next_sell_price)
+                        
+                        return transaction
+
+        except Exception:
+            pass
+        return None
+
+    def on_end_holding(self) -> None:
+        print(f"ATH-only algorithm: final ATH = ${self.ath_price:.2f}")
 
 
 def build_algo_from_name(name: str) -> AlgorithmBase:
@@ -226,6 +359,14 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
     if name == "buy-and-hold":
         return BuyAndHoldAlgorithm()
 
+    # Match ATH-only variant first (more specific pattern)
+    m = re.match(r"^synthetic-dividend-ath-only/(\d+(?:\.\d+)?)%/(\d+(?:\.\d+)?)%$", name)
+    if m:
+        rebalance = float(m.group(1))
+        profit = float(m.group(2))
+        return SyntheticDividendATHOnlyAlgorithm(rebalance_size_pct=rebalance, profit_sharing_pct=profit)
+
+    # Match full synthetic-dividend
     m = re.match(r"^synthetic-dividend/(\d+(?:\.\d+)?)%/(\d+(?:\.\d+)?)%$", name)
     if m:
         rebalance = float(m.group(1))
@@ -336,13 +477,13 @@ def run_algorithm_backtest(
             proceeds = sell_qty * price
             holdings -= sell_qty
             bank += proceeds
-            transactions.append(f"{d.isoformat()} SELL {sell_qty} {ticker} @ {price:.2f} = {proceeds:.2f}, bank = {bank:.2f}  # {tx.notes}")
+            transactions.append(f"{d.isoformat()} SELL {sell_qty} {ticker} @ {price:.2f} = {proceeds:.2f}, holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}")
         elif tx.action.upper() == "BUY":
             buy_qty = int(tx.qty)
             cost = buy_qty * price
             holdings += buy_qty
             bank -= cost
-            transactions.append(f"{d.isoformat()} BUY {buy_qty} {ticker} @ {price:.2f} = {cost:.2f}, bank = {bank:.2f}  # {tx.notes}")
+            transactions.append(f"{d.isoformat()} BUY {buy_qty} {ticker} @ {price:.2f} = {cost:.2f}, holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}")
         else:
             raise ValueError("Transaction action must be 'BUY' or 'SELL'")
 

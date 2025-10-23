@@ -1,3 +1,4 @@
 pandas>=1.0
 matplotlib
 yfinance
+pytest>=7.0
