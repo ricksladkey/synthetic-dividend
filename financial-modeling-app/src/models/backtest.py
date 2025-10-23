@@ -34,6 +34,30 @@ def _get_close_scalar(df: pd.DataFrame, idx, col_name="Close") -> float:
     return float(v)
 
 
+def _get_price_scalar_from_row(price_row: pd.Series, col_name: str) -> Optional[float]:
+    """Extract a float scalar from a price_row Series for the given column name.
+
+    Handles cases where price_row[col_name] may itself be a Series (e.g., multi-index or
+    when a single-row DataFrame is returned). Returns None if the column isn't present.
+    """
+    if col_name not in price_row.index:
+        return None
+    val = price_row[col_name]
+    # If val is a Series (e.g., labelled by ticker), take the first numeric value
+    if hasattr(val, 'iloc'):
+        try:
+            return float(val.iloc[0])
+        except Exception:
+            try:
+                return float(val)
+            except Exception:
+                return None
+    try:
+        return float(val)
+    except Exception:
+        return None
+
+
 class AlgorithmBase(ABC):
     """Algorithm instance that can maintain state across days.
 
@@ -44,7 +68,15 @@ class AlgorithmBase(ABC):
         self.params = params or {}
 
     @abstractmethod
+    def on_new_holdings(self, holdings: int, current_price: float) -> None:
+        pass
+
+    @abstractmethod
     def on_day(self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame) -> Optional[Transaction]:
+        pass
+
+    @abstractmethod
+    def on_end_holding(self) -> None:
         pass
 
 
@@ -54,11 +86,14 @@ class BuyAndHoldAlgorithm(AlgorithmBase):
     def __init__(self, rebalance_size_pct: float = 0.0, profit_sharing_pct: float = 0.0, params: Optional[dict] = None):
         super().__init__(params)
 
-    def buy_holdings(self, holdings: int, current_price: float) -> None:
+    def on_new_holdings(self, holdings: int, current_price: float) -> None:
         pass
 
     def on_day(self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame) -> Optional[Transaction]:
         return None
+
+    def on_end_holding(self) -> None:
+        pass
 
 
 class SyntheticDividendAlgorithm(AlgorithmBase):
@@ -74,8 +109,11 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
     def __init__(self, rebalance_size_pct: float = 0.0, profit_sharing_pct: float = 0.0, params: Optional[dict] = None):
         super().__init__(params)
+
         self.rebalance_size = float(rebalance_size_pct)/100.0
         self.profit_sharing = float(profit_sharing_pct)/100.0
+
+        self.total_volatility_alpha: float = 0.0
 
         self.last_transaction_price: float
 
@@ -84,21 +122,15 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         self.next_sell_price: float
         self.next_sell_qty: float
 
-    def buy_holdings(self, holdings: int, current_price: float) -> None:
-        
-        # Initialize the first buy parameters
-        self.place_orders(holdings, current_price)
-
 
     def place_orders(self, holdings, current_price: float) -> None:
 
         # Record the last transaction price
         self.last_transaction_price = current_price
-        print(f"Placing orders at current price: {self.last_transaction_price}")
 
         # Calculate next buy price and quantity
         self.next_buy_price = self.last_transaction_price / (1 + self.rebalance_size)
-        next_buy_amount = (self.next_buy_price - self.last_transaction_price) * holdings * self.profit_sharing
+        next_buy_amount = (self.last_transaction_price - self.next_buy_price) * holdings * self.profit_sharing
         self.next_buy_qty = int(next_buy_amount / self.next_buy_price + 0.5)
 
         # Calculate next sell price and quantity
@@ -106,25 +138,50 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         next_sell_amount = (self.next_sell_price - self.last_transaction_price) * holdings * self.profit_sharing
         self.next_sell_qty = int(next_sell_amount / self.next_sell_price + 0.5)
 
+        print(f"Placing orders for last transaction price: ${self.last_transaction_price}")
+        print(f"  Next BUY: {self.next_buy_qty} @ ${self.next_buy_price:.2f} = ${self.next_buy_price * self.next_buy_qty:.2f}")
+        print(f"  Next SELL: {self.next_sell_qty} @ ${self.next_sell_price:.2f} = ${self.next_sell_price * self.next_sell_qty:.2f}")
+
+
+    def on_new_holdings(self, holdings: int, current_price: float) -> None:
+        
+        # Initialize the first buy parameters
+        self.place_orders(holdings, current_price)
+
 
     def on_day(self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame) -> Optional[Transaction]:
         try:
 
-            # Retrieve high and low prices for the day.
-            high = price_row['High'] if 'High' in price_row.index else None
-            low = price_row['Low'] if 'Low' in price_row.index else None
+            # Retrieve high and low prices for the day as float scalars.
+            high = _get_price_scalar_from_row(price_row, 'High')
+            low = _get_price_scalar_from_row(price_row, 'Low')
 
             # Validate and execute buy/sell orders based on price thresholds.
             if low is not None and high is not None:
 
+                if False:  # Set to True to enable debug output
+
+                    # Evaluate buy/sell orders based on the day's price range
+                    # Format as numeric floats for clearer debug output
+                    low_s = f"{low:.2f}" if low is not None else "N/A"
+                    high_s = f"{high:.2f}" if high is not None else "N/A"
+                    print(f"Evaluating orders on {date_.isoformat()}: Low=${low_s}, High=${high_s}")
+
                 # Check for buy opportunity
                 if low <= self.next_buy_price <= high:
+
+                    current_value = holdings * self.next_buy_price
+                    profit = (self.last_transaction_price - self.next_buy_price) * self.next_buy_qty
+                    alpha = (profit / current_value) * 100 if current_value != 0 else 0.0
+                    self.total_volatility_alpha += alpha
+
+                    transaction = Transaction(action="BUY", qty=self.next_buy_qty, notes=f"Buying back at a {self.rebalance_size*100:.2f}% discount, alpha = {alpha:.2f}%.")
 
                     # Place orders again to update next prices/quantities
                     self.place_orders(holdings, self.next_buy_price)
 
-                    notes = f"{date_.isoformat()} BUY {holdings} @ {self.next_buy_price:.2f} = {self.next_buy_price * self.next_buy_qty:.2f}"
-                    return Transaction(action="BUY", qty=self.next_buy_qty, notes=notes)
+                    return transaction
+
 
                 # Check for sell opportunity
                 if low <= self.next_sell_price <= high:
@@ -138,6 +195,9 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         except Exception:
             pass
         return None
+
+    def on_end_holding(self) -> None:
+        print(f"Synthetic Dividend Algorithm total volatility alpha: {self.total_volatility_alpha:.2f}%")
 
 
 def build_algo_from_name(name: str) -> AlgorithmBase:
@@ -231,8 +291,8 @@ def run_algorithm_backtest(
     else:
         raise ValueError("algo must be AlgorithmBase instance or callable")
 
-    # initial buy holdings setup
-    algo_obj.buy_holdings(holdings, start_price)
+    # tell algo about initial holdings
+    algo_obj.on_new_holdings(holdings, start_price)
 
     # iterate through dates
     for i, d in enumerate(dates):
@@ -247,7 +307,10 @@ def run_algorithm_backtest(
         history = df_indexed.loc[:dates[i - 1]] if i > 0 else df_indexed.loc[:d]
 
         try:
+
+            # give algo the day to process
             tx = algo_obj.on_day(d, price_row, holdings, bank, history)
+
         except Exception as e:
             raise RuntimeError(f"Algorithm raised an error on {d}: {e}")
 
@@ -301,6 +364,9 @@ def run_algorithm_backtest(
         "annualized": annualized,
         "years": years,
     }
+
+    # Notify the algorithm that the holding period has ended
+    algo_obj.on_end_holding()
 
     return transactions, summary
 
