@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from data.fetcher import HistoryFetcher
-from models.backtest import run_algorithm_backtest, default_algo, Transaction
+from models.backtest import run_algorithm_backtest, build_algo_from_name, Transaction
 
 DEFAULT_TICKER = "NVDA"
 DEFAULT_QTY = 1000
@@ -44,9 +44,10 @@ class FinancialModelingApp:
         ttk.Entry(input_frame, textvariable=self.end_var, width=15).grid(row=1, column=3, sticky="w", pady=(5, 0))
 
         ttk.Label(input_frame, text="Strategy:").grid(row=2, column=0, sticky="w", pady=(8, 0))
-        self.strategy_var = tk.StringVar(value="Default - Buy and Hold")
-        strategy_box = ttk.Combobox(input_frame, textvariable=self.strategy_var, state="readonly",
-                                    values=["Default - Buy and Hold"]) 
+    # strategy identifiers; parameters can be embedded in the identifier string
+    self.strategy_var = tk.StringVar(value="buy-and-hold")
+    strategy_box = ttk.Combobox(input_frame, textvariable=self.strategy_var, state="readonly",
+                    values=["buy-and-hold", "synthetic-dividend/9.15%/50%"])
         strategy_box.grid(row=2, column=1, sticky="w", pady=(8, 0))
 
         ttk.Button(input_frame, text="Back-Test", command=self.run_backtest).grid(row=2, column=3, sticky="e", pady=(8, 0))
@@ -102,8 +103,10 @@ class FinancialModelingApp:
             messagebox.showerror("Data error", f"No price data available for {ticker} in that range.")
             return
 
+        # create algorithm instance from strategy name
+        algo_inst = build_algo_from_name(self.strategy_var.get())
         try:
-            transactions, summary = run_algorithm_backtest(df, ticker, qty, start_date, end_date, algo=default_algo)
+            transactions, summary = run_algorithm_backtest(df, ticker, qty, start_date, end_date, algo=algo_inst)
         except Exception as e:
             messagebox.showerror("Backtest error", str(e))
             return

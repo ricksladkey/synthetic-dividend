@@ -2,6 +2,8 @@ from datetime import date
 from typing import Dict, List, Tuple, Optional, Callable
 from dataclasses import dataclass
 import pandas as pd
+from abc import ABC, abstractmethod
+import re
 
 
 @dataclass
@@ -32,12 +34,82 @@ def _get_close_scalar(df: pd.DataFrame, idx, col_name="Close") -> float:
     return float(v)
 
 
-def default_algo(date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame, params: Optional[dict] = None) -> Optional[Transaction]:
-    """Default algorithm: buy-and-hold -> return None (no transactions).
+class AlgorithmBase(ABC):
+    """Algorithm instance that can maintain state across days.
 
-    Signature: (date, price_row, holdings, bank, history, params) -> Transaction | None
+    Implement on_day(date, price_row, holdings, bank, history) -> Optional[Transaction]
     """
-    return None
+
+    def __init__(self, params: Optional[dict] = None):
+        self.params = params or {}
+
+    @abstractmethod
+    def on_day(self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame) -> Optional[Transaction]:
+        pass
+
+
+class BuyAndHoldAlgorithm(AlgorithmBase):
+    """Buy-and-hold algorithm: never issues further transactions after initial buy."""
+
+    def on_day(self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame) -> Optional[Transaction]:
+        return None
+
+
+class SyntheticDividendAlgorithm(AlgorithmBase):
+    """Skeleton for the Synthetic Dividend algorithm.
+
+    Parameters parsed from name (example): 'synthetic-dividend/9.15%/50%'
+      - rebalance_size_pct: float (e.g. 9.15)
+      - profit_sharing_pct: float (0-100)
+
+    This class can maintain state like hi_price_qty and lo_price_qty for internal bookkeeping.
+    TODO: implement the actual rebalancing logic.
+    """
+
+    def __init__(self, rebalance_size_pct: float = 0.0, profit_sharing_pct: float = 0.0, params: Optional[dict] = None):
+        super().__init__(params)
+        self.rebalance_size_pct = float(rebalance_size_pct)
+        self.profit_sharing_pct = float(profit_sharing_pct)
+        # bookkeeping fields
+        self.hi_price_qty = 0
+        self.lo_price_qty = 0
+
+    def on_day(self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame) -> Optional[Transaction]:
+        # TODO: Implement Synthetic Dividend logic.
+        # For now, it's a stub that returns None (no transaction) but records hi/lo qty placeholders.
+        # hi_price_qty and lo_price_qty can be updated here based on price_row['High']/['Low'].
+        try:
+            high = price_row['High'] if 'High' in price_row.index else None
+            low = price_row['Low'] if 'Low' in price_row.index else None
+            # mock-up bookkeeping: count days where high>low as increment
+            if high is not None and low is not None and high > low:
+                self.hi_price_qty += 1
+            else:
+                self.lo_price_qty += 0
+        except Exception:
+            pass
+        return None
+
+
+def build_algo_from_name(name: str) -> AlgorithmBase:
+    """Parse strategy name identifiers into algorithm instances.
+
+    Examples:
+      - 'buy-and-hold' -> BuyAndHoldAlgorithm()
+      - 'synthetic-dividend/9.15%/50%' -> SyntheticDividendAlgorithm(9.15, 50)
+    """
+    name = name.strip()
+    if name == "buy-and-hold":
+        return BuyAndHoldAlgorithm()
+
+    m = re.match(r"^synthetic-dividend/(\d+(?:\.\d+)?)%/(\d+(?:\.\d+)?)%$", name)
+    if m:
+        rebalance = float(m.group(1))
+        profit = float(m.group(2))
+        return SyntheticDividendAlgorithm(rebalance_size_pct=rebalance, profit_sharing_pct=profit)
+
+    # fallback
+    return BuyAndHoldAlgorithm()
 
 
 def run_algorithm_backtest(
@@ -46,7 +118,7 @@ def run_algorithm_backtest(
     initial_qty: int,
     start_date: date,
     end_date: date,
-    algo: Callable = default_algo,
+    algo: Optional[object] = None,
     algo_params: Optional[dict] = None,
 ) -> Tuple[List[str], Dict[str, object]]:
     """Run a generic per-day algorithmic backtest.
@@ -87,6 +159,25 @@ def run_algorithm_backtest(
     # iterate through subsequent trading days and call the algo
     dates = sorted(d for d in df_indexed.index if d >= first_idx and d <= last_idx)
     # history will be the price DataFrame up to but not including current day when passed
+    # normalize algo into an object with on_day(date, price_row, holdings, bank, history)
+    if algo is None:
+        algo_obj = BuyAndHoldAlgorithm()
+    elif isinstance(algo, AlgorithmBase):
+        algo_obj = algo
+    elif callable(algo):
+        # adapt a simple callable to AlgorithmBase
+        class _FuncAdapter(AlgorithmBase):
+            def __init__(self, fn):
+                super().__init__()
+                self.fn = fn
+
+            def on_day(self, date_, price_row, holdings, bank, history):
+                return self.fn(date_, price_row, holdings, bank, history, algo_params)
+
+        algo_obj = _FuncAdapter(algo)
+    else:
+        raise ValueError("algo must be AlgorithmBase instance or callable")
+
     for i, d in enumerate(dates):
         if d == first_idx:
             # skip calling algo on the initial buy day (per spec: buy then call for consecutive days)
@@ -99,7 +190,7 @@ def run_algorithm_backtest(
         history = df_indexed.loc[:dates[i - 1]] if i > 0 else df_indexed.loc[:d]
 
         try:
-            tx = algo(d, price_row, holdings, bank, history, algo_params)
+            tx = algo_obj.on_day(d, price_row, holdings, bank, history)
         except Exception as e:
             raise RuntimeError(f"Algorithm raised an error on {d}: {e}")
 

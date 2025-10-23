@@ -50,7 +50,7 @@ def main(argv):
 
     try:
         from src.data.fetcher import HistoryFetcher
-        from src.models.backtest import run_algorithm_backtest, default_algo
+        from src.models.backtest import run_algorithm_backtest, build_algo_from_name
     except Exception as e:
         print("Failed to import runtime modules:", e)
         return 3
@@ -66,8 +66,9 @@ def main(argv):
         print("No price data available for", ticker, "in that range.")
         return 5
 
+    algo_inst = build_algo_from_name(strategy)
     try:
-        transactions, summary = run_algorithm_backtest(df, ticker, qty, start, end, algo=default_algo)
+        transactions, summary = run_algorithm_backtest(df, ticker, qty, start, end, algo=algo_inst)
     except Exception as e:
         print("Backtest error:", e)
         return 6
