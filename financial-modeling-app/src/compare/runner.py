@@ -34,7 +34,7 @@ def main(argv):
     df = fetcher.get_history(ticker, start, end)
     algo = build_algo_from_name(algo_id)
 
-    txs, summary = run_algorithm_backtest(df, ticker, initial_qty=1000, start_date=start, end_date=end, algo=algo)
+    txs, summary = run_algorithm_backtest(df, ticker, initial_qty=10000, start_date=start, end_date=end, algo=algo)
 
     # write transactions to a small file next to PNG
     tx_file = os.path.splitext(out_png)[0] + "-tx.txt"

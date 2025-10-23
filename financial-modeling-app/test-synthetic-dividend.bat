@@ -1,3 +1,3 @@
 @echo off
 REM Calls run-model.bat with canned args for NVDA and synthetic-dividend strategy
-CALL "%~dp0\run-model.bat" NVDA 10/27/2024 10/27/2025 synthetic-dividend/9.05%/50%
+CALL "%~dp0\run-model.bat" NVDA 10/22/2024 10/22/2025 "synthetic-dividend/9.05%%%%/50%%%%"

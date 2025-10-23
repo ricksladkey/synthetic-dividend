@@ -33,15 +33,20 @@ def main(argv):
         print("Error parsing dates:", e)
         return 2
 
-    # strategy may contain spaces; join the remaining args
-    # optional 5th argument is quantity; default to 1000 to match GUI
-    strategy = " ".join(argv[3:])
+    # strategy may contain spaces or special chars
+    # optional last argument (if it's a number) is quantity; default to 1000
     qty = 1000
-    if len(argv) >= 5:
+    strategy_args = argv[3:]
+    
+    # Check if last arg is a number (quantity)
+    if len(strategy_args) > 0:
         try:
-            qty = int(argv[4])
-        except Exception:
-            print("Invalid quantity provided, using default 1000")
+            qty = int(strategy_args[-1])
+            # If successful, it's a quantity, so exclude it from strategy
+            strategy = " ".join(strategy_args[:-1])
+        except ValueError:
+            # Not a number, so all args are part of strategy
+            strategy = " ".join(strategy_args)
 
     # ensure repo src package is importable when running from repo root
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

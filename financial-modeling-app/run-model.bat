@@ -17,5 +17,6 @@ if not exist "%VENV_PY%" (
   set VENV_PY=python
 )
 
-"%VENV_PY%" "%SCRIPT_DIR%\run_model.py" %*
+REM Pass arguments properly, using %~4 to handle quoted strings with special chars
+"%VENV_PY%" "%SCRIPT_DIR%\run_model.py" %1 %2 %3 %~4 %5 %6 %7 %8 %9
 exit /b %ERRORLEVEL%

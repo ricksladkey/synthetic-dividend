@@ -175,7 +175,8 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     alpha = (profit / current_value) * 100 if current_value != 0 else 0.0
                     self.total_volatility_alpha += alpha
 
-                    transaction = Transaction(action="BUY", qty=self.next_buy_qty, notes=f"Buying back at a {self.rebalance_size*100:.2f}% discount, alpha = {alpha:.2f}%.")
+                    notes = f"Buying back at a {self.rebalance_size*100:.2f}% discount, alpha = {alpha:.2f}%."
+                    transaction = Transaction(action="BUY", qty=self.next_buy_qty, notes=notes)
 
                     # Place orders again to update next prices/quantities
                     self.place_orders(holdings, self.next_buy_price)
@@ -185,16 +186,19 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
                 # Check for sell opportunity
                 if low <= self.next_sell_price <= high:
-                    
+
+                    notes = f"Taking profits: selling {self.next_sell_qty} shares, {holdings - self.next_sell_qty} left"
+                    transaction = Transaction(action="SELL", qty=self.next_sell_qty, notes=notes)
+
                     # Place orders again to update next prices/quantities
                     self.place_orders(holdings, self.next_sell_price)
 
-                    notes = f"{date_.isoformat()} SELL {holdings} @ {self.next_sell_price:.2f} = {self.next_sell_price * self.next_sell_qty:.2f}"
-                    return Transaction(action="SELL", qty=self.next_sell_qty, notes=notes)
+                    return transaction
 
         except Exception:
             pass
         return None
+
 
     def on_end_holding(self) -> None:
         print(f"Synthetic Dividend Algorithm total volatility alpha: {self.total_volatility_alpha:.2f}%")
@@ -325,13 +329,13 @@ def run_algorithm_backtest(
             proceeds = sell_qty * price
             holdings -= sell_qty
             bank += proceeds
-            transactions.append(f"{d.isoformat()} SELL {sell_qty} {ticker} @ {price:.2f} = {proceeds:.2f}  # {tx.notes}")
+            transactions.append(f"{d.isoformat()} SELL {sell_qty} {ticker} @ {price:.2f} = {proceeds:.2f}, bank = {bank:.2f}  # {tx.notes}")
         elif tx.action.upper() == "BUY":
             buy_qty = int(tx.qty)
             cost = buy_qty * price
             holdings += buy_qty
             bank -= cost
-            transactions.append(f"{d.isoformat()} BUY {buy_qty} {ticker} @ {price:.2f} = {cost:.2f}  # {tx.notes}")
+            transactions.append(f"{d.isoformat()} BUY {buy_qty} {ticker} @ {price:.2f} = {cost:.2f}, bank = {bank:.2f}  # {tx.notes}")
         else:
             raise ValueError("Transaction action must be 'BUY' or 'SELL'")
 

@@ -7,7 +7,7 @@ from data.fetcher import HistoryFetcher
 from models.backtest import run_algorithm_backtest, build_algo_from_name, Transaction
 
 DEFAULT_TICKER = "NVDA"
-DEFAULT_QTY = 1000
+DEFAULT_QTY = 10000
 DEFAULT_END = datetime.now().date()
 DEFAULT_START = DEFAULT_END - timedelta(days=365)
 
