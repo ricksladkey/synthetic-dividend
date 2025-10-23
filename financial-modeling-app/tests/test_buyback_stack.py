@@ -372,6 +372,26 @@ class TestBuybackStackParameterVariations:
         assert stack_empty, "Stack should be empty at recovered ATH"
     
     
+    def test_granular_rebalance(self):
+        """Very granular rebalance trigger (4.44%) with V-shape recovery."""
+        rise = [100.0 + (i * 2.5) for i in range(40)]
+        fall = [200.0 - (i * 2.5) for i in range(40)]
+        rise2 = [100.0 + (i * 2.5) for i in range(40)]
+        
+        price_path = rise + fall + rise2
+        
+        sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
+            price_path=price_path,
+            rebalance_pct=4.44,
+            profit_sharing_pct=50.0
+        )
+        
+        assert sd_full == ath_only, \
+            f"Shares should match with granular rebalance: SD Full={sd_full}, ATH-Only={ath_only}"
+        
+        assert stack_empty, "Stack should be empty at recovered ATH"
+    
+    
     def test_zero_profit_sharing(self):
         """0% profit sharing (reinvest all) with recovery."""
         rise = [100.0 + (i * 2.5) for i in range(40)]
