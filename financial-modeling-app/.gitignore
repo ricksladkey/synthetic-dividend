@@ -56,6 +56,9 @@ Thumbs.db
 *.db
 *.sqlite3
 
+# Output files from compare/runner
+out-*
+
 # Logs
 *.log
 

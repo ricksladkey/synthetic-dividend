@@ -366,6 +366,38 @@ def run_algorithm_backtest(
     }
 
     # Notify the algorithm that the holding period has ended
+    # Compute a buy-and-hold baseline on the same date range for simple alpha comparison.
+    try:
+        # baseline holdings = initial_qty, baseline end value = initial_qty * end_price
+        baseline_end_value = initial_qty * final_price
+        baseline_total = baseline_end_value  # bank is zero for buy-and-hold
+        baseline_total_return = (baseline_total - start_val) / start_val if start_val != 0 else 0.0
+        if years > 0 and start_val > 0:
+            baseline_annualized = (baseline_total / start_val) ** (1.0 / years) - 1.0
+        else:
+            baseline_annualized = 0.0
+
+        baseline_summary = {
+            "start_date": first_idx,
+            "end_date": last_idx,
+            "start_price": start_price,
+            "end_price": final_price,
+            "start_value": start_val,
+            "end_value": baseline_end_value,
+            "total": baseline_total,
+            "total_return": baseline_total_return,
+            "annualized": baseline_annualized,
+        }
+
+        # volatility_alpha defined as difference in total_return vs buy-and-hold baseline
+        volatility_alpha = total_return - baseline_total_return
+
+        summary["baseline"] = baseline_summary
+        summary["volatility_alpha"] = volatility_alpha
+    except Exception:
+        # Do not fail the backtest if baseline computation has an edge-case; omit alpha
+        summary["baseline"] = None
+        summary["volatility_alpha"] = None
     algo_obj.on_end_holding()
 
     return transactions, summary
