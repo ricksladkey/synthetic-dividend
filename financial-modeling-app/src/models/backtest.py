@@ -49,7 +49,13 @@ class AlgorithmBase(ABC):
 
 
 class BuyAndHoldAlgorithm(AlgorithmBase):
-    """Buy-and-hold algorithm: never issues further transactions after initial buy."""
+    """Buy-and-hold algorithm: never issues further transactions after initial buy.
+    """
+    def __init__(self, rebalance_size_pct: float = 0.0, profit_sharing_pct: float = 0.0, params: Optional[dict] = None):
+        super().__init__(params)
+
+    def buy_holdings(self, holdings: int, current_price: float) -> None:
+        pass
 
     def on_day(self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame) -> Optional[Transaction]:
         return None
@@ -68,24 +74,67 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
     def __init__(self, rebalance_size_pct: float = 0.0, profit_sharing_pct: float = 0.0, params: Optional[dict] = None):
         super().__init__(params)
-        self.rebalance_size_pct = float(rebalance_size_pct)
-        self.profit_sharing_pct = float(profit_sharing_pct)
-        # bookkeeping fields
-        self.hi_price_qty = 0
-        self.lo_price_qty = 0
+        self.rebalance_size = float(rebalance_size_pct)/100.0
+        self.profit_sharing = float(profit_sharing_pct)/100.0
+
+        self.last_transaction_price: float
+
+        self.next_buy_price: float
+        self.next_buy_qty: float
+        self.next_sell_price: float
+        self.next_sell_qty: float
+
+    def buy_holdings(self, holdings: int, current_price: float) -> None:
+        
+        # Initialize the first buy parameters
+        self.place_orders(holdings, current_price)
+
+
+    def place_orders(self, holdings, current_price: float) -> None:
+
+        # Record the last transaction price
+        self.last_transaction_price = current_price
+        print(f"Placing orders at current price: {self.last_transaction_price}")
+
+        # Calculate next buy price and quantity
+        self.next_buy_price = self.last_transaction_price / (1 + self.rebalance_size)
+        next_buy_amount = (self.next_buy_price - self.last_transaction_price) * holdings * self.profit_sharing
+        self.next_buy_qty = int(next_buy_amount / self.next_buy_price + 0.5)
+
+        # Calculate next sell price and quantity
+        self.next_sell_price = self.last_transaction_price * (1 + self.rebalance_size)
+        next_sell_amount = (self.next_sell_price - self.last_transaction_price) * holdings * self.profit_sharing
+        self.next_sell_qty = int(next_sell_amount / self.next_sell_price + 0.5)
+
 
     def on_day(self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame) -> Optional[Transaction]:
-        # TODO: Implement Synthetic Dividend logic.
-        # For now, it's a stub that returns None (no transaction) but records hi/lo qty placeholders.
-        # hi_price_qty and lo_price_qty can be updated here based on price_row['High']/['Low'].
         try:
+
+            # Retrieve high and low prices for the day.
             high = price_row['High'] if 'High' in price_row.index else None
             low = price_row['Low'] if 'Low' in price_row.index else None
-            # mock-up bookkeeping: count days where high>low as increment
-            if high is not None and low is not None and high > low:
-                self.hi_price_qty += 1
-            else:
-                self.lo_price_qty += 0
+
+            # Validate and execute buy/sell orders based on price thresholds.
+            if low is not None and high is not None:
+
+                # Check for buy opportunity
+                if low <= self.next_buy_price <= high:
+
+                    # Place orders again to update next prices/quantities
+                    self.place_orders(holdings, self.next_buy_price)
+
+                    notes = f"{date_.isoformat()} BUY {holdings} @ {self.next_buy_price:.2f} = {self.next_buy_price * self.next_buy_qty:.2f}"
+                    return Transaction(action="BUY", qty=self.next_buy_qty, notes=notes)
+
+                # Check for sell opportunity
+                if low <= self.next_sell_price <= high:
+                    
+                    # Place orders again to update next prices/quantities
+                    self.place_orders(holdings, self.next_sell_price)
+
+                    notes = f"{date_.isoformat()} SELL {holdings} @ {self.next_sell_price:.2f} = {self.next_sell_price * self.next_sell_qty:.2f}"
+                    return Transaction(action="SELL", qty=self.next_sell_qty, notes=notes)
+
         except Exception:
             pass
         return None
@@ -99,6 +148,10 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
       - 'synthetic-dividend/9.15%/50%' -> SyntheticDividendAlgorithm(9.15, 50)
     """
     name = name.strip()
+
+    # Record the strategy name supplied by the user
+    print(f"Building algorithm from name: {name}")
+
     if name == "buy-and-hold":
         return BuyAndHoldAlgorithm()
 
@@ -108,8 +161,7 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
         profit = float(m.group(2))
         return SyntheticDividendAlgorithm(rebalance_size_pct=rebalance, profit_sharing_pct=profit)
 
-    # fallback
-    return BuyAndHoldAlgorithm()
+    raise ValueError(f"Unrecognized strategy name: {name}")
 
 
 def run_algorithm_backtest(
@@ -150,6 +202,7 @@ def run_algorithm_backtest(
 
     transactions: List[str] = []
 
+    # Set the initial conditions for the backtesting of the algorithm
     holdings = int(initial_qty)
     bank = 0.0
 
@@ -178,6 +231,10 @@ def run_algorithm_backtest(
     else:
         raise ValueError("algo must be AlgorithmBase instance or callable")
 
+    # initial buy holdings setup
+    algo_obj.buy_holdings(holdings, start_price)
+
+    # iterate through dates
     for i, d in enumerate(dates):
         if d == first_idx:
             # skip calling algo on the initial buy day (per spec: buy then call for consecutive days)

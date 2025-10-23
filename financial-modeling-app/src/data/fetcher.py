@@ -49,7 +49,15 @@ class HistoryFetcher:
         # yfinance uses inclusive start, exclusive end for the 'end' param; add a day buffer
         start_dt = datetime.combine(start, datetime.min.time()) - timedelta(days=1)
         end_dt = datetime.combine(end, datetime.min.time()) + timedelta(days=1)
-        df = yf.download(ticker, start=start_dt.strftime("%Y-%m-%d"), end=end_dt.strftime("%Y-%m-%d"), progress=False)
+        # Explicitly set auto_adjust to False to preserve previous behavior and
+        # avoid the FutureWarning about a changed default.
+        df = yf.download(
+            ticker,
+            start=start_dt.strftime("%Y-%m-%d"),
+            end=end_dt.strftime("%Y-%m-%d"),
+            progress=False,
+            auto_adjust=False,
+        )
         if df is None or df.empty:
             return pd.DataFrame()
         # keep Open/High/Low/Close to support strategies that use intraday extremes
