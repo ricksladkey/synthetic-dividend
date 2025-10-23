@@ -519,6 +519,166 @@ The algorithm tracks **bank balance statistics** to measure cash management effi
 
 This adjustment provides a more **realistic comparison** between strategies by accounting for the cost of capital.
 
+### Asset-Based Financial Adjustments: The Real-World Model
+
+**Critical Insight**: Fixed annual rates (10% reference, 4.5% risk-free) are **unrealistic** because they assume constant benchmark returns regardless of market conditions. The actual cost/benefit of capital varies with market performance.
+
+**Enhanced Model** (implemented October 2025):
+
+Instead of fixed rates, we now use **actual historical returns** from competing assets:
+- **Reference Asset** (default: VOO - Vanguard S&P 500 ETF)
+- **Risk-Free Asset** (default: BIL - SPDR 1-3 Month T-Bill ETF)
+
+**Why This Matters**:
+
+1. **Opportunity Cost Isn't a Penalty, It's a Comparison**
+   - When bank is negative, we're not "paying interest" to anyone
+   - We're measuring: "This capital could have been in VOO instead"
+   - If VOO drops 5% that day → our "cost" is negative (we SAVED 5%!)
+   - If VOO gains 2% that day → our cost is 2% of borrowed amount
+   - This captures **relative performance**, not absolute penalty
+
+2. **Example: Market Downturn Scenario**
+   - Strategy A: Aggressive trading, -$200K avg bank
+   - Strategy B: Conservative trading, -$50K avg bank
+   
+   **Old Model** (Fixed 10% rate):
+   - Strategy A: -$20K opportunity cost (looks terrible)
+   - Strategy B: -$5K opportunity cost (looks better)
+   
+   **New Model** (VOO actually returned -15% during period):
+   - Strategy A: **+$30K** (saved by staying in NVDA, not VOO!)
+   - Strategy B: **+$7.5K** (smaller benefit)
+   - Strategy A is **better** because it avoided VOO's decline
+
+3. **The Barbell Philosophy: Cash as Stability Mechanism**
+   - As the target asset rallies → profit-taking → **cash accumulates**
+   - This cash is **"gold"** - a barbell stabilizer for the portfolio
+   - Cash earns BIL returns (T-bill equivalent, essentially risk-free)
+   - Provides liquidity for distributions without forced selling
+   - Protects against having to sell during downturns
+
+4. **Daily Return Calculation**
+   - Fetch historical data for VOO and BIL during backtest period
+   - Calculate actual daily returns: `(today_price - yesterday_price) / yesterday_price`
+   - Apply these actual returns to each day's bank balance
+   - Sum across all days for total opportunity cost / risk-free gains
+
+**Realistic Interpretation**:
+- **Negative bank** = Capital "borrowed" from potential VOO investment
+- **Positive bank** = Cash earning risk-free rate (BIL)
+- **Neither is inherently good or bad** - depends on relative performance
+- During bull markets: negative bank has higher cost (missing VOO gains)
+- During bear markets: negative bank has negative cost (avoiding VOO losses)
+
+**Implementation Example** (NVDA 10/22/2024-10/22/2025):
+```
+Bank Min: -$262,230 (max margin used)
+Bank Avg: -$77,578 (mostly borrowed capital)
+Opportunity Cost (VOO): -$8,306
+Risk-Free Gains (BIL): +$33
+Net Financial Adjustment: +$8,339
+```
+
+The **negative opportunity cost** means VOO actually declined during days when we had borrowed capital - we benefited by being in NVDA instead!
+
+### Profit Sharing as Position Sizing: The Complete Strategy Spectrum
+
+**Key Insight**: Profit sharing percentage determines **long-term position trajectory**, not just profit-taking amount.
+
+**The Strategy Spectrum**:
+
+1. **0% Profit Sharing = Buy-and-Hold**
+   - Never take profits (never SELL except initial rebalance)
+   - Position stays at 100% of initial shares
+   - Equivalent to traditional buy-and-hold
+   - No bank account needed
+   - Maximum growth exposure, zero cash generation
+
+2. **100% Profit Sharing = Constant-Weight Rebalancing**
+   - Take full profits on every rebalance
+   - Position shrinks toward single maximum share allocation
+   - Equivalent to traditional constant-weight portfolio strategy
+   - Over 10 years: locks into single maximum exposure (in nominal terms!)
+   - Generates maximum cash, sacrifices long-term growth
+
+3. **50% Profit Sharing = Best of Both Worlds**
+   - Balanced profit-taking and position maintenance
+   - Position can grow over long periods while still generating cash
+   - Solves the **universal growth portfolio problem**: generating distributions without sufficient dividends
+   - Creates predictable rules-based cash flow
+   - Only unknown: **when** ATHs occur, not **whether** they occur
+
+**The 10-Year Perspective**:
+
+Why 50% beats 100% over long horizons:
+
+- **100% Case**: After first ATH, you lock into maximum share count
+  - Can never increase position size in nominal terms
+  - Inflation erodes real exposure over time
+  - Miss compound growth on the position itself
+  - Example: Start with 10,000 shares → peak at 11,000 → stay at ~11,000 forever
+
+- **50% Case**: Position can grow steadily
+  - Half of gains stay in the position
+  - Compound growth on growing share count
+  - Still generate meaningful cash distributions
+  - Example: Start with 10,000 → 12,000 → 14,000 → 16,000 over years
+  - Generates cash while maintaining growth exposure
+
+- **0% Case**: Maximum position growth, zero distributions
+  - Full compound growth exposure
+  - No cash for new opportunities or living expenses
+  - Forced to sell externally if cash needed
+
+**Why This Solves a Universal Problem**:
+
+Traditional growth portfolios face a dilemma:
+- **Dividends alone** are never enough for meaningful distributions (~1-2% yields)
+- **Forced selling** for cash creates timing risk and tax events
+- **Rebalancing to fixed income** sacrifices growth potential
+
+**Synthetic Dividend Solution**:
+- **Rules-based**: Profit-taking only at ATHs (strength, not weakness)
+- **Predictable**: Formula-driven, no discretionary timing
+- **Growth-preserving**: 50% keeps position growing with asset
+- **Distribution-generating**: Creates cash flow without external sales
+- **Only unknown**: WHEN ATHs occur, not IF they occur (assumes long-term growth)
+
+**Strategic Use Cases**:
+
+- **<0% (e.g., -25%)**: Accumulation mode - actually ADD on strength
+  - Use when building position in quality asset
+  - Buy more at ATHs instead of selling
+  - Negative bank grows (requires external capital source)
+
+- **0-25%**: Growth emphasis with minimal distributions
+  - Near buy-and-hold performance
+  - Small cash generation for optionality
+
+- **25-50%**: Balanced growth and distributions
+  - Sweet spot for most scenarios
+  - Meaningful cash flow + position growth
+
+- **50-75%**: Income emphasis with growth participation
+  - Higher distributions, slower position growth
+  - Good for transitioning to distribution phase
+
+- **75-100%**: Maximum distributions, position maintenance
+  - Position plateaus at max exposure
+  - Maximum cash generation
+
+- **>100% (e.g., 125%)**: De-risking mode
+  - Actively reduce position at ATHs
+  - Rotate out of concentrated holdings
+  - Build cash reserves for redeployment
+
+**Design Philosophy Summary**:
+
+The Synthetic Dividend algorithm is a **flexible position-sizing tool** disguised as a profit-taking strategy. By adjusting a single parameter (profit sharing percentage), you control the position trajectory from aggressive accumulation (<0%) to maximum de-risking (>100%), while the rebalancing trigger determines transaction frequency and volatility harvesting efficiency.
+
+The 50% default represents the **optimal balance** for most growth-oriented portfolios: maintain long-term compound exposure while generating predictable cash flow for distributions and new opportunities, all governed by simple rules that require no market timing or discretionary decisions.
+
 ---
 
 **Last Updated**: October 2025
