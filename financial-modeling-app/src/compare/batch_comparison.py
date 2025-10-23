@@ -47,7 +47,9 @@ def run_single_backtest(
     start_date: date,
     end_date: date,
     algo_name: str,
-    initial_qty: int = 10000
+    initial_qty: int = 10000,
+    reference_return_pct: float = 10.0,
+    risk_free_rate_pct: float = 4.5,
 ) -> Dict[str, Any]:
     """Run single backtest and extract key metrics.
     
@@ -58,6 +60,8 @@ def run_single_backtest(
         end_date: Backtest end date
         algo_name: Algorithm identifier string
         initial_qty: Initial share quantity
+        reference_return_pct: Annual reference return for opportunity cost (default: 10% S&P 500)
+        risk_free_rate_pct: Annual risk-free rate for cash (default: 4.5% T-bills)
         
     Returns:
         Dict with extracted metrics for CSV row
@@ -70,10 +74,12 @@ def run_single_backtest(
             initial_qty=initial_qty,
             start_date=start_date,
             end_date=end_date,
-            algo=algo
+            algo=algo,
+            reference_return_pct=reference_return_pct,
+            risk_free_rate_pct=risk_free_rate_pct,
         )
         
-        # Extract key metrics
+        # Extract key metrics including new bank statistics
         return {
             "algorithm": algo_name,
             "start_date": summary["start_date"].isoformat(),
@@ -84,6 +90,13 @@ def run_single_backtest(
             "final_shares": summary["holdings"],
             "final_value": summary["end_value"],
             "bank": summary.get("bank", 0.0),
+            "bank_min": summary.get("bank_min", 0.0),
+            "bank_max": summary.get("bank_max", 0.0),
+            "bank_avg": summary.get("bank_avg", 0.0),
+            "bank_negative_count": summary.get("bank_negative_count", 0),
+            "bank_positive_count": summary.get("bank_positive_count", 0),
+            "opportunity_cost": summary.get("opportunity_cost", 0.0),
+            "risk_free_gains": summary.get("risk_free_gains", 0.0),
             "total": summary.get("total", summary["end_value"]),
             "total_return_pct": summary["total_return"] * 100,
             "annualized_return_pct": summary["annualized"] * 100,
@@ -255,6 +268,13 @@ def write_csv(results: List[Dict[str, Any]], output_path: str) -> None:
         "final_shares",
         "final_value",
         "bank",
+        "bank_min",
+        "bank_max",
+        "bank_avg",
+        "bank_negative_count",
+        "bank_positive_count",
+        "opportunity_cost",
+        "risk_free_gains",
         "total",
         "total_return_pct",
         "annualized_return_pct",

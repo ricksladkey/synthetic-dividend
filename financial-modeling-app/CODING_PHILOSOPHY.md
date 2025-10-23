@@ -423,3 +423,103 @@ This philosophy document should evolve with the codebase. When you discover a pa
 
 **Last Updated**: October 2025
 **Contributors**: Project maintainers and code reviewers
+
+
+---
+
+
+## Appendix: Synthetic Dividend Algorithm Design Philosophy
+
+### Profit Sharing Ratio: Strategic Considerations
+
+The **profit sharing ratio** is a critical parameter that controls the balance between profit-taking and long-term growth.
+
+#### The 50% Sweet Spot
+
+**Profit sharing of 50% is a strategic value** that balances immediate profit realization while allowing continued position growth. This ratio ensures:
+
+1. **Half of volatility gains are captured** as cash (bank balance)
+2. **Half of the position remains invested** to compound long-term
+3. **Over extended periods**, the position fully capitalizes on growth trends
+4. **Short-term volatility** provides regular income without sacrificing long-term exposure
+
+In bull markets (like the 1-year NVDA example showing 29% returns), the growth penalty from profit-taking is minimal because the remaining position continues to appreciate substantially.
+
+#### Extended Range: Beyond 0-100%
+
+The algorithm **mathematically supports profit sharing values outside the conventional 0-100% range**, with predictable and useful effects:
+
+**Profit Sharing > 100%**:
+- **Systematically reduces position size** as new all-time highs are reached
+- Sells more shares than the rebalance would naturally dictate
+- Useful for **position exit strategies** or **de-risking** at targets
+- Example: 150% profit sharing will steadily convert equity to cash on uptrends
+
+**Profit Sharing < 0% (Negative)**:
+- **Steadily increases investment from cash** as asset price rises
+- Buys additional shares even when selling would normally occur
+- Useful for **dollar-cost averaging** into strength
+- Example: -50% profit sharing converts rallies into accumulation opportunities
+
+**Practical Implication**: The algorithm becomes a flexible position-sizing tool where profit sharing controls the **direction and rate** of position changes relative to price movements.
+
+#### Rebalancing Trigger vs. Profit Sharing
+
+**Key Insight**: Varying the **rebalancing trigger** (e.g., 5%, 9.05%, 15%, 25%) has significantly more impact on returns than varying the profit sharing ratio.
+
+**Why?**
+- **Rebalancing trigger** determines transaction frequency and volatility harvesting opportunities
+- Lower triggers (5-7.5%) → more frequent trades → more alpha from volatility
+- Higher triggers (15-25%) → fewer trades → lower transaction costs but less harvesting
+- **Profit sharing** primarily affects position trajectory, not opportunity identification
+
+**Empirical Evidence** (from batch comparison results):
+- `sd/7.5%/100%` → 34.14% return (67 transactions)
+- `sd/7.5%/50%` → 31.41% return (67 transactions)
+- `sd/25%/100%` → 33.14% return (23 transactions)
+- `sd/25%/50%` → 30.14% return (23 transactions)
+
+Changing rebalance threshold from 7.5% to 25% reduces transaction count by 66% while maintaining similar returns. Changing profit sharing within same rebalance threshold shows smaller impact (~2-3% difference).
+
+**Design Recommendation**: 
+1. **Optimize rebalancing trigger first** based on asset volatility and transaction costs
+2. **Set profit sharing to 50%** as the balanced default
+3. **Adjust profit sharing** only for specific strategic goals (accumulation, de-risking)
+
+### Bank Balance and Opportunity Costs
+
+The algorithm tracks **bank balance statistics** to measure cash management efficiency:
+
+**Metrics Tracked**:
+- `bank_min`: Most negative balance (maximum margin used)
+- `bank_max`: Highest cash balance
+- `bank_avg`: Average cash position over backtest period
+- `bank_negative_count`: Number of days with negative balance (borrowing)
+- `bank_positive_count`: Number of days with positive balance (cash earning interest)
+
+**Financial Adjustments**:
+
+1. **Opportunity Cost** (when bank < 0):
+   - Represents the cost of borrowing to maintain position
+   - Calculated using reference return (e.g., S&P 500 TR ~10% annually)
+   - Formula: `sum(abs(negative_bank_balance) * daily_reference_rate)`
+   - Penalizes strategies that require sustained margin
+
+2. **Risk-Free Gains** (when bank > 0):
+   - Represents interest earned on cash reserves
+   - Calculated using risk-free rate (e.g., Treasury bills ~4.5% annually)
+   - Formula: `sum(positive_bank_balance * daily_risk_free_rate)`
+   - Rewards strategies that maintain cash buffers
+
+**Interpretation**: Strategies with large negative bank balances incur opportunity costs (foregone returns from alternative investments). Strategies with large positive balances earn risk-free returns but may sacrifice growth.
+
+**Example**:
+- Algorithm with avg bank = -$50,000 over 1 year at 10% reference return
+- Opportunity cost ≈ $5,000 (reduces net return by ~0.35% on $1.4M portfolio)
+
+This adjustment provides a more **realistic comparison** between strategies by accounting for the cost of capital.
+
+---
+
+**Last Updated**: October 2025
+**Contributors**: Project maintainers and code reviewers

@@ -439,6 +439,8 @@ def run_algorithm_backtest(
     end_date: date,
     algo: Optional[Union[AlgorithmBase, Callable]] = None,
     algo_params: Optional[Dict[str, Any]] = None,
+    reference_return_pct: float = 0.0,
+    risk_free_rate_pct: float = 0.0,
 ) -> Tuple[List[str], Dict[str, Any]]:
     """Execute backtest of trading algorithm against historical price data.
 
@@ -448,6 +450,7 @@ def run_algorithm_backtest(
     3. SELL: increases bank, decreases holdings (capped at current holdings)
     4. BUY: decreases bank (may go negative), increases holdings
     5. Compute final portfolio value and returns vs buy-and-hold baseline
+    6. Calculate opportunity cost (negative bank) and risk-free gains (positive bank)
     
     Args:
         df: Historical OHLC price data (indexed by date)
@@ -457,11 +460,16 @@ def run_algorithm_backtest(
         end_date: Backtest end date (inclusive)
         algo: Algorithm instance or callable (defaults to buy-and-hold)
         algo_params: Optional parameters dict (for callable algos)
+        reference_return_pct: Annual return for opportunity cost calc (e.g., S&P 500 TR)
+                             Applied when bank balance is negative (borrowing cost)
+        risk_free_rate_pct: Annual return on cash (e.g., Treasury bill rate)
+                           Applied when bank balance is positive (interest earned)
         
     Returns:
         Tuple of (transaction_strings, summary_dict)
         - transaction_strings: List of human-readable transaction logs
-        - summary_dict: Metrics including returns, holdings, bank, baseline comparison
+        - summary_dict: Metrics including returns, holdings, bank, baseline comparison,
+                       opportunity cost, and risk-free gains
     """
     if df is None or df.empty:
         raise ValueError("Empty price data")
@@ -486,6 +494,11 @@ def run_algorithm_backtest(
     # Initialize portfolio state
     holdings: int = int(initial_qty)
     bank: float = 0.0  # Cash balance (may go negative)
+
+    # Bank balance tracking for statistics
+    bank_history: List[float] = [0.0]  # Track bank balance each day
+    bank_min: float = 0.0
+    bank_max: float = 0.0
 
     # Record initial purchase
     start_value = holdings * start_price
@@ -568,6 +581,11 @@ def run_algorithm_backtest(
                 f"{d.isoformat()} SELL {sell_qty} {ticker} @ {price:.2f} = {proceeds:.2f}, "
                 f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
             )
+            # Track bank balance statistics
+            bank_history.append(bank)
+            bank_min = min(bank_min, bank)
+            bank_max = max(bank_max, bank)
+            
         # Execute BUY transaction
         elif tx.action.upper() == "BUY":
             buy_qty = int(tx.qty)
@@ -578,6 +596,11 @@ def run_algorithm_backtest(
                 f"{d.isoformat()} BUY {buy_qty} {ticker} @ {price:.2f} = {cost:.2f}, "
                 f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
             )
+            # Track bank balance statistics
+            bank_history.append(bank)
+            bank_min = min(bank_min, bank)
+            bank_max = max(bank_max, bank)
+            
         else:
             raise ValueError("Transaction action must be 'BUY' or 'SELL'")
 
@@ -598,6 +621,28 @@ def run_algorithm_backtest(
     else:
         annualized = 0.0
 
+    # Calculate bank balance statistics
+    bank_avg: float = sum(bank_history) / len(bank_history) if bank_history else 0.0
+    bank_negative_count = sum(1 for b in bank_history if b < 0)
+    bank_positive_count = sum(1 for b in bank_history if b > 0)
+
+    # Calculate opportunity cost and risk-free gains
+    # Daily rates (approximate)
+    daily_reference_rate = (1 + reference_return_pct / 100.0) ** (1.0 / 365.25) - 1.0
+    daily_risk_free_rate = (1 + risk_free_rate_pct / 100.0) ** (1.0 / 365.25) - 1.0
+    
+    # Sum opportunity cost (negative bank balance * reference rate per day)
+    opportunity_cost_total = 0.0
+    risk_free_gains_total = 0.0
+    
+    for bank_balance in bank_history:
+        if bank_balance < 0:
+            # Negative balance: opportunity cost of borrowed money
+            opportunity_cost_total += abs(bank_balance) * daily_reference_rate
+        elif bank_balance > 0:
+            # Positive balance: risk-free interest earned on cash
+            risk_free_gains_total += bank_balance * daily_risk_free_rate
+
     # Build summary dict
     summary: Dict[str, Any] = {
         "ticker": ticker,
@@ -609,6 +654,13 @@ def run_algorithm_backtest(
         "end_value": end_value,
         "holdings": holdings,
         "bank": bank,
+        "bank_min": bank_min,
+        "bank_max": bank_max,
+        "bank_avg": bank_avg,
+        "bank_negative_count": bank_negative_count,
+        "bank_positive_count": bank_positive_count,
+        "opportunity_cost": opportunity_cost_total,
+        "risk_free_gains": risk_free_gains_total,
         "total": total,
         "total_return": total_return,
         "annualized": annualized,
