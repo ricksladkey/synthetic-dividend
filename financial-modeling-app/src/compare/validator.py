@@ -88,7 +88,7 @@ def compare_algorithms(
     end_date: date,
     rebalance_pct: float,
     profit_pct: float,
-    initial_qty: int = 1000
+    initial_qty: int = 10000
 ) -> Dict:
     """Compare full synthetic-dividend with ATH-only variant."""
     

@@ -34,8 +34,8 @@ def main(argv):
         return 2
 
     # strategy may contain spaces or special chars
-    # optional last argument (if it's a number) is quantity; default to 1000
-    qty = 1000
+    # optional last argument (if it's a number) is quantity; default to 10000
+    qty = 10000
     strategy_args = argv[3:]
     
     # Check if last arg is a number (quantity)
