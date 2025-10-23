@@ -48,8 +48,12 @@ def run_single_backtest(
     end_date: date,
     algo_name: str,
     initial_qty: int = 10000,
-    reference_return_pct: float = 10.0,
-    risk_free_rate_pct: float = 4.5,
+    reference_return_pct: float = 0.0,
+    risk_free_rate_pct: float = 0.0,
+    reference_asset_df: pd.DataFrame = None,
+    risk_free_asset_df: pd.DataFrame = None,
+    reference_asset_ticker: str = "",
+    risk_free_asset_ticker: str = "",
 ) -> Dict[str, Any]:
     """Run single backtest and extract key metrics.
     
@@ -60,8 +64,12 @@ def run_single_backtest(
         end_date: Backtest end date
         algo_name: Algorithm identifier string
         initial_qty: Initial share quantity
-        reference_return_pct: Annual reference return for opportunity cost (default: 10% S&P 500)
-        risk_free_rate_pct: Annual risk-free rate for cash (default: 4.5% T-bills)
+        reference_return_pct: Annual reference return for opportunity cost (fallback, default 0%)
+        risk_free_rate_pct: Annual risk-free rate for cash (fallback, default 0%)
+        reference_asset_df: Historical data for reference asset (e.g., VOO)
+        risk_free_asset_df: Historical data for risk-free asset (e.g., BIL)
+        reference_asset_ticker: Ticker symbol for reference asset
+        risk_free_asset_ticker: Ticker symbol for risk-free asset
         
     Returns:
         Dict with extracted metrics for CSV row
@@ -77,6 +85,10 @@ def run_single_backtest(
             algo=algo,
             reference_return_pct=reference_return_pct,
             risk_free_rate_pct=risk_free_rate_pct,
+            reference_asset_df=reference_asset_df,
+            risk_free_asset_df=risk_free_asset_df,
+            reference_asset_ticker=reference_asset_ticker,
+            risk_free_asset_ticker=risk_free_asset_ticker,
         )
         
         # Extract key metrics including new bank statistics
@@ -152,7 +164,9 @@ def run_batch_comparison(
     start_date: date,
     end_date: date,
     initial_qty: int = 10000,
-    configs: List[str] = None
+    configs: List[str] = None,
+    reference_asset: str = "VOO",
+    risk_free_asset: str = "BIL"
 ) -> List[Dict[str, Any]]:
     """Run backtest for all configurations and return results.
     
@@ -162,6 +176,8 @@ def run_batch_comparison(
         end_date: Backtest end date
         initial_qty: Initial share quantity
         configs: List of algorithm configs (None = use defaults)
+        reference_asset: Ticker for reference asset (default: VOO for S&P 500)
+        risk_free_asset: Ticker for risk-free asset (default: BIL for T-bills)
         
     Returns:
         List of result dicts, one per configuration
@@ -175,6 +191,31 @@ def run_batch_comparison(
         raise ValueError(f"No price data available for {ticker}")
     
     print(f"Data loaded: {len(df)} trading days")
+    
+    # Fetch reference and risk-free asset data
+    print(f"Fetching {reference_asset} (reference asset)...", end=" ", flush=True)
+    reference_df = None
+    try:
+        reference_df = fetcher.get_history(reference_asset, start_date, end_date)
+        if reference_df.empty:
+            print(f"Warning: No data, using fallback rate")
+            reference_df = None
+        else:
+            print(f"OK {len(reference_df)} days")
+    except Exception as e:
+        print(f"Warning: {e}, using fallback rate")
+    
+    print(f"Fetching {risk_free_asset} (risk-free asset)...", end=" ", flush=True)
+    risk_free_df = None
+    try:
+        risk_free_df = fetcher.get_history(risk_free_asset, start_date, end_date)
+        if risk_free_df.empty:
+            print(f"Warning: No data, using fallback rate")
+            risk_free_df = None
+        else:
+            print(f"OK {len(risk_free_df)} days")
+    except Exception as e:
+        print(f"Warning: {e}, using fallback rate")
     
     # Use default configs if not provided
     if configs is None:
@@ -194,7 +235,11 @@ def run_batch_comparison(
             start_date=start_date,
             end_date=end_date,
             algo_name=algo_name,
-            initial_qty=initial_qty
+            initial_qty=initial_qty,
+            reference_asset_df=reference_df,
+            risk_free_asset_df=risk_free_df,
+            reference_asset_ticker=reference_asset,
+            risk_free_asset_ticker=risk_free_asset
         )
         
         # Add ticker for reference
@@ -205,7 +250,7 @@ def run_batch_comparison(
         if "error" in result:
             print(f"ERROR: {result['error']}")
         else:
-            print(f"✓ Return: {result['total_return_pct']:.2f}%")
+            print(f"OK Return: {result['total_return_pct']:.2f}%")
     
     return results
 
@@ -294,7 +339,7 @@ def write_csv(results: List[Dict[str, Any]], output_path: str) -> None:
             row = {col: result.get(col) for col in columns}
             writer.writerow(row)
     
-    print(f"\n✓ Results written to: {output_path}")
+    print(f"\nOK Results written to: {output_path}")
 
 
 def print_summary(results: List[Dict[str, Any]]) -> None:

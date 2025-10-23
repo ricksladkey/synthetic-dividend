@@ -441,6 +441,10 @@ def run_algorithm_backtest(
     algo_params: Optional[Dict[str, Any]] = None,
     reference_return_pct: float = 0.0,
     risk_free_rate_pct: float = 0.0,
+    reference_asset_df: Optional[pd.DataFrame] = None,
+    risk_free_asset_df: Optional[pd.DataFrame] = None,
+    reference_asset_ticker: str = "",
+    risk_free_asset_ticker: str = "",
 ) -> Tuple[List[str], Dict[str, Any]]:
     """Execute backtest of trading algorithm against historical price data.
 
@@ -460,10 +464,16 @@ def run_algorithm_backtest(
         end_date: Backtest end date (inclusive)
         algo: Algorithm instance or callable (defaults to buy-and-hold)
         algo_params: Optional parameters dict (for callable algos)
-        reference_return_pct: Annual return for opportunity cost calc (e.g., S&P 500 TR)
+        reference_return_pct: Annual return for opportunity cost calc (fallback if no asset data)
                              Applied when bank balance is negative (borrowing cost)
-        risk_free_rate_pct: Annual return on cash (e.g., Treasury bill rate)
+        risk_free_rate_pct: Annual return on cash (fallback if no asset data)
                            Applied when bank balance is positive (interest earned)
+        reference_asset_df: Historical price data for reference asset (e.g., VOO)
+                           If provided, uses actual daily returns instead of fixed rate
+        risk_free_asset_df: Historical price data for risk-free asset (e.g., BIL)
+                           If provided, uses actual daily returns instead of fixed rate
+        reference_asset_ticker: Ticker symbol for reference asset (for reporting)
+        risk_free_asset_ticker: Ticker symbol for risk-free asset (for reporting)
         
     Returns:
         Tuple of (transaction_strings, summary_dict)
@@ -485,6 +495,40 @@ def run_algorithm_backtest(
     except ValueError:
         raise ValueError("No overlapping trading days in requested date range.")
 
+    # Prepare reference asset daily returns (for opportunity cost)
+    reference_returns: Dict[date, float] = {}
+    if reference_asset_df is not None and not reference_asset_df.empty:
+        ref_indexed = reference_asset_df.copy()
+        ref_indexed.index = pd.to_datetime(ref_indexed.index).date
+        if "Close" in ref_indexed.columns:
+            # Calculate daily returns: (today - yesterday) / yesterday
+            close_prices = ref_indexed["Close"].values  # Extract as numpy array
+            dates = ref_indexed.index.tolist()
+            for i in range(1, len(close_prices)):
+                prev_price = float(close_prices[i-1])
+                curr_price = float(close_prices[i])
+                if prev_price > 0:
+                    reference_returns[dates[i]] = (curr_price - prev_price) / prev_price
+
+    # Prepare risk-free asset daily returns (for cash interest)
+    risk_free_returns: Dict[date, float] = {}
+    if risk_free_asset_df is not None and not risk_free_asset_df.empty:
+        rf_indexed = risk_free_asset_df.copy()
+        rf_indexed.index = pd.to_datetime(rf_indexed.index).date
+        if "Close" in rf_indexed.columns:
+            # Calculate daily returns: (today - yesterday) / yesterday
+            close_prices = rf_indexed["Close"].values  # Extract as numpy array
+            dates = rf_indexed.index.tolist()
+            for i in range(1, len(close_prices)):
+                prev_price = float(close_prices[i-1])
+                curr_price = float(close_prices[i])
+                if prev_price > 0:
+                    risk_free_returns[dates[i]] = (curr_price - prev_price) / prev_price
+
+    # Fallback daily rates (if asset data not available)
+    daily_reference_rate_fallback = (1 + reference_return_pct / 100.0) ** (1.0 / 365.25) - 1.0
+    daily_risk_free_rate_fallback = (1 + risk_free_rate_pct / 100.0) ** (1.0 / 365.25) - 1.0
+
     # Extract start/end prices for return calculations
     start_price: float = _get_close_scalar(df_indexed, first_idx, "Close")
     end_price: float = _get_close_scalar(df_indexed, last_idx, "Close")
@@ -495,8 +539,8 @@ def run_algorithm_backtest(
     holdings: int = int(initial_qty)
     bank: float = 0.0  # Cash balance (may go negative)
 
-    # Bank balance tracking for statistics
-    bank_history: List[float] = [0.0]  # Track bank balance each day
+    # Bank balance tracking for statistics (list of (date, balance) tuples)
+    bank_history: List[Tuple[date, float]] = [(first_idx, 0.0)]
     bank_min: float = 0.0
     bank_max: float = 0.0
 
@@ -582,7 +626,7 @@ def run_algorithm_backtest(
                 f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
             )
             # Track bank balance statistics
-            bank_history.append(bank)
+            bank_history.append((d, bank))
             bank_min = min(bank_min, bank)
             bank_max = max(bank_max, bank)
             
@@ -597,7 +641,7 @@ def run_algorithm_backtest(
                 f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
             )
             # Track bank balance statistics
-            bank_history.append(bank)
+            bank_history.append((d, bank))
             bank_min = min(bank_min, bank)
             bank_max = max(bank_max, bank)
             
@@ -622,26 +666,26 @@ def run_algorithm_backtest(
         annualized = 0.0
 
     # Calculate bank balance statistics
-    bank_avg: float = sum(bank_history) / len(bank_history) if bank_history else 0.0
-    bank_negative_count = sum(1 for b in bank_history if b < 0)
-    bank_positive_count = sum(1 for b in bank_history if b > 0)
+    bank_balances = [b for d, b in bank_history]
+    bank_avg: float = sum(bank_balances) / len(bank_balances) if bank_balances else 0.0
+    bank_negative_count = sum(1 for b in bank_balances if b < 0)
+    bank_positive_count = sum(1 for b in bank_balances if b > 0)
 
-    # Calculate opportunity cost and risk-free gains
-    # Daily rates (approximate)
-    daily_reference_rate = (1 + reference_return_pct / 100.0) ** (1.0 / 365.25) - 1.0
-    daily_risk_free_rate = (1 + risk_free_rate_pct / 100.0) ** (1.0 / 365.25) - 1.0
-    
-    # Sum opportunity cost (negative bank balance * reference rate per day)
+    # Calculate opportunity cost and risk-free gains using actual asset returns
     opportunity_cost_total = 0.0
     risk_free_gains_total = 0.0
     
-    for bank_balance in bank_history:
+    for d, bank_balance in bank_history:
         if bank_balance < 0:
             # Negative balance: opportunity cost of borrowed money
-            opportunity_cost_total += abs(bank_balance) * daily_reference_rate
+            # Use actual reference asset return for this day, or fallback to fixed rate
+            daily_return = reference_returns.get(d, daily_reference_rate_fallback)
+            opportunity_cost_total += abs(bank_balance) * daily_return
         elif bank_balance > 0:
             # Positive balance: risk-free interest earned on cash
-            risk_free_gains_total += bank_balance * daily_risk_free_rate
+            # Use actual risk-free asset return for this day, or fallback to fixed rate
+            daily_return = risk_free_returns.get(d, daily_risk_free_rate_fallback)
+            risk_free_gains_total += bank_balance * daily_return
 
     # Build summary dict
     summary: Dict[str, Any] = {

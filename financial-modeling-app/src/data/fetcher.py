@@ -6,7 +6,7 @@ Intelligently extends cache when requested dates exceed cached range.
 import os
 import pickle
 from datetime import date, datetime, timedelta
-from typing import Optional
+from typing import Dict, List, Optional
 import pandas as pd
 
 # Optional dependency: gracefully degrade if yfinance unavailable
@@ -172,3 +172,38 @@ class HistoryFetcher:
         mask = (pd.to_datetime(updated.index).date >= start_date) & \
                (pd.to_datetime(updated.index).date <= end_date)
         return updated.loc[mask].copy()
+
+    def get_multiple_histories(
+        self,
+        tickers: List[str],
+        start_date: date,
+        end_date: date
+    ) -> Dict[str, pd.DataFrame]:
+        """Fetch OHLC history for multiple tickers in parallel (same date range).
+        
+        This is a convenience wrapper around get_history() that fetches data
+        for multiple tickers and returns them as a dictionary. Each ticker
+        is fetched independently using the same caching logic.
+        
+        Args:
+            tickers: List of stock symbols to fetch
+            start_date: Start date (inclusive)
+            end_date: End date (inclusive)
+            
+        Returns:
+            Dict mapping ticker symbol to DataFrame (may be empty if no data)
+            
+        Example:
+            >>> fetcher = HistoryFetcher()
+            >>> data = fetcher.get_multiple_histories(
+            ...     ["NVDA", "VOO", "BIL"],
+            ...     date(2024, 1, 1),
+            ...     date(2024, 12, 31)
+            ... )
+            >>> nvda_df = data["NVDA"]
+            >>> voo_df = data["VOO"]
+        """
+        result: Dict[str, pd.DataFrame] = {}
+        for ticker in tickers:
+            result[ticker] = self.get_history(ticker, start_date, end_date)
+        return result
