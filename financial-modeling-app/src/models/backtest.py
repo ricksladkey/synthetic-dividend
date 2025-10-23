@@ -235,6 +235,10 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         # All-time high tracker (ATH-only mode)
         self.ath_price: float = 0.0
 
+        # Buyback stack for FIFO unwinding (full mode only)
+        # Each entry: (purchase_price, quantity) for exact lot tracking
+        self.buyback_stack: List[Tuple[float, int]] = []
+
         # State for pending orders
         self.last_transaction_price: float
         self.next_buy_price: float
@@ -344,7 +348,11 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                 # Fill at open if market gapped down, else at limit price
                 actual_price = min(self.next_buy_price, open_price) if open_price is not None else self.next_buy_price
                 
+                # Push buyback to stack for FIFO unwinding
+                self.buyback_stack.append((actual_price, self.next_buy_qty))
+                
                 # Calculate alpha: profit from buying back cheaper shares
+                # Note: Alpha will be realized when we unwind this lot during SELL
                 current_value = holdings * actual_price
                 profit = (self.last_transaction_price - actual_price) * self.next_buy_qty
                 alpha = (profit / current_value) * 100 if current_value != 0 else 0.0
@@ -364,7 +372,31 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                 # Fill at open if market gapped up, else at limit price
                 actual_price = max(self.next_sell_price, open_price) if open_price is not None else self.next_sell_price
                 
-                notes = f"Taking profits: limit price = {self.next_sell_price:.2f}, actual price = {actual_price:.2f}"
+                # Unwind buyback stack FIFO before selling initial shares
+                sell_qty_remaining = self.next_sell_qty
+                unwound_from_stack = 0
+                
+                while sell_qty_remaining > 0 and self.buyback_stack:
+                    buy_price, buy_qty = self.buyback_stack[0]
+                    to_unwind = min(sell_qty_remaining, buy_qty)
+                    
+                    # This lot is now fully or partially unwound
+                    if to_unwind == buy_qty:
+                        # Fully unwound - remove from stack
+                        self.buyback_stack.pop(0)
+                    else:
+                        # Partially unwound - update remaining quantity
+                        self.buyback_stack[0] = (buy_price, buy_qty - to_unwind)
+                    
+                    unwound_from_stack += to_unwind
+                    sell_qty_remaining -= to_unwind
+                
+                # Note about what we unwound
+                if unwound_from_stack > 0:
+                    notes = f"Taking profits: limit price = {self.next_sell_price:.2f}, actual price = {actual_price:.2f} (unwound {unwound_from_stack} from buyback stack)"
+                else:
+                    notes = f"Taking profits: limit price = {self.next_sell_price:.2f}, actual price = {actual_price:.2f}"
+                
                 transaction = Transaction(action="SELL", qty=self.next_sell_qty, notes=notes)
 
                 # Recompute orders with reduced holdings
@@ -383,6 +415,12 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         """Print summary statistics after backtest completes."""
         if self.buyback_enabled:
             print(f"Synthetic Dividend Algorithm total volatility alpha: {self.total_volatility_alpha:.2f}%")
+            # Show buyback stack status
+            if self.buyback_stack:
+                total_stack_qty = sum(qty for _, qty in self.buyback_stack)
+                print(f"  Buyback stack: {len(self.buyback_stack)} lots with {total_stack_qty} total shares not yet unwound")
+            else:
+                print(f"  Buyback stack: empty (all lots unwound)")
         else:
             print(f"ATH-only algorithm: final ATH = ${self.ath_price:.2f}")
 
