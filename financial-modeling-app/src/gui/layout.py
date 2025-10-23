@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from data.fetcher import HistoryFetcher
-from models.backtest import buy_and_hold_backtest
+from models.backtest import run_algorithm_backtest, default_algo, Transaction
 
 DEFAULT_TICKER = "NVDA"
 DEFAULT_QTY = 1000
@@ -103,7 +103,7 @@ class FinancialModelingApp:
             return
 
         try:
-            transactions, summary = buy_and_hold_backtest(df, ticker, qty, start_date, end_date)
+            transactions, summary = run_algorithm_backtest(df, ticker, qty, start_date, end_date, algo=default_algo)
         except Exception as e:
             messagebox.showerror("Backtest error", str(e))
             return

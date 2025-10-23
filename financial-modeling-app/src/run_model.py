@@ -50,7 +50,7 @@ def main(argv):
 
     try:
         from src.data.fetcher import HistoryFetcher
-        from src.models.backtest import buy_and_hold_backtest
+        from src.models.backtest import run_algorithm_backtest, default_algo
     except Exception as e:
         print("Failed to import runtime modules:", e)
         return 3
@@ -67,7 +67,7 @@ def main(argv):
         return 5
 
     try:
-        transactions, summary = buy_and_hold_backtest(df, ticker, qty, start, end)
+        transactions, summary = run_algorithm_backtest(df, ticker, qty, start, end, algo=default_algo)
     except Exception as e:
         print("Backtest error:", e)
         return 6
@@ -85,6 +85,9 @@ def main(argv):
     print(f"End Date: {summary['end_date'].isoformat()}")
     print(f"End Price: {summary['end_price']:.2f}")
     print(f"End Value: {summary['end_value']:.2f}")
+    print()
+    print(f"Bank: {summary.get('bank', 0.0):.2f}")
+    print(f"Total (holdings + bank): {summary.get('total', summary['end_value']):.2f}")
     print()
     print(f"Total return: {summary['total_return']*100:.2f}%")
     print(f"Annualized return: {summary['annualized']*100:.2f}% (over {summary['years']:.3f} years)")
