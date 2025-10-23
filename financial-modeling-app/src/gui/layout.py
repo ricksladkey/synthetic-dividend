@@ -1,58 +1,158 @@
-from tkinter import Tk, Label, Entry, Button, Frame
+import tkinter as tk
+from tkinter import ttk, messagebox
+from datetime import datetime, timedelta
+import pandas as pd
+
+from data.fetcher import HistoryFetcher
+
+DEFAULT_TICKER = "NVDA"
+DEFAULT_QTY = 1000
+DEFAULT_END = datetime.now().date()
+DEFAULT_START = DEFAULT_END - timedelta(days=365)
+
 
 class FinancialModelingApp:
     def __init__(self, master):
         self.master = master
         master.title("Financial Modeling Application")
 
-        # Create a frame for the input fields
-        self.frame = Frame(master)
-        self.frame.pack(padx=10, pady=10)
+        self.fetcher = HistoryFetcher()
 
-        # Stock Ticker
-        self.ticker_label = Label(self.frame, text="Stock Ticker:")
-        self.ticker_label.grid(row=0, column=0, sticky="e")
-        self.ticker_entry = Entry(self.frame)
-        self.ticker_entry.grid(row=0, column=1)
+        # Main frame
+        self.frame = ttk.Frame(master)
+        self.frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Quantity of Shares
-        self.quantity_label = Label(self.frame, text="Quantity of Shares:")
-        self.quantity_label.grid(row=1, column=0, sticky="e")
-        self.quantity_entry = Entry(self.frame)
-        self.quantity_entry.grid(row=1, column=1)
+        # Input fields
+        input_frame = ttk.LabelFrame(self.frame, text="Backtest inputs")
+        input_frame.pack(fill="x", padx=5, pady=5)
 
-        # Start Date
-        self.start_date_label = Label(self.frame, text="Start Date (YYYY-MM-DD):")
-        self.start_date_label.grid(row=2, column=0, sticky="e")
-        self.start_date_entry = Entry(self.frame)
-        self.start_date_entry.grid(row=2, column=1)
+        ttk.Label(input_frame, text="Ticker:").grid(row=0, column=0, sticky="w")
+        self.ticker_var = tk.StringVar(value=DEFAULT_TICKER)
+        ttk.Entry(input_frame, textvariable=self.ticker_var, width=12).grid(row=0, column=1, sticky="w")
 
-        # End Date
-        self.end_date_label = Label(self.frame, text="End Date (YYYY-MM-DD):")
-        self.end_date_label.grid(row=3, column=0, sticky="e")
-        self.end_date_entry = Entry(self.frame)
-        self.end_date_entry.grid(row=3, column=1)
+        ttk.Label(input_frame, text="Quantity:").grid(row=0, column=2, sticky="w", padx=(10, 0))
+        self.qty_var = tk.IntVar(value=DEFAULT_QTY)
+        ttk.Entry(input_frame, textvariable=self.qty_var, width=12).grid(row=0, column=3, sticky="w")
 
-        # Submit Button
-        self.submit_button = Button(self.frame, text="Submit", command=self.submit)
-        self.submit_button.grid(row=4, columnspan=2, pady=10)
+        ttk.Label(input_frame, text="Start Date (YYYY-MM-DD):").grid(row=1, column=0, sticky="w", pady=(5, 0))
+        self.start_var = tk.StringVar(value=DEFAULT_START.isoformat())
+        ttk.Entry(input_frame, textvariable=self.start_var, width=15).grid(row=1, column=1, sticky="w", pady=(5, 0))
 
-        # Placeholder for future features
-        self.placeholder_label = Label(master, text="Future features will be added here.")
-        self.placeholder_label.pack(pady=10)
+        ttk.Label(input_frame, text="End Date (YYYY-MM-DD):").grid(row=1, column=2, sticky="w", padx=(10, 0), pady=(5, 0))
+        self.end_var = tk.StringVar(value=DEFAULT_END.isoformat())
+        ttk.Entry(input_frame, textvariable=self.end_var, width=15).grid(row=1, column=3, sticky="w", pady=(5, 0))
 
-    def submit(self):
-        # Placeholder for submit action
-        print("Submitted:")
-        print(f"Ticker: {self.ticker_entry.get()}")
-        print(f"Quantity: {self.quantity_entry.get()}")
-        print(f"Start Date: {self.start_date_entry.get()}")
-        print(f"End Date: {self.end_date_entry.get()}")
+        ttk.Label(input_frame, text="Strategy:").grid(row=2, column=0, sticky="w", pady=(8, 0))
+        self.strategy_var = tk.StringVar(value="Default - Buy and Hold")
+        strategy_box = ttk.Combobox(input_frame, textvariable=self.strategy_var, state="readonly",
+                                    values=["Default - Buy and Hold"]) 
+        strategy_box.grid(row=2, column=1, sticky="w", pady=(8, 0))
+
+        ttk.Button(input_frame, text="Back-Test", command=self.run_backtest).grid(row=2, column=3, sticky="e", pady=(8, 0))
+
+        # Results area
+        results_frame = ttk.Frame(self.frame)
+        results_frame.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # Transactions list (scrollable)
+        trans_frame = ttk.LabelFrame(results_frame, text="Transactions")
+        trans_frame.pack(side="left", fill="both", expand=True, padx=(0, 5))
+
+        self.trans_listbox = tk.Listbox(trans_frame)
+        self.trans_listbox.pack(side="left", fill="both", expand=True)
+        trans_scroll = ttk.Scrollbar(trans_frame, orient="vertical", command=self.trans_listbox.yview)
+        trans_scroll.pack(side="right", fill="y")
+        self.trans_listbox.config(yscrollcommand=trans_scroll.set)
+
+        # Summary / output
+        summary_frame = ttk.LabelFrame(results_frame, text="Summary")
+        summary_frame.pack(side="right", fill="both", expand=True)
+
+        self.summary_text = tk.Text(summary_frame, width=40, height=15, wrap="word")
+        self.summary_text.pack(fill="both", expand=True)
+
+    def run_backtest(self):
+        ticker = self.ticker_var.get().strip().upper()
+        try:
+            qty = int(self.qty_var.get())
+        except Exception:
+            messagebox.showerror("Input error", "Quantity must be an integer.")
+            return
+
+        try:
+            start_date = datetime.fromisoformat(self.start_var.get()).date()
+            end_date = datetime.fromisoformat(self.end_var.get()).date()
+        except Exception:
+            messagebox.showerror("Input error", "Dates must be in YYYY-MM-DD format.")
+            return
+
+        if start_date >= end_date:
+            messagebox.showerror("Input error", "Start date must be before end date.")
+            return
+
+        # Fetch history (cached)
+        try:
+            df = self.fetcher.get_history(ticker, start_date, end_date)
+        except Exception as e:
+            messagebox.showerror("Fetcher error", str(e))
+            return
+
+        if df is None or df.empty:
+            messagebox.showerror("Data error", f"No price data available for {ticker} in that range.")
+            return
+
+        df_indexed = df.copy()
+        df_indexed.index = pd.to_datetime(df_indexed.index).date
+
+        try:
+            first_idx = min(d for d in df_indexed.index if d >= start_date)
+            last_idx = max(d for d in df_indexed.index if d <= end_date)
+        except ValueError:
+            messagebox.showerror("Data error", "No overlapping trading days in requested date range.")
+            return
+
+        start_price = float(df_indexed.loc[first_idx]["Close"])
+        end_price = float(df_indexed.loc[last_idx]["Close"])
+
+        start_value = qty * start_price
+        end_value = qty * end_price
+        total_return = (end_value - start_value) / start_value if start_value != 0 else 0.0
+
+        days = (last_idx - first_idx).days
+        years = days / 365.25 if days > 0 else 0.0
+        if years > 0 and start_value > 0:
+            annualized = (end_value / start_value) ** (1.0 / years) - 1.0
+        else:
+            annualized = 0.0
+
+        # Transactions: initial buy only
+        self.trans_listbox.delete(0, tk.END)
+        buy_line = f"{first_idx.isoformat()} BUY {qty} {ticker} @ {start_price:.2f} = {start_value:.2f}"
+        self.trans_listbox.insert(tk.END, buy_line)
+
+        # Summary output
+        self.summary_text.delete("1.0", tk.END)
+        lines = [
+            f"Ticker: {ticker}",
+            f"Start Date: {first_idx.isoformat()}",
+            f"Start Price: {start_price:.2f}",
+            f"Start Value: {start_value:.2f}",
+            "",
+            f"End Date: {last_idx.isoformat()}",
+            f"End Price: {end_price:.2f}",
+            f"End Value: {end_value:.2f}",
+            "",
+            f"Total return: {total_return*100:.2f}%",
+            f"Annualized return: {annualized*100:.2f}% (over {years:.3f} years)",
+        ]
+        self.summary_text.insert("1.0", "\n".join(lines))
+
 
 def main():
-    root = Tk()
+    root = tk.Tk()
     app = FinancialModelingApp(root)
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()
