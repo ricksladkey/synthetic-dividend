@@ -130,7 +130,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
         # Calculate next buy price and quantity
         self.next_buy_price = self.last_transaction_price / (1 + self.rebalance_size)
-        next_buy_amount = (self.last_transaction_price - self.next_buy_price) * holdings * self.profit_sharing
+        next_buy_amount = (self.last_transaction_price - self.next_buy_price) * holdings / (1 + self.rebalance_size) * self.profit_sharing
         self.next_buy_qty = int(next_buy_amount / self.next_buy_price + 0.5)
 
         # Calculate next sell price and quantity
@@ -153,8 +153,10 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         try:
 
             # Retrieve high and low prices for the day as float scalars.
+            open = _get_price_scalar_from_row(price_row, 'Open')
             high = _get_price_scalar_from_row(price_row, 'High')
             low = _get_price_scalar_from_row(price_row, 'Low')
+            close = _get_price_scalar_from_row(price_row, 'Close')
 
             # Validate and execute buy/sell orders based on price thresholds.
             if low is not None and high is not None:
@@ -168,14 +170,16 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     print(f"Evaluating orders on {date_.isoformat()}: Low=${low_s}, High=${high_s}")
 
                 # Check for buy opportunity
-                if low <= self.next_buy_price <= high:
+                if low <= self.next_buy_price:
 
-                    current_value = holdings * self.next_buy_price
-                    profit = (self.last_transaction_price - self.next_buy_price) * self.next_buy_qty
+                    # Account for market gapping down, assuming
+                    # a standing limit order at next_buy_price.
+                    actual_price = min(self.next_buy_price, open)
+                    current_value = holdings * actual_price
+                    profit = (self.last_transaction_price - actual_price) * self.next_buy_qty
                     alpha = (profit / current_value) * 100 if current_value != 0 else 0.0
                     self.total_volatility_alpha += alpha
-
-                    notes = f"Buying back at a {self.rebalance_size*100:.2f}% discount, alpha = {alpha:.2f}%."
+                    notes = f"Buying back: limit price = {self.next_buy_price:.2f}, actual price = {actual_price:.2f}"
                     transaction = Transaction(action="BUY", qty=self.next_buy_qty, notes=notes)
 
                     # Place orders again to update next prices/quantities
@@ -185,9 +189,12 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
 
                 # Check for sell opportunity
-                if low <= self.next_sell_price <= high:
+                if high >= self.next_sell_price:
 
-                    notes = f"Taking profits: selling {self.next_sell_qty} shares, {holdings - self.next_sell_qty} left"
+                    # Account for market gapping up, assuming
+                    # a standing limit order at next_sell_price.
+                    actual_price = max(self.next_sell_price, open)
+                    notes = f"Taking profits: limit price = {self.next_sell_price:.2f}, actual price = {actual_price:.2f}"
                     transaction = Transaction(action="SELL", qty=self.next_sell_qty, notes=notes)
 
                     # Place orders again to update next prices/quantities

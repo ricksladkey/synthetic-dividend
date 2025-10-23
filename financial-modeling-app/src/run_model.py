@@ -91,6 +91,7 @@ def main(argv):
     print(f"End Date: {summary['end_date'].isoformat()}")
     print(f"End Price: {summary['end_price']:.2f}")
     print(f"End Value: {summary['end_value']:.2f}")
+    print(f"Holdings: {summary.get('holdings', qty)} shares")
     print()
     print(f"Bank: {summary.get('bank', 0.0):.2f}")
     print(f"Total (holdings + bank): {summary.get('total', summary['end_value']):.2f}")
