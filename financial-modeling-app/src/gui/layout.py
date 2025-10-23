@@ -44,10 +44,10 @@ class FinancialModelingApp:
         ttk.Entry(input_frame, textvariable=self.end_var, width=15).grid(row=1, column=3, sticky="w", pady=(5, 0))
 
         ttk.Label(input_frame, text="Strategy:").grid(row=2, column=0, sticky="w", pady=(8, 0))
-    # strategy identifiers; parameters can be embedded in the identifier string
-    self.strategy_var = tk.StringVar(value="buy-and-hold")
-    strategy_box = ttk.Combobox(input_frame, textvariable=self.strategy_var, state="readonly",
-                    values=["buy-and-hold", "synthetic-dividend/9.15%/50%"])
+        # strategy identifiers; parameters can be embedded in the identifier string
+        self.strategy_var = tk.StringVar(value="buy-and-hold")
+        strategy_box = ttk.Combobox(input_frame, textvariable=self.strategy_var, state="readonly",
+                        values=["buy-and-hold", "synthetic-dividend/9.15%/50%"])
         strategy_box.grid(row=2, column=1, sticky="w", pady=(8, 0))
 
         ttk.Button(input_frame, text="Back-Test", command=self.run_backtest).grid(row=2, column=3, sticky="e", pady=(8, 0))
@@ -127,6 +127,10 @@ class FinancialModelingApp:
             f"End Date: {summary['end_date'].isoformat()}",
             f"End Price: {summary['end_price']:.2f}",
             f"End Value: {summary['end_value']:.2f}",
+            f"Holdings: {summary.get('holdings', qty)} shares",
+            "",
+            f"Bank: {summary.get('bank', 0.0):.2f}",
+            f"Total (holdings + bank): {summary.get('total', summary['end_value']):.2f}",
             "",
             f"Total return: {summary['total_return']*100:.2f}%",
             f"Annualized return: {summary['annualized']*100:.2f}% (over {summary['years']:.3f} years)",
