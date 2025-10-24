@@ -145,10 +145,10 @@ def generate_algorithm_configs() -> List[str]:
     # Profit sharing percentages to test
     profit_pcts = [25.0, 33.33, 50.0, 66.67, 75.0, 100.0]
 
-    # Generate full SD configurations
+    # Generate full SD configurations (modern comma-based format)
     for rebal in rebalance_pcts:
         for profit in profit_pcts:
-            configs.append(f"sd/{rebal}%/{profit}%")
+            configs.append(f"sd-{rebal},{profit}")
 
     # Generate ATH-only SD configurations (subset of most interesting params)
     ath_rebalance = [9.05, 9.15, 10.0, 15.0]
@@ -156,7 +156,7 @@ def generate_algorithm_configs() -> List[str]:
 
     for rebal in ath_rebalance:
         for profit in ath_profit:
-            configs.append(f"sd-ath-only/{rebal}%/{profit}%")
+            configs.append(f"sd-ath-only-{rebal},{profit}")
 
     return configs
 

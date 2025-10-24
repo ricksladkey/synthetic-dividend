@@ -97,9 +97,9 @@ def compare_algorithms(
     if df is None or df.empty:
         raise ValueError(f"No price data for {ticker}")
 
-    # Build algorithm identifiers
-    full_algo_name = f"sd/{rebalance_pct}%/{profit_pct}%"
-    ath_algo_name = f"sd-ath-only/{rebalance_pct}%/{profit_pct}%"
+    # Build algorithm identifiers (modern comma-based format)
+    full_algo_name = f"sd-{rebalance_pct},{profit_pct}"
+    ath_algo_name = f"sd-ath-only-{rebalance_pct},{profit_pct}"
 
     print(f"\n{'='*80}")
     print(f"COMPARISON: {ticker} from {start_date} to {end_date}")

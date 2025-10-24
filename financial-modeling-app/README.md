@@ -38,7 +38,7 @@ Traditional growth portfolios face a fundamental dilemma:
 ### Command-Line Interface
 ```bash
 # Run single strategy backtest
-python -m src.run_model NVDA 2024-01-01 2025-01-01 sd/7.5%/50% --qty 10000
+python -m src.run_model NVDA 2024-01-01 2025-01-01 sd-7.5,50 --qty 10000
 
 # Compare multiple strategies
 python -m src.compare.batch_comparison NVDA 2024-01-01 2025-01-01 results.csv
@@ -52,9 +52,9 @@ python src/main.py
 | Strategy | Return | Max Drawdown | Transactions | Bank Avg |
 |----------|--------|--------------|--------------|----------|
 | Buy-and-Hold | 29.05% | -27.50% | 0 | $0 |
-| SD 7.5%/50% | **31.41%** | -25.84% | 67 | -$77.6K |
-| SD 7.5%/100% | 34.14% | -23.72% | 67 | -$262.2K |
-| SD 25%/50% | 30.14% | -27.03% | 23 | -$54.8K |
+| SD 7.5,50 | **31.41%** | -25.84% | 67 | -$77.6K |
+| SD 7.5,100 | 34.14% | -23.72% | 67 | -$262.2K |
+| SD 25,50 | 30.14% | -27.03% | 23 | -$54.8K |
 
 The algorithm **outperforms buy-and-hold** while providing systematic cash flow and reduced drawdowns.
 
@@ -133,7 +133,7 @@ financial-modeling-app/
 ### Run a Single Backtest
 
 ```bash
-python -m src.run_model NVDA 2024-01-01 2025-01-01 sd/7.5%/50% \
+python -m src.run_model NVDA 2024-01-01 2025-01-01 sd-7.5,50 \
     --qty 10000 \
     --reference-asset VOO \
     --risk-free-asset BIL

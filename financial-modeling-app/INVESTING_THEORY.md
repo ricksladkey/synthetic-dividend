@@ -50,10 +50,10 @@ The algorithm **mathematically supports profit sharing values outside the conven
 - **Profit sharing** primarily affects position trajectory, not opportunity identification
 
 **Empirical Evidence** (from batch comparison results):
-- `sd/7.5%/100%` → 34.14% return (67 transactions)
-- `sd/7.5%/50%` → 31.41% return (67 transactions)
-- `sd/25%/100%` → 33.14% return (23 transactions)
-- `sd/25%/50%` → 30.14% return (23 transactions)
+- `sd-7.5,100` → 34.14% return (67 transactions)
+- `sd-7.5,50` → 31.41% return (67 transactions)
+- `sd-25,100` → 33.14% return (23 transactions)
+- `sd-25,50` → 30.14% return (23 transactions)
 
 Changing rebalance threshold from 7.5% to 25% reduces transaction count by 66% while maintaining similar returns. Changing profit sharing within same rebalance threshold shows smaller impact (~2-3% difference).
 

@@ -97,13 +97,13 @@ class FinancialModelingApp:
 
         # Row 2: Strategy dropdown and Run button
         ttk.Label(input_frame, text="Strategy:").grid(row=2, column=0, sticky="w", pady=(8, 0))
-        # Strategy identifiers: parameters embedded in string (e.g., "sd/9.15%/50%")
+        # Strategy identifiers: parameters embedded in string (e.g., "sd-9.15,50")
         self.strategy_var = tk.StringVar(value="buy-and-hold")
         strategy_box: ttk.Combobox = ttk.Combobox(
             input_frame,
             textvariable=self.strategy_var,
             state="readonly",
-            values=["buy-and-hold", "sd/9.15%/50%"],
+            values=["buy-and-hold", "sd-9.15,50"],
         )
         strategy_box.grid(row=2, column=1, sticky="w", pady=(8, 0))
 

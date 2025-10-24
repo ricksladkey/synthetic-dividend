@@ -174,11 +174,11 @@ python -m src.compare.table NVDA 10/22/2024 10/22/2025 9.05 50
 
 # Individual algorithms with financial adjustments
 python -m src.run_model NVDA 10/22/2024 10/22/2025 buy-and-hold --qty 10000
-python -m src.run_model NVDA 10/22/2024 10/22/2025 sd/9.05%/50% --qty 10000
-python -m src.run_model NVDA 10/22/2024 10/22/2025 sd-ath-only/9.05%/50% --qty 10000
+python -m src.run_model NVDA 10/22/2024 10/22/2025 sd-9.05,50 --qty 10000
+python -m src.run_model NVDA 10/22/2024 10/22/2025 sd-ath-only-9.05,50 --qty 10000
 
 # With custom reference/risk-free assets
-python -m src.run_model NVDA 10/22/2024 10/22/2025 sd/9.05%/50% --qty 10000 --reference-asset SPY --risk-free-asset SHV
+python -m src.run_model NVDA 10/22/2024 10/22/2025 sd-9.05,50 --qty 10000 --reference-asset SPY --risk-free-asset SHV
 ```
 
 ### Batch File

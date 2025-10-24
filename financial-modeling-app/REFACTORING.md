@@ -49,17 +49,18 @@ algo_ath = SyntheticDividendAlgorithm(
 
 ### Parsing from Name Strings
 ```python
-# Full algorithm
-algo1 = build_algo_from_name("sd/9.05%/50%")
+# Full algorithm (modern format)
+algo1 = build_algo_from_name("sd-9.05,50")
 # Returns: SyntheticDividendAlgorithm(9.05, 50, buyback_enabled=True)
 
-# ATH-only
-algo2 = build_algo_from_name("sd-ath-only/9.05%/50%")
+# ATH-only (modern format)
+algo2 = build_algo_from_name("sd-ath-only-9.05,50")
 # Returns: SyntheticDividendAlgorithm(9.05, 50, buyback_enabled=False)
 
-# Legacy names also supported for backward compatibility
-algo3 = build_algo_from_name("synthetic-dividend/9.05%/50%")
-algo4 = build_algo_from_name("synthetic-dividend-ath-only/9.05%/50%")
+# Legacy formats also supported for backward compatibility
+algo3 = build_algo_from_name("sd/9.05%/50%")
+algo4 = build_algo_from_name("sd-ath-only/9.05%/50%")
+algo5 = build_algo_from_name("synthetic-dividend/9.05%/50%")
 ```
 
 ## Implementation Details
@@ -115,7 +116,7 @@ def on_day(self, date_, price_row, holdings, bank, history):
 
 ### Full Algorithm (buyback_enabled=True)
 ```
-Command: sd/9.05%/50%
+Command: sd-9.05,50
 Holdings: 899 shares
 Bank: $23,615.10
 Total Return: 29.35%
@@ -124,7 +125,7 @@ Transactions: 26
 
 ### ATH-Only (buyback_enabled=False)
 ```
-Command: sd-ath-only/9.05%/50%
+Command: sd-ath-only-9.05,50
 Holdings: 881 shares
 Bank: $20,273.12
 Total Return: 24.77%
@@ -147,16 +148,17 @@ All existing code continues to work without changes:
 
 ### Command Line
 ```powershell
-# Full algorithm
-python -m src.run_model NVDA 10/22/2024 10/22/2025 "sd/9.05%/50%"
+# Full algorithm (modern format)
+python -m src.run_model NVDA 10/22/2024 10/22/2025 "sd-9.05,50"
 
-# ATH-only
-python -m src.run_model NVDA 10/22/2024 10/22/2025 "sd-ath-only/9.05%/50%"
+# ATH-only (modern format)
+python -m src.run_model NVDA 10/22/2024 10/22/2025 "sd-ath-only-9.05,50"
 
 # Comparison
 python -m src.compare.validator NVDA 10/22/2024 10/22/2025 9.05 50
 
-# Legacy names still work (backward compatible)
+# Legacy formats still work (backward compatible)
+python -m src.run_model NVDA 10/22/2024 10/22/2025 "sd/9.05%/50%"
 python -m src.run_model NVDA 10/22/2024 10/22/2025 "synthetic-dividend/9.05%/50%"
 ```
 

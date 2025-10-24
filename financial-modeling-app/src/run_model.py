@@ -9,11 +9,12 @@ Usage:
 
 Examples:
     python run_model.py NVDA 10/22/2024 10/22/2025 buy-and-hold
-    python run_model.py NVDA 2024-10-22 2025-10-22 sd/9.05%/50% --qty 10000
-    python run_model.py NVDA 10/22/2024 10/22/2025 sd/9.05%/50% --reference-asset SPY --risk-free-asset BIL
+    python run_model.py NVDA 2024-10-22 2025-10-22 sd-9.05,50 --qty 10000
+    python run_model.py NVDA 10/22/2024 10/22/2025 sd-9.05,50 --reference-asset SPY --risk-free-asset BIL
 
 Date formats: MM/DD/YYYY or YYYY-MM-DD
-Strategy formats: buy-and-hold, sd/X%/Y%, sd-ath-only/X%/Y%
+Strategy formats: buy-and-hold, sd-X,Y, sd-ath-only-X,Y
+Legacy formats: sd/X%/Y%, sd-ath-only/X%/Y% (still supported)
 """
 import argparse
 import os
@@ -60,15 +61,15 @@ def main(argv: List[str]) -> int:
         epilog="""
 Examples:
   python run_model.py NVDA 10/22/2024 10/22/2025 buy-and-hold
-  python run_model.py NVDA 2024-10-22 2025-10-22 sd/9.05%/50% --qty 10000
-  python run_model.py NVDA 10/22/2024 10/22/2025 sd/9.05%/50% --reference-asset SPY --risk-free-asset BIL
+  python run_model.py NVDA 2024-10-22 2025-10-22 sd-9.05,50 --qty 10000
+  python run_model.py NVDA 10/22/2024 10/22/2025 sd-9.05,50 --reference-asset SPY --risk-free-asset BIL
         """,
     )
 
     parser.add_argument("ticker", help="Stock ticker symbol (e.g., NVDA)")
     parser.add_argument("start_date", help="Start date (MM/DD/YYYY or YYYY-MM-DD)")
     parser.add_argument("end_date", help="End date (MM/DD/YYYY or YYYY-MM-DD)")
-    parser.add_argument("strategy", help="Strategy name (e.g., buy-and-hold, sd/9.05%%/50%%)")
+    parser.add_argument("strategy", help="Strategy name (e.g., buy-and-hold, sd-9.05,50)")
     parser.add_argument(
         "--qty", type=int, default=10000, help="Initial quantity of shares (default: 10000)"
     )

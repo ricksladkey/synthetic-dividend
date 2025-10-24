@@ -59,13 +59,13 @@ def run_comparison_table(
 
     results = []
 
-    # Algorithm configurations
+    # Algorithm configurations (modern comma-based format)
     algorithms = [
         ("Buy and Hold", "buy-and-hold"),
-        (f"SD ({rebalance_pct}%/{profit_pct}%)", f"sd/{rebalance_pct}%/{profit_pct}%"),
+        (f"SD ({rebalance_pct}%/{profit_pct}%)", f"sd-{rebalance_pct},{profit_pct}"),
         (
             f"SD ATH-Only ({rebalance_pct}%/{profit_pct}%)",
-            f"sd-ath-only/{rebalance_pct}%/{profit_pct}%",
+            f"sd-ath-only-{rebalance_pct},{profit_pct}",
         ),
     ]
 

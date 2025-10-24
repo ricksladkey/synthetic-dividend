@@ -1,8 +1,10 @@
 # Naming Convention Migration - Summary
 
+> **Note (October 2025)**: This document describes the 2025 migration from `synthetic-dividend` to `sd`. A subsequent migration to comma-based format (`sd-9.05,50`) has since been completed. See current examples in README.md and source code.
+
 **Date**: 2025
 **Branch**: main
-**Status**: ✅ Complete
+**Status**: ✅ Complete (superseded by comma-based format migration)
 
 ## Overview
 

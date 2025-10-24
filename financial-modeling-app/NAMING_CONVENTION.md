@@ -1,5 +1,7 @@
 # Naming Convention
 
+> **Note (October 2025)**: This document describes the legacy slash/percent notation (`sd/9.05%/50%`). The project has migrated to a cleaner comma-based format (`sd-9.05,50`). See updated examples in README.md and source code. Legacy format is still supported for backward compatibility.
+
 This document establishes the consistent naming convention for the synthetic dividend algorithm throughout the codebase.
 
 ## Core Principle
@@ -7,7 +9,8 @@ This document establishes the consistent naming convention for the synthetic div
 **Verbosity in code, terseness in identifiers.**
 
 - **Internal Code**: Use full descriptive names (`SyntheticDividendAlgorithm`, `calculate_synthetic_dividend_orders()`)
-- **User-Facing Identifiers**: Use abbreviated form (`sd`, `sd-ath-only`)
+- **User-Facing Identifiers**: Use abbreviated form with comma-based parameters (`sd-9.05,50`, `sd-ath-only-9.05,50`)
+- **Legacy Format**: Slash/percent notation (`sd/9.05%/50%`) still supported for backward compatibility
 
 ## User-Facing Identifiers
 

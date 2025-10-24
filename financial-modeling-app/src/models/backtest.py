@@ -437,12 +437,14 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
 
     Supported formats:
         'buy-and-hold' → BuyAndHoldAlgorithm()
-        'sd/9.15%/50%' → SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=True)
-        'sd-ath-only/9.15%/50%' → SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=False)
+        'sd-9.15,50' → SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=True)
+        'sd-ath-only-9.15,50' → SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=False)
 
-    Legacy names (backward compatibility):
-        'synthetic-dividend/...' → same as 'sd/...'
-        'synthetic-dividend-ath-only/...' → same as 'sd-ath-only/...'
+    Legacy formats (backward compatibility):
+        'sd/9.15%/50%' → same as 'sd-9.15,50'
+        'sd-ath-only/9.15%/50%' → same as 'sd-ath-only-9.15,50'
+        'synthetic-dividend/...' → same as 'sd-...'
+        'synthetic-dividend-ath-only/...' → same as 'sd-ath-only-...'
     """
     name = name.strip()
     print(f"Building algorithm from name: {name}")
@@ -451,7 +453,25 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
     if name == "buy-and-hold":
         return BuyAndHoldAlgorithm()
 
-    # ATH-only variant: accepts 'sd' or 'synthetic-dividend' prefix
+    # ATH-only variant: modern comma-based format
+    m = re.match(r"^(sd|synthetic-dividend)-ath-only-(\d+(?:\.\d+)?),(\d+(?:\.\d+)?)$", name)
+    if m:
+        rebalance = float(m.group(2))
+        profit = float(m.group(3))
+        return SyntheticDividendAlgorithm(
+            rebalance_size_pct=rebalance, profit_sharing_pct=profit, buyback_enabled=False
+        )
+
+    # Full algorithm: modern comma-based format
+    m = re.match(r"^(sd|synthetic-dividend)-(\d+(?:\.\d+)?),(\d+(?:\.\d+)?)$", name)
+    if m:
+        rebalance = float(m.group(2))
+        profit = float(m.group(3))
+        return SyntheticDividendAlgorithm(
+            rebalance_size_pct=rebalance, profit_sharing_pct=profit, buyback_enabled=True
+        )
+
+    # Legacy: ATH-only variant with slash/percent format
     m = re.match(r"^(sd|synthetic-dividend)-ath-only/(\d+(?:\.\d+)?)%/(\d+(?:\.\d+)?)%$", name)
     if m:
         rebalance = float(m.group(2))
@@ -460,7 +480,7 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
             rebalance_size_pct=rebalance, profit_sharing_pct=profit, buyback_enabled=False
         )
 
-    # Full algorithm: accepts 'sd' or 'synthetic-dividend' prefix
+    # Legacy: Full algorithm with slash/percent format
     m = re.match(r"^(sd|synthetic-dividend)/(\d+(?:\.\d+)?)%/(\d+(?:\.\d+)?)%$", name)
     if m:
         rebalance = float(m.group(2))
