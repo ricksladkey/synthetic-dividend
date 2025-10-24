@@ -79,21 +79,33 @@ def run_single_backtest(
             algo=algo,
         )
         
-        # Extract key metrics
+        # Extract key metrics from summary dict
+        # Note: summary uses 'total_return' (decimal), 'holdings', 'bank', etc.
+        # Convert to percentage and use correct key names
+        total_return_pct = summary.get("total_return", 0) * 100  # Convert to percentage
+        volatility_alpha_pct = summary.get("volatility_alpha", 0) * 100
+        transaction_count = len(transactions)  # Count transactions (excluding initial buy)
+        
+        # Get algorithm trigger percentage if available (from algo object)
+        rebalance_trigger = 0
+        if hasattr(algo, 'alpha_pct'):
+            rebalance_trigger = algo.alpha_pct
+        
         result = {
             "ticker": ticker,
             "asset_class": get_class_for_ticker(ticker),
             "strategy": strategy,
             "sd_n": sd_n,
             "profit_pct": profit_pct,
-            "rebalance_trigger": summary.get("rebalance_trigger_pct", 0),
-            "total_return_pct": summary.get("total_return_pct", 0),
-            "max_drawdown_pct": summary.get("max_drawdown_pct", 0),
-            "sharpe_ratio": summary.get("sharpe_ratio", 0),
-            "transaction_count": summary.get("transaction_count", 0),
-            "final_holdings": summary.get("final_holdings", 0),
-            "final_bank": summary.get("final_bank", 0),
-            "final_value": summary.get("final_value", 0),
+            "rebalance_trigger": rebalance_trigger,
+            "total_return_pct": total_return_pct,
+            "volatility_alpha_pct": volatility_alpha_pct,
+            "max_drawdown_pct": 0,  # TODO: Calculate from bank/holdings history
+            "sharpe_ratio": 0,  # TODO: Calculate from daily returns
+            "transaction_count": transaction_count,
+            "final_holdings": summary.get("holdings", 0),
+            "final_bank": summary.get("bank", 0),
+            "final_value": summary.get("total", 0),
             "start_date": start_date.isoformat(),
             "end_date": end_date.isoformat(),
         }
@@ -180,6 +192,7 @@ def save_results_to_csv(results: List[Dict], output_path: str):
         "profit_pct",
         "rebalance_trigger",
         "total_return_pct",
+        "volatility_alpha_pct",
         "max_drawdown_pct",
         "sharpe_ratio",
         "transaction_count",
