@@ -45,15 +45,18 @@ def parse_date(s: str) -> date:
     raise ValueError(f"Unrecognized date format: {s}")
 
 
-def main(argv: List[str]) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     """Execute backtest from command-line arguments.
 
     Args:
-        argv: Command-line arguments (excluding program name)
+        argv: Command-line arguments (excluding program name). If None, uses sys.argv[1:]
 
     Returns:
         Exit code (0 = success, >0 = error)
     """
+    if argv is None:
+        argv = sys.argv[1:]
+        
     # Setup argument parser
     parser = argparse.ArgumentParser(
         description="Run backtest on historical stock data",
@@ -218,4 +221,4 @@ Examples:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())

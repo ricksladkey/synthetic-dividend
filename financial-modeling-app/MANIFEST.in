@@ -1,0 +1,11 @@
+include README.md
+include LICENSE
+include RESEARCH.md
+include INVESTING_THEORY.md
+include CODING_PHILOSOPHY.md
+include TODO.md
+recursive-include src *.py
+recursive-exclude src *.pyc
+recursive-exclude src __pycache__
+global-exclude *.pkl
+global-exclude .DS_Store
