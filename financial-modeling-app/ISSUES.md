@@ -1,10 +1,11 @@
 # Known Issues
 
-## Bug: optimal_rebalancing.py Returns Zero Metrics
+## ~~Bug: optimal_rebalancing.py Returns Zero Metrics~~ [RESOLVED]
 
-**Status:** Open  
+**Status:** ✅ RESOLVED (Fixed in commit 08be65e)  
 **Priority:** High  
 **Created:** 2025-10-24  
+**Resolved:** 2025-10-24  
 
 ### Description
 The `src/research/optimal_rebalancing.py` script successfully downloads historical data and runs synthetic dividend simulations, but fails to properly calculate and save final performance metrics to the output CSV. All results are written as zeros.
