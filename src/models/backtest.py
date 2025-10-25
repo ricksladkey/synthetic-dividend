@@ -569,8 +569,14 @@ def run_algorithm_backtest(
     Returns:
         Tuple of (transaction_strings, summary_dict)
         - transaction_strings: List of human-readable transaction logs
-        - summary_dict: Metrics including returns, holdings, bank, baseline comparison,
-                       opportunity cost, and risk-free gains
+        - summary_dict: Metrics including:
+            * Primary: total_return, annualized, volatility_alpha
+            * Holdings: holdings, bank, end_value, total
+            * Bank stats: bank_min, bank_max, bank_avg, negative/positive counts
+            * Costs/Gains: opportunity_cost, risk_free_gains
+            * Deployment (supplementary): capital_utilization, return_on_deployed_capital,
+              deployment_min/max, avg_deployed_capital
+            * Baseline: buy-and-hold comparison data
     """
     if df is None or df.empty:
         raise ValueError("Empty price data")
@@ -635,6 +641,9 @@ def run_algorithm_backtest(
     bank_min: float = 0.0
     bank_max: float = 0.0
 
+    # Deployed capital tracking for capital utilization metrics
+    deployment_history: List[Tuple[date, float]] = []  # (date, deployed_capital)
+
     # Record initial purchase
     start_value = holdings * start_price
     transactions.append(
@@ -684,11 +693,17 @@ def run_algorithm_backtest(
     for i, d in enumerate(dates):
         # Skip initial purchase day (already processed above)
         if d == first_idx:
+            # Track initial deployment
+            deployment_history.append((d, holdings * start_price))
             continue
 
         # Get current day's prices
         price_row = df_indexed.loc[d]
         price: float = _get_close_scalar(df_indexed, d, "Close")
+
+        # Track deployed capital (market value of holdings) at start of day
+        deployed_capital = holdings * price
+        deployment_history.append((d, deployed_capital))
 
         # History includes all data up to previous day
         history = df_indexed.loc[: dates[i - 1]] if i > 0 else df_indexed.loc[:d]
@@ -763,6 +778,19 @@ def run_algorithm_backtest(
     bank_negative_count = sum(1 for b in bank_balances if b < 0)
     bank_positive_count = sum(1 for b in bank_balances if b > 0)
 
+    # Calculate capital deployment statistics
+    deployed_amounts = [dep for d, dep in deployment_history]
+    avg_deployed_capital: float = sum(deployed_amounts) / len(deployed_amounts) if deployed_amounts else 0.0
+    min_deployed_capital: float = min(deployed_amounts) if deployed_amounts else 0.0
+    max_deployed_capital: float = max(deployed_amounts) if deployed_amounts else 0.0
+    
+    # Capital utilization rate: average deployed capital as % of initial investment
+    capital_utilization: float = avg_deployed_capital / start_val if start_val > 0 else 0.0
+    
+    # Deployment range as percentages
+    deployment_min_pct: float = min_deployed_capital / start_val if start_val > 0 else 0.0
+    deployment_max_pct: float = max_deployed_capital / start_val if start_val > 0 else 0.0
+
     # Calculate opportunity cost and risk-free gains using actual asset returns
     opportunity_cost_total = 0.0
     risk_free_gains_total = 0.0
@@ -801,6 +829,13 @@ def run_algorithm_backtest(
         "total_return": total_return,
         "annualized": annualized,
         "years": years,
+        # Capital deployment supplementary metrics
+        "avg_deployed_capital": avg_deployed_capital,
+        "capital_utilization": capital_utilization,
+        "deployment_min": min_deployed_capital,
+        "deployment_max": max_deployed_capital,
+        "deployment_min_pct": deployment_min_pct,
+        "deployment_max_pct": deployment_max_pct,
     }
 
     # Compute buy-and-hold baseline for alpha comparison
@@ -830,8 +865,15 @@ def run_algorithm_backtest(
         # Alpha = algorithm return - baseline return
         volatility_alpha = total_return - baseline_total_return
 
+        # Return on deployed capital: measures efficiency when capital was actually at risk
+        # This adjusts for strategies that hold significant cash positions
+        return_on_deployed_capital: float = 0.0
+        if capital_utilization > 0:
+            return_on_deployed_capital = total_return / capital_utilization
+
         summary["baseline"] = baseline_summary
         summary["volatility_alpha"] = volatility_alpha
+        summary["return_on_deployed_capital"] = return_on_deployed_capital
     except Exception:
         # Gracefully handle edge cases in baseline computation
         summary["baseline"] = None
