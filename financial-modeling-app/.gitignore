@@ -59,6 +59,13 @@ Thumbs.db
 # Output files from compare/runner
 out-*
 
+# Research output CSV files
+*_results.csv
+test_*.csv
+research_*.csv
+volatility_alpha_*.csv
+optimal_rebalancing_*.csv
+
 # Logs
 *.log
 
