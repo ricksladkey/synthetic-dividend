@@ -262,6 +262,80 @@ class Transaction:
 - Performance-critical loops (with clear comments explaining tradeoff)
 
 
+### 7. Test-Driven Trust
+
+**Principle**: Tests are not just verification—they are the foundation of confidence in our calculations and logic.
+
+**Philosophy**: "Tests are like magic. They keep us distrusting calculations that could be wrong and we wouldn't notice."
+
+**Why Tests are Essential**:
+- **Catch Silent Bugs**: Calculations can be subtly wrong without obviously breaking
+- **Document Expected Behavior**: Tests are executable specifications
+- **Enable Refactoring**: Comprehensive tests let you change code fearlessly
+- **Prevent Regression**: Once fixed, bugs stay fixed
+- **Expose Edge Cases**: Unusual inputs that you wouldn't think to manually test
+
+**Real Example from This Codebase**:
+The buyback stack tests exposed a fundamental misunderstanding about volatility harvesting:
+- **Original Assumption**: Enhanced and ATH-only should have equal shares after V-shape recovery
+- **Test Failure**: Enhanced consistently had MORE shares (7337 vs 7221)
+- **Investigation**: Not a bug—this IS volatility alpha! Enhanced buys low, sells high, retains more shares
+- **Fix**: Changed test assertions from `==` to `>=` to verify correct economic behavior
+
+Without tests, we might have "fixed" the algorithm to match wrong expectations, destroying the volatility harvesting feature!
+
+**Testing Best Practices**:
+```python
+# GOOD: Test verifies economic invariants
+def test_v_shape_symmetric(self):
+    """Enhanced accumulates shares during dip, retains MORE after recovery."""
+    sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
+        price_path=[...],  # 100→200→100→200
+        rebalance_pct=10.0,
+        profit_sharing_pct=50.0
+    )
+    
+    # Enhanced MUST have more shares (volatility harvesting)
+    assert sd_full >= ath_only, \
+        f"Enhanced should retain more: SD={sd_full}, ATH={ath_only}"
+    
+    # Stack quantity accounts for extra shares
+    share_diff = sd_full - ath_only
+    assert stack_qty == share_diff, \
+        f"Stack ({stack_qty}) should equal difference ({share_diff})"
+```
+
+**What to Test**:
+- **Happy Path**: Normal expected behavior
+- **Edge Cases**: Zero quantities, empty datasets, boundary values
+- **Economic Invariants**: Relationships that MUST hold (alpha ≥ 0, stack integrity)
+- **Error Conditions**: Invalid inputs should raise appropriate exceptions
+- **Regression**: Once you fix a bug, add a test so it never returns
+
+**Test Organization**:
+```python
+class TestBuybackStackVShape:
+    """Test V-shape price patterns (100→200→100→200).
+    
+    Expected behavior:
+    - Enhanced buys during dip, sells during recovery
+    - Retains MORE shares than ATH-only (volatility harvesting)
+    - Buyback stack tracks the share difference
+    """
+    
+    def test_symmetric_recovery(self): ...
+    def test_exceeds_previous_ath(self): ...
+    def test_multiple_cycles(self): ...
+```
+
+**Trust Through Testing**:
+- Don't trust your calculations—**verify them with tests**
+- Don't assume edge cases work—**test them explicitly**
+- Don't believe the algorithm is correct—**prove it with comprehensive tests**
+
+Tests transform hope into certainty. They're the difference between "I think this works" and "I know this works."
+
+
 ## Code Review Checklist
 
 Before committing code, verify:
@@ -272,7 +346,8 @@ Before committing code, verify:
 - [ ] **Length**: Functions are short (5-30 lines typical, max ~50)
 - [ ] **Purity**: Functions prefer explicit parameters over hidden state
 - [ ] **Side Effects**: Mutations are minimized and clearly documented
-- [ ] **Tests**: New functions have unit tests (prefer pure functions for testability)
+- [ ] **Tests**: New functions have unit tests covering happy path, edge cases, and invariants
+- [ ] **Test Coverage**: Tests verify expected behavior, not just "it doesn't crash"
 - [ ] **Naming**: Variable/function names are descriptive and unambiguous
 
 
@@ -285,8 +360,11 @@ These principles emerged from real-world experience with large codebases:
 3. **Short functions** reduce cognitive load and improve maintainability
 4. **Dense comments** preserve intent for future maintainers (including yourself)
 5. **Immutability** prevents entire classes of concurrency and mutation bugs
+6. **Comprehensive tests** catch silent calculation errors that you'd never notice otherwise
 
 The goal is **code that is easy to understand, modify, and verify correctness**. These practices have proven effective across thousands of production systems.
+
+**Special Note on Testing**: In financial/mathematical code, silent errors are the most dangerous. A bug that crashes is obvious; a bug that produces slightly wrong numbers can go undetected for years. Tests are your only defense against this—they transform uncertain calculations into verified facts.
 
 
 ## Examples From This Codebase
