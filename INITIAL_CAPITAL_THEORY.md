@@ -7,8 +7,30 @@
 **Initialization (lines 636-649):**
 ```python
 # Initialize portfolio state
-holdings: int = int(initial_qty)  # e.g., 1000 shares
-bank: float = 0.0  # ← Starts at ZERO, not negative!
+holdings: int = int(initial_qty)  # e.### ✓ Option B: Track Initial Capital Separately (Recommended)
+```python
+# Initialize portfolio state
+holdings: int = int(initial_qty)
+bank: float = 0.0  # Algorithm's trading balance (starts at zero)
+initial_capital_deployed: float = holdings * start_price  # Track separately
+
+# During backtest, accumulate opportunity cost on BOTH:
+# 1. Initial capital (always accumulating)
+# 2. Negative bank balance (when algorithm borrows for buybacks)
+```
+
+**Pros:**
+- ✓ Preserves correct bank tracking (algorithm's cash flow)
+- ✓ Doesn't break existing code
+- ✓ Clear separation: "equity position" vs "trading cash"
+- ✓ Can report total opportunity cost (initial + trading)
+- ✓ Matches conceptual model correctly
+
+**Cons:**
+- More variables to track
+- Two separate opportunity cost calculations
+
+### ✓ Option C: Post-Calculation Adjustment (Minimal Change)ank: float = 0.0  # ← Starts at ZERO, not negative!
 
 # Record initial purchase
 start_value = holdings * start_price  # e.g., $100,000
@@ -73,16 +95,22 @@ Day 0: BUY 1000 shares @ $100 = $100,000
 Day 1-N: Track opportunity cost only on negative bank from trading
 ```
 
-**Problem:** Where did the initial $100,000 come from? It represents borrowed capital with opportunity cost from day 1!
+**Problem:** Where did the initial $100,000 come from? It represents deployed capital with opportunity cost from day 1!
 
 ### Corrected Model
 ```
-Day 0: BUY 1000 shares @ $100 = $100,000
-       Bank: -$100,000 (borrowed to fund initial position)
-       Opportunity Cost: Begins accruing immediately at VOO return rate
+Day 0: BUY 1000 shares @ $100 = $100,000 (equity position)
+       Bank: $0 (algorithm's trading cash flow starts at zero)
+       Opportunity Cost Tracking:
+         - On $100k equity position: Begins accruing at VOO return rate
+         - On bank balance: Only when negative (algorithm borrows for buybacks)
 
-Day 1-N: Continue tracking opportunity cost on entire negative balance
+Day 1-N: Continue tracking TWO separate opportunity costs:
+         1. Initial $100k equity (always accumulating)
+         2. Negative bank balance (only when algorithm borrows)
 ```
+
+**Key Insight:** The bank tracks algorithm's cash generation from selling at ATHs, NOT the equity position itself.
 
 ## Theoretical Implications
 
@@ -230,24 +258,36 @@ Net Cost: $8,000 - $1,200 = $6,800
 
 ## Implementation Considerations
 
-### Option A: Start Bank at -start_value (Realistic)
+### Critical Distinction: Two Separate Capital Streams
+
+**Initial Capital (Equity Position):**
+- The $100k we invested to buy shares
+- This is NOT a loan to ourselves, it's our equity stake
+- Opportunity cost: What we gave up by not investing in VOO
+- **Does NOT affect bank balance**
+
+**Trading Cash Flow (Bank Balance):**
+- Starts at $0 (algorithm hasn't traded yet)
+- Tracks cash generated from selling at ATHs
+- Goes negative if we buy back more than we've sold
+- **Completely separate from initial equity**
+
+### ❌ Option A: Start Bank at -start_value (WRONG - Don't Do This!)
 ```python
 # Initialize portfolio state
 holdings: int = int(initial_qty)
-bank: float = -1.0 * (holdings * start_price)  # Borrowed to fund position
+bank: float = -1.0 * (holdings * start_price)  # ❌ WRONG!
 ```
 
-**Pros:**
-- Conceptually accurate
-- Opportunity cost tracked from day 1
-- Clear "pay back the loan" narrative
+**Why This Is Wrong:**
+- Conflates equity position with trading cash flow
+- Bank is meant to track algorithm's cash generation, not equity
+- Would break all existing bank tracking logic
+- Algorithm can't "pay back" the equity - we're holding shares!
 
-**Cons:**
-- Changes all existing metrics
-- Bank will almost always be negative
-- May confuse existing tests/reports
+**This option is included only to explain why it's incorrect.**
 
-### Option B: Track "Virtual Initial Debt" Separately
+### ✓ Option B: Track Initial Capital Separately (Recommended)
 ```python
 # Initialize portfolio state
 holdings: int = int(initial_qty)
@@ -264,19 +304,31 @@ initial_capital_deployed: float = holdings * start_price  # Separate tracking
 - More complex bookkeeping
 - Two sources of opportunity cost to track
 
-### Option C: Post-Calculation Adjustment (Minimal Change)
+### ✓ Option C: Post-Calculation Adjustment (Minimal Change)
 ```python
-# At end of backtest
+# At end of backtest, calculate what we missed
+initial_capital_opp_cost = 0.0
+for d in date_range:
+    daily_return = reference_returns.get(d, daily_reference_rate_fallback)
+    initial_capital_opp_cost += initial_capital * daily_return
+
+# Combine with existing trading opportunity cost
 total_opportunity_cost = (
-    opportunity_cost_from_trading +  # Current calculation
-    opportunity_cost_from_initial_capital  # New calculation
+    opportunity_cost_from_trading +  # Current calculation (negative bank)
+    initial_capital_opp_cost         # New calculation (equity position)
 )
 ```
 
 **Pros:**
-- Minimal code changes
-- Backward compatible
-- Can add as optional "enhanced reporting"
+- ✓ Minimal code changes
+- ✓ Backward compatible (existing metrics unchanged)
+- ✓ Can add as optional "enhanced reporting"
+- ✓ Doesn't touch bank tracking logic
+
+**Cons:**
+- Can't track cumulative opportunity cost over time (only endpoint)
+- Less intuitive than separate variable
+- Harder to visualize daily accumulation
 
 **Cons:**
 - Doesn't fix conceptual model
