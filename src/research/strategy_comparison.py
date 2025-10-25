@@ -57,6 +57,8 @@ def calculate_yearly_cash_flow(transactions: List[str], start_date: date, end_da
         
     Returns:
         Dict mapping year to net cash flow (positive = received cash, negative = paid cash)
+        
+    Note: Excludes the initial BUY transaction to focus on ongoing cash generation
     """
     yearly_cash: Dict[int, float] = {}
     
@@ -64,7 +66,8 @@ def calculate_yearly_cash_flow(transactions: List[str], start_date: date, end_da
     for year in range(start_date.year, end_date.year + 1):
         yearly_cash[year] = 0.0
     
-    for tx in transactions:
+    # Skip first transaction (initial BUY)
+    for tx in transactions[1:] if len(transactions) > 1 else []:
         # Parse transaction format: "2024-01-15 SELL 100 NVDA @ 500.00 = 50000.00, holdings = 9900, bank = 50000.00  # Notes"
         try:
             parts = tx.split()
