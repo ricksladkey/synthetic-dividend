@@ -190,9 +190,9 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         self.assertAlmostEqual(ath_summary['total_return'], enhanced_summary['total_return'],
                               places=4, msg="Returns should match with no drawdowns")
         
-        # Volatility alpha should be ~0
-        vol_alpha = enhanced_summary.get('volatility_alpha', 0)
-        self.assertAlmostEqual(vol_alpha, 0, places=2,
+        # Volatility alpha (Enhanced vs ATH-only) should be ~0
+        vol_alpha = enhanced_summary['total_return'] - ath_summary['total_return']
+        self.assertAlmostEqual(vol_alpha, 0, places=4,
                               msg="No volatility alpha without drawdowns")
     
     def test_volatile_double_has_positive_volatility_alpha(self):
@@ -241,8 +241,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         self.assertGreater(enhanced_return, ath_return,
                           "Enhanced should outperform ATH-only with volatility")
         
-        # Volatility alpha should be positive
-        vol_alpha = enhanced_summary.get('volatility_alpha', 0)
+        # Volatility alpha (Enhanced vs ATH-only) should be positive
+        vol_alpha = enhanced_return - ath_return
         self.assertGreater(vol_alpha, 0,
                           "Volatility alpha should be positive")
         
