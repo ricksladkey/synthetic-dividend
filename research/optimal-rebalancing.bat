@@ -17,7 +17,7 @@ echo.
 
 REM Run without --ticker or --asset-class to test ALL assets
 REM Using historical 1-year period: 10/23/2023 - 10/23/2024 (weekdays - avoiding weekend data issues)
-c:\Users\ricks\OneDrive\Documents\GenAI\profit-sharing\.venv\Scripts\python.exe -m src.research.optimal_rebalancing --start "10/23/2023" --end "10/23/2024" --profit 50 --qty 10000 --output research_phase1_1year_core.csv
+C:/build/synthetic-dividend/.venv/Scripts/python.exe -m src.research.optimal_rebalancing --start "10/23/2023" --end "10/23/2024" --profit 50 --qty 10000 --output research_phase1_1year_core.csv
 
 echo.
 echo ========================================

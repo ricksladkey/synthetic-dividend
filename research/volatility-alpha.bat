@@ -14,9 +14,6 @@ echo.
 echo The difference is "Volatility Alpha" - extra profit from price volatility
 echo.
 
-REM Use hardcoded venv Python path (bypasses activation)
-set PYTHON=c:\Users\ricks\OneDrive\Documents\GenAI\profit-sharing\.venv\Scripts\python.exe
-
 REM Historical period (weekday dates to avoid Yahoo Finance weekend gaps)
 set START_DATE=10/23/2023
 set END_DATE=10/23/2024
@@ -32,7 +29,7 @@ echo - Profit Taking: %PROFIT_PCT%%%
 echo - Initial Quantity: %INITIAL_QTY%
 echo.
 
-%PYTHON% -m src.research.volatility_alpha ^
+C:/build/synthetic-dividend/.venv/Scripts/python.exe -m src.research.volatility_alpha ^
     --comprehensive ^
     --start "%START_DATE%" ^
     --end "%END_DATE%" ^
