@@ -260,6 +260,11 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         self.next_sell_price = orders["next_sell_price"]
         self.next_sell_qty = int(orders["next_sell_qty"])
 
+        # Edge case: Skip orders with zero quantity (e.g., 0% profit sharing)
+        # This prevents creating empty lots in the buyback stack
+        if self.next_buy_qty == 0 and self.next_sell_qty == 0:
+            return
+
         # Debug output
         if self.buyback_enabled:
             print(f"Placing orders for last transaction price: ${self.last_transaction_price}")
@@ -318,7 +323,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     self.ath_price = high
 
                     # Execute sell if threshold reached
-                    if high >= self.next_sell_price:
+                    if high >= self.next_sell_price and self.next_sell_qty > 0:
                         # Use open if market gapped up, else use limit price
                         actual_price = (
                             max(self.next_sell_price, open_price)
@@ -340,7 +345,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             # Full mode: check both buy (on dip) and sell (on rise)
 
             # Buy trigger: price dropped to or below buy threshold
-            if low <= self.next_buy_price:
+            if low <= self.next_buy_price and self.next_buy_qty > 0:
                 # Fill at open if market gapped down, else at limit price
                 actual_price = (
                     min(self.next_buy_price, open_price)
@@ -368,7 +373,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                 return transaction
 
             # Sell trigger: price rose to or above sell threshold
-            if high >= self.next_sell_price:
+            if high >= self.next_sell_price and self.next_sell_qty > 0:
                 # Fill at open if market gapped up, else at limit price
                 actual_price = (
                     max(self.next_sell_price, open_price)
