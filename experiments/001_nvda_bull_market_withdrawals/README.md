@@ -178,10 +178,13 @@
 
 **Code**: `src/research/strategy_comparison.py`  
 **Batch File**: `src/research/compare-strategies.bat`  
-**Raw Data**: `output/strategy_comparison.csv`  
-**Command**: `python -m src.research.strategy_comparison NVDA 2020-01-01 2025-01-01`
+**Raw Data**: `experiments/001_nvda_bull_market_withdrawals/results.csv`  
+**Command**: 
+```bash
+python -m src.research.strategy_comparison NVDA 2020-01-01 2025-01-01
+```
 
-**Git Commit**: [To be added after check-in]
+**Git Commit**: `6c7ee76` - "Add Experiment 001: NVDA bull market withdrawal sustainability"
 
 ---
 
