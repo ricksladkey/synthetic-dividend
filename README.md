@@ -179,6 +179,9 @@ synthetic-dividend/
 │   │   ├── optimal_rebalancing.py      # Phase 1: Parameter optimization
 │   │   └── volatility_alpha.py         # Phase 1b: Enhanced vs ATH-only
 │   │
+│   ├── 🛠️ tools/
+│   │   └── order_calculator.py         # Manual trading order calculator
+│   │
 │   ├── 📊 compare/
 │   │   ├── batch_comparison.py         # Multi-strategy analysis
 │   │   ├── plotter.py                  # Matplotlib visualizations
@@ -266,6 +269,45 @@ Initial Investment: $450,500.00 (10,000 shares @ $45.05)
    Volatility Alpha: 9.59% vs ATH-only
 
 ✅ OUTPERFORMED buy-and-hold by 25.46%!
+```
+
+### 🧮 Calculate Orders for Manual Trading
+
+**For live trading**: Calculate exact limit orders to place in your broker:
+
+```bash
+# Calculate buy/sell orders based on current position
+python -m src.tools.order_calculator \
+    --ticker NVDA \
+    --holdings 1000 \
+    --last-price 120.50 \
+    --current-price 125.30 \
+    --sdn 8 \
+    --profit 50
+```
+
+**Output** (ready to copy/paste into your broker):
+```
+╔══════════════════════════════════════════════════════════════╗
+║           SYNTHETIC DIVIDEND ORDER CALCULATOR                ║
+╚══════════════════════════════════════════════════════════════╝
+
+📊 CURRENT POSITION - NVDA
+  Holdings:         1,000 shares
+  Last Transaction: $120.50
+  Current Price:    $125.30
+  
+🎯 LIMIT ORDERS TO PLACE
+
+  BUY  NVDA     45 @ $110.50  (LIMIT GTC)
+  SELL NVDA     41 @ $131.41  (LIMIT GTC)
+
+💡 TIP: Set both orders as GTC, cancel and replace when either executes
+```
+
+**Quick shortcut** (Windows):
+```bash
+.\calc-orders.bat NVDA 1000 120.50 125.30 8 50
 ```
 
 ### 🔬 Run Research Analysis
