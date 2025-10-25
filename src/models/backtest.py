@@ -265,20 +265,21 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         if self.next_buy_qty == 0 and self.next_sell_qty == 0:
             return
 
-        # Debug output
-        if self.buyback_enabled:
-            print(f"Placing orders for last transaction price: ${self.last_transaction_price}")
-            print(
-                f"  Next BUY: {self.next_buy_qty} @ ${self.next_buy_price:.2f} = ${self.next_buy_price * self.next_buy_qty:.2f}"
-            )
-            print(
-                f"  Next SELL: {self.next_sell_qty} @ ${self.next_sell_price:.2f} = ${self.next_sell_price * self.next_sell_qty:.2f}"
-            )
-        else:
-            print(f"ATH-only: New ATH at ${current_price:.2f}, placing sell order:")
-            print(
-                f"  Next SELL: {self.next_sell_qty} @ ${self.next_sell_price:.2f} = ${self.next_sell_price * self.next_sell_qty:.2f}"
-            )
+        # Debug output (disabled by default for cleaner logs)
+        # Uncomment for detailed order placement debugging
+        # if self.buyback_enabled:
+        #     print(f"Placing orders for last transaction price: ${self.last_transaction_price}")
+        #     print(
+        #         f"  Next BUY: {self.next_buy_qty} @ ${self.next_buy_price:.2f} = ${self.next_buy_price * self.next_buy_qty:.2f}"
+        #     )
+        #     print(
+        #         f"  Next SELL: {self.next_sell_qty} @ ${self.next_sell_price:.2f} = ${self.next_sell_price * self.next_sell_qty:.2f}"
+        #     )
+        # else:
+        #     print(f"ATH-only: New ATH at ${current_price:.2f}, placing sell order:")
+        #     print(
+        #         f"  Next SELL: {self.next_sell_qty} @ ${self.next_sell_price:.2f} = ${self.next_sell_price * self.next_sell_qty:.2f}"
+        #     )
 
     def on_new_holdings(self, holdings: int, current_price: float) -> None:
         """Initialize algorithm state after initial purchase."""
