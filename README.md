@@ -163,7 +163,7 @@ python src/main.py
 ## 🏗️ Project Structure
 
 ```
-financial-modeling-app/
+synthetic-dividend/
 ├── 📊 src/
 │   ├── main.py                         # GUI entry point
 │   ├── run_model.py                    # CLI for single backtests
@@ -215,7 +215,7 @@ financial-modeling-app/
 ```bash
 # 1. Clone the repository
 git clone https://github.com/ricksladkey/synthetic-dividend.git
-cd synthetic-dividend/financial-modeling-app
+cd synthetic-dividend
 
 # 2. Create virtual environment (Windows PowerShell)
 python -m venv .venv
