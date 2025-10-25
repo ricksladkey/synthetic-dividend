@@ -1,29 +1,29 @@
 @echo off
-REM Run all unit tests for the buyback stack implementation
+REM Run ALL unit tests for the synthetic dividend project
 REM
-REM This batch file runs the comprehensive test suite that validates:
-REM   - FIFO buyback stack unwinding logic
-REM   - Share count parity at ATH recovery
-REM   - Buyback stack status tracking
-REM   - Multiple rebalance trigger scenarios
+REM This batch file runs the complete test suite using pytest, which includes:
+REM   - test_buyback_stack.py - FIFO buyback stack unwinding logic
+REM   - test_synthetic_dividend.py - Core synthetic dividend algorithm
+REM   - test_volatility_alpha_synthetic.py - Volatility alpha calculations
+REM   - Any other test files in the tests/ directory
 REM
-REM Expected results:
-REM   - Tests with monotonic price rises: PASS
-REM   - Tests with drawdown endings: PASS  
-REM   - Tests with V-shapes (return to previous ATH, not new): FAIL (economically correct)
-REM   - Tests with multiple cycles: Some PASS, some FAIL depending on final price
+REM Usage:
+REM   run-tests.bat              - Run all tests
+REM   run-tests.bat -v           - Run with verbose output
+REM   run-tests.bat -k pattern   - Run tests matching pattern
+REM   run-tests.bat --lf         - Run last failed tests only
 
 echo.
 echo ======================================================================
-echo Running Buyback Stack Unit Tests
+echo Running ALL Tests
 echo ======================================================================
 echo.
 
 REM Set PYTHONPATH to include the app root
 set PYTHONPATH=%~dp0
 
-REM Run the tests using the virtual environment Python
-c:\Users\ricks\OneDrive\Documents\GenAI\profit-sharing\.venv\Scripts\python.exe tests\test_buyback_stack.py
+REM Run all tests using pytest in the virtual environment
+.venv\Scripts\python.exe -m pytest tests\ %*
 
 REM Capture exit code
 set TEST_EXIT_CODE=%ERRORLEVEL%
@@ -34,10 +34,6 @@ if %TEST_EXIT_CODE% EQU 0 (
     echo All tests PASSED!
 ) else (
     echo Some tests FAILED - see details above
-    echo.
-    echo Note: V-shape test failures are expected and demonstrate correct
-    echo economic behavior when price returns to previous ATH without
-    echo exceeding it. Different strategies produce different share counts.
 )
 echo ======================================================================
 echo.
