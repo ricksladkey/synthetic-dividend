@@ -45,7 +45,7 @@ def test_allow_margin_true_bank_can_go_negative():
     )
     
     # Debug: print transactions to see what happened
-    print("\n".join(transactions[:20]))  # First 20 transactions
+    print("\n".join([t.to_string() for t in transactions[:20]]))  # First 20 transactions
     print(f"bank_min={summary['bank_min']}, skipped_buys={summary['skipped_buys']}")
     
     # Verify bank went negative
@@ -108,7 +108,7 @@ def test_allow_margin_false_bank_never_negative():
     assert summary['allow_margin'] is False
     
     # Check transactions for SKIP BUY messages
-    skip_messages = [t for t in transactions if 'SKIP BUY' in t]
+    skip_messages = [t for t in transactions if t.action == 'SKIP BUY']
     assert len(skip_messages) > 0, "Should have SKIP BUY transaction messages"
     assert len(skip_messages) == summary['skipped_buys']
 

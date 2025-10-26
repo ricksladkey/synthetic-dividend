@@ -51,7 +51,7 @@ def test_dividend_income_credited_to_bank():
     assert summary["bank"] == expected_total, "Bank should equal total dividends received"
 
     # Verify transactions show dividend payments
-    div_transactions = [t for t in transactions if "DIVIDEND" in t]
+    div_transactions = [t for t in transactions if t.action == "DIVIDEND"]
     assert len(div_transactions) == 4, "Should have 4 dividend transaction logs"
 
 

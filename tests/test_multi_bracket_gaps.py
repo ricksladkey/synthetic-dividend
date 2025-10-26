@@ -80,7 +80,11 @@ class TestMultiBracketGaps:
     """Test that multi-bracket price gaps trigger multiple transactions."""
     
     def test_single_bracket_gap_baseline(self):
-        """Baseline: 10% gap with 9.05% bracket should trigger ONE sell."""
+        """Baseline: 10% gap with 9.05% bracket should trigger ONE sell on gap day.
+        
+        Note: Total sells = 2 (one at recovery, one at gap). This test validates
+        that gap day has exactly 1 sell (not multiple).
+        """
         df = create_multi_bracket_gap_scenario(
             start_price=100.0,
             gap_multiplier=1.10  # 10% gap = 1.1 brackets (just over threshold)
@@ -102,17 +106,22 @@ class TestMultiBracketGaps:
         )
         
         # Count transactions by type (transactions are now Transaction objects)
-        buys = [t for t in txns if t.action == "BUY"]
+        # Exclude initial purchase from counts
+        buys = [t for t in txns if t.action == "BUY" and "Initial purchase" not in t.notes]
         sells = [t for t in txns if t.action == "SELL"]
+        gap_day_sells = [t for t in txns if t.action == "SELL" and t.transaction_date == date(2024, 1, 21)]
         
         print(f"\nSingle-bracket gap (10%):")
         print(f"  Total transactions: {len(txns)}")
         print(f"  Buys: {len(buys)}")
-        print(f"  Sells: {len(sells)}")
+        print(f"  Total sells: {len(sells)}")
+        print(f"  Gap day sells: {len(gap_day_sells)}")
         
-        # Should have 1 buy (day 10 dip) and 1 sell (day 20 gap)
+        # Should have 1 buy (day 11 dip), 2 total sells (recovery + gap)
+        # But only 1 sell on the gap day itself
         assert len(buys) == 1, f"Expected 1 buy, got {len(buys)}"
-        assert len(sells) == 1, f"Expected 1 sell, got {len(sells)}"
+        assert len(sells) == 2, f"Expected 2 total sells, got {len(sells)}"
+        assert len(gap_day_sells) == 1, f"Expected 1 sell on gap day, got {len(gap_day_sells)}"
         
     def test_double_bracket_gap(self):
         """Test: 20% gap with 9.05% bracket should trigger TWO sells.
@@ -148,7 +157,8 @@ class TestMultiBracketGaps:
         )
         
         # Count transactions by type (transactions are now Transaction objects)
-        buys = [t for t in txns if t.action == "BUY"]
+        # Exclude initial purchase from counts
+        buys = [t for t in txns if t.action == "BUY" and "Initial purchase" not in t.notes]
         sells = [t for t in txns if t.action == "SELL"]
         
         print(f"\nDouble-bracket gap (20%):")
@@ -198,7 +208,8 @@ class TestMultiBracketGaps:
         )
         
         # Count transactions by type (transactions are now Transaction objects)
-        buys = [t for t in txns if t.action == "BUY"]
+        # Exclude initial purchase from counts
+        buys = [t for t in txns if t.action == "BUY" and "Initial purchase" not in t.notes]
         sells = [t for t in txns if t.action == "SELL"]
         
         print(f"\nTriple-bracket gap (30%):")
@@ -255,7 +266,8 @@ class TestMultiBracketGaps:
         )
         
         # Count transactions (transactions are now Transaction objects)
-        buys = [t for t in txns if t.action == "BUY"]
+        # Exclude initial purchase from counts
+        buys = [t for t in txns if t.action == "BUY" and "Initial purchase" not in t.notes]
         
         print(f"\nGap DOWN (20% crash):")
         print(f"  Total buys: {len(buys)}")

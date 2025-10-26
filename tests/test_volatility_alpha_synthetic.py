@@ -145,7 +145,7 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         # All transactions should be SELL (ATH-only doesn't buy back)
         # Skip first transaction which is the initial BUY
         for txn in transactions[1:]:
-            self.assertIn("SELL", txn, "ATH-only should only SELL")
+            self.assertEqual(txn.action, "SELL", "ATH-only should only SELL")
     
     def test_gradual_double_enhanced_vs_ath(self):
         """Test that enhanced strategy matches ATH-only when there are no drawdowns."""
@@ -247,8 +247,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
                           "Volatility alpha should be positive")
         
         # Enhanced should have both BUY and SELL transactions
-        has_buy = any("BUY" in txn for txn in enhanced_txns)
-        has_sell = any("SELL" in txn for txn in enhanced_txns)
+        has_buy = any(txn.action == "BUY" for txn in enhanced_txns)
+        has_sell = any(txn.action == "SELL" for txn in enhanced_txns)
         self.assertTrue(has_buy, "Enhanced should have BUY transactions")
         self.assertTrue(has_sell, "Enhanced should have SELL transactions")
     
@@ -276,8 +276,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
                           "Should profit from buy-low-sell-high cycles")
         
         # Should have both buy and sell transactions
-        buys = [txn for txn in enhanced_txns if "BUY" in txn]
-        sells = [txn for txn in enhanced_txns if "SELL" in txn]
+        buys = [txn for txn in enhanced_txns if txn.action == "BUY" and "Initial purchase" not in txn.notes]
+        sells = [txn for txn in enhanced_txns if txn.action == "SELL"]
         self.assertGreater(len(buys), 0, "Should have buyback transactions")
         self.assertGreater(len(sells), 0, "Should have sell transactions")
     
@@ -372,7 +372,7 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
                        "Should have sold some holdings with 50% profit sharing")
         
         # Should have multiple sell transactions
-        sell_txns = [t for t in transactions if "SELL" in t]
+        sell_txns = [t for t in transactions if t.action == "SELL"]
         self.assertGreater(len(sell_txns), 5,
                           "Should have multiple sells during price doubling")
     
@@ -482,7 +482,7 @@ class TestProfitSharingSymmetry(unittest.TestCase):
         
         # All transactions after initial BUY should be SELL
         for txn in transactions[1:]:  # Skip initial BUY
-            self.assertIn("SELL", txn,
+            self.assertEqual(txn.action, "SELL",
                          "100% profit sharing should only SELL after initial position")
 
 

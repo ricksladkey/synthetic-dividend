@@ -105,11 +105,9 @@ class TestPriceNormalization:
         )
 
         # Extract normalized price from first transaction
-        # Format: "YYYY-MM-DD BUY qty TICKER @ price = total"
+        # Transaction object has .price property
         first_tx = txns[0]
-        parts = first_tx.split("@")
-        price_part = parts[1].split("=")[0].strip()
-        normalized_price = float(price_part)
+        normalized_price = first_tx.price
 
         # Calculate bracket number
         n = math.log(normalized_price) / math.log(1 + trigger)
@@ -136,12 +134,9 @@ class TestPriceNormalization:
             """Extract bracket numbers from transaction log."""
             brackets = []
             for tx in txns[1:]:  # Skip initial purchase
-                parts = tx.split("@")
-                if len(parts) >= 2:
-                    price_part = parts[1].split("=")[0].strip()
+                if tx.price > 0:  # Transaction has a price
                     try:
-                        price = float(price_part)
-                        n = math.log(price) / math.log(1 + trigger)
+                        n = math.log(tx.price) / math.log(1 + trigger)
                         brackets.append(round(n))
                     except ValueError:
                         pass
@@ -241,9 +236,7 @@ class TestPriceNormalization:
 
         # Extract price from first transaction
         first_tx = txns[0]
-        parts = first_tx.split("@")
-        price_part = parts[1].split("=")[0].strip()
-        actual_price = float(price_part)
+        actual_price = first_tx.price
 
         # Should be the original price (no normalization)
         assert (
@@ -295,9 +288,7 @@ class TestPriceNormalization:
 
             # Extract normalized price
             first_tx = txns[0]
-            parts = first_tx.split("@")
-            price_part = parts[1].split("=")[0].strip()
-            normalized_price = float(price_part)
+            normalized_price = first_tx.price
 
             # Calculate bracket number
             trigger_decimal = trigger_pct / 100.0
