@@ -4,6 +4,7 @@ Provides abstract base for strategy implementations and execution framework
 for backtesting against historical OHLC price data.
 """
 
+import math
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ from datetime import date
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
+
 
 
 def calculate_synthetic_dividend_orders(
@@ -537,6 +539,13 @@ def run_algorithm_backtest(
     risk_free_asset_df: Optional[pd.DataFrame] = None,
     reference_asset_ticker: str = "",
     risk_free_asset_ticker: str = "",
+    # Withdrawal policy parameters
+    withdrawal_rate_pct: float = 0.0,
+    withdrawal_frequency_days: int = 30,
+    cpi_adjustment_df: Optional[pd.DataFrame] = None,
+    simple_mode: bool = False,
+    # Price normalization
+    normalize_prices: bool = False,
 ) -> Tuple[List[str], Dict[str, Any]]:
     """Execute backtest of trading algorithm against historical price data.
 
@@ -545,8 +554,9 @@ def run_algorithm_backtest(
     2. Each day: call algo.on_day() which may return Transaction or None
     3. SELL: increases bank, decreases holdings (capped at current holdings)
     4. BUY: decreases bank (may go negative), increases holdings
-    5. Compute final portfolio value and returns vs buy-and-hold baseline
-    6. Calculate opportunity cost (negative bank) and risk-free gains (positive bank)
+    5. Process withdrawals (if configured) - withdraw from bank or sell shares if needed
+    6. Compute final portfolio value and returns vs buy-and-hold baseline
+    7. Calculate opportunity cost (negative bank) and risk-free gains (positive bank)
 
     Args:
         df: Historical OHLC price data (indexed by date)
@@ -558,14 +568,33 @@ def run_algorithm_backtest(
         algo_params: Optional parameters dict (for callable algos)
         reference_return_pct: Annual return for opportunity cost calc (fallback if no asset data)
                              Applied when bank balance is negative (borrowing cost)
+                             Ignored if simple_mode=True
         risk_free_rate_pct: Annual return on cash (fallback if no asset data)
                            Applied when bank balance is positive (interest earned)
+                           Ignored if simple_mode=True
         reference_asset_df: Historical price data for reference asset (e.g., VOO)
                            If provided, uses actual daily returns instead of fixed rate
+                           Ignored if simple_mode=True
         risk_free_asset_df: Historical price data for risk-free asset (e.g., BIL)
                            If provided, uses actual daily returns instead of fixed rate
+                           Ignored if simple_mode=True
         reference_asset_ticker: Ticker symbol for reference asset (for reporting)
         risk_free_asset_ticker: Ticker symbol for risk-free asset (for reporting)
+        withdrawal_rate_pct: Annual withdrawal rate as % of initial portfolio value
+                            (e.g., 4.0 for 4% withdrawal rate)
+                            Withdrawals are taken monthly and CPI-adjusted
+        withdrawal_frequency_days: Days between withdrawals (default 30 for monthly)
+        cpi_adjustment_df: Historical CPI data for inflation adjustment
+                          If provided, withdrawals adjust with inflation
+                          If None, withdrawals remain constant in nominal terms
+        simple_mode: If True, disables opportunity cost, risk-free gains, and CPI adjustment
+                    Useful for unit tests where we want clean, simple behavior
+                    (free borrowing, cash holds value, no inflation)
+        normalize_prices: If True, normalize all prices so brackets are at standard positions
+                         relative to 1.0 based on rebalance_trigger.
+                         This makes bracket placement deterministic across different backtests.
+                         For sd8 (9.05% trigger): brackets at 1.0, 1.0905, 1.1893, 1.2968, ...
+                         The first price is scaled so it lands on a standard bracket.
 
     Returns:
         Tuple of (transaction_strings, summary_dict)
@@ -575,6 +604,7 @@ def run_algorithm_backtest(
             * Holdings: holdings, bank, end_value, total
             * Bank stats: bank_min, bank_max, bank_avg, negative/positive counts
             * Costs/Gains: opportunity_cost, risk_free_gains
+            * Withdrawals: total_withdrawn, withdrawal_count, shares_sold_for_withdrawals
             * Deployment (supplementary): capital_utilization, return_on_deployed_capital,
               deployment_min/max, avg_deployed_capital
             * Baseline: buy-and-hold comparison data
@@ -623,13 +653,64 @@ def run_algorithm_backtest(
                 if prev_price > 0:
                     risk_free_returns[dates[i]] = (curr_price - prev_price) / prev_price
 
-    # Fallback daily rates (if asset data not available)
-    daily_reference_rate_fallback = (1 + reference_return_pct / 100.0) ** (1.0 / 365.25) - 1.0
-    daily_risk_free_rate_fallback = (1 + risk_free_rate_pct / 100.0) ** (1.0 / 365.25) - 1.0
+    # Fallback daily rates (if asset data not available or simple_mode)
+    if simple_mode:
+        daily_reference_rate_fallback = 0.0
+        daily_risk_free_rate_fallback = 0.0
+    else:
+        daily_reference_rate_fallback = (1 + reference_return_pct / 100.0) ** (1.0 / 365.25) - 1.0
+        daily_risk_free_rate_fallback = (1 + risk_free_rate_pct / 100.0) ** (1.0 / 365.25) - 1.0
 
     # Extract start/end prices for return calculations
     start_price: float = _get_close_scalar(df_indexed, first_idx, "Close")
     end_price: float = _get_close_scalar(df_indexed, last_idx, "Close")
+
+    # Price normalization (if enabled)
+    # Normalize so that brackets are at standard positions relative to 1.0
+    # For example, with sd8 (9.05% trigger), brackets at: 1.0, 1.0905, 1.1893, 1.2968, ...
+    price_scale_factor: float = 1.0
+    if normalize_prices:
+        # Get rebalance trigger from algorithm
+        rebalance_trigger = 0.0
+        if algo is not None:
+            if isinstance(algo, SyntheticDividendAlgorithm):
+                rebalance_trigger = algo.rebalance_size  # Already in decimal form
+            elif hasattr(algo, 'rebalance_size'):
+                rebalance_trigger = algo.rebalance_size
+        
+        if rebalance_trigger > 0:
+            # Find which bracket the start_price should be on
+            # Brackets are at: 1.0 * (1 + r)^n for integer n
+            # We want: start_price * scale = 1.0 * (1 + r)^n for some integer n
+            # So: n = log(start_price * scale) / log(1 + r)
+            # We want n to be an integer, so find closest integer bracket
+            
+            # Start by assuming scale=1, find which bracket that gives us
+            n_float = math.log(start_price) / math.log(1 + rebalance_trigger)
+            n_int = round(n_float)  # Round to nearest integer bracket
+            
+            # Now calculate the scale to land exactly on that bracket
+            # target_price = 1.0 * (1 + r)^n
+            # scale = target_price / start_price
+            target_price = math.pow(1 + rebalance_trigger, n_int)
+            price_scale_factor = target_price / start_price
+            
+            # Scale all prices in the dataframe
+            df_indexed = df_indexed.copy()
+            for col in ['Open', 'High', 'Low', 'Close']:
+                if col in df_indexed.columns:
+                    df_indexed[col] = df_indexed[col] * price_scale_factor
+            
+            # Update start/end prices
+            start_price = start_price * price_scale_factor
+            end_price = end_price * price_scale_factor
+            
+            print(f"Price normalization: scaling factor = {price_scale_factor:.6f}")
+            print(f"  Original start price: ${start_price / price_scale_factor:.2f}")
+            print(f"  Normalized start price: ${start_price:.2f} (bracket n={n_int})")
+            print(f"  Rebalance trigger: {rebalance_trigger * 100:.4f}%")
+            print(f"  Next bracket up: ${start_price * (1 + rebalance_trigger):.2f}")
+            print(f"  Next bracket down: ${start_price / (1 + rebalance_trigger):.2f}")
 
     transactions: List[str] = []
 
@@ -644,9 +725,41 @@ def run_algorithm_backtest(
 
     # Deployed capital tracking for capital utilization metrics
     deployment_history: List[Tuple[date, float]] = []  # (date, deployed_capital)
+    
+    # Withdrawal tracking
+    total_withdrawn: float = 0.0
+    withdrawal_count: int = 0
+    shares_sold_for_withdrawals: int = 0
+    last_withdrawal_date: Optional[date] = None
+    
+    # Calculate initial withdrawal amount (if withdrawal policy enabled)
+    start_value = holdings * start_price
+    if withdrawal_rate_pct > 0:
+        # Annual withdrawal based on initial portfolio value
+        annual_withdrawal = start_value * (withdrawal_rate_pct / 100.0)
+        # Convert to per-period withdrawal
+        base_withdrawal_amount = annual_withdrawal * (withdrawal_frequency_days / 365.25)
+    else:
+        base_withdrawal_amount = 0.0
+        
+    # CPI adjustment setup
+    cpi_returns: Dict[date, float] = {}
+    if cpi_adjustment_df is not None and not cpi_adjustment_df.empty and not simple_mode:
+        cpi_indexed = cpi_adjustment_df.copy()
+        cpi_indexed.index = pd.to_datetime(cpi_indexed.index).date
+        if "Close" in cpi_indexed.columns or "Value" in cpi_indexed.columns:
+            value_col = "Value" if "Value" in cpi_indexed.columns else "Close"
+            cpi_values = cpi_indexed[value_col].values
+            cpi_dates = cpi_indexed.index.tolist()
+            # Calculate cumulative CPI adjustment from start
+            if len(cpi_values) > 0 and first_idx in cpi_dates:
+                start_cpi_idx = cpi_dates.index(first_idx)
+                start_cpi = float(cpi_values[start_cpi_idx])
+                for i, d in enumerate(cpi_dates):
+                    if d >= first_idx:
+                        cpi_returns[d] = float(cpi_values[i]) / start_cpi
 
     # Record initial purchase
-    start_value = holdings * start_price
     transactions.append(
         f"{first_idx.isoformat()} BUY {holdings} {ticker} @ {start_price:.2f} = {start_value:.2f}"
     )
@@ -715,46 +828,103 @@ def run_algorithm_backtest(
         except Exception as e:
             raise RuntimeError(f"Algorithm raised an error on {d}: {e}")
 
-        # No transaction requested
-        if tx is None:
-            continue
+        # Process algorithm transaction (if any)
+        if tx is not None:
+            # Validate transaction type
+            if not isinstance(tx, Transaction):
+                raise ValueError("Algorithm must return a Transaction or None")
 
-        # Validate transaction type
-        if not isinstance(tx, Transaction):
-            raise ValueError("Algorithm must return a Transaction or None")
+            # Execute SELL transaction
+            if tx.action.upper() == "SELL":
+                sell_qty = min(int(tx.qty), holdings)  # Cap at available holdings
+                proceeds = sell_qty * price
+                holdings -= sell_qty
+                bank += proceeds
+                transactions.append(
+                    f"{d.isoformat()} SELL {sell_qty} {ticker} @ {price:.2f} = {proceeds:.2f}, "
+                    f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
+                )
+                # Track bank balance statistics
+                bank_history.append((d, bank))
+                bank_min = min(bank_min, bank)
+                bank_max = max(bank_max, bank)
 
-        # Execute SELL transaction
-        if tx.action.upper() == "SELL":
-            sell_qty = min(int(tx.qty), holdings)  # Cap at available holdings
-            proceeds = sell_qty * price
-            holdings -= sell_qty
-            bank += proceeds
-            transactions.append(
-                f"{d.isoformat()} SELL {sell_qty} {ticker} @ {price:.2f} = {proceeds:.2f}, "
-                f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
-            )
-            # Track bank balance statistics
-            bank_history.append((d, bank))
-            bank_min = min(bank_min, bank)
-            bank_max = max(bank_max, bank)
+            # Execute BUY transaction
+            elif tx.action.upper() == "BUY":
+                buy_qty = int(tx.qty)
+                cost = buy_qty * price
+                holdings += buy_qty
+                bank -= cost  # May go negative (margin)
+                transactions.append(
+                    f"{d.isoformat()} BUY {buy_qty} {ticker} @ {price:.2f} = {cost:.2f}, "
+                    f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
+                )
+                # Track bank balance statistics
+                bank_history.append((d, bank))
+                bank_min = min(bank_min, bank)
+                bank_max = max(bank_max, bank)
 
-        # Execute BUY transaction
-        elif tx.action.upper() == "BUY":
-            buy_qty = int(tx.qty)
-            cost = buy_qty * price
-            holdings += buy_qty
-            bank -= cost  # May go negative (margin)
-            transactions.append(
-                f"{d.isoformat()} BUY {buy_qty} {ticker} @ {price:.2f} = {cost:.2f}, "
-                f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
-            )
-            # Track bank balance statistics
-            bank_history.append((d, bank))
-            bank_min = min(bank_min, bank)
-            bank_max = max(bank_max, bank)
-
-        else:
-            raise ValueError("Transaction action must be 'BUY' or 'SELL'")
+            else:
+                raise ValueError("Transaction action must be 'BUY' or 'SELL'")
+        
+        # Process withdrawals (if enabled and due)
+        if base_withdrawal_amount > 0:
+            # Check if withdrawal is due
+            days_since_last = None
+            if last_withdrawal_date is None:
+                # First withdrawal after start date
+                days_since_last = (d - first_idx).days
+            else:
+                days_since_last = (d - last_withdrawal_date).days
+            
+            if days_since_last is not None and days_since_last >= withdrawal_frequency_days:
+                # Calculate CPI-adjusted withdrawal amount
+                cpi_multiplier = cpi_returns.get(d, 1.0)
+                withdrawal_amount = base_withdrawal_amount * cpi_multiplier
+                
+                # Try to withdraw from bank first
+                if bank >= withdrawal_amount:
+                    # Sufficient cash - withdraw from bank
+                    bank -= withdrawal_amount
+                    transactions.append(
+                        f"{d.isoformat()} WITHDRAWAL ${withdrawal_amount:.2f} from bank, "
+                        f"bank = {bank:.2f}"
+                    )
+                else:
+                    # Insufficient cash - need to sell shares
+                    cash_needed = withdrawal_amount - max(0, bank)
+                    shares_to_sell = int(cash_needed / price) + 1  # Round up
+                    shares_to_sell = min(shares_to_sell, holdings)  # Cap at available
+                    
+                    if shares_to_sell > 0:
+                        proceeds = shares_to_sell * price
+                        holdings -= shares_to_sell
+                        bank += proceeds
+                        shares_sold_for_withdrawals += shares_to_sell
+                        
+                        transactions.append(
+                            f"{d.isoformat()} SELL {shares_to_sell} {ticker} @ {price:.2f} "
+                            f"for withdrawal (need ${withdrawal_amount:.2f}), "
+                            f"holdings = {holdings}, bank = {bank:.2f}"
+                        )
+                    
+                    # Now withdraw from bank
+                    actual_withdrawal = min(withdrawal_amount, bank)
+                    bank -= actual_withdrawal
+                    transactions.append(
+                        f"{d.isoformat()} WITHDRAWAL ${actual_withdrawal:.2f} from bank, "
+                        f"bank = {bank:.2f}"
+                    )
+                    withdrawal_amount = actual_withdrawal
+                
+                total_withdrawn += withdrawal_amount
+                withdrawal_count += 1
+                last_withdrawal_date = d
+                
+                # Track bank balance after withdrawal
+                bank_history.append((d, bank))
+                bank_min = min(bank_min, bank)
+                bank_max = max(bank_max, bank)
 
     # Calculate final portfolio metrics
     final_price = end_price
@@ -793,20 +963,22 @@ def run_algorithm_backtest(
     deployment_max_pct: float = max_deployed_capital / start_val if start_val > 0 else 0.0
 
     # Calculate opportunity cost and risk-free gains using actual asset returns
+    # Skip if simple_mode is enabled (free borrowing, cash holds value)
     opportunity_cost_total = 0.0
     risk_free_gains_total = 0.0
 
-    for d, bank_balance in bank_history:
-        if bank_balance < 0:
-            # Negative balance: opportunity cost of borrowed money
-            # Use actual reference asset return for this day, or fallback to fixed rate
-            daily_return = reference_returns.get(d, daily_reference_rate_fallback)
-            opportunity_cost_total += abs(bank_balance) * daily_return
-        elif bank_balance > 0:
-            # Positive balance: risk-free interest earned on cash
-            # Use actual risk-free asset return for this day, or fallback to fixed rate
-            daily_return = risk_free_returns.get(d, daily_risk_free_rate_fallback)
-            risk_free_gains_total += bank_balance * daily_return
+    if not simple_mode:
+        for d, bank_balance in bank_history:
+            if bank_balance < 0:
+                # Negative balance: opportunity cost of borrowed money
+                # Use actual reference asset return for this day, or fallback to fixed rate
+                daily_return = reference_returns.get(d, daily_reference_rate_fallback)
+                opportunity_cost_total += abs(bank_balance) * daily_return
+            elif bank_balance > 0:
+                # Positive balance: risk-free interest earned on cash
+                # Use actual risk-free asset return for this day, or fallback to fixed rate
+                daily_return = risk_free_returns.get(d, daily_risk_free_rate_fallback)
+                risk_free_gains_total += bank_balance * daily_return
 
     # Build summary dict
     summary: Dict[str, Any] = {
@@ -830,6 +1002,11 @@ def run_algorithm_backtest(
         "total_return": total_return,
         "annualized": annualized,
         "years": years,
+        # Withdrawal metrics
+        "total_withdrawn": total_withdrawn,
+        "withdrawal_count": withdrawal_count,
+        "shares_sold_for_withdrawals": shares_sold_for_withdrawals,
+        "withdrawal_rate_pct": withdrawal_rate_pct,
         # Capital deployment supplementary metrics
         "avg_deployed_capital": avg_deployed_capital,
         "capital_utilization": capital_utilization,
