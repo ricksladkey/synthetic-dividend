@@ -29,6 +29,33 @@
 - ✅ Parameter variation tests (4.44%, 9.05%, 10%, 15% rebalance)
 - ✅ Profit sharing tests (0%, 50%, 100%)
 - ✅ Buyback stack FIFO unwinding tests
+- ✅ Withdrawal policy tests (orthogonal design validation)
+- ✅ Price normalization tests (deterministic bracket placement)
+- ✅ Simple mode tests (clean testing environment)
+
+### Documentation & Theory
+- ✅ INVESTING_THEORY.md - Core volatility alpha theory
+- ✅ VOLATILITY_ALPHA_THESIS.md - Mathematical framework
+- ✅ INITIAL_CAPITAL_THEORY.md - Opportunity cost tracking
+- ✅ RETURN_METRICS_ANALYSIS.md - Performance measurement formulas
+- ✅ WITHDRAWAL_POLICY.md - Orthogonal withdrawal design
+- ✅ PRICE_NORMALIZATION.md - Deterministic bracket placement
+- ✅ CHECKPOINT.md - Line-by-line theory-practice verification
+- ✅ CHECKPOINT_SUMMARY.md - Quick status overview
+- ✅ QUICK_REFERENCE.md - Core concepts quick refresh
+
+### Development Infrastructure
+- ✅ Migration from unittest to pytest framework (all 39 tests)
+- ✅ Test coverage measurement with pytest-cov (26% overall, 78% on backtest.py)
+- ✅ Type hints with mypy (mypy.ini configured)
+- ✅ Code style with flake8 (.flake8 configured)
+
+### Recent Features (October 2025)
+- ✅ Withdrawal policy as orthogonal dimension (4% rule with CPI adjustment)
+- ✅ Price normalization for deterministic bracket placement
+- ✅ Simple mode for clean unit testing (disables costs/inflation)
+- ✅ Order calculator enhancement with bracket position display
+- ✅ Critical bug fix: Withdrawal logic now works for all strategies
 
 ---
 
@@ -70,18 +97,17 @@
 
 ---
 
-## 🔧 Housekeeping & Code Quality (NEW)
+## 🔧 Housekeeping & Code Quality
 
 ### Type Checking
-- [ ] Add mypy configuration (mypy.ini or pyproject.toml)
-- [ ] Run mypy on all source files
-- [ ] Add type hints to all functions in src/models/backtest.py
-- [ ] Add type hints to all functions in src/data/fetcher.py
+- ✅ Add mypy configuration (COMPLETED - mypy.ini exists)
+- ✅ Add type hints to core modules (substantially complete)
+- [ ] Run mypy on all source files and achieve zero errors
 - [ ] Add type hints to src/compare/ modules
-- [ ] Fix any mypy errors/warnings
+- [ ] Add type hints to remaining utility modules
 
 ### Linting & Formatting
-- [ ] Add flake8 configuration (.flake8)
+- ✅ Add flake8 configuration (COMPLETED - .flake8 exists)
 - [ ] Run flake8 and fix style issues
 - [ ] Add black configuration (pyproject.toml)
 - [ ] Format all Python files with black
@@ -97,16 +123,16 @@
 - [ ] Add .editorconfig for consistent formatting across editors
 
 ### Testing Infrastructure
-- [ ] Migrate to pytest framework (currently using simple assert)
-- [ ] Add pytest.ini configuration
-- [ ] Add test coverage measurement (pytest-cov)
+- ✅ Migrate to pytest framework (COMPLETED - all 39 tests use pytest)
+- ✅ Add pytest.ini configuration (COMPLETED - pytest configured)
+- ✅ Add test coverage measurement with pytest-cov (COMPLETED - 26%/78% coverage)
 - [ ] Aim for >80% code coverage on core modules
 - [ ] Add doctests for key functions
 
 ### Documentation
-- [ ] Add docstrings to all public functions (Google or NumPy style)
+- ✅ Add docstrings to all public functions (substantially complete)
 - [ ] Generate API documentation with Sphinx (optional)
-- [ ] Update README.md with current project state
+- ✅ Update README.md with current project state
 - [ ] Document all batch files in README
 - [ ] Add CONTRIBUTING.md with development guidelines
 
@@ -222,25 +248,38 @@
 
 ## 📊 Current Test Status
 
-**Unit Tests**: 11 total
-- ✅ 6 passing (validating core FIFO logic)
-- ⚠️ 5 failing (expected - demonstrating correct economic behavior)
+**Unit Tests**: 39 total (all passing ✅)
+- ✅ 11 buyback stack tests (FIFO unwinding, profit sharing)
+- ✅ 8 symmetry tests (deterministic behavior validation)
+- ✅ 12 volatility alpha tests (mechanics and market regime theory)
+- ✅ 5 price normalization tests (deterministic bracket placement)
+- ✅ 3 withdrawal policy tests (orthogonal design validation)
 
-**Test Coverage**: Unknown (add pytest-cov to measure)
+**Test Coverage**: 
+- Overall: 26%
+- Core backtest.py: 78%
+- Framework: pytest with pytest-cov
 
 **Rebalance Triggers Tested**: 4.44%, 9.05%, 10%, 15%
 
 **Profit Sharing Tested**: 0%, 50%, 100%
 
+**New Features Validated**:
+- Withdrawal policy (4% rule with CPI adjustment)
+- Price normalization (deterministic brackets)
+- Simple mode (clean testing environment)
+
 ---
 
 ## 📝 Notes
 
-- V-shape test "failures" are actually correct - they demonstrate that different strategies yield different share counts when price returns to previous ATH without exceeding it
-- Stack empty status correctly indicates all buybacks unwound at ATH recovery
-- 183-share difference in NVDA comparison is economically correct behavior
+- All tests now passing after critical withdrawal bug fix (October 25, 2025)
+- Theory-practice synchronization verified across 8 theory documents
+- Experiment framework established (3 experiments validating market regime theory)
+- Positive volatility alpha confirmed (+0.09-0.23% in favorable conditions)
+- Comprehensive checkpoint documentation available (CHECKPOINT.md)
 
 ---
 
-*Last Updated: October 23, 2025*
-*Version: Post-FIFO Implementation*
+*Last Updated: October 25, 2025*
+*Version: Post-Withdrawal & Normalization Implementation*
