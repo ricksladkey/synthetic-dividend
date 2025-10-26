@@ -1,504 +1,171 @@
-# Initial Capital Theory: The Missing Opportunity Cost
+# Initial Capital and Opportunity Cost Theory
 
-## Current Implementation Details
+## The Core Question
 
-### What We Track Now (src/models/backtest.py)
-
-**Initialization (lines 636-649):**
-```python
-# Initialize portfolio state
-holdings: int = int(initial_qty)  # e.### ✓ Option B: Track Initial Capital Separately (Recommended)
-```python
-# Initialize portfolio state
-holdings: int = int(initial_qty)
-bank: float = 0.0  # Algorithm's trading balance (starts at zero)
-initial_capital_deployed: float = holdings * start_price  # Track separately
-
-# During backtest, accumulate opportunity cost on BOTH:
-# 1. Initial capital (always accumulating)
-# 2. Negative bank balance (when algorithm borrows for buybacks)
-```
-
-**Pros:**
-- ✓ Preserves correct bank tracking (algorithm's cash flow)
-- ✓ Doesn't break existing code
-- ✓ Clear separation: "equity position" vs "trading cash"
-- ✓ Can report total opportunity cost (initial + trading)
-- ✓ Matches conceptual model correctly
-
-**Cons:**
-- More variables to track
-- Two separate opportunity cost calculations
-
-### ✓ Option C: Post-Calculation Adjustment (Minimal Change)ank: float = 0.0  # ← Starts at ZERO, not negative!
-
-# Record initial purchase
-start_value = holdings * start_price  # e.g., $100,000
-transactions.append(
-    f"{first_idx.isoformat()} BUY {holdings} {ticker} @ {start_price:.2f} = {start_value:.2f}"
-)
-```
-
-**Opportunity Cost Calculation (lines 794-808):**
-```python
-opportunity_cost_total = 0.0
-
-for d, bank_balance in bank_history:
-    if bank_balance < 0:
-        # Negative balance: opportunity cost of borrowed money
-        daily_return = reference_returns.get(d, daily_reference_rate_fallback)
-        opportunity_cost_total += abs(bank_balance) * daily_return
-    elif bank_balance > 0:
-        # Positive balance: risk-free interest earned on cash
-        daily_return = risk_free_returns.get(d, daily_risk_free_rate_fallback)
-        risk_free_gains_total += bank_balance * daily_return
-```
-
-**What This Means:**
-- ✅ We track opportunity cost when algorithm trading causes negative bank balance
-- ✅ We track risk-free gains when algorithm accumulates positive cash
-- ❌ We DON'T track opportunity cost on the initial $100k capital
-- ❌ Implicitly assumes investor had $100k sitting idle with no opportunity cost
-
-### Example: Current Behavior
-
-**Scenario:** NVDA backtest, $100k initial, bank never goes negative
-```
-Start: 1000 shares @ $100 = $100,000
-End:   1500 shares @ $200 = $300,000
-Bank:  $0 (all gains reinvested)
-
-Current Metrics:
-- Total Return: 200% = ($300k - $100k) / $100k
-- Opportunity Cost: $0 (bank never negative)
-- Risk-Free Gains: $0 (bank never positive)
-
-Missing Information:
-- What did VOO return over same period? (e.g., 150%)
-- Opportunity cost on $100k initial capital: ~$150k
-- True net return: 200% - 150% = 50% (this is volatility alpha!)
-```
-
-**The $100k Question:** Where did it come from?
-- **If borrowed:** We owe interest at market rate (VOO return)
-- **If owned:** We gave up earning VOO return on that cash
-- **Either way:** There's an opportunity cost we're not tracking!
-
-## The Conceptual Inconsistency
-
-### Current Model
-```
-Day 0: BUY 1000 shares @ $100 = $100,000
-       Bank: $0
-       Opportunity Cost: $0
-
-Day 1-N: Track opportunity cost only on negative bank from trading
-```
-
-**Problem:** Where did the initial $100,000 come from? It represents deployed capital with opportunity cost from day 1!
-
-### Corrected Model
-```
-Day 0: BUY 1000 shares @ $100 = $100,000 (equity position)
-       Bank: $0 (algorithm's trading cash flow starts at zero)
-       Opportunity Cost Tracking:
-         - On $100k equity position: Begins accruing at VOO return rate
-         - On bank balance: Only when negative (algorithm borrows for buybacks)
-
-Day 1-N: Continue tracking TWO separate opportunity costs:
-         1. Initial $100k equity (always accumulating)
-         2. Negative bank balance (only when algorithm borrows)
-```
-
-**Key Insight:** The bank tracks algorithm's cash generation from selling at ATHs, NOT the equity position itself.
-
-## Theoretical Implications
-
-### 1. **True Break-Even Calculation**
-
-**Current (Wrong):**
-- Algorithm breaks even when: `total_value >= start_value`
-- Ignores cost of capital
-
-**Corrected:**
-- Algorithm breaks even when: `total_value >= start_value + opportunity_cost_on_initial_capital`
-- Must beat the reference return (VOO) to justify the strategy
-
-### 2. **Volatility Alpha Interpretation**
-
-**Current:**
-```python
-volatility_alpha = total_return - buy_and_hold_return
-```
-
-**This is actually correct!** Because:
-- Both strategies borrow $100,000 on day 0
-- Both pay opportunity cost on that capital
-- The alpha is the DIFFERENCE in outcomes
-- Opportunity cost cancels out in the subtraction
-
-**But we're not surfacing it correctly in reporting.**
-
-### 3. **Return Metrics Need Adjustment**
-
-**Current `total_return`:**
-```
-total_return = (end_value - start_value) / start_value
-```
-
-**Two interpretations:**
-
-A) **Return on Borrowed Capital** (current):
-- "If I borrowed $100k, what % return did I generate?"
-- This is what we currently calculate
-- Valid for comparing strategies
-
-B) **Net Return After Opportunity Cost** (proposed):
-```
-net_return = (end_value - start_value - total_opportunity_cost) / start_value
-```
-- "After paying back my loan at market rates, what % return did I keep?"
-- More realistic investor perspective
-- Could be negative even if end_value > start_value
-
-## The "Skin in the Game" Question
-
-### Scenario: Investor has $100k cash
-
-**Option 1: Buy VOO**
-- Cost: $0 (using own money)
-- Return: VOO market return
-- Opportunity cost: $0 (baseline)
-
-**Option 2: Buy NVDA with Synthetic Dividend Algorithm**
-- Cost: $0 (using own money)  
-- Return: Algorithm total return
-- Opportunity cost: What VOO would have returned
-- **Real gain: total_return - VOO_return** ← This is volatility_alpha!
-
-**Option 3: Buy NVDA with leverage (borrowed $100k)**
-- Cost: Interest on $100k loan
-- Return: Algorithm total return
-- Opportunity cost: Interest payments
-- Real gain: total_return - interest_rate
-
-## Worked Example: NVDA 2020-2024
-
-### Scenario Setup
-- Initial: 100 shares @ $100 = $10,000
-- Period: 2020-01-01 to 2024-12-31
-- VOO return over period: +80% (example)
-- NVDA buy-and-hold return: +300%
-- NVDA with algorithm return: +336%
-
-### Current Reporting (What We Show)
-```
-Algorithm Total Return: +336%
-  Start Value: $10,000
-  End Value:   $43,600
-  Profit:      $33,600
-
-Buy-and-Hold Return: +300%
-  Start Value: $10,000
-  End Value:   $40,000
-  Profit:      $30,000
-
-Volatility Alpha: +36% (336% - 300%)
-Opportunity Cost: $0 (bank never went negative)
-```
-
-### What We're Missing
-```
-Opportunity Cost on Initial $10k:
-  VOO gained 80% over period = $8,000
-  This is the "cost" of deploying capital in NVDA vs VOO
-
-Net Return After Opportunity Cost:
-  Algorithm: +336% gross - 80% opp cost = +256% net
-  Buy-Hold:  +300% gross - 80% opp cost = +220% net
-  
-Alpha (unchanged): +36% (same as before, cancels out!)
-```
-
-### Key Insight
-The **volatility alpha (+36%)** is correct because:
-```
-Algorithm net:  (336% - 80%) = 256%
-Buy-hold net:   (300% - 80%) = 220%
-Difference:      256% - 220% = 36% ✓
-```
-
-But we're not showing investors the **full picture**:
-- "You made 336%!" (Current)
-- "You made 336% gross, paid 80% opportunity cost, kept 256% net" (Better)
-
-### Three Different Backtests, Three Different Stories
-
-**Test 1: Bank Always Zero (All Gains Reinvested)**
-```
-Current Opportunity Cost: $0
-Missing Opportunity Cost: Initial capital only
-Should Track: ~$8,000 on $10k over 5 years
-```
-
-**Test 2: Bank Goes Negative (Algorithm Borrows)**
-```
-Current Opportunity Cost: $2,500 (from trading)
-Missing Opportunity Cost: Initial capital
-Should Track: ~$8,000 + $2,500 = $10,500
-```
-
-**Test 3: Bank Goes Positive (Algorithm Accumulates Cash)**
-```
-Current: Opp Cost $0, Risk-Free Gains $1,200
-Missing: Initial capital opp cost
-Should Track: Opp Cost $8,000, Risk-Free Gains $1,200
-Net Cost: $8,000 - $1,200 = $6,800
-```
-
-## Implementation Considerations
-
-### Critical Distinction: Two Separate Capital Streams
-
-**Initial Capital (Equity Position):**
-- The $100k we invested to buy shares
-- This is NOT a loan to ourselves, it's our equity stake
-- Opportunity cost: What we gave up by not investing in VOO
-- **Does NOT affect bank balance**
-
-**Trading Cash Flow (Bank Balance):**
-- Starts at $0 (algorithm hasn't traded yet)
-- Tracks cash generated from selling at ATHs
-- Goes negative if we buy back more than we've sold
-- **Completely separate from initial equity**
-
-### ❌ Option A: Start Bank at -start_value (WRONG - Don't Do This!)
-```python
-# Initialize portfolio state
-holdings: int = int(initial_qty)
-bank: float = -1.0 * (holdings * start_price)  # ❌ WRONG!
-```
-
-**Why This Is Wrong:**
-- Conflates equity position with trading cash flow
-- Bank is meant to track algorithm's cash generation, not equity
-- Would break all existing bank tracking logic
-- Algorithm can't "pay back" the equity - we're holding shares!
-
-**This option is included only to explain why it's incorrect.**
-
-### ✓ Option B: Track Initial Capital Separately (Recommended)
-```python
-# Initialize portfolio state
-holdings: int = int(initial_qty)
-bank: float = 0.0  # Algorithm's trading balance
-initial_capital_deployed: float = holdings * start_price  # Separate tracking
-```
-
-**Pros:**
-- Doesn't break existing code
-- Clearer separation: "investor capital" vs "algorithm trades"
-- Can add new metric: `total_opportunity_cost` (initial + trading)
-
-**Cons:**
-- More complex bookkeeping
-- Two sources of opportunity cost to track
-
-### ✓ Option C: Post-Calculation Adjustment (Minimal Change)
-```python
-# At end of backtest, calculate what we missed
-initial_capital_opp_cost = 0.0
-for d in date_range:
-    daily_return = reference_returns.get(d, daily_reference_rate_fallback)
-    initial_capital_opp_cost += initial_capital * daily_return
-
-# Combine with existing trading opportunity cost
-total_opportunity_cost = (
-    opportunity_cost_from_trading +  # Current calculation (negative bank)
-    initial_capital_opp_cost         # New calculation (equity position)
-)
-```
-
-**Pros:**
-- ✓ Minimal code changes
-- ✓ Backward compatible (existing metrics unchanged)
-- ✓ Can add as optional "enhanced reporting"
-- ✓ Doesn't touch bank tracking logic
-
-**Cons:**
-- Can't track cumulative opportunity cost over time (only endpoint)
-- Less intuitive than separate variable
-- Harder to visualize daily accumulation
-
-**Cons:**
-- Doesn't fix conceptual model
-- Harder to track intra-period metrics
-
-## Proposed Metrics Suite
-
-### Primary Metrics (Investor Perspective)
-1. **Gross Return**: `(end_value - start_value) / start_value`
-   - Raw performance, ignoring opportunity cost
-   - Current `total_return` metric
-
-2. **Net Return After Opportunity Cost**: `(end_value - start_value - total_opportunity_cost) / start_value`
-   - What you keep after "paying back the loan"
-   - Could be negative!
-
-3. **Volatility Alpha** (unchanged): `gross_return - buy_and_hold_return`
-   - Relative performance vs baseline
-   - Opportunity cost cancels in subtraction
-
-### Supplementary Metrics (Diagnostic)
-4. **Total Opportunity Cost**: Cost of capital across entire period
-   - Initial capital: Always accruing
-   - Trading balance: When bank < 0
-
-5. **Opportunity Cost Ratio**: `total_opportunity_cost / start_value`
-   - What % of initial capital was "paid in interest"
-
-6. **Hurdle Return**: `reference_asset_return`
-   - The return needed to break even
-   - Algorithm must beat this to justify strategy
-
-## Visualization Opportunities
-
-### 1. **Cumulative Opportunity Cost Over Time**
-```
-$120k ┤     ╭─────────  Total Opportunity Cost
-$100k ┤  ╭──╯           (Initial + Trading)
- $80k ┤╭─╯
- $60k ┤╯   ╭───────────  From Initial Capital
- $40k ┤ ╭──╯
- $20k ┤─╯               From Trading (negative bank)
-   $0 └─────────────────────────────────────>
-      Jan    Apr    Jul    Oct    Jan    Apr
-```
-
-### 2. **Net Value After Opportunity Cost**
-```
-$150k ┤           ╭─────  End Value
-$125k ┤       ╭───╯
-$100k ┼═══════╪═══════  Start Value (Break-even line)
- $75k ┤       │    ╭───  Net Value (after opp. cost)
- $50k ┤       │╭───╯
- $25k ┤   ────╯         
-   $0 └─────────────────────────────────────>
-```
-
-### 3. **Decomposition Chart**
-```
-Gross Return:         +45.2%  ████████████████████
-Opportunity Cost:     -12.3%  ██████
-Net Return:           +32.9%  ██████████████
-
-vs Buy-and-Hold:      +38.1%  ████████████████
-Volatility Alpha:      +7.1%  ████
-```
-
-## Questions to Explore
-
-1. **Does opportunity cost on initial capital matter for strategy comparison?**
-   - If both strategies start with same capital, it cancels in alpha calculation
-   - But matters for absolute return reporting
-
-2. **Should we report "net return" as primary metric?**
-   - More realistic investor perspective
-   - Could be negative even with positive gross return
-   - Emphasizes "beat the market or go home"
-
-3. **How does this affect capital utilization metrics?**
-   - Currently: `avg_deployed / start_value`
-   - Should it be: `avg_deployed / (start_value + bank_balance)`?
-
-4. **What about "positive bank" scenarios?**
-   - If algorithm accumulates cash (bank > 0), did we over-capitalize?
-   - Should measure: "optimal capital deployment"
-
-5. **Time-series vs endpoint calculation?**
-   - Track cumulative opportunity cost daily
-   - Or just calculate total at end?
-   - Daily tracking enables better visualization
-
-## Recommended Next Steps
-
-1. **Document current behavior** - Clarify that opportunity cost on initial capital is NOT currently tracked
-
-2. **Create analysis script** - Calculate what opportunity cost WOULD be if we tracked initial capital
-
-3. **Compare scenarios**:
-   - Current reporting (no initial capital opp. cost)
-   - Option B reporting (separate virtual debt tracking)
-   - Option C reporting (post-calculation adjustment)
-
-4. **Visualize the difference** - Show how metrics change with proper accounting
-
-5. **Update theoretical framework** - Decide which interpretation best serves research goals
-
-6. **Implementation** - If warranted, update backtest engine with chosen approach
-
-## Philosophy Note
-
-This is fundamentally about **what question we're asking**:
-
-**Question A:** "Given I've deployed $100k in this strategy, how much money did I make?"
-- Current model works fine
-- Total return is clear
-
-**Question B:** "Given I borrowed $100k at market rates, did this strategy beat the opportunity cost?"
-- Need opportunity cost on initial capital
-- Net return tells the story
-
-**Question C:** "Should I use this strategy vs buy-and-hold with the same capital?"
-- Volatility alpha answers this
-- Opportunity cost cancels out (both strategies pay it)
-
-**We're asking Question C, but reporting like Question A.**
-
-The fix: Surface the opportunity cost explicitly, even though it cancels in the alpha calculation, to give complete picture of capital efficiency.
+When backtesting, what opportunity cost should we measure against the initial capital?
 
 ---
 
-## Summary: Current Implementation Status
+## Current Implementation
 
-### What We Track ✅
-1. **Opportunity cost on negative bank during trading**
-   - When algorithm borrows money (bank < 0), we charge VOO returns
-   - Calculated daily using actual reference asset returns
-   - Reported in `summary['opportunity_cost']`
+**What we track**:
+```python
+# Starting state
+holdings = 100 shares × $100 = $10,000 deployed
+bank = $0  # Starts at zero
 
-2. **Risk-free gains on positive bank**
-   - When algorithm accumulates cash (bank > 0), we credit BIL returns
-   - Calculated daily using actual risk-free asset returns
-   - Reported in `summary['risk_free_gains']`
+# We measure opportunity cost on:
+# - Bank balance (when negative = borrowed capital)
+# - Nothing else (initial deployment ignored)
+```
 
-3. **Volatility alpha (correctly calculated)**
-   - Algorithm return - buy-and-hold return
-   - Opportunity cost cancels out in subtraction
-   - Reported in `summary['volatility_alpha']`
+**Problem**: We bought $10K of stock but don't measure the opportunity cost of that initial purchase.
 
-### What We DON'T Track ❌
-1. **Opportunity cost on initial capital**
-   - The $100k to buy initial position came from somewhere
-   - Either borrowed (owe interest) or owned (gave up returns)
-   - We implicitly assume it's "free money" with no opportunity cost
-   - **This is the gap we need to address**
+---
 
-2. **True net return after all costs**
-   - Currently: `total_return = (end_value - start_value) / start_value`
-   - Missing: Cost of capital on initial deployment
-   - Should be: `net_return = (end_value - start_value - total_opp_cost) / start_value`
+## The Conceptual Inconsistency
 
-3. **Complete capital efficiency picture**
-   - How much did we "borrow" total? (initial + negative bank)
-   - What was the cumulative "interest bill"? (opp cost on both)
-   - Did we make enough to justify the borrowed capital?
+### Current Model (Incomplete)
 
-### Impact Assessment
-- **For volatility alpha:** No impact (cancels in subtraction) ✓
-- **For absolute returns:** Overstated by ~80-150% of initial capital over 5 years ⚠️
-- **For investor understanding:** Missing the "borrowed capital" narrative ⚠️
-- **For strategy comparison:** Misleading if different capital deployment patterns ⚠️
+**Day 1**: Buy 100 shares @ $100 = $10,000 deployed
+- No opportunity cost tracked (it's the "starting state")
 
-### Next Steps (see work plan in tasks)
-Task 2 will quantify the magnitude of missing opportunity cost across real backtests.
+**Day 100**: Bank = -$5,000 (borrowed for buybacks)
+- Opportunity cost accrues on the $5K (could have been in VOO)
+
+**Inconsistency**: Why measure opportunity cost on $5K borrowed but not $10K initially deployed?
+
+### Corrected Model
+
+**Reality**: ALL capital has opportunity cost from day 1.
+
+When you deploy $10K into NVDA:
+- You could have deployed it into VOO instead
+- Every day NVDA ≠ VOO, you have opportunity cost/gain
+- This is the **relative performance** we should measure
+
+**Formula**:
+```python
+total_opportunity_cost = sum(
+    (stock_return[day] - VOO_return[day]) × deployed_capital[day]
+)
+```
+
+This measures: "Did I beat VOO, and by how much?"
+
+---
+
+## Theoretical Implications
+
+### 1. True Break-Even
+
+**Current**: Strategy "breaks even" when final value = initial capital
+**Corrected**: Strategy breaks even when final value = (initial capital × VOO growth)
+
+If VOO doubled during backtest, you need to double your money just to break even!
+
+### 2. Volatility Alpha Interpretation
+
+**Volatility alpha** = excess return beyond asset's buy-and-hold
+**Initial capital opportunity cost** = asset's return vs reference (VOO)
+
+These are **separate dimensions**:
+- Alpha: SD8 vs buy-and-hold NVDA
+- Opportunity cost: NVDA vs VOO
+
+### 3. Return Metrics
+
+**Current** (asset-only):
+```python
+return = (final_value - initial_value) / initial_value
+```
+
+**Enhanced** (vs reference):
+```python
+asset_return = (final_value - initial) / initial
+voo_return = (voo_final - voo_initial) / voo_initial
+relative_return = asset_return - voo_return
+```
+
+---
+
+## The "Skin in the Game" Question
+
+**Scenario**: Investor has $100K cash
+
+**Option A**: Deploy $10K into NVDA (SD8 strategy)
+**Option B**: Deploy $100K into NVDA (SD8 strategy)
+
+**Question**: Should option B show 10x the opportunity cost?
+
+**Answer**: YES! Option B has 10x more capital at risk.
+
+**Current limitation**: Our backtest starts with "100 shares" but doesn't know if that's $100K or $10M depending on when you started.
+
+---
+
+## Worked Example: NVDA 2020-2024
+
+**Setup**:
+- Buy 100 shares @ $120 = $12,000 initial
+- VOO: $320 → $480 (50% gain)
+- NVDA: $120 → $140 (17% gain)
+
+**Current reporting**:
+```
+Final value: $14,000
+Return: 17%  (looks good!)
+```
+
+**Missing**:
+```
+VOO would have grown to: $18,000 (50%)
+Opportunity cost: -$4,000
+True performance: 17% - 50% = -33% relative
+```
+
+**Key insight**: NVDA grew 17% but **underperformed VOO by 33%**. Current metrics hide this.
+
+---
+
+## Implementation Approach
+
+**Option A**: Track from day 1
+```python
+# Day 1: Initial purchase
+opportunity_cost = initial_capital × (voo_daily_return - 0)
+# Day 2+: Ongoing tracking
+opportunity_cost += deployed_capital × (voo_return - asset_return)
+```
+
+**Option B**: Post-calculation adjustment
+```python
+# Run backtest as-is
+final_value = backtest_result
+
+# Calculate what VOO would have done
+voo_final = initial_capital × (1 + voo_total_return)
+
+# Report relative performance
+relative_performance = final_value - voo_final
+```
+
+**Recommendation**: Option B (simpler, same result)
+
+---
+
+## Practical Implications
+
+**For strategy comparison**: Opportunity cost matters less (all strategies start with same capital in same asset)
+
+**For absolute performance**: Opportunity cost is critical (did you beat the index?)
+
+**For multi-asset portfolios**: Each asset has its own opportunity cost vs reference
+
+---
+
+**Status**: Conceptual framework documented, implementation pending
+
+**See Also**:
+- [INVESTING_THEORY.md](INVESTING_THEORY.md) - Asset-based opportunity cost model
+- [RETURN_METRICS_ANALYSIS.md](RETURN_METRICS_ANALYSIS.md) - Deployment-adjusted metrics
