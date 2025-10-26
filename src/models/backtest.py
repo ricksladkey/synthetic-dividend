@@ -546,6 +546,8 @@ def run_algorithm_backtest(
     simple_mode: bool = False,
     # Price normalization
     normalize_prices: bool = False,
+    # Bank behavior
+    allow_margin: bool = True,
 ) -> Tuple[List[str], Dict[str, Any]]:
     """Execute backtest of trading algorithm against historical price data.
 
@@ -595,6 +597,11 @@ def run_algorithm_backtest(
                          This makes bracket placement deterministic across different backtests.
                          For sd8 (9.05% trigger): brackets at 1.0, 1.0905, 1.1893, 1.2968, ...
                          The first price is scaled so it lands on a standard bracket.
+        allow_margin: If True (default), bank can go negative (borrowing from yourself)
+                     BUY transactions always execute, withdrawals cover amount only.
+                     If False (strict mode), bank never goes negative (closed system)
+                     BUY transactions skipped if insufficient cash,
+                     withdrawals must cover both amount AND repay any deficit.
 
     Returns:
         Tuple of (transaction_strings, summary_dict)
@@ -732,6 +739,10 @@ def run_algorithm_backtest(
     shares_sold_for_withdrawals: int = 0
     last_withdrawal_date: Optional[date] = None
     
+    # Skipped transaction tracking (for strict mode)
+    skipped_buys: int = 0
+    skipped_buy_value: float = 0.0
+    
     # Calculate initial withdrawal amount (if withdrawal policy enabled)
     start_value = holdings * start_price
     if withdrawal_rate_pct > 0:
@@ -853,16 +864,28 @@ def run_algorithm_backtest(
             elif tx.action.upper() == "BUY":
                 buy_qty = int(tx.qty)
                 cost = buy_qty * price
-                holdings += buy_qty
-                bank -= cost  # May go negative (margin)
-                transactions.append(
-                    f"{d.isoformat()} BUY {buy_qty} {ticker} @ {price:.2f} = {cost:.2f}, "
-                    f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
-                )
-                # Track bank balance statistics
-                bank_history.append((d, bank))
-                bank_min = min(bank_min, bank)
-                bank_max = max(bank_max, bank)
+                
+                # Check if we can afford this buy
+                if not allow_margin and bank < cost:
+                    # Strict mode: skip buy if insufficient cash
+                    skipped_buys += 1
+                    skipped_buy_value += cost
+                    transactions.append(
+                        f"{d.isoformat()} SKIP BUY {buy_qty} {ticker} @ {price:.2f} "
+                        f"(insufficient cash: ${bank:.2f} < ${cost:.2f})  # {tx.notes}"
+                    )
+                else:
+                    # Execute buy (allow_margin=True OR sufficient cash)
+                    holdings += buy_qty
+                    bank -= cost  # May go negative if allow_margin=True
+                    transactions.append(
+                        f"{d.isoformat()} BUY {buy_qty} {ticker} @ {price:.2f} = {cost:.2f}, "
+                        f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
+                    )
+                    # Track bank balance statistics
+                    bank_history.append((d, bank))
+                    bank_min = min(bank_min, bank)
+                    bank_max = max(bank_max, bank)
 
             else:
                 raise ValueError("Transaction action must be 'BUY' or 'SELL'")
@@ -892,7 +915,14 @@ def run_algorithm_backtest(
                     )
                 else:
                     # Insufficient cash - need to sell shares
-                    cash_needed = withdrawal_amount - max(0, bank)
+                    # In allow_margin mode: only cover withdrawal
+                    # In strict mode: cover withdrawal AND repay any negative balance
+                    if allow_margin:
+                        cash_needed = withdrawal_amount - max(0, bank)
+                    else:
+                        # Strict mode: also need to cover negative bank balance
+                        cash_needed = withdrawal_amount - bank  # If bank<0, this increases cash_needed
+                    
                     shares_to_sell = int(cash_needed / price) + 1  # Round up
                     shares_to_sell = min(shares_to_sell, holdings)  # Cap at available
                     
@@ -1007,6 +1037,10 @@ def run_algorithm_backtest(
         "withdrawal_count": withdrawal_count,
         "shares_sold_for_withdrawals": shares_sold_for_withdrawals,
         "withdrawal_rate_pct": withdrawal_rate_pct,
+        # Strict mode metrics
+        "skipped_buys": skipped_buys,
+        "skipped_buy_value": skipped_buy_value,
+        "allow_margin": allow_margin,
         # Capital deployment supplementary metrics
         "avg_deployed_capital": avg_deployed_capital,
         "capital_utilization": capital_utilization,
