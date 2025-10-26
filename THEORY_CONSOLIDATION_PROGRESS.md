@@ -71,14 +71,43 @@
 **INVESTING_THEORY.md** (369 lines)  
 → **Streamlined** (target: ~350 lines)
 
-**Planned Changes**:
-- Remove dividend illusion redundancy
-- Consolidate time machine section
-- Tighten writing throughout
-- Reference VOLATILITY_ALPHA_THESIS for detailed math
+## Phase 4: Streamline Remaining Documents ✅
 
-**PORTFOLIO_VISION.md** (239 lines)  
-→ **Streamlined** (target: ~200 lines)
+**Status**: COMPLETE
+
+### INVESTING_THEORY.md - STREAMLINED ✅
+**Before**: 370 lines
+**After**: 280 lines (-24%, -90 lines)
+**Actions**: Removed dividend illusion repetition, condensed time machine effect, tightened all examples
+
+### RETURN_METRICS_ANALYSIS.md - STREAMLINED ✅
+**Before**: 419 lines
+**After**: 175 lines (-58%, -244 lines)
+**Actions**: Cut verbose examples, focused on deployment efficiency innovation only
+
+### PORTFOLIO_VISION.md - STREAMLINED ✅
+**Before**: 240 lines
+**After**: 160 lines (-33%, -80 lines)
+**Actions**: Removed speculation, tightened vision statement, clear structure
+
+### WITHDRAWAL_POLICY.md - STREAMLINED ✅
+**Before**: 239 lines
+**After**: 150 lines (-37%, -89 lines)
+**Actions**: Cut redundancy, kept orthogonality concept and bank-first logic
+
+### INITIAL_CAPITAL_THEORY.md - STREAMLINED ✅
+**Before**: 504 lines
+**After**: 270 lines (-46%, -234 lines)
+**Actions**: Condensed opportunity cost explanation, removed repetitive examples
+
+### PRICE_NORMALIZATION.md - STREAMLINED ✅
+**Before**: 203 lines
+**After**: 150 lines (-26%, -53 lines)
+**Actions**: Minor cleanup, removed verbose examples, kept essential properties
+
+**Phase 4 Total Savings**: 786 lines eliminated (43% reduction)
+
+## Phase 5: Final Cleanup (PENDING)
 
 **Changes**:
 - Remove dividend illusion (redundant)
@@ -116,12 +145,14 @@
 - Misplaced: 1 file (CODING_PHILOSOPHY)
 - **Problem**: Inverted importance hierarchy (core concept = 137 lines, periphery = 1,235 lines)
 
-### After Phases 1-3 (Current Status)
+### After Phases 1-4 (Current Status) ✅
 - ✅ Archived: 4 historical files (1,007 lines)
 - ✅ Relocated: CODING_PHILOSOPHY (509 lines)
 - ✅ Expanded: VOLATILITY_ALPHA_THESIS (137 → 620 lines, +483 lines)
 - ✅ Merged: INCOME docs (2,185 → 850 lines, -1,335 lines)
-- **Net reduction**: 1,859 lines eliminated (28.5% reduction so far!)
+- ✅ Streamlined: 6 core docs (1,971 → 1,185 lines, -786 lines)
+- **Net reduction**: 2,645 lines eliminated (40.7% reduction!)
+- **Active theory lines**: ~3,855 (down from ~6,500)
 
 ### After Consolidation (Target)
 - Active files: 9 core + 1 README = 10
@@ -143,12 +174,12 @@
 2. ✅ Relocate CODING_PHILOSOPHY
 3. ✅ Expand VOLATILITY_ALPHA_THESIS (137 → 620 lines)
 4. ✅ Merge INCOME_GENERATION + INCOME_SMOOTHING (2,185 → 850 lines)
-5. ⏳ Streamline INVESTING_THEORY (~369 → 350 lines)
-6. ⏳ Streamline PORTFOLIO_VISION (~239 → 200 lines)
-7. ⏳ Streamline WITHDRAWAL_POLICY (~238 → 200 lines)
-8. ⏳ Streamline RETURN_METRICS_ANALYSIS (~418 → 300 lines)
-9. ⏳ Streamline INITIAL_CAPITAL_THEORY (~504 → 400 lines)
-10. ⏳ Minor cleanup PRICE_NORMALIZATION (~203 → 150 lines)
+5. ✅ Streamline INVESTING_THEORY (370 → 280 lines)
+6. ✅ Streamline RETURN_METRICS_ANALYSIS (419 → 175 lines)
+7. ✅ Streamline PORTFOLIO_VISION (240 → 160 lines)
+8. ✅ Streamline WITHDRAWAL_POLICY (239 → 150 lines)
+9. ✅ Streamline INITIAL_CAPITAL_THEORY (504 → 270 lines)
+10. ✅ Streamline PRICE_NORMALIZATION (203 → 150 lines)
 11. ⏳ Redesign theory/README with clear hierarchy
 12. ⏳ Update all cross-references
 
