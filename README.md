@@ -7,18 +7,34 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![| 💰 **[INCOME_GENERATION.md](theory/INCOME_GENERATION.md)** | How volatility becomes cash flow - the core income mechanism, practical implementation guide |
+[![| 💰 **[INCOME_GENERATION.md### ✅ Completed (Phase 1-2)
+- [x] Core synthetic dividend algorithm with buyback stack
+- [x] Optimal rebalancing parameter research (48 backtests)
+- [x] Volatility alpha discovery and measurement
+- [x] CLI tools for backtesting and batch analysis
+- [x] Comprehensive test suite with 48 tests (100% passing)
+- [x] Withdrawal policy implementation (orthogonal to strategy)
+- [x] Dual bank management modes (simple vs strict)
+- [x] Price normalization for deterministic backtests
+- [x] Income generation framework and theory documentation
+- [x] Income smoothing theory (irregular → regular transformation)
+- [x] Dividend/interest income tracking (real + synthetic dividends)
+- [x] Volatility alpha analyzer tool (auto-suggest SD parameters)
+
+### 🔄 In Progress (Phase 3)ME_GENERATION.md)** | How volatility becomes cash flow - the core income mechanism, practical implementation guide |
 | 🔄 **[INCOME_SMOOTHING.md](theory/INCOME_SMOOTHING.md)** | Irregular → regular payment transformation, sequence-of-returns protection, never sell at loss principle |
 | 🏦 **[WITHDRAWAL_POLICY.md](theory/WITHDRAWAL_POLICY.md)** | Orthogonal withdrawal dimension, bank-first approach, 4% rule with CPI adjustment |
 | 💻 **[CODING_PHILOSOPHY.md](theory/CODING_PHILOSOPHY.md)** | Code quality standards, functional programming principles, and development best practices |
 | 📚 **[theory/README.md](theory/README.md)** | Complete theoretical framework overview and system prompt usage guide |
 | 🤝 **[CONTRIBUTORS.md](CONTRIBUTORS.md)** | Who built this and how - the human-AI collaboration story |
 | 🚀 **[CODING_ASSISTANCE_MANIFESTO.md](CODING_ASSISTANCE_MANIFESTO.md)** | ⭐ Lessons on AI-assisted development, the "pays for itself" productivity gain |
-| 📋 **[TODO.md](TODO.md)** | Development roadmap, completed features, and future plans |(https://img.shields.io/badge/tests-44%20passing-brightgreen.svg)](./tests)
+| 📋 **[TODO.md](TODO.md)** | Development roadmap, completed features, and future plans |
+
+[![Tests](https://img.shields.io/badge/tests-48%20passing-brightgreen.svg)](./tests)
 
 **A rules-based investment strategy that systematically generates cash flow from growth stocks while preserving compound growth potential.**
 
-[🚀 Quick Start](#-quick-start-guide) • [📊 Research Findings](#-research-findings) • [📖 Documentation](#-documentation) • [🤝 Contributing](#-contributing)
+[🚀 Quick Start](#-quick-start-guide) • [📊 Research Findings](#-research-findings) • [� Examples](EXAMPLES.md) • [�📖 Documentation](#-documentation) • [🤝 Contributing](#-contributing)
 
 ---
 
@@ -145,18 +161,27 @@ Alpha Per Transaction:                +0.25% per buyback cycle
 ### 💻 Command-Line Interface
 
 ```bash
+# Recommended: Volatility Alpha Analyzer (auto-suggests SD parameter)
+analyze-alpha.bat GLD 10/26/2024 10/26/2025
+analyze-alpha.bat NVDA 10/23/2023 10/23/2024
+
 # Single backtest with detailed output
 python -m src.run_model NVDA 10/23/2023 10/23/2024 sd8 --qty 10000
 
 # Batch research across 12 assets, 4 rebalancing triggers
 python -m src.research.optimal_rebalancing --comprehensive --output results.csv
 
-# Compare enhanced vs ATH-only (volatility alpha analysis)
-python -m src.research.volatility_alpha --ticker NVDA --start 10/23/2023 --end 10/23/2024
-
-# Interactive GUI
-python src/main.py
+# Dividend tracking demo
+python demo_dividends.py
 ```
+
+**💡 New Feature**: The **Volatility Alpha Analyzer** automatically:
+1. Calculates historical volatility
+2. Suggests optimal SD parameter (e.g., SD16 for low-vol GLD, SD6 for high-vol NVDA)
+3. Compares full strategy vs ATH-only
+4. Reports volatility alpha (secondary synthetic dividends)
+
+See [**EXAMPLES.md**](EXAMPLES.md) for comprehensive usage guide!
 
 ## 🎯 Live Example: NVDA Bull Run (Oct 2024 - Oct 2025)
 
@@ -451,6 +476,7 @@ isort src/ tests/
 | �💻 **[CODING_PHILOSOPHY.md](theory/CODING_PHILOSOPHY.md)** | Code quality standards, functional programming principles, and development best practices |
 | 📚 **[theory/README.md](theory/README.md)** | Complete theoretical framework overview and system prompt usage guide |
 | 📋 **[TODO.md](TODO.md)** | Development roadmap, completed features, and future plans |
+| 🎓 **[EXAMPLES.md](EXAMPLES.md)** | ⭐ **Comprehensive usage guide** - command examples, real-world scenarios, volatility analyzer walkthrough |
 
 ## 🗺️ Roadmap
 
