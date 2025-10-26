@@ -63,6 +63,9 @@ Thumbs.db
 # Subfolders can have their own .gitignore to track specific images
 /*.png
 
+# Backup files from consolidation/refactoring
+*.old
+
 # Sandbox/scratch output (ephemeral, not versioned)
 output/
 
