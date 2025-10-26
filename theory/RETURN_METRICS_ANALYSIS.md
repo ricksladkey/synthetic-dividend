@@ -297,6 +297,8 @@ ATH-Only:        7,221 shares, $142,100 value, 42.1% return, 95% utilization
 | `total_return` | Measure absolute success | Forces focus on dollars, not shares |
 | `annualized` | Normalize for time | Compares strategies fairly over different periods |
 | `volatility_alpha` | vs baseline | Shows value-add of active strategy |
+| `total_dividends` | Real dividend income | Tracks actual dividends/interest received |
+| `dividend_payment_count` | Payment frequency | Shows how often dividends credited |
 | `capital_utilization` | % capital deployed | Reveals how much cash was held |
 | `return_on_deployed_capital` | Efficiency ratio | Shows per-dollar effectiveness |
 | `deployment_min/max` | Deployment range | Shows strategic risk management |
@@ -313,6 +315,54 @@ When evaluating Enhanced vs ATH-only (or any two strategies):
 
 **Never**: Draw conclusions from share counts alone
 **Always**: Start with return metrics, use deployment metrics to explain why
+
+---
+
+### Dividend Income Tracking (October 2025)
+
+**New Feature**: The system now tracks real dividend/interest income alongside synthetic dividends.
+
+**Metrics Added**:
+- `total_dividends`: Dollar amount of real dividends received
+- `dividend_payment_count`: Number of dividend payments
+
+**What Gets Tracked**:
+- **Equity dividends**: AAPL, MSFT, JPM (quarterly)
+- **ETF distributions**: VOO, VTI, SCHD (quarterly)  
+- **Interest payments**: BIL, SHY, SGOV (monthly)
+
+**How It Works**:
+```python
+# Dividends credited to bank on ex-dividend date
+if dividend_series is not None and date in dividend_dates:
+    div_per_share = dividend_series[date]
+    div_payment = div_per_share * holdings
+    bank += div_payment
+    total_dividends += div_payment
+    dividend_payment_count += 1
+```
+
+**Example Output**:
+```
+Strategy: SD8 on AAPL (100 shares, 2024)
+================================================
+Primary Metrics:
+  Total Return:         45.2%
+  Annualized Return:    45.2%
+  
+Income Breakdown:
+  Real Dividends:       $99.00  (4 payments @ $0.25/share avg)
+  Synthetic Dividends:  $250.00 (from volatility harvesting)
+  Total Income:         $349.00 (real + synthetic combined)
+  
+Portfolio Value:
+  Final Value:          $14,520
+  Bank Balance:         $349
+```
+
+**Key Insight**: Real dividends are "free money" that doesn't require selling. They compound with synthetic dividends for total income generation.
+
+---
 
 ### Example Report Interpretation
 

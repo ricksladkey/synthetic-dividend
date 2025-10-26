@@ -387,6 +387,56 @@ Cons:
 
 ---
 
+### 3.4 Real + Synthetic Dividends: Total Income
+
+**New Feature** (October 2025): The system now tracks BOTH real and synthetic dividends.
+
+**Real Dividends** - Traditional income from:
+- **Equity dividends**: AAPL, MSFT, JPM (quarterly)
+- **ETF distributions**: VOO, VTI, SCHD (quarterly)
+- **Interest payments**: BIL, SHY, SGOV (monthly)
+
+**Implementation**:
+```python
+from src.data.fetcher import HistoryFetcher
+
+fetcher = HistoryFetcher()
+prices = fetcher.get_history("AAPL", "2024-01-01", "2024-12-31")
+dividends = fetcher.get_dividends("AAPL", "2024-01-01", "2024-12-31")
+
+# Backtest automatically credits dividends to bank on ex-date
+result = run_algorithm_backtest(
+    df=prices,
+    dividend_series=dividends,  # Real dividends tracked here
+    # ... other parameters
+)
+```
+
+**What This Means**:
+- **Bank credits**: Dividends automatically deposited (shares × dividend per share)
+- **No selling required**: Free money from the company
+- **Compounds with synthetic**: Real + synthetic = total income
+- **Metrics tracked**: `total_dividends` and `dividend_payment_count` in summary
+
+**Example - AAPL 2024** (100 shares):
+- Real dividends: $0.99/share = **$99.00** (4 quarterly payments)
+- Synthetic dividends: ~$200-300 from SD8 volatility harvesting
+- **Total income**: $299-399 (real + synthetic combined)
+
+**Example - BIL 2024** (100 shares, money market ETF):
+- Interest payments: $4.60/share = **$460.00** (12 monthly payments)
+- Synthetic dividends: ~$20-40 from SD20 (low volatility)
+- **Total income**: $480-500 (mostly real interest, small synthetic boost)
+
+**Best Use Cases**:
+1. **Dividend growth stocks** (AAPL, MSFT): Moderate dividends + high growth + volatility alpha
+2. **High-yield ETFs** (SCHD, VYM): Strong dividends + synthetic income from rebalancing
+3. **Money market + volatility** (BIL core + NVDA satellite): Risk-free interest + growth exposure
+
+**Key Insight**: You don't have to choose between dividends and growth. Run SD algorithm on dividend-paying stocks and get BOTH income sources.
+
+---
+
 ## Part 4: Tax Implications
 
 ### 4.1 Tax Efficiency Through Frequent Small Sales

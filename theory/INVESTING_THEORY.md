@@ -61,6 +61,19 @@ If the stock is up, it's worth more. You can:
 
 The Synthetic Dividend algorithm provides the **flexibility and tax efficiency of growth stocks** with the **predictable cash flow of dividend stocks**, using simple rules that require no discretionary decisions.
 
+**Update (October 2025)**: The system now tracks BOTH real and synthetic dividends:
+- **Real dividends**: Equity dividends (AAPL, MSFT), ETF distributions (VOO), interest (BIL)
+- **Synthetic dividends**: Cash from volatility harvesting (profit-taking + buybacks)
+- **Total income**: Real + synthetic combined for complete picture
+
+**Best of both worlds**: Run the algorithm on dividend-paying growth stocks (AAPL, MSFT) to get:
+1. Real dividend income (free money from the company)
+2. Synthetic dividend income (volatility harvesting profits)  
+3. Capital appreciation (share price growth)
+4. Volatility alpha (extra returns from strategic rebalancing)
+
+See INCOME_GENERATION.md section 3.4 for details on combining real and synthetic dividends.
+
 ## Overview
 
 The **Synthetic Dividend Algorithm** is a rules-based position-sizing and profit-taking strategy that generates cash flow from growth assets without traditional dividend income. It operates on a simple principle: systematically take profits at all-time highs (ATHs) and reinvest during drawdowns.
