@@ -27,13 +27,13 @@ The **Volatility Alpha Analyzer** is the recommended starting point. It automati
 
 ```bash
 # Analyze gold (auto-suggests SD parameter based on volatility)
-analyze-alpha.bat GLD 10/26/2024 10/26/2025
+analyze-volatility-alpha.bat GLD 10/26/2024 10/26/2025
 
 # Analyze NVIDIA
-analyze-alpha.bat NVDA 10/23/2023 10/23/2024
+analyze-volatility-alpha.bat NVDA 10/23/2023 10/23/2024
 
 # Analyze Apple with custom quantity
-analyze-alpha.bat AAPL 01/01/2024 12/31/2024 --qty 200
+analyze-volatility-alpha.bat AAPL 01/01/2024 12/31/2024 --qty 200
 ```
 
 ### Example Output
@@ -84,10 +84,10 @@ The tool uses this mapping:
 
 ```bash
 # Force specific SD parameter
-analyze-alpha.bat GLD 10/26/2024 10/26/2025 --sd 8
+analyze-volatility-alpha.bat GLD 10/26/2024 10/26/2025 --sd 8
 
 # Custom profit sharing (default is 50%)
-analyze-alpha.bat GLD 10/26/2024 10/26/2025 --profit-sharing 75
+analyze-volatility-alpha.bat GLD 10/26/2024 10/26/2025 --profit-sharing 75
 ```
 
 ---
@@ -417,16 +417,16 @@ Diversify across asset classes with different SD parameters:
 
 ```bash
 # Tech (high vol) → SD8
-analyze-alpha.bat NVDA 01/01/2024 12/31/2024
+analyze-volatility-alpha.bat NVDA 01/01/2024 12/31/2024
 
 # Index (medium vol) → SD10
-analyze-alpha.bat VOO 01/01/2024 12/31/2024
+analyze-volatility-alpha.bat VOO 01/01/2024 12/31/2024
 
 # Gold (low vol) → SD16
-analyze-alpha.bat GLD 01/01/2024 12/31/2024
+analyze-volatility-alpha.bat GLD 01/01/2024 12/31/2024
 
 # Money market (very low vol) → SD20
-analyze-alpha.bat BIL 01/01/2024 12/31/2024
+analyze-volatility-alpha.bat BIL 01/01/2024 12/31/2024
 ```
 
 Portfolio allocation example:

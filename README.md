@@ -162,8 +162,8 @@ Alpha Per Transaction:                +0.25% per buyback cycle
 
 ```bash
 # Recommended: Volatility Alpha Analyzer (auto-suggests SD parameter)
-analyze-alpha.bat GLD 10/26/2024 10/26/2025
-analyze-alpha.bat NVDA 10/23/2023 10/23/2024
+analyze-volatility-alpha.bat GLD 10/26/2024 10/26/2025
+analyze-volatility-alpha.bat NVDA 10/23/2023 10/23/2024
 
 # Single backtest with detailed output
 python -m src.run_model NVDA 10/23/2023 10/23/2024 sd8 --qty 10000
