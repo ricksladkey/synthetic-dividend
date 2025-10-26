@@ -29,12 +29,17 @@ The **Volatility Alpha Analyzer** is the recommended starting point. It automati
 # Analyze gold (auto-suggests SD parameter based on volatility)
 analyze-volatility-alpha.bat GLD 10/26/2024 10/26/2025
 
-# Analyze NVIDIA
-analyze-volatility-alpha.bat NVDA 10/23/2023 10/23/2024
+# Analyze NVIDIA with price chart
+analyze-volatility-alpha.bat NVDA 10/23/2023 10/23/2024 --plot
 
-# Analyze Apple with custom quantity
-analyze-volatility-alpha.bat AAPL 01/01/2024 12/31/2024 --qty 200
+# Analyze Apple with custom quantity and chart
+analyze-volatility-alpha.bat AAPL 01/01/2024 12/31/2024 --qty 200 --plot
 ```
+
+**Visualization**: Add `--plot` to generate a price chart with:
+- 🟢 Green circles for SELL transactions (profit-taking at highs)
+- 🔴 Red circles for BUY transactions (buybacks during dips)
+- Chart saved as `{TICKER}_volatility_alpha.png`
 
 ### Example Output
 
