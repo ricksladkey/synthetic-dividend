@@ -9,10 +9,12 @@ Usage:
 Output:
     - Next BUY limit price and quantity
     - Next SELL limit price and quantity
+    - Bracket position information (normalized to standard positions)
     - Ready to copy/paste into your broker
 """
 
 import argparse
+import math
 from datetime import date
 from typing import Tuple
 
@@ -92,6 +94,21 @@ def format_order_display(
     
     rebalance_pct = ((2.0 ** (1.0 / float(sdn))) - 1.0) * 100
     
+    # Calculate bracket positions (normalized to base 1.0)
+    trigger_decimal = rebalance_pct / 100.0
+    
+    # Current bracket (based on last transaction price)
+    current_bracket_n = math.log(last_price) / math.log(1 + trigger_decimal)
+    current_bracket_normalized = math.pow(1 + trigger_decimal, round(current_bracket_n))
+    
+    # Buy bracket (one step down)
+    buy_bracket_n = math.log(buy_price) / math.log(1 + trigger_decimal)
+    buy_bracket_normalized = math.pow(1 + trigger_decimal, round(buy_bracket_n))
+    
+    # Sell bracket (one step up)
+    sell_bracket_n = math.log(sell_price) / math.log(1 + trigger_decimal)
+    sell_bracket_normalized = math.pow(1 + trigger_decimal, round(sell_bracket_n))
+    
     output = f"""
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║                       SYNTHETIC DIVIDEND ORDER CALCULATOR                 ║
@@ -100,11 +117,23 @@ def format_order_display(
 📊 CURRENT POSITION - {ticker}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Holdings:              {holdings:,} shares
-  Last Transaction:      ${last_price:.2f}
+  Last Transaction:      ${last_price:.2f}  (bracket n={round(current_bracket_n)}, normalized=${current_bracket_normalized:.2f})
   Current Price:         ${current_price:.2f}
   Price Change:          ${price_change:+.2f} ({price_change_pct:+.2f}%)
   
   Strategy:              sd{sdn} ({rebalance_pct:.2f}% rebalance, {profit_pct:.0f}% profit sharing)
+
+📍 BRACKET POSITIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Your position is on bracket n={round(current_bracket_n)}
+  
+  Standard bracket ladder for sd{sdn} (normalized to 1.0):
+    Bracket n={round(buy_bracket_n):4}  →  ${buy_bracket_normalized:8.2f}  [BUY TARGET]
+    Bracket n={round(current_bracket_n):4}  →  ${current_bracket_normalized:8.2f}  [YOUR POSITION]
+    Bracket n={round(sell_bracket_n):4}  →  ${sell_bracket_normalized:8.2f}  [SELL TARGET]
+  
+  💡 All backtests using sd{sdn} will hit these same bracket positions,
+     making your strategy deterministic and comparable.
 
 🎯 LIMIT ORDERS TO PLACE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
