@@ -1,4 +1,4 @@
-# The Coding Assistance Manifesto
+# Coding Assistance Use Case
 ## Lessons from Building the Synthetic Dividend Algorithm
 
 **A Case Study in Human-AI Collaboration**
@@ -830,7 +830,7 @@ Meta-level proof: Rick just had an insight about insight capture, and within min
 
 **What's Remarkable**: All three levels are now captured in this project:
 - Level 1: INCOME_SMOOTHING.md (the financial theory)
-- Level 2: CODING_ASSISTANCE_MANIFESTO.md (the collaboration lessons)
+- Level 2: CODING_ASSISTANCE_USE_CASE.md (the collaboration lessons)
 - Level 3: This very section (the insight about insight capture)
 
 ---
@@ -849,7 +849,7 @@ Meta-level proof: Rick just had an insight about insight capture, and within min
 - Built on prior work
 
 **Third Insight Captured**:
-- CODING_ASSISTANCE_MANIFESTO.md
+- CODING_ASSISTANCE_USE_CASE.md
 - "4-6X productivity from collaboration"
 - Referenced both prior insights
 - Synthesized patterns
@@ -897,7 +897,7 @@ Meta-level proof: Rick just had an insight about insight capture, and within min
 
 2. **Capture it immediately** (2 seconds to request)
    - "Document this insight about X"
-   - "Add this to the manifesto"
+   - "Add this to the use case doc"
    - "Create new section on Y"
 
 3. **AI does the heavy lifting** (2 minutes of collaboration)
@@ -941,12 +941,12 @@ Meta-level proof: Rick just had an insight about insight capture, and within min
 
 ### This Document Is the Proof
 
-**Total time to create this manifesto**:
+**Total time to create this use case study**:
 - Rick's insights: Accumulated over 6 days of intensive collaboration
 - Rick's request: "I want such a document"
 - AI's generation: ~5 minutes
 - Rick's review: ~10 minutes
-- Total: **~15 minutes** for a 5,500+ word manifesto
+- Total: **~15 minutes** for a 5,500+ word case study
 
 **If written solo**:
 - Outline: 30 minutes
@@ -1060,7 +1060,7 @@ Meta-level proof: Rick just had an insight about insight capture, and within min
 **1. To documenting our process**
 - CONTRIBUTORS.md (who built this)
 - HOUSEKEEPING.md (how to maintain quality)
-- This manifesto (why it matters)
+- This use case (why it matters)
 
 **2. To sharing our learnings**
 - Open source (MIT license)
@@ -1129,7 +1129,7 @@ Meta-level proof: Rick just had an insight about insight capture, and within min
 
 ---
 
-**Document Status**: Manifesto complete  
+**Document Status**: Use case study complete  
 **Last Updated**: October 26, 2025  
 **Purpose**: Capture the lessons, inspire others, document the future
 
