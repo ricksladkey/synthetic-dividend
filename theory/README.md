@@ -1,6 +1,27 @@
 # Synthetic Dividend Algorithm - Theoretical Framework
 
-This folder contains the complete conceptual and theoretical foundation for the Synthetic Dividend Algorithm. These documents are designed to be concatenated and used as a comprehensive system prompt for AI assistants or as standalone reference material.
+This folder contains the complete conceptual and theore5. Review `RETURN_METRICS_ANALYSIS.md` - Learn proper interpretation
+6. Study `INITIAL_CAPITAL_THEORY.md` - Understand opportunity cost nuances
+7. Read `PRICE_NORMALIZATION.md` - Learn about deterministic brackets
+8. Study `WITHDRAWAL_POLICY.md` - Understand orthogonal withdrawal design
+9. Explore `PORTFOLIO_VISION.md` - See the long-term vision
+10. Reference `CODING_PHILOSOPHY.md` - Internalize development principles
+
+## Key Concepts Across Documents
+
+### Income Generation & Smoothing
+
+**Irregular → Regular Transformation** (NEW):
+- Volatility generates cash at unpredictable times (market-driven, lumpy)
+- Withdrawals needed at predictable times (lifestyle-driven, regular)
+- Bank balance acts as temporal buffer (smoothing mechanism)
+- Coverage ratio measures smoothing effectiveness (>200% = excellent)
+
+**Sequence-of-Returns Protection** (NEW):
+- Growth stocks particularly vulnerable to early-retirement bear markets
+- Bank balance shields against forced sales during drawdowns
+- Goal: Maximize probability of "never selling at a loss"
+- Only sell at ATHs + bank buffer during dips = gain-only salesundation for the Synthetic Dividend Algorithm. These documents are designed to be concatenated and used as a comprehensive system prompt for AI assistants or as standalone reference material.
 
 ## Document Overview
 
@@ -20,7 +41,7 @@ This folder contains the complete conceptual and theoretical foundation for the 
    - Relationship to exponential scaling
    - Theoretical limits and constraints
 
-3. **[INCOME_GENERATION.md](INCOME_GENERATION.md)** - ⭐ Income strategy framework (NEW)
+3. **[INCOME_GENERATION.md](INCOME_GENERATION.md)** - ⭐ Income strategy framework
    - How volatility becomes cash flow (the core mechanism)
    - Buyback stack as income engine
    - Income frequency and reliability
@@ -28,30 +49,39 @@ This folder contains the complete conceptual and theoretical foundation for the 
    - Tax efficiency and IRA/Roth killer app
    - Practical implementation guide for income seekers
 
+4. **[INCOME_SMOOTHING.md](INCOME_SMOOTHING.md)** - ⭐ Temporal arbitrage & sequence-of-returns protection (NEW)
+   - Irregular payments → Regular income transformation
+   - Bank balance as temporal buffer (smoothing mechanism)
+   - Coverage ratio as smoothing effectiveness metric
+   - Sequence-of-returns risk mitigation for growth stocks
+   - "Never forced to sell at a loss" principle
+   - Portfolio diversification for robust smoothing
+   - Graceful degradation to buy-and-hold behavior
+
 ### Advanced Concepts
 
-4. **[INITIAL_CAPITAL_THEORY.md](INITIAL_CAPITAL_THEORY.md)** - Opportunity cost framework
+5. **[INITIAL_CAPITAL_THEORY.md](INITIAL_CAPITAL_THEORY.md)** - Opportunity cost framework
    - Two separate capital streams: equity position vs trading cash flow
    - What we currently track vs what we don't track
    - Conceptual inconsistency in opportunity cost accounting
    - Three implementation options (with Option A marked as WRONG)
    - Impact on absolute returns vs volatility alpha (alpha unchanged)
 
-5. **[PRICE_NORMALIZATION.md](PRICE_NORMALIZATION.md)** - Deterministic bracket placement
+6. **[PRICE_NORMALIZATION.md](PRICE_NORMALIZATION.md)** - Deterministic bracket placement
    - Normalizes prices to standard bracket positions (1.0 × (1+r)^n)
    - Makes bracket placement deterministic across backtests
    - Mathematical foundation and implementation
    - Benefits for comparison and analysis
    - Usage in backtests and order calculator
 
-6. **[WITHDRAWAL_POLICY.md](WITHDRAWAL_POLICY.md)** - Orthogonal withdrawal dimension
+7. **[WITHDRAWAL_POLICY.md](WITHDRAWAL_POLICY.md)** - Orthogonal withdrawal dimension
    - Withdrawals apply uniformly to all strategies
    - Bank-first approach (sell only if needed)
    - Standard 4% rule with CPI adjustment
    - Simple mode for clean testing
    - Quantifies value of cash generation
 
-7. **[PORTFOLIO_VISION.md](PORTFOLIO_VISION.md)** - Multi-stock portfolio strategy (Phase 2 goal)
+8. **[PORTFOLIO_VISION.md](PORTFOLIO_VISION.md)** - Multi-stock portfolio strategy (Phase 2 goal)
    - Vision for portfolio-level implementation
    - Shared 10% cash reserve across multiple stocks
    - Three-stream capital model: tactical cash + stock positions + trading flow
@@ -60,14 +90,14 @@ This folder contains the complete conceptual and theoretical foundation for the 
 
 ### Practical Framework
 
-8. **[RETURN_METRICS_ANALYSIS.md](RETURN_METRICS_ANALYSIS.md)** - Metrics interpretation
+9. **[RETURN_METRICS_ANALYSIS.md](RETURN_METRICS_ANALYSIS.md)** - Metrics interpretation
    - Primary vs supplementary metrics
    - Capital utilization and deployment tracking
    - "More Shares = Success" fallacy prevention
    - Proper interpretation checklist
    - Variable capital deployment scenarios
 
-9. **[CODING_PHILOSOPHY.md](CODING_PHILOSOPHY.md)** - Development principles
+10. **[CODING_PHILOSOPHY.md](CODING_PHILOSOPHY.md)** - Development principles
    - Test-Driven Trust: tests validate economic behavior
    - Code as documentation
    - Fail-fast with clear error messages
@@ -88,6 +118,7 @@ cat theory/INVESTING_THEORY.md theory/VOLATILITY_ALPHA_THESIS.md > prompt.md
 cat theory/INVESTING_THEORY.md \
     theory/VOLATILITY_ALPHA_THESIS.md \
     theory/INCOME_GENERATION.md \
+    theory/INCOME_SMOOTHING.md \
     theory/INITIAL_CAPITAL_THEORY.md \
     theory/PRICE_NORMALIZATION.md \
     theory/WITHDRAWAL_POLICY.md \
@@ -99,8 +130,9 @@ cat theory/INVESTING_THEORY.md \
 ### Recommended Order for Learning
 1. Start with `INVESTING_THEORY.md` - Understand the "why"
 2. Read `VOLATILITY_ALPHA_THESIS.md` - Grasp the mathematics
-3. ⭐ **NEW**: Study `INCOME_GENERATION.md` - See the practical application (income from volatility)
-4. Review `RETURN_METRICS_ANALYSIS.md` - Learn proper interpretation
+3. ⭐ Study `INCOME_GENERATION.md` - See the practical application (income from volatility)
+4. ⭐ **NEW**: Read `INCOME_SMOOTHING.md` - Understand irregular → regular transformation and sequence-of-returns protection
+5. Review `RETURN_METRICS_ANALYSIS.md` - Learn proper interpretation
 5. Study `INITIAL_CAPITAL_THEORY.md` - Understand opportunity cost nuances
 6. Read `PRICE_NORMALIZATION.md` - Learn about deterministic brackets
 7. Study `WITHDRAWAL_POLICY.md` - Understand orthogonal withdrawal design

@@ -4,7 +4,7 @@
 **Author**: Synthetic Dividend Research Team  
 **Created**: October 25, 2025  
 **Status**: Foundation Document  
-**Related**: VOLATILITY_ALPHA_THESIS.md, INITIAL_CAPITAL_THEORY.md, WITHDRAWAL_POLICY.md
+**Related**: VOLATILITY_ALPHA_THESIS.md, INCOME_SMOOTHING.md, WITHDRAWAL_POLICY.md
 
 ---
 
@@ -17,11 +17,15 @@ Traditional finance teaches us to fear volatility. Dividend investors accept low
 **We harvest it.**
 
 Through systematic rebalancing with a buyback stack, we transform price fluctuations into:
-1. **Immediate cash** from profit-taking on upswings
-2. **Deferred cash** from buyback unwinding on returns to previous highs
-3. **Net cash flow** that can fund regular withdrawals without depleting the core position
+1. **Immediate cash** from profit-taking on upswings (irregular timing, market-driven)
+2. **Deferred cash** from buyback unwinding on returns to previous highs (irregular)
+3. **Regular income** through temporal smoothing (see INCOME_SMOOTHING.md)
+4. **Sequence-of-returns protection** by avoiding forced sales during drawdowns
+5. **Net cash flow** that can fund regular withdrawals without depleting the core position
 
 This document explains the mechanics, mathematics, and economic intuition behind volatility-based income generation.
+
+**See Also**: INCOME_SMOOTHING.md for the transformation of irregular synthetic dividends into regular income streams.
 
 ---
 

@@ -7,7 +7,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests](https://img.shields.io/badge/tests-20%20passing-brightgreen.svg)](./tests)
+[![Tests](https://img.shields.io/badge/tests-44%20passing-brightgreen.svg)](./tests)
 
 **A rules-based investment strategy that systematically generates cash flow from growth stocks while preserving compound growth potential.**
 
@@ -23,16 +23,18 @@ The Synthetic Dividend Algorithm solves a fundamental problem in portfolio manag
 
 Traditional approaches fail:
 - 🔴 **Dividend stocks** - Low yields (1-2%), slower growth
-- 🔴 **Forced selling** - Market timing risk, tax inefficiency  
+- 🔴 **Forced selling** - Sequence-of-returns risk, tax inefficiency  
 - 🔴 **Bonds/Fixed income** - Sacrifice growth potential
 
 **Our solution**:
 - ✅ **Strategic profit-taking** - Only sell at all-time highs (never weakness)
 - ✅ **Volatility harvesting** - Buybacks during dips amplify returns
+- ✅ **Income smoothing** - Convert irregular volatility profits into regular income
+- ✅ **Sequence-of-returns protection** - Bank buffer avoids forced sales in bear markets
 - ✅ **Configurable distributions** - Flexible profit-sharing ratios (0-100%+)
 - ✅ **Rules-based execution** - No market timing, just mathematics
 
-> 💎 **Key Insight**: The only unknown is *WHEN* all-time highs occur, not *IF*. This algorithm capitalizes on certainty within uncertainty.
+> 💎 **Key Insight**: Irregular payments (from market volatility) → Regular income (for lifestyle needs) through temporal buffering.
 
 ## 🔬 How It Works
 
@@ -113,6 +115,8 @@ Alpha Per Transaction:                +0.25% per buyback cycle
 - 💸 **Flexible profit sharing** (-100% to >100% for any strategy)
 - 📚 **FIFO buyback stack** for tax-efficient cost basis tracking
 - 💰 **Bank balance tracking** for cash flow analysis
+- 🏦 **Dual bank modes** (simple: allow margin, strict: never negative)
+- 💵 **Withdrawal policy** (4% rule with CPI adjustment, orthogonal to strategy)
 - 📊 **Financial adjustments** using real market benchmarks (VOO/BIL)
 
 </td>
@@ -121,9 +125,9 @@ Alpha Per Transaction:                +0.25% per buyback cycle
 ### 🔬 Research Tools
 - 📈 **Historical backtesting** with yfinance market data
 - 🔄 **Batch comparison** across multiple parameters
-- 📉 **Performance metrics** (Sharpe, drawdown, alpha)
+- 📉 **Performance metrics** (Sharpe, drawdown, alpha, coverage ratio)
 - 🎨 **Visualization** with matplotlib charts
-- ✅ **20-test suite** covering edge cases
+- ✅ **44-test suite** covering edge cases, margin modes, withdrawals
 
 </td>
 </tr>
@@ -383,7 +387,7 @@ This project maintains **rigorous engineering standards**:
 
 | Tool | Status | Coverage |
 |------|--------|----------|
-| ✅ **pytest** | 20 tests | Core algorithm, buyback stack, edge cases |
+| ✅ **pytest** | 44 tests | Core algorithm, buyback stack, margin modes, withdrawals, edge cases |
 | ✅ **mypy** | Type checking | 100% clean, strict mode |
 | ✅ **flake8** | Linting | 0 warnings |
 | ✅ **black** | Formatting | 100 char lines, consistent style |
@@ -397,6 +401,7 @@ pytest tests/ -v
 
 # Run specific test suite
 pytest tests/test_synthetic_dividend.py -v
+pytest tests/test_margin_modes.py -v  # New: Bank management modes
 
 # Run with coverage report
 pytest --cov=src tests/
@@ -406,7 +411,8 @@ pytest --cov=src tests/
 - 🔧 **Unit tests**: Algorithm logic, FIFO stack, profit calculations
 - 📊 **Integration tests**: Full backtests with synthetic data
 - 🎯 **Edge cases**: 0% profit sharing, 100% profit sharing, gap scenarios
-- 🐛 **Known issues**: 6 xfail tests documenting edge case bugs (see TODO.md)
+- 🏦 **Bank modes**: Margin vs strict mode, withdrawal coverage
+- 💵 **Withdrawal policy**: 4% rule, CPI adjustment, bank-first approach
 
 ### 📏 Code Quality
 
@@ -428,29 +434,39 @@ isort src/ tests/
 
 | Document | Description |
 |----------|-------------|
-| 📖 **[INVESTING_THEORY.md](INVESTING_THEORY.md)** | Comprehensive investment strategy explanation, profit-sharing mathematics, and financial adjustment theory |
-| 💎 **[VOLATILITY_ALPHA_THESIS.md](VOLATILITY_ALPHA_THESIS.md)** | How buybacks during drawdowns create extra returns beyond ATH-only selling |
-| 💻 **[CODING_PHILOSOPHY.md](CODING_PHILOSOPHY.md)** | Code quality standards, functional programming principles, and development best practices |
-| 📋 **[TODO.md](TODO.md)** | Development roadmap, planned features, and known issues |
+| 📖 **[INVESTING_THEORY.md](theory/INVESTING_THEORY.md)** | Comprehensive investment strategy explanation, profit-sharing mathematics, and financial adjustment theory |
+| 💎 **[VOLATILITY_ALPHA_THESIS.md](theory/VOLATILITY_ALPHA_THESIS.md)** | How buybacks during drawdowns create extra returns beyond ATH-only selling |
+| 💰 **[INCOME_GENERATION.md](theory/INCOME_GENERATION.md)** | How volatility becomes cash flow - the core income mechanism, practical implementation guide |
+| � **[INCOME_SMOOTHING.md](theory/INCOME_SMOOTHING.md)** | ⭐ NEW: Irregular → regular payment transformation, sequence-of-returns protection, never sell at loss principle |
+| 🏦 **[WITHDRAWAL_POLICY.md](theory/WITHDRAWAL_POLICY.md)** | Orthogonal withdrawal dimension, bank-first approach, 4% rule with CPI adjustment |
+| �💻 **[CODING_PHILOSOPHY.md](theory/CODING_PHILOSOPHY.md)** | Code quality standards, functional programming principles, and development best practices |
+| 📚 **[theory/README.md](theory/README.md)** | Complete theoretical framework overview and system prompt usage guide |
+| 📋 **[TODO.md](TODO.md)** | Development roadmap, completed features, and future plans |
 
 ## 🗺️ Roadmap
 
-### ✅ Completed (Phase 1)
+### ✅ Completed (Phase 1-2)
 - [x] Core synthetic dividend algorithm with buyback stack
 - [x] Optimal rebalancing parameter research (48 backtests)
 - [x] Volatility alpha discovery and measurement
 - [x] CLI tools for backtesting and batch analysis
-- [x] Comprehensive test suite with 20 tests
+- [x] Comprehensive test suite with 44 tests (100% passing)
+- [x] Withdrawal policy implementation (orthogonal to strategy)
+- [x] Dual bank management modes (simple vs strict)
+- [x] Price normalization for deterministic backtests
+- [x] Income generation framework and theory documentation
+- [x] Income smoothing theory (irregular → regular transformation)
 
-### 🚧 In Progress
-- [ ] Fix edge case bugs in volatility alpha synthetic tests (6 xfail tests)
-- [ ] Complete 12-asset volatility alpha analysis
-- [ ] Statistical significance testing (p-values, correlation analysis)
+### � In Progress (Phase 3)
+- [ ] Multi-asset portfolio experiments (diversification benefits)
+- [ ] Sequence-of-returns Monte Carlo validation
+- [ ] Coverage ratio optimization research
+- [ ] Income calculator tool for retirement planning
 
-### 🔮 Planned (Phase 2+)
-- [ ] Profit-sharing independence testing
-- [ ] Extended time horizons (3-year, 5-year backtests)
+### 🔮 Planned (Phase 4+)
 - [ ] Portfolio-level optimization (multi-asset allocation)
+- [ ] Dynamic withdrawal rate adjustments
+- [ ] Tax optimization strategies (lot selection, loss harvesting)
 - [ ] Web dashboard for interactive analysis
 - [ ] Real-time trading integration (paper trading)
 
