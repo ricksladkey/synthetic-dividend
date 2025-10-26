@@ -67,6 +67,21 @@ class Transaction:
     action: str  # 'BUY' or 'SELL'
     qty: int  # Number of shares
     notes: str = ""  # Optional explanation or metadata
+    transaction_date: Optional[date] = None  # Transaction date (filled by backtest engine)
+    price: float = 0.0  # Execution price per share (filled by backtest engine)
+    ticker: str = ""  # Stock symbol (filled by backtest engine)
+    
+    def to_string(self) -> str:
+        """Format transaction as human-readable string."""
+        if self.transaction_date and self.price > 0:
+            value = self.qty * self.price
+            return (
+                f"{self.transaction_date.isoformat()} {self.action} {self.qty} {self.ticker} "
+                f"@ {self.price:.2f} = {value:.2f}  # {self.notes}"
+            )
+        else:
+            # Fallback for transactions without date/price
+            return f"{self.action} {self.qty}  # {self.notes}"
 
 
 @dataclass
@@ -620,7 +635,7 @@ def run_algorithm_backtest(
     normalize_prices: bool = False,
     # Bank behavior
     allow_margin: bool = True,
-) -> Tuple[List[str], Dict[str, Any]]:
+) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Execute backtest of trading algorithm against historical price data.
 
     Flow:
@@ -796,7 +811,7 @@ def run_algorithm_backtest(
             print(f"  Next bracket up: ${start_price * (1 + rebalance_trigger):.2f}")
             print(f"  Next bracket down: ${start_price / (1 + rebalance_trigger):.2f}")
 
-    transactions: List[str] = []
+    transactions: List[Transaction] = []
 
     # Initialize portfolio state
     holdings: int = int(initial_qty)
@@ -853,7 +868,14 @@ def run_algorithm_backtest(
 
     # Record initial purchase
     transactions.append(
-        f"{first_idx.isoformat()} BUY {holdings} {ticker} @ {start_price:.2f} = {start_value:.2f}"
+        Transaction(
+            transaction_date=first_idx,
+            action="BUY",
+            qty=holdings,
+            price=start_price,
+            ticker=ticker,
+            notes="Initial purchase"
+        )
     )
 
     # Prepare sorted list of all trading days in range
@@ -926,6 +948,11 @@ def run_algorithm_backtest(
             if not isinstance(tx, Transaction):
                 raise ValueError("Algorithm must return a Transaction or None")
 
+            # Enhance transaction with date, price, and ticker (algorithms don't know these)
+            tx.transaction_date = d
+            tx.price = price
+            tx.ticker = ticker
+
             # Execute SELL transaction
             if tx.action.upper() == "SELL":
                 sell_qty = min(int(tx.qty), holdings)  # Cap at available holdings
@@ -933,8 +960,14 @@ def run_algorithm_backtest(
                 holdings -= sell_qty
                 bank += proceeds
                 transactions.append(
-                    f"{d.isoformat()} SELL {sell_qty} {ticker} @ {price:.2f} = {proceeds:.2f}, "
-                    f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
+                    Transaction(
+                        date=d,
+                        action="SELL",
+                        qty=sell_qty,
+                        price=price,
+                        ticker=ticker,
+                        notes=f"{tx.notes}, holdings = {holdings}, bank = {bank:.2f}"
+                    )
                 )
                 # Track bank balance statistics
                 bank_history.append((d, bank))
@@ -952,16 +985,28 @@ def run_algorithm_backtest(
                     skipped_buys += 1
                     skipped_buy_value += cost
                     transactions.append(
-                        f"{d.isoformat()} SKIP BUY {buy_qty} {ticker} @ {price:.2f} "
-                        f"(insufficient cash: ${bank:.2f} < ${cost:.2f})  # {tx.notes}"
+                        Transaction(
+                            date=d,
+                            action="SKIP BUY",
+                            qty=buy_qty,
+                            price=price,
+                            ticker=ticker,
+                            notes=f"{tx.notes}, insufficient cash: ${bank:.2f} < ${cost:.2f}"
+                        )
                     )
                 else:
                     # Execute buy (allow_margin=True OR sufficient cash)
                     holdings += buy_qty
                     bank -= cost  # May go negative if allow_margin=True
                     transactions.append(
-                        f"{d.isoformat()} BUY {buy_qty} {ticker} @ {price:.2f} = {cost:.2f}, "
-                        f"holdings = {holdings}, bank = {bank:.2f}  # {tx.notes}"
+                        Transaction(
+                            date=d,
+                            action="BUY",
+                            qty=buy_qty,
+                            price=price,
+                            ticker=ticker,
+                            notes=f"{tx.notes}, holdings = {holdings}, bank = {bank:.2f}"
+                        )
                     )
                     # Track bank balance statistics
                     bank_history.append((d, bank))
@@ -987,8 +1032,14 @@ def run_algorithm_backtest(
                 dividend_payment_count += 1
                 
                 transactions.append(
-                    f"{d.isoformat()} DIVIDEND {holdings} shares × ${div_per_share:.4f} "
-                    f"= ${div_payment:.2f}, bank = {bank:.2f}"
+                    Transaction(
+                        date=d,
+                        action="DIVIDEND",
+                        qty=holdings,
+                        price=div_per_share,
+                        ticker=ticker,
+                        notes=f"${div_payment:.2f}, bank = {bank:.2f}"
+                    )
                 )
                 
                 # Track bank balance statistics
@@ -1029,16 +1080,28 @@ def run_algorithm_backtest(
                     shares_sold_for_withdrawals += shares_to_sell
                     
                     transactions.append(
-                        f"{d.isoformat()} SELL {shares_to_sell} {ticker} @ {price:.2f} "
-                        f"for withdrawal, holdings = {holdings}, bank = {bank:.2f}  # {withdrawal_result.notes}"
+                        Transaction(
+                            date=d,
+                            action="SELL",
+                            qty=shares_to_sell,
+                            price=price,
+                            ticker=ticker,
+                            notes=f"For withdrawal, {withdrawal_result.notes}, holdings = {holdings}, bank = {bank:.2f}"
+                        )
                     )
                 
                 # Withdraw cash from bank
                 actual_withdrawal = min(withdrawal_result.cash_from_bank, bank)
                 bank -= actual_withdrawal
                 transactions.append(
-                    f"{d.isoformat()} WITHDRAWAL ${actual_withdrawal:.2f} from bank, "
-                    f"bank = {bank:.2f}"
+                    Transaction(
+                        date=d,
+                        action="WITHDRAWAL",
+                        qty=0,
+                        price=0.0,
+                        ticker=ticker,
+                        notes=f"${actual_withdrawal:.2f} from bank, bank = {bank:.2f}"
+                    )
                 )
                 
                 total_withdrawn += actual_withdrawal
