@@ -77,6 +77,25 @@ def suggest_sd_parameter(volatility: float) -> Tuple[int, float, str]:
         return (20, 3.53, f"Very low volatility ({vol_pct:.1f}%) → SD20 (3.53% trigger)")
 
 
+def calculate_minimum_alpha_per_cycle(trigger_pct: float) -> float:
+    """Calculate theoretical minimum volatility alpha per buyback-resell cycle.
+    
+    Formula: Alpha ≈ (trigger%)² / 2
+    
+    This is the lower bound profit from each buyback cycle, assuming:
+    - Price drops by exactly trigger%, then returns to original price
+    - No gaps or price discontinuities (actual alpha usually higher)
+    
+    Args:
+        trigger_pct: Rebalance trigger as percentage (e.g., 9.05 for SD8)
+        
+    Returns:
+        Minimum alpha per cycle as decimal (e.g., 0.0041 = 0.41%)
+    """
+    trigger_decimal = trigger_pct / 100.0
+    return (trigger_decimal ** 2) / 2.0
+
+
 def _parse_transaction_line(line: str) -> Optional[Dict[str, any]]:
     """Parse transaction log line to extract date, action, and price.
     
@@ -331,6 +350,13 @@ def analyze_volatility_alpha(
     # Calculate volatility alpha
     vol_alpha = (summary_full['total_return'] - summary_ath['total_return']) * 100
     
+    # Count buyback transactions (BUY transactions in full strategy)
+    buy_count = sum(1 for line in transactions_full if 'BUY' in line and 'BUYBACK' not in line.upper())
+    
+    # Calculate theoretical minimum alpha
+    min_alpha_per_cycle = calculate_minimum_alpha_per_cycle(trigger_pct)
+    predicted_min_alpha = buy_count * min_alpha_per_cycle * 100  # As percentage
+    
     print(f"\n{'=' * 80}")
     print(f"VOLATILITY ALPHA RESULTS")
     print(f"{'=' * 80}")
@@ -343,6 +369,15 @@ def analyze_volatility_alpha(
     print(f"SD{sd_n}-ATH-Only Return:    {summary_ath['total_return'] * 100:>8.2f}%")
     print(f"{'─' * 80}")
     print(f"Volatility Alpha:        {vol_alpha:>+8.2f}%")
+    print(f"")
+    print(f"📊 Theoretical Analysis:")
+    print(f"   Buyback cycles: {buy_count}")
+    print(f"   Min alpha/cycle: {min_alpha_per_cycle * 100:.3f}% (formula: trigger²/2)")
+    print(f"   Predicted min alpha: {predicted_min_alpha:.2f}%")
+    print(f"   Actual vs predicted: {vol_alpha:.2f}% vs {predicted_min_alpha:.2f}%")
+    if vol_alpha > predicted_min_alpha:
+        bonus = vol_alpha - predicted_min_alpha
+        print(f"   ✨ Bonus alpha from gaps: +{bonus:.2f}% (actual exceeds minimum)")
     print(f"")
     
     if vol_alpha > 0.5:
