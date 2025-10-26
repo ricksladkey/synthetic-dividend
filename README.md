@@ -518,9 +518,12 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 - 📈 **Market data** provided by [yfinance](https://github.com/ranaroussi/yfinance) (Yahoo Finance API)
 - 🐍 **Built with** Python, NumPy, Pandas, and Matplotlib
+- 🤖 **Proudly developed in collaboration with AI** - See [CONTRIBUTORS.md](CONTRIBUTORS.md) for the full story
 - 💡 **Inspired by** the need for systematic cash flow from growth portfolios
 - 🎓 **Mathematical foundation** based on exponential rebalancing theory (2^(1/N) scaling)
 - 🔬 **Research methodology** influenced by systematic trading and quantitative finance principles
+
+This project represents a groundbreaking collaboration between human expertise and artificial intelligence, demonstrating the transformative potential of AI-assisted software development. Read the full collaboration story in [CONTRIBUTORS.md](CONTRIBUTORS.md).
 
 Special thanks to the open-source community for excellent tools that made this project possible.
 
@@ -534,8 +537,9 @@ Special thanks to the open-source community for excellent tools that made this p
 
 ### 🔗 Quick Links
 
-- 📖 [Full Documentation](INVESTING_THEORY.md)
-- 💎 [Volatility Alpha Thesis](VOLATILITY_ALPHA_THESIS.md)
+- 📖 [Full Documentation](theory/README.md)
+- 💎 [Volatility Alpha Thesis](theory/VOLATILITY_ALPHA_THESIS.md)
+- 🤝 [Contributors & Collaboration Story](CONTRIBUTORS.md)
 - 🐛 [Issue Tracker](https://github.com/ricksladkey/synthetic-dividend/issues)
 - 💬 [Discussions](https://github.com/ricksladkey/synthetic-dividend/discussions)
 
@@ -552,10 +556,12 @@ Special thanks to the open-source community for excellent tools that made this p
 - 💼 Always consult a qualified financial advisor
 - ⚖️ Past performance ≠ future results
 
-**Use at your own risk. The author assumes no liability for financial decisions made based on this software.**
+**Use at your own risk. The authors assume no liability for financial decisions made based on this software.**
+
+**About This Project**: Proudly developed through human-AI collaboration. See [CONTRIBUTORS.md](CONTRIBUTORS.md) for the fascinating story of how this project became a case study in AI-assisted software development.
 
 ---
 
-<sub>Made with ❤️ and Python | © 2024-2025 Rick Sladkey | MIT License</sub>
+<sub>Made with ❤️, Python, and AI collaboration | © 2024-2025 Rick Sladkey | MIT License</sub>
 
 </div>
