@@ -18,15 +18,32 @@ This distinction allows:
 ```
 experiments/
 ├── README.md                        # This file
+├── volatility-alpha-validation/    # Formula validation dataset
+│   ├── README.md                    # Analysis and findings
+│   ├── generate-data.bat            # Reproduction script
+│   └── volatility_alpha_table.csv   # 18 scenarios across 6 assets
 ├── 2025-01-25_profit-sharing/      # Experiment date + name
 │   ├── README.md                    # Experiment documentation
 │   ├── params.json                  # Parameters used
 │   ├── results.csv                  # Raw results
 │   └── charts/                      # Generated visualizations
 │       └── composition.png
-├── 2025-01-26_volatility-alpha/
-│   └── ...
 └── ...
+```
+
+## Current Experiments
+
+### volatility-alpha-validation/
+**Purpose**: Validate the mathematical formula `Alpha ≈ (trigger%)² / 2 × buy_count`
+
+**Assets**: NVDA, MSTR, BTC-USD, ETH-USD, PLTR, GLD  
+**Timeframes**: 1, 2, 3 years ending Oct 26, 2025  
+**Key Finding**: Formula provides reliable conservative lower bound. High volatility assets show 2-3x theoretical minimum due to gap bonuses.
+
+**Reproduce**:
+```bash
+cd experiments/volatility-alpha-validation
+generate-data.bat
 ```
 
 ## Naming Convention
