@@ -43,6 +43,10 @@ class HistoryFetcher:
         """Return absolute path to cache file for ticker."""
         return os.path.join(self.cache_dir, f"{ticker.upper()}.pkl")
 
+    def _dividend_cache_path(self, ticker: str) -> str:
+        """Return absolute path to dividend cache file for ticker."""
+        return os.path.join(self.cache_dir, f"{ticker.upper()}_dividends.pkl")
+
     def _load_cache(self, ticker: str) -> Optional[pd.DataFrame]:
         """Load cached DataFrame for ticker, or None if missing/corrupt."""
         path = self._cache_path(ticker)
@@ -64,6 +68,29 @@ class HistoryFetcher:
                 pickle.dump(df, f)
         except Exception:
             # Silently ignore save failures (permissions, disk full, etc.)
+            pass
+
+    def _load_dividend_cache(self, ticker: str) -> Optional[pd.Series]:
+        """Load cached dividend Series for ticker, or None if missing/corrupt."""
+        path = self._dividend_cache_path(ticker)
+        if os.path.exists(path):
+            try:
+                with open(path, "rb") as f:
+                    series: pd.Series = pickle.load(f)
+                return series
+            except Exception:
+                # Corrupt cache file
+                return None
+        return None
+
+    def _save_dividend_cache(self, ticker: str, series: pd.Series) -> None:
+        """Persist dividend Series to cache file (pickle format)."""
+        path = self._dividend_cache_path(ticker)
+        try:
+            with open(path, "wb") as f:
+                pickle.dump(series, f)
+        except Exception:
+            # Silently ignore save failures
             pass
 
     def _download(self, ticker: str, start: date, end: date) -> pd.DataFrame:
@@ -104,6 +131,41 @@ class HistoryFetcher:
         # Remove rows with all NaN prices
         df = df[cols].dropna(how="all")
         return df
+
+    def _download_dividends(self, ticker: str) -> pd.Series:
+        """Download COMPLETE dividend/interest history from yfinance.
+
+        Strategy: "Clone, don't query" - grab everything available, cache locally.
+        Works for both equity dividends (AAPL) and ETF distributions (BIL interest).
+
+        Args:
+            ticker: Stock symbol
+
+        Returns:
+            Series with dividend amounts indexed by ex-dividend date (empty if none)
+        """
+        if yf is None:
+            raise RuntimeError("yfinance not installed or failed to import")
+
+        try:
+            # Fetch Ticker object (this is fast - just metadata)
+            ticker_obj = yf.Ticker(ticker)
+            
+            # Get complete dividend history (small data, fast to download)
+            # Returns Series indexed by date, values are dividend amounts
+            dividends = ticker_obj.dividends
+            
+            if dividends is None or dividends.empty:
+                return pd.Series(dtype=float)
+            
+            # Clean up: remove any NaN values
+            dividends = dividends.dropna()
+            
+            return dividends
+            
+        except Exception:
+            # If download fails, return empty Series
+            return pd.Series(dtype=float)
 
     def get_history(self, ticker: str, start_date: date, end_date: date) -> pd.DataFrame:
         """Fetch OHLC history for ticker in date range, using cache when possible.
@@ -202,4 +264,83 @@ class HistoryFetcher:
         result: Dict[str, pd.DataFrame] = {}
         for ticker in tickers:
             result[ticker] = self.get_history(ticker, start_date, end_date)
+        return result
+
+    def get_dividends(self, ticker: str, start_date: date, end_date: date) -> pd.Series:
+        """Fetch dividend/interest history for ticker, using cache when possible.
+
+        Strategy: "Clone everything once" - download complete dividend history,
+        cache locally, return filtered subset for requested date range.
+
+        Works for:
+        - Equity dividends (AAPL, MSFT, KO, etc.)
+        - ETF distributions (VOO, VTI, etc.)
+        - Money market interest (BIL, SHV, etc.)
+
+        Args:
+            ticker: Stock symbol
+            start_date: Start date (inclusive)
+            end_date: End date (inclusive)
+
+        Returns:
+            Series with dividend amounts indexed by ex-dividend date
+            (empty Series if no dividends in range or ticker doesn't pay)
+
+        Example:
+            >>> fetcher = HistoryFetcher()
+            >>> divs = fetcher.get_dividends("AAPL", date(2024, 1, 1), date(2024, 12, 31))
+            >>> total_dividends = divs.sum()
+        """
+        ticker = ticker.upper()
+        
+        # Try to load from cache
+        cached = self._load_dividend_cache(ticker)
+        
+        # If no cache, download complete history and save it
+        if cached is None or cached.empty:
+            dividends = self._download_dividends(ticker)
+            if not dividends.empty:
+                self._save_dividend_cache(ticker, dividends)
+            cached = dividends
+        
+        # If still empty (ticker doesn't pay dividends), return empty Series
+        if cached.empty:
+            return pd.Series(dtype=float)
+        
+        # Filter to requested date range
+        # Convert index to date objects for comparison
+        div_dates = pd.to_datetime(cached.index).date
+        mask = (div_dates >= start_date) & (div_dates <= end_date)
+        
+        return cached.loc[mask].copy()
+
+    def get_multiple_dividends(
+        self, tickers: List[str], start_date: date, end_date: date
+    ) -> Dict[str, pd.Series]:
+        """Fetch dividend history for multiple tickers (same date range).
+
+        Convenience wrapper around get_dividends() that fetches data
+        for multiple tickers and returns them as a dictionary.
+
+        Args:
+            tickers: List of stock symbols to fetch
+            start_date: Start date (inclusive)
+            end_date: End date (inclusive)
+
+        Returns:
+            Dict mapping ticker symbol to dividend Series (may be empty if none)
+
+        Example:
+            >>> fetcher = HistoryFetcher()
+            >>> divs = fetcher.get_multiple_dividends(
+            ...     ["AAPL", "MSFT", "BIL"],
+            ...     date(2024, 1, 1),
+            ...     date(2024, 12, 31)
+            ... )
+            >>> aapl_total = divs["AAPL"].sum()
+            >>> bil_interest = divs["BIL"].sum()
+        """
+        result: Dict[str, pd.Series] = {}
+        for ticker in tickers:
+            result[ticker] = self.get_dividends(ticker, start_date, end_date)
         return result

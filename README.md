@@ -122,8 +122,9 @@ Alpha Per Transaction:                +0.25% per buyback cycle
 - 💸 **Flexible profit sharing** (-100% to >100% for any strategy)
 - 📚 **FIFO buyback stack** for tax-efficient cost basis tracking
 - 💰 **Bank balance tracking** for cash flow analysis
+- 💵 **Real dividend/interest income** (AAPL, BIL, etc.) credited to bank
 - 🏦 **Dual bank modes** (simple: allow margin, strict: never negative)
-- 💵 **Withdrawal policy** (4% rule with CPI adjustment, orthogonal to strategy)
+- � **Withdrawal policy** (4% rule with CPI adjustment, orthogonal to strategy)
 - 📊 **Financial adjustments** using real market benchmarks (VOO/BIL)
 
 </td>
@@ -131,10 +132,11 @@ Alpha Per Transaction:                +0.25% per buyback cycle
 
 ### 🔬 Research Tools
 - 📈 **Historical backtesting** with yfinance market data
+- 📥 **Dividend/interest tracking** (cached locally for fast access)
 - 🔄 **Batch comparison** across multiple parameters
 - 📉 **Performance metrics** (Sharpe, drawdown, alpha, coverage ratio)
 - 🎨 **Visualization** with matplotlib charts
-- ✅ **44-test suite** covering edge cases, margin modes, withdrawals
+- ✅ **48-test suite** covering edge cases, margin modes, withdrawals, dividends
 
 </td>
 </tr>

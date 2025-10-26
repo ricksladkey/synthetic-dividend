@@ -539,6 +539,8 @@ def run_algorithm_backtest(
     risk_free_asset_df: Optional[pd.DataFrame] = None,
     reference_asset_ticker: str = "",
     risk_free_asset_ticker: str = "",
+    # Dividend/interest payments
+    dividend_series: Optional[pd.Series] = None,
     # Withdrawal policy parameters
     withdrawal_rate_pct: float = 0.0,
     withdrawal_frequency_days: int = 30,
@@ -582,6 +584,11 @@ def run_algorithm_backtest(
                            Ignored if simple_mode=True
         reference_asset_ticker: Ticker symbol for reference asset (for reporting)
         risk_free_asset_ticker: Ticker symbol for risk-free asset (for reporting)
+        dividend_series: Historical dividend/interest payments (Series indexed by ex-date)
+                        Each value is dividend amount per share on that date
+                        Works for equity dividends (AAPL) and ETF distributions (BIL)
+                        If provided, dividends are credited to bank on ex-date
+                        If None, no dividend income is tracked
         withdrawal_rate_pct: Annual withdrawal rate as % of initial portfolio value
                             (e.g., 4.0 for 4% withdrawal rate)
                             Withdrawals are taken monthly and CPI-adjusted
@@ -739,6 +746,10 @@ def run_algorithm_backtest(
     shares_sold_for_withdrawals: int = 0
     last_withdrawal_date: Optional[date] = None
     
+    # Dividend/interest income tracking
+    total_dividends: float = 0.0
+    dividend_payment_count: int = 0
+    
     # Skipped transaction tracking (for strict mode)
     skipped_buys: int = 0
     skipped_buy_value: float = 0.0
@@ -890,6 +901,30 @@ def run_algorithm_backtest(
             else:
                 raise ValueError("Transaction action must be 'BUY' or 'SELL'")
         
+        # Process dividend/interest payments (if available for this date)
+        if dividend_series is not None and not dividend_series.empty:
+            # Check if this date has a dividend payment
+            # Convert date index to date objects for comparison
+            div_dates = pd.to_datetime(dividend_series.index).date
+            if d in div_dates:
+                # Find the dividend amount for this date
+                div_idx = list(div_dates).index(d)
+                div_per_share = dividend_series.iloc[div_idx]
+                div_payment = div_per_share * holdings
+                
+                bank += div_payment
+                total_dividends += div_payment
+                dividend_payment_count += 1
+                
+                transactions.append(
+                    f"{d.isoformat()} DIVIDEND {holdings} shares × ${div_per_share:.4f} "
+                    f"= ${div_payment:.2f}, bank = {bank:.2f}"
+                )
+                
+                # Track bank balance statistics
+                bank_history.append((d, bank))
+                bank_max = max(bank_max, bank)
+        
         # Process withdrawals (if enabled and due)
         if base_withdrawal_amount > 0:
             # Check if withdrawal is due
@@ -1037,6 +1072,9 @@ def run_algorithm_backtest(
         "withdrawal_count": withdrawal_count,
         "shares_sold_for_withdrawals": shares_sold_for_withdrawals,
         "withdrawal_rate_pct": withdrawal_rate_pct,
+        # Dividend/interest income metrics
+        "total_dividends": total_dividends,
+        "dividend_payment_count": dividend_payment_count,
         # Strict mode metrics
         "skipped_buys": skipped_buys,
         "skipped_buy_value": skipped_buy_value,
