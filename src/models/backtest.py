@@ -69,6 +69,21 @@ class Transaction:
     notes: str = ""  # Optional explanation or metadata
 
 
+@dataclass
+class WithdrawalResult:
+    """Represents the result of a withdrawal request.
+    
+    The algorithm decides how to fulfill a withdrawal request, returning:
+    - shares_to_sell: Number of shares to liquidate (0 if using cash only)
+    - cash_from_bank: Amount to withdraw from bank balance
+    - notes: Optional explanation of the withdrawal strategy
+    """
+
+    shares_to_sell: int = 0  # Number of shares to liquidate
+    cash_from_bank: float = 0.0  # Amount to withdraw from cash balance
+    notes: str = ""  # Optional explanation
+
+
 def _get_close_scalar(df: pd.DataFrame, idx: Any, col_name: str = "Close") -> float:
     """Extract scalar float from DataFrame at given index/column.
 
@@ -162,6 +177,61 @@ class AlgorithmBase(ABC):
     def on_end_holding(self) -> None:
         """Cleanup/reporting after backtest completes."""
         pass
+
+    def on_withdrawal(
+        self,
+        date_: date,
+        requested_amount: float,
+        current_price: float,
+        holdings: int,
+        bank: float,
+        allow_margin: bool,
+    ) -> WithdrawalResult:
+        """Handle a withdrawal request, deciding how to fulfill it.
+        
+        Default implementation: Use cash first, then sell shares if needed.
+        Subclasses can override to implement custom withdrawal strategies.
+        
+        Args:
+            date_: Current date
+            requested_amount: Amount of cash requested for withdrawal
+            current_price: Current share price
+            holdings: Current share count
+            bank: Current cash balance (may be negative)
+            allow_margin: Whether negative bank balance is allowed
+        
+        Returns:
+            WithdrawalResult specifying how to fulfill the withdrawal
+        """
+        # Default strategy: cash first, then shares
+        if bank >= requested_amount:
+            # Sufficient cash - withdraw from bank only
+            return WithdrawalResult(
+                shares_to_sell=0,
+                cash_from_bank=requested_amount,
+                notes="Withdrawal from cash balance"
+            )
+        else:
+            # Insufficient cash - need to sell shares
+            # In allow_margin mode: only cover withdrawal
+            # In strict mode: cover withdrawal AND repay any negative balance
+            if allow_margin:
+                cash_needed = requested_amount - max(0, bank)
+            else:
+                # Strict mode: also need to cover negative bank balance
+                cash_needed = requested_amount - bank  # If bank<0, this increases cash_needed
+            
+            shares_to_sell = int(cash_needed / current_price) + 1  # Round up
+            shares_to_sell = min(shares_to_sell, holdings)  # Cap at available
+            
+            # Calculate actual cash available from bank after share sale
+            cash_from_bank = requested_amount
+            
+            return WithdrawalResult(
+                shares_to_sell=shares_to_sell,
+                cash_from_bank=cash_from_bank,
+                notes=f"Selling {shares_to_sell} shares for withdrawal (need ${requested_amount:.2f})"
+            )
 
 
 class BuyAndHoldAlgorithm(AlgorithmBase):
@@ -940,49 +1010,38 @@ def run_algorithm_backtest(
                 cpi_multiplier = cpi_returns.get(d, 1.0)
                 withdrawal_amount = base_withdrawal_amount * cpi_multiplier
                 
-                # Try to withdraw from bank first
-                if bank >= withdrawal_amount:
-                    # Sufficient cash - withdraw from bank
-                    bank -= withdrawal_amount
-                    transactions.append(
-                        f"{d.isoformat()} WITHDRAWAL ${withdrawal_amount:.2f} from bank, "
-                        f"bank = {bank:.2f}"
-                    )
-                else:
-                    # Insufficient cash - need to sell shares
-                    # In allow_margin mode: only cover withdrawal
-                    # In strict mode: cover withdrawal AND repay any negative balance
-                    if allow_margin:
-                        cash_needed = withdrawal_amount - max(0, bank)
-                    else:
-                        # Strict mode: also need to cover negative bank balance
-                        cash_needed = withdrawal_amount - bank  # If bank<0, this increases cash_needed
-                    
-                    shares_to_sell = int(cash_needed / price) + 1  # Round up
-                    shares_to_sell = min(shares_to_sell, holdings)  # Cap at available
-                    
-                    if shares_to_sell > 0:
-                        proceeds = shares_to_sell * price
-                        holdings -= shares_to_sell
-                        bank += proceeds
-                        shares_sold_for_withdrawals += shares_to_sell
-                        
-                        transactions.append(
-                            f"{d.isoformat()} SELL {shares_to_sell} {ticker} @ {price:.2f} "
-                            f"for withdrawal (need ${withdrawal_amount:.2f}), "
-                            f"holdings = {holdings}, bank = {bank:.2f}"
-                        )
-                    
-                    # Now withdraw from bank
-                    actual_withdrawal = min(withdrawal_amount, bank)
-                    bank -= actual_withdrawal
-                    transactions.append(
-                        f"{d.isoformat()} WITHDRAWAL ${actual_withdrawal:.2f} from bank, "
-                        f"bank = {bank:.2f}"
-                    )
-                    withdrawal_amount = actual_withdrawal
+                # Let algorithm decide how to fulfill withdrawal
+                withdrawal_result = algo_obj.on_withdrawal(
+                    date_=d,
+                    requested_amount=withdrawal_amount,
+                    current_price=price,
+                    holdings=holdings,
+                    bank=bank,
+                    allow_margin=allow_margin,
+                )
                 
-                total_withdrawn += withdrawal_amount
+                # Execute share sale if algorithm decided to liquidate
+                if withdrawal_result.shares_to_sell > 0:
+                    shares_to_sell = withdrawal_result.shares_to_sell
+                    proceeds = shares_to_sell * price
+                    holdings -= shares_to_sell
+                    bank += proceeds
+                    shares_sold_for_withdrawals += shares_to_sell
+                    
+                    transactions.append(
+                        f"{d.isoformat()} SELL {shares_to_sell} {ticker} @ {price:.2f} "
+                        f"for withdrawal, holdings = {holdings}, bank = {bank:.2f}  # {withdrawal_result.notes}"
+                    )
+                
+                # Withdraw cash from bank
+                actual_withdrawal = min(withdrawal_result.cash_from_bank, bank)
+                bank -= actual_withdrawal
+                transactions.append(
+                    f"{d.isoformat()} WITHDRAWAL ${actual_withdrawal:.2f} from bank, "
+                    f"bank = {bank:.2f}"
+                )
+                
+                total_withdrawn += actual_withdrawal
                 withdrawal_count += 1
                 last_withdrawal_date = d
                 
