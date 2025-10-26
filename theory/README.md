@@ -29,7 +29,21 @@ This folder contains the complete conceptual and theoretical foundation for the 
    - Three implementation options (with Option A marked as WRONG)
    - Impact on absolute returns vs volatility alpha (alpha unchanged)
 
-4. **[PORTFOLIO_VISION.md](PORTFOLIO_VISION.md)** - Multi-stock portfolio strategy (Phase 2 goal)
+4. **[PRICE_NORMALIZATION.md](PRICE_NORMALIZATION.md)** - Deterministic bracket placement
+   - Normalizes prices to standard bracket positions (1.0 × (1+r)^n)
+   - Makes bracket placement deterministic across backtests
+   - Mathematical foundation and implementation
+   - Benefits for comparison and analysis
+   - Usage in backtests and order calculator
+
+5. **[WITHDRAWAL_POLICY.md](WITHDRAWAL_POLICY.md)** - Orthogonal withdrawal dimension
+   - Withdrawals apply uniformly to all strategies
+   - Bank-first approach (sell only if needed)
+   - Standard 4% rule with CPI adjustment
+   - Simple mode for clean testing
+   - Quantifies value of cash generation
+
+6. **[PORTFOLIO_VISION.md](PORTFOLIO_VISION.md)** - Multi-stock portfolio strategy (Phase 2 goal)
    - Vision for portfolio-level implementation
    - Shared 10% cash reserve across multiple stocks
    - Three-stream capital model: tactical cash + stock positions + trading flow
@@ -38,14 +52,14 @@ This folder contains the complete conceptual and theoretical foundation for the 
 
 ### Practical Framework
 
-5. **[RETURN_METRICS_ANALYSIS.md](RETURN_METRICS_ANALYSIS.md)** - Metrics interpretation
+7. **[RETURN_METRICS_ANALYSIS.md](RETURN_METRICS_ANALYSIS.md)** - Metrics interpretation
    - Primary vs supplementary metrics
    - Capital utilization and deployment tracking
    - "More Shares = Success" fallacy prevention
    - Proper interpretation checklist
    - Variable capital deployment scenarios
 
-6. **[CODING_PHILOSOPHY.md](CODING_PHILOSOPHY.md)** - Development principles
+8. **[CODING_PHILOSOPHY.md](CODING_PHILOSOPHY.md)** - Development principles
    - Test-Driven Trust: tests validate economic behavior
    - Code as documentation
    - Fail-fast with clear error messages
@@ -66,6 +80,8 @@ cat theory/INVESTING_THEORY.md theory/VOLATILITY_ALPHA_THESIS.md > prompt.md
 cat theory/INVESTING_THEORY.md \
     theory/VOLATILITY_ALPHA_THESIS.md \
     theory/INITIAL_CAPITAL_THEORY.md \
+    theory/PRICE_NORMALIZATION.md \
+    theory/WITHDRAWAL_POLICY.md \
     theory/PORTFOLIO_VISION.md \
     theory/RETURN_METRICS_ANALYSIS.md \
     theory/CODING_PHILOSOPHY.md > full_prompt.md
@@ -76,8 +92,10 @@ cat theory/INVESTING_THEORY.md \
 2. Read `VOLATILITY_ALPHA_THESIS.md` - Grasp the mathematics
 3. Review `RETURN_METRICS_ANALYSIS.md` - Learn proper interpretation
 4. Study `INITIAL_CAPITAL_THEORY.md` - Understand opportunity cost nuances
-5. Explore `PORTFOLIO_VISION.md` - See the long-term vision
-6. Reference `CODING_PHILOSOPHY.md` - Internalize development principles
+5. Read `PRICE_NORMALIZATION.md` - Learn about deterministic brackets
+6. Study `WITHDRAWAL_POLICY.md` - Understand orthogonal withdrawal design
+7. Explore `PORTFOLIO_VISION.md` - See the long-term vision
+8. Reference `CODING_PHILOSOPHY.md` - Internalize development principles
 
 ## Key Concepts Across Documents
 
