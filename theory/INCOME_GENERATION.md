@@ -817,26 +817,39 @@ Benefits:
    - Accumulated AAPL/MSFT/QQQ over career
    - Need income but don't want to switch to bonds
    - Comfortable with moderate volatility
+   - **Key insight**: With 50% profit-sharing, you'll reach the same wealth endpoint as buy-and-hold, just on a 2x timeframe while generating income along the way
 
 2. **RSU/Stock Comp Employees**:
    - Concentrated position in employer stock (GOOGL, AMZN, etc.)
    - Need to extract cash without selling entire position
    - Want systematic approach
+   - **Time machine effect**: Convert future growth into current cash flow at a controlled rate
 
 3. **Roth IRA Optimizers**:
    - Young investors with decades to compound
    - Want growth + income with zero taxes
    - Comfortable with active management
+   - **Perfect use case**: Even 0.5% annual volatility alpha compounds massively over 30-40 years
 
 4. **Dividend Yield Chasers** (who want growth):
    - Frustrated with 2-4% dividend yields
    - Want exposure to growth stocks
    - Willing to accept variable income for upside
+   - **Reality**: You have to sell shares to generate income anyway - might as well do it systematically at optimal times
 
 5. **Covered Call Sellers** (seeking simpler approach):
    - Like income from volatility
    - Tired of options complexity
    - Want unlimited upside potential
+   - **Advantage**: No time decay, bidirectional profits, simpler execution
+
+**The Fundamental Truth**:
+You cannot generate cash flow without reducing your position. The question is HOW you do it:
+- ❌ Randomly sell when you need money (poor timing)
+- ❌ Switch to low-yield dividend stocks (sacrifice growth)
+- ✅ **Systematically sell at all-time highs** (optimal timing)
+
+With profit-sharing as your time dilation knob, the algorithm converts your growth timeline into a cash flow schedule. Whatever your goal return is, you'll reach it - it just takes proportionally longer based on how much income you extract along the way.
 
 **Not Ideal For**:
 

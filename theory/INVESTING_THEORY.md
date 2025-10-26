@@ -93,6 +93,42 @@ The **profit sharing ratio** is a critical parameter that controls the balance b
 
 In bull markets (like the 1-year NVDA example showing 29% returns), the growth penalty from profit-taking is minimal because the remaining position continues to appreciate substantially.
 
+### The Time Machine Effect
+
+**Key Insight**: Profit sharing acts as a **time dilation factor** for investment returns.
+
+With 50% profit-sharing:
+- You extract half the gains as cash flow (income generation)
+- You keep half the gains as growth (compounding)
+- You reach the same endpoint as buy-and-hold, just on a **2x time scale**
+
+**Example**:
+- Buy-and-hold: 10x your money in 10 years
+- SD algorithm (50% profit-sharing): 10x your money in ~20 years
+- **BUT**: Generate substantial cash flow throughout the entire period
+- **AND**: Sequence-of-returns protection (never forced to sell at a loss)
+
+**The Beauty**: This is like a time machine for your returns. Whatever your goal return is, the algorithm will reach it - it just takes proportionally longer based on your profit-sharing ratio.
+
+**Why This Matters**:
+- **Even 0.5% volatility alpha is huge** when compounded over 20-40 years on assets like QQQ
+- You're trading time for income - a perfectly rational trade-off for retirees
+- The algorithm converts **growth timeline** into **cash flow schedule**
+- You can't avoid selling to generate income - this just does it systematically at optimal times
+
+**Mathematical Relationship**:
+```
+Time_to_goal ≈ Buy_and_hold_time × (1 / (1 - profit_sharing_ratio))
+
+Examples:
+- 0% profit sharing:   1.0x time (pure buy-and-hold)
+- 50% profit sharing:  2.0x time (balanced)
+- 75% profit sharing:  4.0x time (income-focused)
+- 90% profit sharing: 10.0x time (maximum income extraction)
+```
+
+This assumes roughly monotonically increasing growth (no prolonged bear markets). In reality, volatility alpha can partially offset the time dilation.
+
 ### Extended Range: Beyond 0-100%
 
 The algorithm **mathematically supports profit sharing values outside the conventional 0-100% range**, with predictable and useful effects:
