@@ -7,7 +7,14 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests](https://img.shields.io/badge/tests-44%20passing-brightgreen.svg)](./tests)
+[![| 💰 **[INCOME_GENERATION.md](theory/INCOME_GENERATION.md)** | How volatility becomes cash flow - the core income mechanism, practical implementation guide |
+| 🔄 **[INCOME_SMOOTHING.md](theory/INCOME_SMOOTHING.md)** | Irregular → regular payment transformation, sequence-of-returns protection, never sell at loss principle |
+| 🏦 **[WITHDRAWAL_POLICY.md](theory/WITHDRAWAL_POLICY.md)** | Orthogonal withdrawal dimension, bank-first approach, 4% rule with CPI adjustment |
+| 💻 **[CODING_PHILOSOPHY.md](theory/CODING_PHILOSOPHY.md)** | Code quality standards, functional programming principles, and development best practices |
+| 📚 **[theory/README.md](theory/README.md)** | Complete theoretical framework overview and system prompt usage guide |
+| 🤝 **[CONTRIBUTORS.md](CONTRIBUTORS.md)** | Who built this and how - the human-AI collaboration story |
+| 🚀 **[CODING_ASSISTANCE_MANIFESTO.md](CODING_ASSISTANCE_MANIFESTO.md)** | ⭐ Lessons on AI-assisted development, the "pays for itself" productivity gain |
+| 📋 **[TODO.md](TODO.md)** | Development roadmap, completed features, and future plans |(https://img.shields.io/badge/tests-44%20passing-brightgreen.svg)](./tests)
 
 **A rules-based investment strategy that systematically generates cash flow from growth stocks while preserving compound growth potential.**
 
@@ -540,7 +547,8 @@ Special thanks to the open-source community for excellent tools that made this p
 - 📖 [Full Documentation](theory/README.md)
 - 💎 [Volatility Alpha Thesis](theory/VOLATILITY_ALPHA_THESIS.md)
 - 🤝 [Contributors & Collaboration Story](CONTRIBUTORS.md)
-- 🐛 [Issue Tracker](https://github.com/ricksladkey/synthetic-dividend/issues)
+- � [AI-Assisted Development Manifesto](CODING_ASSISTANCE_MANIFESTO.md)
+- �🐛 [Issue Tracker](https://github.com/ricksladkey/synthetic-dividend/issues)
 - 💬 [Discussions](https://github.com/ricksladkey/synthetic-dividend/discussions)
 
 ---
