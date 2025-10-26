@@ -1,11 +1,15 @@
 <div align="center">
 
-# 💰 Synthetic Dividend Algorithm
+# 💰 Synthet[🚀 Quick Start](#-quick-start-guide) • [📊 Research Findings](#-research-findings) • [📖 Examples](docs/EXAMPLES.md) • [📖 Documentation](#-documentation) • [🤝 Contributing](#-contributing)c Dividend Algorithm
 
 ### *Transform Volatility Into Cash Flow*
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](h| 🏦 **[WITHDRAWAL_POLICY.md](theory/WITHDRAWAL_POLICY.md)** | Orthogonal withdrawal dimension, bank-first approach, 4% rule with CPI adjustment |
+| 💻 **[CODING_PHILOSOPHY.md](theory/CODING_PHILOSOPHY.md)** | Code quality standards, functional programming principles, and development best practices |
+| 📚 **[theory/README.md](theory/README.md)** | Complete theoretical framework overview and system prompt usage guide |
+| 📋 **[TODO.md](TODO.md)** | Development roadmap, completed features, and future plans |
+| 🎓 **[EXAMPLES.md](docs/EXAMPLES.md)** | ⭐ **Comprehensive usage guide** - command examples, real-world scenarios, volatility analyzer walkthrough |//opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![| 💰 **[INCOME_GENERATION.md### ✅ Completed (Phase 1-2)
 - [x] Core synthetic dividend algorithm with buyback stack
@@ -26,7 +30,7 @@
 | 🏦 **[WITHDRAWAL_POLICY.md](theory/WITHDRAWAL_POLICY.md)** | Orthogonal withdrawal dimension, bank-first approach, 4% rule with CPI adjustment |
 | 💻 **[CODING_PHILOSOPHY.md](theory/CODING_PHILOSOPHY.md)** | Code quality standards, functional programming principles, and development best practices |
 | 📚 **[theory/README.md](theory/README.md)** | Complete theoretical framework overview and system prompt usage guide |
-| 🤝 **[CONTRIBUTORS.md](CONTRIBUTORS.md)** | Who built this and how - the human-AI collaboration story |
+| 🤝 **[CONTRIBUTORS.md](docs/CONTRIBUTORS.md)** | Who built this and how - the human-AI collaboration story |
 | 🚀 **[CODING_ASSISTANCE_MANIFESTO.md](CODING_ASSISTANCE_MANIFESTO.md)** | ⭐ Lessons on AI-assisted development, the "pays for itself" productivity gain |
 | 📋 **[TODO.md](TODO.md)** | Development roadmap, completed features, and future plans |
 
@@ -172,7 +176,7 @@ python -m src.run_model NVDA 10/23/2023 10/23/2024 sd8 --qty 10000
 python -m src.research.optimal_rebalancing --comprehensive --output results.csv
 
 # Dividend tracking demo
-python demo_dividends.py
+python examples/demo_dividends.py
 ```
 
 **💡 New Feature**: The **Volatility Alpha Analyzer** automatically:
@@ -181,7 +185,7 @@ python demo_dividends.py
 3. Compares full strategy vs ATH-only
 4. Reports volatility alpha (secondary synthetic dividends)
 
-See [**EXAMPLES.md**](EXAMPLES.md) for comprehensive usage guide!
+See [**EXAMPLES.md**](docs/EXAMPLES.md) for comprehensive usage guide!
 
 ## 🎯 Live Example: NVDA Bull Run (Oct 2024 - Oct 2025)
 
@@ -553,12 +557,12 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 - 📈 **Market data** provided by [yfinance](https://github.com/ranaroussi/yfinance) (Yahoo Finance API)
 - 🐍 **Built with** Python, NumPy, Pandas, and Matplotlib
-- 🤖 **Proudly developed in collaboration with AI** - See [CONTRIBUTORS.md](CONTRIBUTORS.md) for the full story
+- 🤖 **Proudly developed in collaboration with AI** - See [CONTRIBUTORS.md](docs/CONTRIBUTORS.md) for the full story
 - 💡 **Inspired by** the need for systematic cash flow from growth portfolios
 - 🎓 **Mathematical foundation** based on exponential rebalancing theory (2^(1/N) scaling)
 - 🔬 **Research methodology** influenced by systematic trading and quantitative finance principles
 
-This project represents a groundbreaking collaboration between human expertise and artificial intelligence, demonstrating the transformative potential of AI-assisted software development. Read the full collaboration story in [CONTRIBUTORS.md](CONTRIBUTORS.md).
+This project represents a groundbreaking collaboration between human expertise and artificial intelligence, demonstrating the transformative potential of AI-assisted software development. Read the full collaboration story in [CONTRIBUTORS.md](docs/CONTRIBUTORS.md).
 
 Special thanks to the open-source community for excellent tools that made this project possible.
 
@@ -574,7 +578,7 @@ Special thanks to the open-source community for excellent tools that made this p
 
 - 📖 [Full Documentation](theory/README.md)
 - 💎 [Volatility Alpha Thesis](theory/VOLATILITY_ALPHA_THESIS.md)
-- 🤝 [Contributors & Collaboration Story](CONTRIBUTORS.md)
+- 🤝 [Contributors & Collaboration Story](docs/CONTRIBUTORS.md)
 - � [AI-Assisted Development Manifesto](CODING_ASSISTANCE_MANIFESTO.md)
 - �🐛 [Issue Tracker](https://github.com/ricksladkey/synthetic-dividend/issues)
 - 💬 [Discussions](https://github.com/ricksladkey/synthetic-dividend/discussions)
@@ -594,7 +598,7 @@ Special thanks to the open-source community for excellent tools that made this p
 
 **Use at your own risk. The authors assume no liability for financial decisions made based on this software.**
 
-**About This Project**: Proudly developed through human-AI collaboration. See [CONTRIBUTORS.md](CONTRIBUTORS.md) for the fascinating story of how this project became a case study in AI-assisted software development.
+**About This Project**: Proudly developed through human-AI collaboration. See [CONTRIBUTORS.md](docs/CONTRIBUTORS.md) for the fascinating story of how this project became a case study in AI-assisted software development.
 
 ---
 

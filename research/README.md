@@ -90,7 +90,7 @@ pip install -r requirements.txt
 ## Documentation
 
 See also:
-- `RESEARCH_PLAN.md` - Overall research strategy
-- `VOLATILITY_ALPHA_THESIS.md` - Theory behind volatility harvesting
-- `PROFIT_SHARING_ANALYSIS_RESULTS.md` - Findings from composition analysis
-- `RETURN_METRICS_ANALYSIS.md` - Capital deployment metrics framework
+- `../theory/RESEARCH_PLAN.md` - Overall research strategy
+- `../theory/VOLATILITY_ALPHA_THESIS.md` - Theory behind volatility harvesting
+- `../theory/PROFIT_SHARING_ANALYSIS_RESULTS.md` - Findings from composition analysis
+- `../theory/RETURN_METRICS_ANALYSIS.md` - Capital deployment metrics framework
