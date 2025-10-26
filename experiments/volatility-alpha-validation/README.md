@@ -1,7 +1,34 @@
 # Volatility Alpha Validation Data
 
+**Location**: `experiments/volatility-alpha-validation/`  
 **Generated**: October 26, 2025  
 **Script**: `src/research/volatility_alpha_table.py`
+
+## How to Reproduce
+
+### Quick Method (Windows)
+```bash
+cd experiments/volatility-alpha-validation
+generate-data.bat
+```
+
+### Manual Method (Any Platform)
+```bash
+# From repository root
+.venv/Scripts/python.exe -m src.research.volatility_alpha_table
+
+# Output: volatility_alpha_table.csv
+```
+
+The script will:
+1. Fetch historical data for 6 assets (NVDA, MSTR, BTC-USD, ETH-USD, PLTR, GLD)
+2. Calculate annualized volatility for each asset
+3. Auto-suggest optimal SD parameter based on volatility
+4. Run backtests for 1, 2, and 3 year periods ending Oct 26, 2025
+5. Compare full strategy (with buybacks) vs ATH-only
+6. Generate CSV with all metrics
+
+**Runtime**: ~2-3 minutes (fetches data from Yahoo Finance)
 
 ## Summary
 
