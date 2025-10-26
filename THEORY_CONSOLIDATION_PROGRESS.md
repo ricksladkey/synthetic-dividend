@@ -17,52 +17,68 @@
 **Total archived**: 1,007 lines of historical content  
 **Total relocated**: 509 lines to appropriate location
 
-## Phase 2: Planned Consolidations
+## Phase 2: Expand Core Concepts ✅
 
-### Priority 1: Merge Income Documents
+**Status**: COMPLETE
 
-**Status**: Ready to execute
+### VOLATILITY_ALPHA_THESIS.md - EXPANDED ✅
 
-**INCOME_GENERATION.md** (950 lines) + **INCOME_SMOOTHING.md** (1,235 lines)  
-→ **New INCOME_GENERATION.md** (target: ~800 lines)
+**Before**: 137 lines (way too short for core concept!)  
+**After**: 620 lines
 
-**Strategy**:
-- INCOME_GENERATION.md has better structure and practical focus
-- INCOME_SMOOTHING.md has excellent detailed analysis
-- Merge: Take best explanations from each
-- Remove: Excessive repetition, redundant examples
-- Structure: Mechanism → Theory → Applications → Implementation
+**Additions completed**:
+- ✅ Executive summary with mathematical formula
+- ✅ Detailed two-strategy comparison (ATH-only vs Enhanced)
+- ✅ Four sources of volatility alpha
+- ✅ Complete mathematical derivation
+- ✅ Empirical validation across 18 scenarios (6 assets × 3 timeframes)
+- ✅ Gap bonus multiplier analysis (1.1x to 3.4x by asset class)
+- ✅ Frequency parameter (sdN) selection guide
+- ✅ Theoretical limits and practical implications
+- ✅ Time machine effect integration
+- ✅ Future research directions
 
-**Sections to merge:**
-From INCOME_SMOOTHING:
-- Part 2: The Smoothing Mechanism (excellent)
-- Part 4: Temporal Arbitrage (unique insight)
-- Part 6: Sequence-of-Returns Risk (critical for retirees)
+**Backup**: VOLATILITY_ALPHA_THESIS.md.old created
 
-From INCOME_GENERATION:
-- Practical implementation guide
-- Who is this for? sections
-- Tax efficiency analysis
-- Real + synthetic dividend integration
+## Phase 3: Merge Overlapping Content ✅
 
-### Priority 2: Expand Volatility Alpha Thesis
+**Status**: COMPLETE
 
-**Status**: Critical - currently too short!
+### INCOME_GENERATION + INCOME_SMOOTHING - MERGED ✅
 
-**VOLATILITY_ALPHA_THESIS.md** (137 lines - TOO SHORT!)  
-→ **Expanded VOLATILITY_ALPHA_THESIS.md** (target: ~400 lines)
+**Before**: 2 files, 2,185 lines total
+- INCOME_GENERATION.md: 951 lines
+- INCOME_SMOOTHING.md: 1,235 lines
 
-**Additions needed**:
-- Mathematical framework (from INVESTING_THEORY)
-- Formula: Alpha ≈ (trigger%)² / 2 × buy_count
-- Gap bonus explanation
-- Validation data summary (from experiments)
-- More detailed examples
+**After**: 1 file, 850 lines (INCOME_GENERATION.md)
 
-### Priority 3: Streamline Core Theory
+**Savings**: 1,335 lines eliminated (61% reduction!)
+
+**Final Structure**:
+- ✅ Part 1: Income Mechanism (from GENERATION)
+- ✅ Part 2: Income Smoothing via Temporal Arbitrage (from SMOOTHING)
+- ✅ Part 3: Sequence-of-Returns Protection (from SMOOTHING - unique innovation)
+- ✅ Part 4: Economic Intuition & Comparisons (from GENERATION)
+- ✅ Part 5: Practical Implementation (merged best from both)
+- ✅ Part 6: Who Is This For (consolidated)
+
+**Backups**: INCOME_GENERATION.md.old and INCOME_SMOOTHING.md.old created
+
+## Phase 4: Streamline Remaining Documents (PENDING)
+
+### Priority 1: Streamline Core Theory
 
 **INVESTING_THEORY.md** (369 lines)  
 → **Streamlined** (target: ~350 lines)
+
+**Planned Changes**:
+- Remove dividend illusion redundancy
+- Consolidate time machine section
+- Tighten writing throughout
+- Reference VOLATILITY_ALPHA_THESIS for detailed math
+
+**PORTFOLIO_VISION.md** (239 lines)  
+→ **Streamlined** (target: ~200 lines)
 
 **Changes**:
 - Remove dividend illusion (redundant)
@@ -98,29 +114,43 @@ From INCOME_GENERATION:
 - Average: 406 lines/file
 - Historical clutter: 4 files, 1,007 lines
 - Misplaced: 1 file (CODING_PHILOSOPHY)
+- **Problem**: Inverted importance hierarchy (core concept = 137 lines, periphery = 1,235 lines)
+
+### After Phases 1-3 (Current Status)
+- ✅ Archived: 4 historical files (1,007 lines)
+- ✅ Relocated: CODING_PHILOSOPHY (509 lines)
+- ✅ Expanded: VOLATILITY_ALPHA_THESIS (137 → 620 lines, +483 lines)
+- ✅ Merged: INCOME docs (2,185 → 850 lines, -1,335 lines)
+- **Net reduction**: 1,859 lines eliminated (28.5% reduction so far!)
 
 ### After Consolidation (Target)
 - Active files: 9 core + 1 README = 10
-- Total lines: ~3,150
-- Average: 315 lines/file
+- Total lines: ~3,450
+- Average: 345 lines/file
 - Historical: Archived (4 files, 1,007 lines)
 - All files properly located
+- **Hierarchy fixed**: Core concepts most comprehensive, applications streamlined
 
 ### Improvement
-- **51% reduction** in active theory lines
-- **Inverted importance hierarchy** - core concepts get most space
-- **Zero duplication** - each concept explained once, best
+- **47% reduction** in active theory lines (target)
+- **Inverted importance hierarchy** - core concepts get most space ✅
+- **Zero duplication** - each concept explained once, best ✅
 - **Clear navigation** - obvious reading path
 
 ## Next Steps
 
 1. ✅ Archive historical documents
 2. ✅ Relocate CODING_PHILOSOPHY
-3. ⏳ Merge INCOME_GENERATION + INCOME_SMOOTHING
-4. ⏳ Expand VOLATILITY_ALPHA_THESIS (critical!)
-5. ⏳ Streamline remaining documents
-6. ⏳ Redesign README with clear hierarchy
-7. ⏳ Update all cross-references
+3. ✅ Expand VOLATILITY_ALPHA_THESIS (137 → 620 lines)
+4. ✅ Merge INCOME_GENERATION + INCOME_SMOOTHING (2,185 → 850 lines)
+5. ⏳ Streamline INVESTING_THEORY (~369 → 350 lines)
+6. ⏳ Streamline PORTFOLIO_VISION (~239 → 200 lines)
+7. ⏳ Streamline WITHDRAWAL_POLICY (~238 → 200 lines)
+8. ⏳ Streamline RETURN_METRICS_ANALYSIS (~418 → 300 lines)
+9. ⏳ Streamline INITIAL_CAPITAL_THEORY (~504 → 400 lines)
+10. ⏳ Minor cleanup PRICE_NORMALIZATION (~203 → 150 lines)
+11. ⏳ Redesign theory/README with clear hierarchy
+12. ⏳ Update all cross-references
 
 ## Key Principle
 
