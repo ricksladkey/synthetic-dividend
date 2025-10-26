@@ -20,30 +20,38 @@ This folder contains the complete conceptual and theoretical foundation for the 
    - Relationship to exponential scaling
    - Theoretical limits and constraints
 
+3. **[INCOME_GENERATION.md](INCOME_GENERATION.md)** - ⭐ Income strategy framework (NEW)
+   - How volatility becomes cash flow (the core mechanism)
+   - Buyback stack as income engine
+   - Income frequency and reliability
+   - Comparison to dividends, covered calls, forced selling
+   - Tax efficiency and IRA/Roth killer app
+   - Practical implementation guide for income seekers
+
 ### Advanced Concepts
 
-3. **[INITIAL_CAPITAL_THEORY.md](INITIAL_CAPITAL_THEORY.md)** - Opportunity cost framework
+4. **[INITIAL_CAPITAL_THEORY.md](INITIAL_CAPITAL_THEORY.md)** - Opportunity cost framework
    - Two separate capital streams: equity position vs trading cash flow
    - What we currently track vs what we don't track
    - Conceptual inconsistency in opportunity cost accounting
    - Three implementation options (with Option A marked as WRONG)
    - Impact on absolute returns vs volatility alpha (alpha unchanged)
 
-4. **[PRICE_NORMALIZATION.md](PRICE_NORMALIZATION.md)** - Deterministic bracket placement
+5. **[PRICE_NORMALIZATION.md](PRICE_NORMALIZATION.md)** - Deterministic bracket placement
    - Normalizes prices to standard bracket positions (1.0 × (1+r)^n)
    - Makes bracket placement deterministic across backtests
    - Mathematical foundation and implementation
    - Benefits for comparison and analysis
    - Usage in backtests and order calculator
 
-5. **[WITHDRAWAL_POLICY.md](WITHDRAWAL_POLICY.md)** - Orthogonal withdrawal dimension
+6. **[WITHDRAWAL_POLICY.md](WITHDRAWAL_POLICY.md)** - Orthogonal withdrawal dimension
    - Withdrawals apply uniformly to all strategies
    - Bank-first approach (sell only if needed)
    - Standard 4% rule with CPI adjustment
    - Simple mode for clean testing
    - Quantifies value of cash generation
 
-6. **[PORTFOLIO_VISION.md](PORTFOLIO_VISION.md)** - Multi-stock portfolio strategy (Phase 2 goal)
+7. **[PORTFOLIO_VISION.md](PORTFOLIO_VISION.md)** - Multi-stock portfolio strategy (Phase 2 goal)
    - Vision for portfolio-level implementation
    - Shared 10% cash reserve across multiple stocks
    - Three-stream capital model: tactical cash + stock positions + trading flow
@@ -52,14 +60,14 @@ This folder contains the complete conceptual and theoretical foundation for the 
 
 ### Practical Framework
 
-7. **[RETURN_METRICS_ANALYSIS.md](RETURN_METRICS_ANALYSIS.md)** - Metrics interpretation
+8. **[RETURN_METRICS_ANALYSIS.md](RETURN_METRICS_ANALYSIS.md)** - Metrics interpretation
    - Primary vs supplementary metrics
    - Capital utilization and deployment tracking
    - "More Shares = Success" fallacy prevention
    - Proper interpretation checklist
    - Variable capital deployment scenarios
 
-8. **[CODING_PHILOSOPHY.md](CODING_PHILOSOPHY.md)** - Development principles
+9. **[CODING_PHILOSOPHY.md](CODING_PHILOSOPHY.md)** - Development principles
    - Test-Driven Trust: tests validate economic behavior
    - Code as documentation
    - Fail-fast with clear error messages
@@ -79,6 +87,7 @@ cat theory/INVESTING_THEORY.md theory/VOLATILITY_ALPHA_THESIS.md > prompt.md
 ```bash
 cat theory/INVESTING_THEORY.md \
     theory/VOLATILITY_ALPHA_THESIS.md \
+    theory/INCOME_GENERATION.md \
     theory/INITIAL_CAPITAL_THEORY.md \
     theory/PRICE_NORMALIZATION.md \
     theory/WITHDRAWAL_POLICY.md \
@@ -90,12 +99,13 @@ cat theory/INVESTING_THEORY.md \
 ### Recommended Order for Learning
 1. Start with `INVESTING_THEORY.md` - Understand the "why"
 2. Read `VOLATILITY_ALPHA_THESIS.md` - Grasp the mathematics
-3. Review `RETURN_METRICS_ANALYSIS.md` - Learn proper interpretation
-4. Study `INITIAL_CAPITAL_THEORY.md` - Understand opportunity cost nuances
-5. Read `PRICE_NORMALIZATION.md` - Learn about deterministic brackets
-6. Study `WITHDRAWAL_POLICY.md` - Understand orthogonal withdrawal design
-7. Explore `PORTFOLIO_VISION.md` - See the long-term vision
-8. Reference `CODING_PHILOSOPHY.md` - Internalize development principles
+3. ⭐ **NEW**: Study `INCOME_GENERATION.md` - See the practical application (income from volatility)
+4. Review `RETURN_METRICS_ANALYSIS.md` - Learn proper interpretation
+5. Study `INITIAL_CAPITAL_THEORY.md` - Understand opportunity cost nuances
+6. Read `PRICE_NORMALIZATION.md` - Learn about deterministic brackets
+7. Study `WITHDRAWAL_POLICY.md` - Understand orthogonal withdrawal design
+8. Explore `PORTFOLIO_VISION.md` - See the long-term vision
+9. Reference `CODING_PHILOSOPHY.md` - Internalize development principles
 
 ## Key Concepts Across Documents
 
