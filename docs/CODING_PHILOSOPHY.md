@@ -2,6 +2,79 @@
 
 This document outlines the core principles guiding code quality and maintainability in this project.
 
+## Meta-Principle: Don't Hide Your Light Under a Bushel
+
+**Principle**: When you have strong opinions backed by technical reasoning, state them clearly and pointedly.
+
+**Why**:
+- **Clarity beats politeness**: "This is wrong" > "Perhaps we might consider..."
+- **Efficiency**: Direct feedback saves time and avoids misunderstandings
+- **Technical leadership**: Strong opinions, weakly held—advocate clearly, update freely
+- **Respect through honesty**: Pointed remarks show you care enough to be direct
+
+**Practice**:
+- Say "This approach is fundamentally flawed because..." not "Maybe this could be improved"
+- Recommend the best solution directly: "Option 1 is clearly superior for these three reasons"
+- Don't soften technical critique with hedging language
+- Back strong statements with concrete technical reasoning
+- But remain open to counter-arguments with better reasoning
+
+**Example**:
+```python
+# GOOD (pointed, clear)
+# This is a terrible design. The lot selection logic doesn't belong here
+# because tax consequences are orthogonal to symmetry tracking.
+# Remove this entire method.
+
+# AVOID (wishy-washy)
+# Perhaps we might consider whether this method is needed, as it seems
+# like maybe there could be some potential concerns about...
+```
+
+**Caveat**: Be direct about **code and architecture**, not people. Critique the work, not the worker.
+
+---
+
+## Meta-Principle: Document Insights While Everything Is Fresh
+
+**Principle**: Write conclusions, insights, and experimental results immediately after discovery, while context is still vivid in your mind.
+
+**Why**:
+- **Context evaporates**: Technical details fade within hours; assumptions you "just know" become mysteries
+- **Future you is a stranger**: What's obvious now will be obscure in a week
+- **Experiments have half-lives**: Without documentation, research decays into "we tried something once"
+- **Compounding knowledge**: Today's insights inform tomorrow's experiments, but only if captured
+
+**Practice**:
+- After running experiments: Write summary markdown **immediately** with findings, surprises, and implications
+- Create lab notebooks: Document hypothesis, methodology, results, and next questions
+- Capture the "why": Don't just log what happened, explain why it matters
+- Record failures: Negative results are valuable; document what didn't work and why
+- Include reproduction steps: Future experiments should build on, not rediscover, past work
+
+**Structure for Experiment Documentation**:
+```markdown
+# Experiment: [Name]
+**Date**: [ISO date]
+**Hypothesis**: [What you expected to find]
+**Methodology**: [How you tested it]
+**Results**: [What actually happened - data, charts, numbers]
+**Insights**: [What this means, surprises, implications]
+**Next Steps**: [Questions raised, follow-up experiments]
+```
+
+**Example**:
+After running portfolio volatility alpha experiment, don't just commit the code—write:
+- What the +39% volatility alpha means economically
+- Why ATH-only underperformed buy-and-hold by 208%
+- Which assets contributed most and why
+- How this changes our understanding of the strategy
+- What parameters should be tested next
+
+**Caveat**: Balance thoroughness with momentum. 5 minutes of documentation now saves 5 hours of archaeology later.
+
+---
+
 ## Core Tenets
 
 ### 1. Functional-Style Programming
