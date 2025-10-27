@@ -246,14 +246,21 @@ class Holding:
                 f"Cannot sell {shares} shares of {self.ticker}: only {current} shares held"
             )
         
-        if lot_selection != "FIFO":
+        # Select lots based on method
+        if lot_selection == "FIFO":
+            # FIFO: Sell oldest purchases first (iterate forward)
+            lots_to_process = self.transactions
+        elif lot_selection == "LIFO":
+            # LIFO: Sell newest purchases first (iterate backward)
+            lots_to_process = reversed(self.transactions)
+        else:
             raise NotImplementedError(f"Lot selection '{lot_selection}' not yet implemented")
         
-        # FIFO: Sell oldest purchases first
+        # Process lots in selected order
         remaining_to_sell = shares
         sell_transactions = []
         
-        for txn in self.transactions:
+        for txn in lots_to_process:
             if remaining_to_sell <= 0:
                 break
             

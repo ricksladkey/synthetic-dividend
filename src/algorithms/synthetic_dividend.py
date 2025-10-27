@@ -54,6 +54,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         rebalance_size: float = 0.0,
         profit_sharing: float = 0.0,
         buyback_enabled: bool = True,
+        lot_selection: str = "LIFO",
         params: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize algorithm with strategy parameters.
@@ -62,6 +63,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             rebalance_size: Bracket spacing as decimal (e.g., 0.0915 for 9.15%)
             profit_sharing: Trade size as fraction (e.g., 0.5 for 50%)
             buyback_enabled: True for full mode, False for ATH-only
+            lot_selection: Lot selection method ('FIFO', 'LIFO') - default LIFO
             params: Optional dict for base class compatibility
         """
         super().__init__(params)
@@ -70,6 +72,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         self.rebalance_size: float = float(rebalance_size)
         self.profit_sharing: float = float(profit_sharing)
         self.buyback_enabled: bool = buyback_enabled
+        self.lot_selection: str = lot_selection
 
         # Performance tracking: cumulative alpha from volatility harvesting
         self.total_volatility_alpha: float = 0.0
@@ -126,29 +129,52 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         return (profit / current_value) * 100 if current_value != 0 else 0.0
     
     def _unwind_buyback_stack(self, sell_quantity: int) -> None:
-        """Unwind buyback stack in FIFO order.
+        """Unwind buyback stack using configured lot selection method.
         
-        FIFO (First-In-First-Out) unwinding ensures that:
-        1. Lot tracking is exact and symmetric
-        2. Multi-bracket gaps unwind one bracket at a time
-        3. Profit calculation remains accurate
+        FIFO (First-In-First-Out) unwinding:
+        - Sells oldest purchases first (default for buy-and-hold parity)
+        - Multi-bracket gaps unwind one bracket at a time
+        - Exact lot tracking and symmetric profit calculation
+        
+        LIFO (Last-In-First-Out) unwinding:
+        - Sells newest purchases first (tax-efficient in some jurisdictions)
+        - Potentially different profit characteristics
+        - Still maintains exact lot tracking
         
         Args:
             sell_quantity: Number of shares being sold
         """
         remaining = sell_quantity
-        while remaining > 0 and self.buyback_stack:
-            buy_price, buy_qty = self.buyback_stack[0]
-            to_unwind = min(remaining, buy_qty)
-            
-            if to_unwind == buy_qty:
-                # Fully consumed this lot
-                self.buyback_stack.pop(0)
-            else:
-                # Partially consumed - update remaining quantity
-                self.buyback_stack[0] = (buy_price, buy_qty - to_unwind)
-            
-            remaining -= to_unwind
+        
+        # Select unwinding direction based on lot_selection
+        if self.lot_selection == "LIFO":
+            # LIFO: Process from end of stack (newest first)
+            while remaining > 0 and self.buyback_stack:
+                buy_price, buy_qty = self.buyback_stack[-1]
+                to_unwind = min(remaining, buy_qty)
+                
+                if to_unwind == buy_qty:
+                    # Fully consumed this lot
+                    self.buyback_stack.pop()
+                else:
+                    # Partially consumed - update remaining quantity
+                    self.buyback_stack[-1] = (buy_price, buy_qty - to_unwind)
+                
+                remaining -= to_unwind
+        else:
+            # FIFO: Process from beginning of stack (oldest first)
+            while remaining > 0 and self.buyback_stack:
+                buy_price, buy_qty = self.buyback_stack[0]
+                to_unwind = min(remaining, buy_qty)
+                
+                if to_unwind == buy_qty:
+                    # Fully consumed this lot
+                    self.buyback_stack.pop(0)
+                else:
+                    # Partially consumed - update remaining quantity
+                    self.buyback_stack[0] = (buy_price, buy_qty - to_unwind)
+                
+                remaining -= to_unwind
 
     def place_orders(self, holdings: int, current_price: float) -> None:
         """Calculate and place symmetric buy/sell orders with the market.
