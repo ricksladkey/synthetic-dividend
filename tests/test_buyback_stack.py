@@ -130,10 +130,9 @@ def run_test_comparison(
     sd_full_shares = result_full["holdings"]
     ath_only_shares = result_ath["holdings"]
 
-    # Check buyback stack status
-    stack_size = len(algo_full.buyback_stack)
-    total_stack_qty = sum(qty for _, qty in algo_full.buyback_stack)
-    stack_empty = stack_size == 0
+    # Check buyback stack status (now just a count, not a list)
+    total_stack_qty = algo_full.buyback_stack_count
+    stack_empty = total_stack_qty == 0
 
     return sd_full_shares, ath_only_shares, total_stack_qty, stack_empty
 

@@ -1,7 +1,7 @@
 """Synthetic dividend algorithm: volatility harvesting strategy."""
 
 from datetime import date
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 import pandas as pd
 
 from src.algorithms.base import AlgorithmBase
@@ -54,7 +54,6 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         rebalance_size: float = 0.0,
         profit_sharing: float = 0.0,
         buyback_enabled: bool = True,
-        lot_selection: str = "LIFO",
         params: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize algorithm with strategy parameters.
@@ -63,7 +62,6 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             rebalance_size: Bracket spacing as decimal (e.g., 0.0915 for 9.15%)
             profit_sharing: Trade size as fraction (e.g., 0.5 for 50%)
             buyback_enabled: True for full mode, False for ATH-only
-            lot_selection: Lot selection method ('FIFO', 'LIFO') - default LIFO
             params: Optional dict for base class compatibility
         """
         super().__init__(params)
@@ -72,7 +70,6 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         self.rebalance_size: float = float(rebalance_size)
         self.profit_sharing: float = float(profit_sharing)
         self.buyback_enabled: bool = buyback_enabled
-        self.lot_selection: str = lot_selection
 
         # Performance tracking: cumulative alpha from volatility harvesting
         self.total_volatility_alpha: float = 0.0
@@ -80,10 +77,10 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         # ATH-only mode: track all-time high for baseline comparison
         self.ath_price: float = 0.0
 
-        # FIFO lot tracking for exact profit calculation
-        # Each entry: (purchase_price, quantity) representing one buy transaction
-        # Unwound in FIFO order on sells to maintain symmetry
-        self.buyback_stack: List[Tuple[float, int]] = []
+        # Buyback stack: simple count of shares purchased for volatility harvesting
+        # We don't track individual lots since tax consequences (LTCG) don't matter here
+        # Just need to know how many shares are in the stack for symmetry tracking
+        self.buyback_stack_count: int = 0
 
         # Market interface: handles order placement, triggering, and execution
         self.market: Market = Market()
@@ -127,60 +124,6 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         current_value = holdings * fill_price
         profit = (self.last_transaction_price - fill_price) * quantity
         return (profit / current_value) * 100 if current_value != 0 else 0.0
-    
-    def _unwind_buyback_stack(self, sell_quantity: int) -> None:
-        """Unwind buyback stack using configured lot selection method.
-        
-        Uses lot selection strategy to determine unwinding order:
-        - FIFO: Sells oldest purchases first (default for buy-and-hold parity)
-        - LIFO: Sells newest purchases first (tax-efficient in some jurisdictions)
-        - HIGHEST_COST: Minimize taxable gains (tax-loss harvesting)
-        - LOWEST_COST: Maximize taxable gains (low-tax years)
-        
-        Multi-bracket gaps unwind one bracket at a time for exact symmetry.
-        
-        Args:
-            sell_quantity: Number of shares being sold
-        """
-        remaining = sell_quantity
-        
-        # Determine unwinding order based on lot selection strategy
-        if self.lot_selection == "LIFO":
-            # LIFO: Process from end (newest first)
-            stack_order = reversed(range(len(self.buyback_stack)))
-        elif self.lot_selection == "HIGHEST_COST":
-            # HIGHEST_COST: Process highest prices first
-            stack_order = sorted(range(len(self.buyback_stack)), 
-                               key=lambda i: self.buyback_stack[i][0], reverse=True)
-        elif self.lot_selection == "LOWEST_COST":
-            # LOWEST_COST: Process lowest prices first
-            stack_order = sorted(range(len(self.buyback_stack)), 
-                               key=lambda i: self.buyback_stack[i][0])
-        else:  # FIFO (default)
-            # FIFO: Process from beginning (oldest first)
-            stack_order = range(len(self.buyback_stack))
-        
-        # Process lots in the determined order
-        indices_to_remove = []
-        for i in stack_order:
-            if remaining <= 0:
-                break
-            
-            buy_price, buy_qty = self.buyback_stack[i]
-            to_unwind = min(remaining, buy_qty)
-            
-            if to_unwind == buy_qty:
-                # Fully consumed - mark for removal
-                indices_to_remove.append(i)
-            else:
-                # Partially consumed - update quantity
-                self.buyback_stack[i] = (buy_price, buy_qty - to_unwind)
-            
-            remaining -= to_unwind
-        
-        # Remove fully consumed lots (in reverse order to maintain indices)
-        for i in sorted(indices_to_remove, reverse=True):
-            self.buyback_stack.pop(i)
 
     def place_orders(self, holdings: int, current_price: float) -> None:
         """Calculate and place symmetric buy/sell orders with the market.
@@ -325,8 +268,8 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                 
                 if txn.action == "BUY":
                     if self.buyback_enabled:
-                        # Add to FIFO stack for exact lot tracking
-                        self.buyback_stack.append((fill_price, txn.qty))
+                        # Add to buyback stack count for symmetry tracking
+                        self.buyback_stack_count += txn.qty
                         
                         # Accumulate volatility alpha (profit from mean reversion)
                         alpha = self._calculate_volatility_alpha(holdings, fill_price, txn.qty)
@@ -337,8 +280,10 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     
                 elif txn.action == "SELL":
                     if self.buyback_enabled:
-                        # Unwind FIFO stack to maintain symmetry
-                        self._unwind_buyback_stack(txn.qty)
+                        # Unwind from buyback stack (simple count decrement)
+                        # Only unwind what's in the stack - can't go negative
+                        shares_to_unwind = min(txn.qty, self.buyback_stack_count)
+                        self.buyback_stack_count -= shares_to_unwind
                     
                     # Update position
                     holdings -= txn.qty
@@ -360,13 +305,12 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             print(
                 f"Synthetic Dividend Algorithm total volatility alpha: {self.total_volatility_alpha:.2f}%"
             )
-            # Report buyback stack status (unwound lots indicate complete cycles)
-            if self.buyback_stack:
-                total_stack_qty = sum(qty for _, qty in self.buyback_stack)
+            # Report buyback stack status (unwound shares indicate complete cycles)
+            if self.buyback_stack_count > 0:
                 print(
-                    f"  Buyback stack: {len(self.buyback_stack)} lots with {total_stack_qty} total shares not yet unwound"
+                    f"  Buyback stack: {self.buyback_stack_count} shares not yet unwound"
                 )
             else:
-                print("  Buyback stack: empty (all lots unwound)")
+                print("  Buyback stack: empty (all shares unwound)")
         else:
             print(f"ATH-only algorithm: final ATH = ${self.ath_price:.2f}")
