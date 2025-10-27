@@ -26,6 +26,10 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         Full: SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=True)
         ATH-only: SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=False)
     """
+    
+    # Maximum iterations for multi-bracket gap handling per day
+    # Prevents infinite loops while allowing extreme volatility (e.g., 20 brackets)
+    MAX_ITERATIONS_PER_DAY = 20
 
     def __init__(
         self,
@@ -57,6 +61,52 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         
         # Last transaction price (for order calculations)
         self.last_transaction_price: float = 0.0
+
+    @staticmethod
+    def _extract_fill_price(transaction: Transaction) -> float:
+        """Extract fill price from transaction notes.
+        
+        Args:
+            transaction: Transaction with notes containing "filled=$XX.XX"
+            
+        Returns:
+            Fill price as float
+        """
+        fill_price_str = transaction.notes.split("filled=$")[1].split()[0]
+        return float(fill_price_str)
+    
+    def _calculate_volatility_alpha(self, holdings: int, fill_price: float, quantity: int) -> float:
+        """Calculate volatility alpha from a buy transaction.
+        
+        Args:
+            holdings: Current holdings before this buy
+            fill_price: Price at which shares were bought
+            quantity: Number of shares bought
+            
+        Returns:
+            Alpha as percentage
+        """
+        current_value = holdings * fill_price
+        profit = (self.last_transaction_price - fill_price) * quantity
+        return (profit / current_value) * 100 if current_value != 0 else 0.0
+    
+    def _unwind_buyback_stack(self, sell_quantity: int) -> None:
+        """Unwind buyback stack in FIFO order.
+        
+        Args:
+            sell_quantity: Number of shares being sold
+        """
+        remaining = sell_quantity
+        while remaining > 0 and self.buyback_stack:
+            buy_price, buy_qty = self.buyback_stack[0]
+            to_unwind = min(remaining, buy_qty)
+            
+            if to_unwind == buy_qty:
+                self.buyback_stack.pop(0)
+            else:
+                self.buyback_stack[0] = (buy_price, buy_qty - to_unwind)
+            
+            remaining -= to_unwind
 
     def place_orders(self, holdings: int, current_price: float) -> None:
         """Calculate and place buy/sell orders with the market.
@@ -147,8 +197,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                 self.ath_price = high
         
         # Iterate to handle multi-bracket gaps
-        max_iterations = 20
-        for iteration in range(1, max_iterations + 1):
+        for iteration in range(1, self.MAX_ITERATIONS_PER_DAY + 1):
             # Let the market evaluate current orders against this day's price
             executed = self.market.evaluate_day(date_, price_row, max_iterations=1)
             
@@ -159,18 +208,15 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             # Process each executed transaction
             for txn in executed:
                 # Extract fill price from transaction notes
-                fill_price_str = txn.notes.split("filled=$")[1].split()[0]
-                fill_price = float(fill_price_str)
+                fill_price = self._extract_fill_price(txn)
                 
                 if txn.action == "BUY":
                     # Add to buyback stack (for FIFO unwinding)
                     if self.buyback_enabled:
                         self.buyback_stack.append((fill_price, txn.qty))
                         
-                        # Calculate volatility alpha
-                        current_value = holdings * fill_price
-                        profit = (self.last_transaction_price - fill_price) * txn.qty
-                        alpha = (profit / current_value) * 100 if current_value != 0 else 0.0
+                        # Calculate and accumulate volatility alpha
+                        alpha = self._calculate_volatility_alpha(holdings, fill_price, txn.qty)
                         self.total_volatility_alpha += alpha
                     
                     # Update holdings
@@ -179,17 +225,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                 elif txn.action == "SELL":
                     # Unwind buyback stack FIFO (if in full mode)
                     if self.buyback_enabled:
-                        sell_qty_remaining = txn.qty
-                        while sell_qty_remaining > 0 and self.buyback_stack:
-                            buy_price, buy_qty = self.buyback_stack[0]
-                            to_unwind = min(sell_qty_remaining, buy_qty)
-                            
-                            if to_unwind == buy_qty:
-                                self.buyback_stack.pop(0)
-                            else:
-                                self.buyback_stack[0] = (buy_price, buy_qty - to_unwind)
-                            
-                            sell_qty_remaining -= to_unwind
+                        self._unwind_buyback_stack(txn.qty)
                     
                     # Update holdings
                     holdings -= txn.qty
