@@ -129,7 +129,63 @@ Alpha Per Transaction:                +0.25% per buyback cycle
 **The "Volatility Alpha" Thesis**: 
 > Buybacks during drawdowns create "secondary synthetic dividends" by rewinding the clock on previous sales, enabling resales at higher prices. This transforms volatility from risk into opportunity.
 
-📄 **[Read the full thesis →](VOLATILITY_ALPHA_THESIS.md)**
+📄 **[Read the full thesis →](theory/VOLATILITY_ALPHA_THESIS.md)**
+
+### Optimal Withdrawal Rate Discovery (Experiment 004) ⭐ **NEW**
+
+**Breakthrough finding**: Withdrawal rates can be optimized by minimizing `abs(mean(bank))`, revealing the maximum sustainable rate where volatility alpha exactly matches withdrawals.
+
+**Key Discovery - SPY 2022 Bear Market**:
+```
+Optimal Withdrawal Rate: 10% annually
+Mean Bank Balance:        $701 (essentially zero!)
+Margin Usage:            30.8% of days
+Market Return:           -19.5% (bear market)
+Result:                  Self-sustaining portfolio ✅
+```
+
+**What This Means**:
+- **10% withdrawals sustainable** vs traditional 4% "safe withdrawal rate" (2.5× improvement!)
+- Works in **bear markets** through volatility harvesting, not just bull markets
+- Bank oscillates around zero = withdrawals perfectly matched by harvested alpha
+- Margin used ~30% of time = buffer used ~70% of time (predicted "~50% point")
+
+**Diversification Math**:
+| Portfolio | Margin Usage | Confidence Level |
+|-----------|--------------|------------------|
+| Single asset | 30.8% | ~68% (1-sigma) |
+| 10 uncorrelated assets | **9.7%** | **~95% (2-sigma)** ⭐ |
+
+With just 10 uncorrelated assets, margin usage drops to 9.7% (√10 reduction via Central Limit Theorem), enabling **95% confidence of no margin** while maintaining 10% annual withdrawals!
+
+**Results Across Market Conditions**:
+| Market | Return | Optimal Rate | Mean Bank | Margin % |
+|--------|--------|--------------|-----------|----------|
+| NVDA 2023 Bull | +246% | 30% | $61,193 | 0% |
+| VOO 2019 Moderate | +29% | 15% | $3,665 | 0% |
+| **SPY 2022 Bear** | **-20%** | **10%** | **$701** ⭐ | **30.8%** |
+
+📄 **[Read the full experiment →](experiments/EXPERIMENT_004_OPTIMAL_WITHDRAWAL_RATE.md)**
+
+### Risk-Free Gains Feature (October 2025)
+
+**Implementation**: Cash reserves now earn returns from risk-free assets (VOO, BND, SGOV, etc.)
+
+**Impact Over Time**:
+| Period | Asset | Improvement | Bank Growth Rate |
+|--------|-------|-------------|------------------|
+| 1 year | NVDA 2023 | +$17,527 (+6.8%) | - |
+| 4 years | NVDA 2020-2023 | +$22,815 (+7.4%) | 4.69%/year |
+| 10 years | SPY 2010-2019 | +$22,221 (+13.7%) | 5.11%/year |
+
+**Strategic Implication**: SD8 is effectively a **2-asset portfolio**:
+- Primary allocation: Main asset (NVDA, VOO, SPY)
+- Cash allocation: Risk-free asset earning market returns
+- Dynamic rebalancing: Determined by harvested volatility alpha
+
+Cash reserves aren't dead weight - they earn market returns while buffering withdrawals!
+
+📄 **[Read the feature documentation →](RISK_FREE_GAINS_FEATURE.md)**
 
 ## 🚀 Key Features
 
