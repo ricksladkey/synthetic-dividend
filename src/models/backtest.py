@@ -17,11 +17,7 @@ import pandas as pd
 from src.models.types import Transaction, WithdrawalResult
 
 # Import utility functions
-from src.models.backtest_utils import (
-    calculate_synthetic_dividend_orders,
-    _get_close_scalar,
-    _get_price_scalar_from_row,
-)
+from src.models.backtest_utils import calculate_synthetic_dividend_orders
 
 # Import algorithm classes from dedicated package
 from src.algorithms import AlgorithmBase, BuyAndHoldAlgorithm, SyntheticDividendAlgorithm, build_algo_from_name
@@ -186,8 +182,8 @@ def run_algorithm_backtest(
         daily_risk_free_rate_fallback = (1 + risk_free_rate_pct / 100.0) ** (1.0 / 365.25) - 1.0
 
     # Extract start/end prices for return calculations
-    start_price: float = _get_close_scalar(df_indexed, first_idx, "Close")
-    end_price: float = _get_close_scalar(df_indexed, last_idx, "Close")
+    start_price: float = float(df_indexed.loc[first_idx, "Close"])
+    end_price: float = float(df_indexed.loc[last_idx, "Close"])
     
     # Calculate initial quantity from investment amount or shares
     # Prefer initial_qty if both are provided, otherwise use initial_investment
@@ -385,7 +381,7 @@ def run_algorithm_backtest(
 
         # Get current day's prices
         price_row = df_indexed.loc[d]
-        price: float = _get_close_scalar(df_indexed, d, "Close")
+        price: float = float(df_indexed.loc[d, "Close"])
 
         # Track deployed capital (market value of holdings) at start of day
         deployed_capital = holdings * price

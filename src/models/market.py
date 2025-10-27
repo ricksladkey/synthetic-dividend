@@ -143,14 +143,12 @@ class Market:
         Returns:
             List of executed transactions
         """
-        from src.models.backtest_utils import _get_price_scalar_from_row
-        
         transactions: List[Transaction] = []
         
-        # Extract OHLC prices
-        open_price = _get_price_scalar_from_row(price_row, "Open")
-        high = _get_price_scalar_from_row(price_row, "High")
-        low = _get_price_scalar_from_row(price_row, "Low")
+        # Extract OHLC prices (use .get() for safe access)
+        open_price = price_row.get("Open")
+        high = price_row.get("High")
+        low = price_row.get("Low")
         
         # Need high/low to evaluate orders
         if low is None or high is None:

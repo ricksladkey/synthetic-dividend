@@ -296,13 +296,11 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         Returns:
             List of executed transactions for this day
         """
-        from src.models.backtest_utils import _get_price_scalar_from_row
-        
         transactions: List[Transaction] = []
         
         # ATH-only mode: track all-time high for baseline comparison
         if not self.buyback_enabled:
-            high = _get_price_scalar_from_row(price_row, "High")
+            high = price_row.get("High")
             if high is not None and high > self.ath_price:
                 self.ath_price = high
         
