@@ -35,11 +35,20 @@ Examples:
     # Run backtest on NVDA
     synthetic-dividend-tool backtest --ticker NVDA --start 2023-01-01 --end 2024-01-01
     
+    # Auto-analyze volatility and suggest optimal SD
+    synthetic-dividend-tool analyze volatility-alpha --ticker GLD --start 2024-01-01 --end 2025-01-01
+    
     # Run optimal rebalancing research
     synthetic-dividend-tool research optimal-rebalancing --output results.csv
     
     # Compare algorithms
-    synthetic-dividend-tool compare algorithms --ticker SPY
+    synthetic-dividend-tool compare algorithms --ticker SPY --start 2023-01-01 --end 2024-01-01
+    
+    # Batch comparison across assets
+    synthetic-dividend-tool compare batch --tickers NVDA AAPL GLD --strategies sd8 sd16 --start 2024-01-01 --end 2025-01-01
+    
+    # Analyze gap bonus
+    synthetic-dividend-tool analyze gap-bonus --input research_phase1_1year_core.csv
     
     # Run tests
     synthetic-dividend-tool test
@@ -141,6 +150,18 @@ For detailed help on any command:
     strategy_compare_parser.add_argument('--ticker', required=True, help='Asset ticker')
     strategy_compare_parser.add_argument('--start', required=True, help='Start date')
     strategy_compare_parser.add_argument('--end', required=True, help='End date')
+    strategy_compare_parser.add_argument('--output', help='Output file')
+    
+    # compare batch
+    batch_compare_parser = compare_subparsers.add_parser(
+        'batch',
+        help='Run batch comparison across multiple assets/strategies'
+    )
+    batch_compare_parser.add_argument('--tickers', nargs='+', required=True, help='List of tickers')
+    batch_compare_parser.add_argument('--strategies', nargs='+', required=True, help='List of strategies (e.g., sd8 sd16)')
+    batch_compare_parser.add_argument('--start', required=True, help='Start date')
+    batch_compare_parser.add_argument('--end', required=True, help='End date')
+    batch_compare_parser.add_argument('--output', help='Output CSV file')
     
     # compare table
     table_parser = compare_subparsers.add_parser(
@@ -158,6 +179,19 @@ For detailed help on any command:
         description='Analysis and reporting tools'
     )
     analyze_subparsers = analyze_parser.add_subparsers(dest='analyze_type', help='Analysis type')
+    
+    # analyze volatility-alpha (auto-suggest SD parameters)
+    volatility_alpha_parser = analyze_subparsers.add_parser(
+        'volatility-alpha',
+        help='Auto-analyze asset and suggest optimal SD parameter'
+    )
+    volatility_alpha_parser.add_argument('--ticker', required=True, help='Asset ticker')
+    volatility_alpha_parser.add_argument('--start', required=True, help='Start date')
+    volatility_alpha_parser.add_argument('--end', required=True, help='End date')
+    volatility_alpha_parser.add_argument('--qty', type=int, default=100, help='Initial quantity (default: 100)')
+    volatility_alpha_parser.add_argument('--plot', action='store_true', help='Generate price chart with transactions')
+    volatility_alpha_parser.add_argument('--sd', type=int, help='Override auto-suggested SD parameter')
+    volatility_alpha_parser.add_argument('--profit-sharing', type=float, help='Override profit sharing %% (default: 50)')
     
     # analyze gap-bonus
     gap_parser = analyze_subparsers.add_parser(
@@ -283,6 +317,18 @@ def run_compare(args) -> int:
         # Would integrate with src.compare.runner
         return 0
     
+    elif args.compare_type == 'strategies':
+        from src.compare import runner
+        print(f"Comparing strategies for {args.ticker}...")
+        # Would integrate with strategy comparison
+        return 0
+    
+    elif args.compare_type == 'batch':
+        from src.compare import batch_comparison
+        print(f"Running batch comparison: {args.tickers} with {args.strategies}...")
+        # Would integrate with batch_comparison
+        return 0
+    
     elif args.compare_type == 'table':
         from src.compare import table
         print(f"Generating comparison table from {args.input}...")
@@ -297,7 +343,29 @@ def run_compare(args) -> int:
 def run_analyze(args) -> int:
     """Execute analyze command."""
     
-    if args.analyze_type == 'gap-bonus':
+    if args.analyze_type == 'volatility-alpha':
+        import subprocess
+        import os
+        
+        # Build command for analyze-volatility-alpha
+        script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 
+                                   'src', 'tools', 'volatility_alpha_analyzer.py')
+        
+        cmd = [sys.executable, script_path, args.ticker, args.start, args.end]
+        
+        if args.qty:
+            cmd.extend(['--qty', str(args.qty)])
+        if args.plot:
+            cmd.append('--plot')
+        if args.sd:
+            cmd.extend(['--sd', str(args.sd)])
+        if args.profit_sharing:
+            cmd.extend(['--profit-sharing', str(args.profit_sharing)])
+        
+        result = subprocess.run(cmd, capture_output=False)
+        return result.returncode
+    
+    elif args.analyze_type == 'gap-bonus':
         import subprocess
         import os
         

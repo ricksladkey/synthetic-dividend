@@ -25,6 +25,19 @@ The **Volatility Alpha Analyzer** is the recommended starting point. It automati
 
 ### Quick Start
 
+**Unified CLI Tool (Recommended)**:
+```bash
+# Analyze gold (auto-suggests SD parameter based on volatility)
+.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker GLD --start 10/26/2024 --end 10/26/2025
+
+# Analyze NVIDIA with price chart
+.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker NVDA --start 10/23/2023 --end 10/23/2024 --plot
+
+# Analyze Apple with custom quantity and chart
+.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker AAPL --start 01/01/2024 --end 12/31/2024 --qty 200 --plot
+```
+
+**Legacy Batch File** (still supported):
 ```bash
 # Analyze gold (auto-suggests SD parameter based on volatility)
 analyze-volatility-alpha.bat GLD 10/26/2024 10/26/2025
@@ -87,6 +100,16 @@ The tool uses this mapping:
 
 ### Override Auto-Suggestion
 
+**Unified CLI Tool**:
+```bash
+# Force specific SD parameter
+.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker GLD --start 10/26/2024 --end 10/26/2025 --sd 8
+
+# Custom profit sharing (default is 50%)
+.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker GLD --start 10/26/2024 --end 10/26/2025 --profit-sharing 75
+```
+
+**Legacy**:
 ```bash
 # Force specific SD parameter
 analyze-volatility-alpha.bat GLD 10/26/2024 10/26/2025 --sd 8
@@ -103,6 +126,12 @@ Run individual backtests with specific parameters.
 
 ### Command Format
 
+**Unified CLI Tool** (Recommended):
+```bash
+.\synthetic-dividend-tool.bat backtest --ticker TICKER --start START_DATE --end END_DATE [OPTIONS]
+```
+
+**Legacy Python Module**:
 ```bash
 python -m src.run_model TICKER START_DATE END_DATE STRATEGY [OPTIONS]
 ```
@@ -167,6 +196,13 @@ Compare multiple strategies or assets simultaneously.
 
 ### Compare Multiple SD Parameters
 
+**Unified CLI Tool**:
+```bash
+# Run comprehensive analysis (12 assets × 4 SD parameters)
+.\synthetic-dividend-tool.bat research optimal-rebalancing --output results.csv
+```
+
+**Legacy**:
 ```bash
 # Run comprehensive analysis (12 assets × 4 SD parameters)
 python -m src.research.optimal_rebalancing --comprehensive --output results.csv
@@ -185,6 +221,13 @@ SD parameters tested: SD4, SD6, SD8, SD10
 
 ### Custom Batch Run
 
+**Unified CLI Tool**:
+```bash
+# Compare 3 assets with 2 strategies each
+.\synthetic-dividend-tool.bat compare batch --tickers NVDA AAPL GLD --strategies sd8 sd16 --start 01/01/2024 --end 12/31/2024
+```
+
+**Legacy**:
 ```bash
 # Compare 3 assets with 2 strategies each
 python -m src.compare.batch_comparison \
@@ -420,6 +463,22 @@ Results:
 
 Diversify across asset classes with different SD parameters:
 
+**Unified CLI Tool**:
+```bash
+# Tech (high vol) → SD8
+.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker NVDA --start 01/01/2024 --end 12/31/2024
+
+# Index (medium vol) → SD10
+.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker VOO --start 01/01/2024 --end 12/31/2024
+
+# Gold (low vol) → SD16
+.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker GLD --start 01/01/2024 --end 12/31/2024
+
+# Money market (very low vol) → SD20
+.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker BIL --start 01/01/2024 --end 12/31/2024
+```
+
+**Legacy**:
 ```bash
 # Tech (high vol) → SD8
 analyze-volatility-alpha.bat NVDA 01/01/2024 12/31/2024
@@ -452,9 +511,28 @@ Benefits:
 
 ### Most Common Commands
 
+**Unified CLI Tool** (Recommended):
+```bash
+# Auto-analyze any asset (auto-suggest SD parameter)
+.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker TICKER --start START --end END
+
+# Basic backtest
+.\synthetic-dividend-tool.bat backtest --ticker TICKER --start START --end END --sd-n 8 --initial-qty 100
+
+# Batch research
+.\synthetic-dividend-tool.bat research optimal-rebalancing --output results.csv
+
+# Batch comparison
+.\synthetic-dividend-tool.bat compare batch --tickers NVDA AAPL --strategies sd8 sd16 --start START --end END
+
+# Run tests
+.\synthetic-dividend-tool.bat test
+```
+
+**Legacy** (still supported):
 ```bash
 # Auto-analyze any asset
-analyze-alpha.bat TICKER START END
+analyze-volatility-alpha.bat TICKER START END
 
 # Basic backtest
 python -m src.run_model TICKER START END sd8 --qty 100
