@@ -69,6 +69,7 @@ cache/
 
 # Sandbox/scratch output (ephemeral, not versioned)
 output/
+test_output/
 
 # Output files from compare/runner
 out-*
