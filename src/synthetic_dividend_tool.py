@@ -35,6 +35,15 @@ Examples:
     # Run backtest on NVDA
     synthetic-dividend-tool backtest --ticker NVDA --start 2023-01-01 --end 2024-01-01
     
+    # Backtest with inflation adjustment
+    synthetic-dividend-tool backtest --ticker NVDA --start 2024-01-01 --end 2024-12-31 --adjust-inflation --verbose
+    
+    # Backtest with market adjustment (vs VOO)
+    synthetic-dividend-tool backtest --ticker GLD --start 2024-01-01 --end 2024-12-31 --adjust-market --verbose
+    
+    # Complete return analysis (nominal + real + alpha)
+    synthetic-dividend-tool backtest --ticker AAPL --start 2024-01-01 --end 2024-12-31 --adjust-both --verbose
+    
     # Auto-analyze volatility and suggest optimal SD
     synthetic-dividend-tool analyze volatility-alpha --ticker GLD --start 2024-01-01 --end 2025-01-01
     
@@ -81,6 +90,18 @@ For detailed help on any command:
     backtest_parser.add_argument('--output', help='Output file for results (CSV)')
     backtest_parser.add_argument('--verbose', action='store_true', help='Verbose output')
     
+    # Return adjustment options
+    backtest_parser.add_argument('--adjust-inflation', action='store_true', 
+                                 help='Show inflation-adjusted (real) returns')
+    backtest_parser.add_argument('--adjust-market', action='store_true',
+                                 help='Show market-adjusted returns (alpha)')
+    backtest_parser.add_argument('--adjust-both', action='store_true',
+                                 help='Show both inflation and market adjustments')
+    backtest_parser.add_argument('--inflation-ticker', default='CPI',
+                                 help='Ticker for inflation data (default: CPI)')
+    backtest_parser.add_argument('--market-ticker', default='VOO',
+                                 help='Ticker for market benchmark (default: VOO)')
+    
     # ========================================================================
     # RESEARCH command
     # ========================================================================
@@ -96,22 +117,46 @@ For detailed help on any command:
         'optimal-rebalancing',
         help='Find optimal rebalancing parameters'
     )
-    optimal_parser.add_argument('--start', default='10/23/2023', help='Start date (default: 10/23/2023)')
-    optimal_parser.add_argument('--end', default='10/23/2024', help='End date (default: 10/23/2024)')
-    optimal_parser.add_argument('--profit', type=float, default=50.0, help='Profit sharing %% (default: 50)')
-    optimal_parser.add_argument('--qty', type=int, default=10000, help='Initial quantity (default: 10000)')
+    optimal_parser.add_argument('--start', default='2023-10-23', help='Start date (default: 2023-10-23)')
+    optimal_parser.add_argument('--end', default='2024-10-23', help='End date (default: 2024-10-23)')
+    optimal_parser.add_argument('--profit-pct', type=float, default=50.0, help='Profit sharing %% (default: 50)')
+    optimal_parser.add_argument('--initial-qty', type=int, default=10000, help='Initial quantity (default: 10000)')
     optimal_parser.add_argument('--ticker', help='Specific ticker (optional, tests all if omitted)')
     optimal_parser.add_argument('--asset-class', help='Specific asset class (optional)')
     optimal_parser.add_argument('--output', required=True, help='Output CSV file')
+    
+    # Return adjustment options
+    optimal_parser.add_argument('--adjust-inflation', action='store_true', 
+                                help='Add inflation-adjusted returns to output')
+    optimal_parser.add_argument('--adjust-market', action='store_true',
+                                help='Add market-adjusted returns to output')
+    optimal_parser.add_argument('--adjust-both', action='store_true',
+                                help='Add both inflation and market adjustments')
+    optimal_parser.add_argument('--inflation-ticker', default='CPI',
+                                help='Ticker for inflation data (default: CPI)')
+    optimal_parser.add_argument('--market-ticker', default='VOO',
+                                help='Ticker for market benchmark (default: VOO)')
     
     # research volatility-alpha
     volatility_parser = research_subparsers.add_parser(
         'volatility-alpha',
         help='Analyze volatility alpha across assets'
     )
-    volatility_parser.add_argument('--start', default='10/23/2023', help='Start date')
-    volatility_parser.add_argument('--end', default='10/23/2024', help='End date')
+    volatility_parser.add_argument('--start', default='2023-10-23', help='Start date')
+    volatility_parser.add_argument('--end', default='2024-10-23', help='End date')
     volatility_parser.add_argument('--output', required=True, help='Output CSV file')
+    
+    # Return adjustment options
+    volatility_parser.add_argument('--adjust-inflation', action='store_true', 
+                                   help='Add inflation-adjusted returns to output')
+    volatility_parser.add_argument('--adjust-market', action='store_true',
+                                   help='Add market-adjusted returns to output')
+    volatility_parser.add_argument('--adjust-both', action='store_true',
+                                   help='Add both inflation and market adjustments')
+    volatility_parser.add_argument('--inflation-ticker', default='CPI',
+                                   help='Ticker for inflation data (default: CPI)')
+    volatility_parser.add_argument('--market-ticker', default='VOO',
+                                   help='Ticker for market benchmark (default: VOO)')
     
     # research asset-classes
     asset_class_parser = research_subparsers.add_parser(
@@ -121,6 +166,18 @@ For detailed help on any command:
     asset_class_parser.add_argument('--start', required=True, help='Start date')
     asset_class_parser.add_argument('--end', required=True, help='End date')
     asset_class_parser.add_argument('--output', required=True, help='Output CSV file')
+    
+    # Return adjustment options
+    asset_class_parser.add_argument('--adjust-inflation', action='store_true', 
+                                    help='Add inflation-adjusted returns to output')
+    asset_class_parser.add_argument('--adjust-market', action='store_true',
+                                    help='Add market-adjusted returns to output')
+    asset_class_parser.add_argument('--adjust-both', action='store_true',
+                                    help='Add both inflation and market adjustments')
+    asset_class_parser.add_argument('--inflation-ticker', default='CPI',
+                                    help='Ticker for inflation data (default: CPI)')
+    asset_class_parser.add_argument('--market-ticker', default='VOO',
+                                    help='Ticker for market benchmark (default: VOO)')
     
     # ========================================================================
     # COMPARE command
@@ -163,6 +220,18 @@ For detailed help on any command:
     batch_compare_parser.add_argument('--end', required=True, help='End date')
     batch_compare_parser.add_argument('--output', help='Output CSV file')
     
+    # Return adjustment options
+    batch_compare_parser.add_argument('--adjust-inflation', action='store_true', 
+                                      help='Add inflation-adjusted returns to output')
+    batch_compare_parser.add_argument('--adjust-market', action='store_true',
+                                      help='Add market-adjusted returns to output')
+    batch_compare_parser.add_argument('--adjust-both', action='store_true',
+                                      help='Add both inflation and market adjustments')
+    batch_compare_parser.add_argument('--inflation-ticker', default='CPI',
+                                      help='Ticker for inflation data (default: CPI)')
+    batch_compare_parser.add_argument('--market-ticker', default='VOO',
+                                      help='Ticker for market benchmark (default: VOO)')
+    
     # compare table
     table_parser = compare_subparsers.add_parser(
         'table',
@@ -188,10 +257,22 @@ For detailed help on any command:
     volatility_alpha_parser.add_argument('--ticker', required=True, help='Asset ticker')
     volatility_alpha_parser.add_argument('--start', required=True, help='Start date')
     volatility_alpha_parser.add_argument('--end', required=True, help='End date')
-    volatility_alpha_parser.add_argument('--qty', type=int, default=100, help='Initial quantity (default: 100)')
+    volatility_alpha_parser.add_argument('--initial-qty', type=int, default=100, help='Initial quantity (default: 100)')
     volatility_alpha_parser.add_argument('--plot', action='store_true', help='Generate price chart with transactions')
-    volatility_alpha_parser.add_argument('--sd', type=int, help='Override auto-suggested SD parameter')
-    volatility_alpha_parser.add_argument('--profit-sharing', type=float, help='Override profit sharing %% (default: 50)')
+    volatility_alpha_parser.add_argument('--sd-n', type=int, help='Override auto-suggested SD parameter')
+    volatility_alpha_parser.add_argument('--profit-pct', type=float, help='Override profit sharing %% (default: 50)')
+    
+    # Return adjustment options
+    volatility_alpha_parser.add_argument('--adjust-inflation', action='store_true', 
+                                        help='Show inflation-adjusted returns')
+    volatility_alpha_parser.add_argument('--adjust-market', action='store_true',
+                                        help='Show market-adjusted returns')
+    volatility_alpha_parser.add_argument('--adjust-both', action='store_true',
+                                        help='Show both adjustments')
+    volatility_alpha_parser.add_argument('--inflation-ticker', default='CPI',
+                                        help='Ticker for inflation data (default: CPI)')
+    volatility_alpha_parser.add_argument('--market-ticker', default='VOO',
+                                        help='Ticker for market benchmark (default: VOO)')
     
     # analyze gap-bonus
     gap_parser = analyze_subparsers.add_parser(
@@ -262,8 +343,8 @@ def run_research(args) -> int:
         research_args = [
             '--start', args.start,
             '--end', args.end,
-            '--profit', str(args.profit),
-            '--qty', str(args.qty),
+            '--profit-pct', str(args.profit_pct),
+            '--initial-qty', str(args.initial_qty),
             '--output', args.output
         ]
         
@@ -353,14 +434,14 @@ def run_analyze(args) -> int:
         
         cmd = [sys.executable, script_path, args.ticker, args.start, args.end]
         
-        if args.qty:
-            cmd.extend(['--qty', str(args.qty)])
+        if args.initial_qty:
+            cmd.extend(['--initial-qty', str(args.initial_qty)])
         if args.plot:
             cmd.append('--plot')
-        if args.sd:
-            cmd.extend(['--sd', str(args.sd)])
-        if args.profit_sharing:
-            cmd.extend(['--profit-sharing', str(args.profit_sharing)])
+        if args.sd_n:
+            cmd.extend(['--sd-n', str(args.sd_n)])
+        if args.profit_pct:
+            cmd.extend(['--profit-pct', str(args.profit_pct)])
         
         result = subprocess.run(cmd, capture_output=False)
         return result.returncode
