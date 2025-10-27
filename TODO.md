@@ -48,6 +48,10 @@
 - ✅ Migration from unittest to pytest framework (all 39 tests)
 - ✅ Test coverage measurement with pytest-cov (26% overall, 78% on backtest.py)
 - ✅ Type hints with mypy (mypy.ini configured)
+- ✅ Unified CLI tool (synthetic-dividend-tool.bat)
+- ✅ EXAMPLES.md transformed to experimental lab notebook format
+- ✅ BRAINSTORMING.md with 120 experimental research ideas
+- ✅ STRATEGIC_ANALYSIS.md with prioritized roadmap
 - ✅ Code style with flake8 (.flake8 configured)
 
 ### Recent Features (October 2025)
@@ -98,6 +102,71 @@
 ---
 
 ## 🔧 Housekeeping & Code Quality
+
+### Strategic Experiments & Infrastructure (From STRATEGIC_ANALYSIS.md)
+
+**Phase 1: Quick Wins (1 week)**
+- [ ] Build Transaction Log Analyzer (Gap #2)
+  - [ ] Create `src/analysis/transaction_log.py`
+  - [ ] Add gap detection and analysis methods
+  - [ ] Add income distribution analysis
+- [ ] Build Results Aggregation Framework (Gap #3)
+  - [ ] Create `src/analysis/results.py`
+  - [ ] Unified CSV schema for experiments
+  - [ ] Comparison utilities (group by, pivot, aggregate)
+  - [ ] Visualization templates (heatmaps, line plots)
+- [ ] Run Experiment #51: Asset Class Leaderboard (1h)
+- [ ] Run Experiment #1: Gap Frequency Distribution (2h)
+- [ ] Run Experiment #8: Transaction Multipliers by Asset Class (2h)
+
+**Phase 2: Optimization Studies (2 weeks)**
+- [ ] Build Batch Experiment Runner (Gap #1)
+  - [ ] Create `src/experiments/batch_runner.py`
+  - [ ] Parameter grid support (Cartesian product)
+  - [ ] Parallel execution with progress tracking
+- [ ] Build Metric Calculator Suite (Gap #4)
+  - [ ] Add max_drawdown calculation
+  - [ ] Add sharpe_ratio calculation
+  - [ ] Add sortino_ratio calculation
+  - [ ] Add calmar_ratio calculation
+- [ ] Run Experiment #11: SD Parameter Sweep (3h)
+- [ ] Run Experiment #21: Profit Sharing Sweep (4h)
+- [ ] Run Experiment #36+37: Safe Withdrawal Rate Study (6-8h) 🔥 **KILLER APP**
+
+**Phase 3: Portfolio Infrastructure (3 weeks)**
+- [ ] Build Portfolio-Level Backtesting (Gap #5)
+  - [ ] Implement PORTFOLIO_ABSTRACTION.md design
+  - [ ] Create `src/models/portfolio.py`
+  - [ ] Unified bank across assets
+  - [ ] Cross-asset NAV arbitrage
+  - [ ] Rebalancing strategies
+- [ ] Run Experiment #15: ATH-Only Comprehensive Baseline
+- [ ] Run Experiment #52: Correlation Matrix
+- [ ] Run Experiment #61: Equal Weight vs Cap Weight Portfolios
+
+**Additional Infrastructure Gaps**
+- [ ] Experiment Template System (Gap #6)
+  - [ ] Add `experiment create <name>` to CLI
+  - [ ] Template files with standard structure
+  - [ ] Auto-generate SUMMARY.md outlines
+- [ ] Time-Series Analysis Tools (Gap #7)
+  - [ ] Create `src/analysis/timeseries.py`
+  - [ ] Bank balance trajectory analysis
+  - [ ] Holdings trajectory analysis
+  - [ ] Income autocorrelation
+
+### Foundation Refactor (CURRENT)
+- [ ] Create clean Holding abstraction
+  - [ ] Create `src/models/holding.py`
+  - [ ] Transaction model (ticker, type, date, price, shares)
+  - [ ] FIFO/LIFO lot tracking
+  - [ ] Current value calculation from transaction history
+- [ ] Create clean Portfolio abstraction
+  - [ ] Create `src/models/portfolio.py`
+  - [ ] Multi-ticker holdings container
+  - [ ] Unified transaction history
+  - [ ] Portfolio-level value calculation
+  - [ ] Rebalancing logic
 
 ### Type Checking
 - ✅ Add mypy configuration (COMPLETED - mypy.ini exists)
