@@ -101,6 +101,155 @@
 
 ---
 
+## 🏗️ Asset Provider Extensibility
+
+### ✅ Implemented (October 2025)
+
+**Core Provider Infrastructure**:
+- ✅ AssetProvider ABC - Interface contract for all data providers
+- ✅ AssetRegistry - Priority-based pattern matching for provider selection
+- ✅ Asset Factory - Thin wrapper that delegates to registered providers
+- ✅ YahooAssetProvider - Yahoo Finance with dual caching (pkl + csv)
+- ✅ CashAssetProvider - Flat $1.00 prices for USD, no dividends
+- ✅ MockAssetProvider - Mathematical signposts and deterministic testing
+
+**Design Benefits**:
+- Zero special-casing: All assets use identical `Asset()` interface
+- Zero forking: New providers don't require algorithm changes
+- Extensible: Register new providers at runtime via registry pattern
+- Testable: Mock providers enable deterministic validation
+
+### What Works Today
+
+```python
+# Use mocks for mathematical signposts
+Asset("MOCK-FLAT-100")         # Constant $100
+Asset("MOCK-LINEAR-50-150")    # Linear trend
+Asset("MOCK-SINE-100-20")      # Volatile oscillation
+
+# Use real assets
+Asset("NVDA")                  # Yahoo Finance
+Asset("USD")                   # Cash provider
+Asset("AVNT-USD")              # Crypto
+Asset("VFINX")                 # Mutual fund
+Asset("^SP500TR")              # S&P 500 Total Return index
+Asset("GC=F")                  # Gold futures
+Asset("BKYI")                  # OTC market stocks
+```
+
+### What Can Be Added Tomorrow (Zero Code Changes)
+
+```python
+# Just register new providers, existing code continues to work:
+AssetRegistry.register("BOND-*", BondAssetProvider, priority=2)
+AssetRegistry.register("QUANDL-*", QuandlAssetProvider, priority=2)
+AssetRegistry.register("CUSTOM-*", CSVAssetProvider, priority=3)
+
+# Immediately works everywhere:
+Asset("BOND-UST-10Y")          # Individual Treasury bonds
+Asset("QUANDL-GOLD-SPOT")      # True commodity spot prices
+Asset("CUSTOM-MYDATA")         # User-supplied CSV data
+```
+
+### Future Provider Implementations
+
+**Bond Provider** (Priority: Medium)
+- [ ] Implement BondAssetProvider using TreasuryDirect API
+- [ ] Support CUSIP-based bond lookup
+- [ ] Handle maturity dates and coupon payments
+- [ ] Pattern: `BOND-{TYPE}-{MATURITY}` (e.g., BOND-UST-10Y)
+- **Use Case**: Fixed income portfolios, bond ladders
+
+**Commodity Spot Provider** (Priority: Medium)
+- [ ] Implement QuandlAssetProvider using Quandl/Nasdaq Data Link
+- [ ] Support spot prices (not futures) for gold, silver, oil
+- [ ] Handle weekend/holiday data gaps
+- [ ] Pattern: `QUANDL-{COMMODITY}-SPOT` (e.g., QUANDL-GOLD-SPOT)
+- **Use Case**: Commodity exposure without futures rollover issues
+
+**Custom CSV Provider** (Priority: High - User Flexibility)
+- [ ] Implement CSVAssetProvider for user-supplied data
+- [ ] Support standard CSV format (Date, Open, High, Low, Close, Dividends)
+- [ ] Validate data completeness and format
+- [ ] Pattern: `CUSTOM-{NAME}` reads from `cache/CUSTOM-{NAME}.csv`
+- **Use Case**: Private assets, backtest historical portfolios, research data
+
+**Multi-Source Provider** (Priority: Low - International Stocks)
+- [ ] Implement MultiSourceProvider with fallback chain
+- [ ] Try Yahoo → Alpha Vantage → IEX Cloud for reliability
+- [ ] Handle currency conversion for foreign stocks
+- [ ] Pattern: `INTL-{TICKER}` (e.g., INTL-7203.T for Toyota)
+- **Use Case**: International stock coverage beyond Yahoo's reach
+
+**Money Market Provider** (Priority: Medium - Interest on Cash)
+- [ ] Implement MoneyMarketProvider with historical interest rates
+- [ ] Fetch 3-month T-bill rates from FRED API (free)
+- [ ] Return daily interest as "dividends" on cash
+- [ ] Pattern: `MM-{TYPE}` (e.g., MM-TBILL3M, MM-FEDFUNDS)
+- **Use Case**: Opportunity cost modeling with realistic cash returns
+
+**Options Provider** (Priority: Low - Advanced Strategies)
+- [ ] Implement OptionsAssetProvider using Tradier/TDAmeritrade API
+- [ ] Handle option chains, expiration dates, strikes
+- [ ] Calculate option prices from underlying + Greeks
+- [ ] Pattern: `OPT-{TICKER}-{EXPIRY}-{STRIKE}-{TYPE}` 
+- **Use Case**: Covered calls, protective puts, advanced strategies
+
+**Real-Time Provider** (Priority: Low - Paper Trading)
+- [ ] Implement LiveAssetProvider for real-time market data
+- [ ] Support websocket connections for streaming prices
+- [ ] Add paper trading mode with simulated execution
+- [ ] Pattern: `LIVE-{TICKER}` switches to real-time feed
+- **Use Case**: Live strategy testing without real money
+
+### Provider Coverage Analysis
+
+**Yahoo Finance Coverage** (via YahooAssetProvider):
+- ✅ US stocks & ETFs (excellent coverage)
+- ✅ Mutual funds (VFINX, VTSAX, etc.)
+- ✅ Cryptocurrency (BTC-USD, ETH-USD, AVNT-USD)
+- ✅ Market indexes (^SP500TR, ^GSPC, ^DJI)
+- ✅ OTC markets (most major OTC stocks)
+- ✅ ADRs (foreign stocks via US exchanges)
+- ⚠️ Commodity futures (GC=F works but has rollover issues)
+- ❌ Individual bonds (not available)
+- ❌ Foreign stocks direct (use ADRs instead)
+- ❌ Options (unreliable historical data)
+- ❌ Commodity spot prices (futures only)
+
+**Best Practices**:
+1. Use Yahoo Finance (YahooAssetProvider) for 95% of needs
+2. Use commodity ETFs (GLD, SLV, USO) instead of futures
+3. Use bond ETFs (TLT, AGG, BND) instead of individual bonds
+4. Use ADRs (TSM, BABA) instead of direct foreign stocks
+5. Add specialized providers only when needed
+
+### The Magic of Extensibility
+
+**Core Algorithm**: NEVER needs to change
+- Synthetic dividend algorithm ✓
+- Backtest engine ✓
+- Portfolio/Holding classes ✓
+- Market execution logic ✓
+
+**What Changes**: Provider registration only
+- New asset class? Register new provider
+- New data source? Register new provider  
+- Custom instruments? Register new provider
+- Testing scenarios? Register mock provider
+
+**Result**: Infinite extensibility without forking
+
+### Documentation References
+
+- `theory/ASSET_PROVIDER_COVERAGE.md` - Comprehensive Yahoo Finance coverage analysis
+- `src/data/asset_provider.py` - Base interface and registry implementation
+- `src/data/mock_provider.py` - Example of clean provider implementation
+- `tests/test_registry.py` - 14 tests demonstrating extensibility
+- `tests/test_mock_provider.py` - 12 tests for mock patterns
+
+---
+
 ## 🔧 Housekeeping & Code Quality
 
 ### Strategic Experiments & Infrastructure (From STRATEGIC_ANALYSIS.md)
@@ -350,5 +499,5 @@
 
 ---
 
-*Last Updated: October 25, 2025*
-*Version: Post-Withdrawal & Normalization Implementation*
+*Last Updated: October 27, 2025*
+*Version: Post-Withdrawal & Normalization + Asset Provider Extensibility*
