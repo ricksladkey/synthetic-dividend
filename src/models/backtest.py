@@ -359,6 +359,10 @@ def run_algorithm_backtest(
     skipped_buys: int = 0
     skipped_buy_value: float = 0.0
     
+    # Opportunity cost and risk-free gains tracking
+    opportunity_cost_total: float = 0.0
+    risk_free_gains_total: float = 0.0
+    
     # Calculate initial withdrawal amount (if withdrawal policy enabled)
     start_value = holdings * start_price
     if withdrawal_rate_pct > 0:
@@ -451,6 +455,21 @@ def run_algorithm_backtest(
         # Get current day's prices
         price_row = df_indexed.loc[d]
         price: float = df_indexed.loc[d, "Close"].item()
+
+        # Apply daily gains/costs to bank balance (if not in simple mode)
+        if not simple_mode:
+            if bank < 0:
+                # Negative balance: opportunity cost of borrowed money
+                daily_return = reference_returns.get(d, daily_reference_rate_fallback)
+                opportunity_cost_today = abs(bank) * daily_return
+                bank -= opportunity_cost_today  # Makes bank more negative
+                opportunity_cost_total += opportunity_cost_today
+            elif bank > 0:
+                # Positive balance: risk-free interest earned on cash
+                daily_return = risk_free_returns.get(d, daily_risk_free_rate_fallback)
+                risk_free_gain_today = bank * daily_return
+                bank += risk_free_gain_today  # Adds to cash balance
+                risk_free_gains_total += risk_free_gain_today
 
         # Track deployed capital (market value of holdings) at start of day
         deployed_capital = holdings * price
@@ -688,23 +707,8 @@ def run_algorithm_backtest(
     deployment_min_pct: float = min_deployed_capital / start_val if start_val > 0 else 0.0
     deployment_max_pct: float = max_deployed_capital / start_val if start_val > 0 else 0.0
 
-    # Calculate opportunity cost and risk-free gains using actual asset returns
-    # Skip if simple_mode is enabled (free borrowing, cash holds value)
-    opportunity_cost_total = 0.0
-    risk_free_gains_total = 0.0
-
-    if not simple_mode:
-        for d, bank_balance in bank_history:
-            if bank_balance < 0:
-                # Negative balance: opportunity cost of borrowed money
-                # Use actual reference asset return for this day, or fallback to fixed rate
-                daily_return = reference_returns.get(d, daily_reference_rate_fallback)
-                opportunity_cost_total += abs(bank_balance) * daily_return
-            elif bank_balance > 0:
-                # Positive balance: risk-free interest earned on cash
-                # Use actual risk-free asset return for this day, or fallback to fixed rate
-                daily_return = risk_free_returns.get(d, daily_risk_free_rate_fallback)
-                risk_free_gains_total += bank_balance * daily_return
+    # opportunity_cost_total and risk_free_gains_total were accumulated during daily loop
+    # (No longer need post-processing calculation)
 
     # Build summary dict
     summary: Dict[str, Any] = {
