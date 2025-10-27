@@ -253,7 +253,52 @@ synthetic-dividend/
     └── requirements-dev.txt            # Development tools (pytest, mypy, black)
 ```
 
-## � Quick Start Guide
+## 🚀 Quick Start Guide
+
+### 🔧 Unified CLI Tool (Recommended)
+
+The **Synthetic Dividend Tool** provides a single swiss army knife interface to all functionality:
+
+```bash
+# Show all available commands
+.\synthetic-dividend-tool.bat --help
+
+# Run backtest on NVDA
+.\synthetic-dividend-tool.bat backtest --ticker NVDA --start 2023-01-01 --end 2024-01-01
+
+# Run optimal rebalancing research
+.\synthetic-dividend-tool.bat research optimal-rebalancing --output results.csv
+
+# Compare algorithms or strategies
+.\synthetic-dividend-tool.bat compare algorithms --ticker SPY --start 2023-01-01 --end 2024-01-01
+
+# Analyze gap bonus impact
+.\synthetic-dividend-tool.bat analyze gap-bonus --input research_phase1_1year_core.csv
+
+# Calculate order recommendations
+.\synthetic-dividend-tool.bat order --ticker NVDA --holdings 1000 --sd-n 8
+
+# Run test suite
+.\synthetic-dividend-tool.bat test
+.\synthetic-dividend-tool.bat test --verbose
+.\synthetic-dividend-tool.bat test --coverage
+```
+
+**Available Commands**:
+- `backtest` - Run single-asset backtest
+- `research` - Run research studies (optimal-rebalancing, volatility-alpha, asset-classes)
+- `compare` - Compare algorithms, strategies, or generate comparison tables
+- `analyze` - Analyze gap-bonus, coverage ratios, and other metrics
+- `order` - Calculate buy/sell order recommendations
+- `test` - Run pytest test suite
+
+**Discoverability**: Every command supports `--help` for detailed options:
+```bash
+.\synthetic-dividend-tool.bat research --help
+.\synthetic-dividend-tool.bat research optimal-rebalancing --help
+```
+
+> 💡 **Note**: Individual batch files (`run-model.bat`, `research-phase1.bat`, etc.) are still available for backward compatibility, but the unified tool is recommended for new workflows.
 
 ### 🎬 Installation
 
