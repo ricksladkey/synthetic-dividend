@@ -55,6 +55,7 @@ pip-delete-this-directory.txt
 Thumbs.db
 
 # Data and caches
+cache/
 *.pkl
 *.db
 *.sqlite3
