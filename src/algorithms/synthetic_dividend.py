@@ -6,7 +6,8 @@ import pandas as pd
 
 from src.algorithms.base import AlgorithmBase
 from src.models.types import Transaction
-from src.models.backtest_utils import calculate_synthetic_dividend_orders, _get_price_scalar_from_row
+from src.models.backtest_utils import calculate_synthetic_dividend_orders
+from src.models.market import Market, Order, OrderAction, OrderType
 
 
 class SyntheticDividendAlgorithm(AlgorithmBase):
@@ -51,19 +52,25 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         # Each entry: (purchase_price, quantity) for exact lot tracking
         self.buyback_stack: List[Tuple[float, int]] = []
 
-        # State for pending orders
-        self.last_transaction_price: float
-        self.next_buy_price: float
-        self.next_buy_qty: int
-        self.next_sell_price: float
-        self.next_sell_qty: int
+        # Market for order execution
+        self.market: Market = Market()
+        
+        # Last transaction price (for order calculations)
+        self.last_transaction_price: float = 0.0
 
     def place_orders(self, holdings: int, current_price: float) -> None:
-        """Calculate and set next buy/sell orders based on current state.
+        """Calculate and place buy/sell orders with the market.
 
-        Updates instance variables with new order prices and quantities.
+        Clears existing orders and places new symmetric orders based on
+        current holdings and price.
+        
+        In buyback mode: place both buy and sell orders
+        In ATH-only mode: only place sell orders (no buybacks)
         """
-        # Anchor next orders to this transaction price
+        # Clear any pending orders (they're all based on old price/holdings)
+        self.market.clear_orders()
+        
+        # Update transaction anchor
         self.last_transaction_price = current_price
 
         # Calculate symmetric buy/sell orders
@@ -74,32 +81,42 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             profit_sharing=self.profit_sharing,
         )
 
-        # Update order state
-        self.next_buy_price = orders["next_buy_price"]
-        self.next_buy_qty = int(orders["next_buy_qty"])
-        self.next_sell_price = orders["next_sell_price"]
-        self.next_sell_qty = int(orders["next_sell_qty"])
-
-        # Edge case: Skip orders with zero quantity (e.g., 0% profit sharing)
-        # This prevents creating empty lots in the buyback stack
-        if self.next_buy_qty == 0 and self.next_sell_qty == 0:
-            return
-
-        # Debug output (disabled by default for cleaner logs)
-        # Uncomment for detailed order placement debugging
-        # if self.buyback_enabled:
-        #     print(f"Placing orders for last transaction price: ${self.last_transaction_price}")
-        #     print(
-        #         f"  Next BUY: {self.next_buy_qty} @ ${self.next_buy_price:.2f} = ${self.next_buy_price * self.next_buy_qty:.2f}"
-        #     )
-        #     print(
-        #         f"  Next SELL: {self.next_sell_qty} @ ${self.next_sell_price:.2f} = ${self.next_sell_price * self.next_sell_qty:.2f}"
-        #     )
-        # else:
-        #     print(f"ATH-only: New ATH at ${current_price:.2f}, placing sell order:")
-        #     print(
-        #         f"  Next SELL: {self.next_sell_qty} @ ${self.next_sell_price:.2f} = ${self.next_sell_price * self.next_sell_qty:.2f}"
-        #     )
+        # In buyback mode: place both buy and sell orders
+        if self.buyback_enabled:
+            # Place buy order (if quantity > 0)
+            if orders["next_buy_qty"] > 0:
+                buy_order = Order(
+                    action=OrderAction.BUY,
+                    quantity=int(orders["next_buy_qty"]),
+                    order_type=OrderType.LIMIT,
+                    limit_price=orders["next_buy_price"],
+                    notes="Buying back"
+                )
+                self.market.place_order(buy_order)
+            
+            # Place sell order (if quantity > 0)
+            if orders["next_sell_qty"] > 0:
+                sell_order = Order(
+                    action=OrderAction.SELL,
+                    quantity=int(orders["next_sell_qty"]),
+                    order_type=OrderType.LIMIT,
+                    limit_price=orders["next_sell_price"],
+                    notes="Taking profits"
+                )
+                self.market.place_order(sell_order)
+        
+        # In ATH-only mode: only place sell orders
+        else:
+            # Only place sell order (no buybacks in ATH-only mode)
+            if orders["next_sell_qty"] > 0:
+                sell_order = Order(
+                    action=OrderAction.SELL,
+                    quantity=int(orders["next_sell_qty"]),
+                    order_type=OrderType.LIMIT,
+                    limit_price=orders["next_sell_price"],
+                    notes=f"ATH-only sell, ATH=${self.ath_price:.2f}"
+                )
+                self.market.place_order(sell_order)
 
     def on_new_holdings(self, holdings: int, current_price: float) -> None:
         """Initialize algorithm state after initial purchase."""
@@ -113,159 +130,75 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
     def on_day(
         self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame
     ) -> List[Transaction]:
-        """Evaluate day's price action and execute ALL triggered orders.
+        """Evaluate day's price action and execute triggered orders.
 
-        CRITICAL FIX: Loops to process multiple bracket crossings on same day.
-        Example: 20% gap with 9% brackets triggers 2 sells instead of 1.
-
-        Logic:
-        - ATH-only mode: Sell at all triggered price levels
-        - Full mode: Buy on dips, sell on rises - loop until no more triggers
-        - Orders placed as limit orders; actual price may differ due to gaps
+        The Market handles trigger detection and execution mechanics.
+        We iterate to handle multi-bracket gaps: after each execution,
+        update holdings and check if new orders trigger.
         """
+        from src.models.backtest_utils import _get_price_scalar_from_row
+        
         transactions: List[Transaction] = []
         
-        try:
-            # Extract OHLC prices as scalars
-            open_price: Optional[float] = _get_price_scalar_from_row(price_row, "Open")
-            high: Optional[float] = _get_price_scalar_from_row(price_row, "High")
-            low: Optional[float] = _get_price_scalar_from_row(price_row, "Low")
-
-            # Require high/low to evaluate orders
-            if low is None or high is None:
-                return transactions
-
-            # Debug output (disabled by default)
-            if False:
-                low_s = f"{low:.2f}"
-                high_s = f"{high:.2f}"
-                print(f"Evaluating orders on {date_.isoformat()}: Low=${low_s}, High=${high_s}")
-
-            # ATH-only mode: sell at ALL triggered levels
-            if not self.buyback_enabled:
-                # Loop to process multiple sells if gap crosses multiple brackets
-                max_iterations = 20  # Safety limit to prevent infinite loops
-                iteration = 0
-                
-                while iteration < max_iterations:
-                    iteration += 1
-                    
-                    if high > self.ath_price:
-                        # Record new ATH
-                        self.ath_price = high
-
-                        # Check if sell threshold reached
-                        if high >= self.next_sell_price and self.next_sell_qty > 0:
-                            # Use open if market gapped up, else use limit price
-                            actual_price = (
-                                max(self.next_sell_price, open_price)
-                                if open_price is not None
-                                else self.next_sell_price
-                            )
-                            notes = f"ATH-only sell #{iteration}: limit price = {self.next_sell_price:.2f}, actual price = {actual_price:.2f}, new ATH = {self.ath_price:.2f}"
-                            transaction = Transaction(
-                                action="SELL", qty=self.next_sell_qty, notes=notes
-                            )
-                            transactions.append(transaction)
-
-                            # Update orders and holdings for next potential sell
-                            holdings -= self.next_sell_qty
-                            self.place_orders(holdings, self.next_sell_price)
-                            
-                            # Continue loop to check if high triggers another sell
-                        else:
-                            # No more sells triggered
-                            break
-                    else:
-                        # Price didn't exceed ATH
-                        break
-                
-                return transactions
-
-            # Full mode: loop to process ALL triggered orders (buys and sells)
-            max_iterations = 20  # Safety limit
-            iteration = 0
+        # ATH-only mode: update ATH price
+        if not self.buyback_enabled:
+            high = _get_price_scalar_from_row(price_row, "High")
+            if high is not None and high > self.ath_price:
+                self.ath_price = high
+        
+        # Iterate to handle multi-bracket gaps
+        max_iterations = 20
+        for iteration in range(1, max_iterations + 1):
+            # Let the market evaluate current orders against this day's price
+            executed = self.market.evaluate_day(date_, price_row, max_iterations=1)
             
-            while iteration < max_iterations:
-                iteration += 1
-                transaction_executed = False
-
-                # Buy trigger: price dropped to or below buy threshold
-                if low <= self.next_buy_price and self.next_buy_qty > 0:
-                    # Fill at open if market gapped down, else at limit price
-                    actual_price = (
-                        min(self.next_buy_price, open_price)
-                        if open_price is not None
-                        else self.next_buy_price
-                    )
-
-                    # Push buyback to stack for FIFO unwinding
-                    self.buyback_stack.append((actual_price, self.next_buy_qty))
-
-                    # Calculate alpha: profit from buying back cheaper shares
-                    current_value = holdings * actual_price
-                    profit = (self.last_transaction_price - actual_price) * self.next_buy_qty
-                    alpha = (profit / current_value) * 100 if current_value != 0 else 0.0
-                    self.total_volatility_alpha += alpha
-
-                    notes = f"Buying back #{iteration}: limit price = {self.next_buy_price:.2f}, actual price = {actual_price:.2f}"
-                    transaction = Transaction(action="BUY", qty=self.next_buy_qty, notes=notes)
-                    transactions.append(transaction)
-
-                    # Update holdings and orders for next potential buy
-                    holdings += self.next_buy_qty
-                    self.place_orders(holdings, self.next_buy_price)
-                    transaction_executed = True
-
-                # Sell trigger: price rose to or above sell threshold
-                if high >= self.next_sell_price and self.next_sell_qty > 0:
-                    # Fill at open if market gapped up, else at limit price
-                    actual_price = (
-                        max(self.next_sell_price, open_price)
-                        if open_price is not None
-                        else self.next_sell_price
-                    )
-
-                    # Unwind buyback stack FIFO before selling initial shares
-                    sell_qty_remaining = self.next_sell_qty
-                    unwound_from_stack = 0
-
-                    while sell_qty_remaining > 0 and self.buyback_stack:
-                        buy_price, buy_qty = self.buyback_stack[0]
-                        to_unwind = min(sell_qty_remaining, buy_qty)
-
-                        # This lot is now fully or partially unwound
-                        if to_unwind == buy_qty:
-                            # Fully unwound - remove from stack
-                            self.buyback_stack.pop(0)
-                        else:
-                            # Partially unwound - update remaining quantity
-                            self.buyback_stack[0] = (buy_price, buy_qty - to_unwind)
-
-                        unwound_from_stack += to_unwind
-                        sell_qty_remaining -= to_unwind
-
-                    # Note about what we unwound
-                    if unwound_from_stack > 0:
-                        notes = f"Taking profits #{iteration}: limit price = {self.next_sell_price:.2f}, actual price = {actual_price:.2f} (unwound {unwound_from_stack} from buyback stack)"
-                    else:
-                        notes = f"Taking profits #{iteration}: limit price = {self.next_sell_price:.2f}, actual price = {actual_price:.2f}"
-
-                    transaction = Transaction(action="SELL", qty=self.next_sell_qty, notes=notes)
-                    transactions.append(transaction)
-
-                    # Update holdings and orders for next potential sell
-                    holdings -= self.next_sell_qty
-                    self.place_orders(holdings, self.next_sell_price)
-                    transaction_executed = True
-
-                # If no transaction was executed this iteration, we're done
-                if not transaction_executed:
-                    break
-
-        except Exception:
-            # Silently ignore errors (e.g., missing price data)
-            pass
+            if not executed:
+                # No orders triggered
+                break
+            
+            # Process each executed transaction
+            for txn in executed:
+                # Extract fill price from transaction notes
+                fill_price_str = txn.notes.split("filled=$")[1].split()[0]
+                fill_price = float(fill_price_str)
+                
+                if txn.action == "BUY":
+                    # Add to buyback stack (for FIFO unwinding)
+                    if self.buyback_enabled:
+                        self.buyback_stack.append((fill_price, txn.qty))
+                        
+                        # Calculate volatility alpha
+                        current_value = holdings * fill_price
+                        profit = (self.last_transaction_price - fill_price) * txn.qty
+                        alpha = (profit / current_value) * 100 if current_value != 0 else 0.0
+                        self.total_volatility_alpha += alpha
+                    
+                    # Update holdings
+                    holdings += txn.qty
+                    
+                elif txn.action == "SELL":
+                    # Unwind buyback stack FIFO (if in full mode)
+                    if self.buyback_enabled:
+                        sell_qty_remaining = txn.qty
+                        while sell_qty_remaining > 0 and self.buyback_stack:
+                            buy_price, buy_qty = self.buyback_stack[0]
+                            to_unwind = min(sell_qty_remaining, buy_qty)
+                            
+                            if to_unwind == buy_qty:
+                                self.buyback_stack.pop(0)
+                            else:
+                                self.buyback_stack[0] = (buy_price, buy_qty - to_unwind)
+                            
+                            sell_qty_remaining -= to_unwind
+                    
+                    # Update holdings
+                    holdings -= txn.qty
+                
+                # Place new orders based on updated holdings and fill price
+                self.place_orders(holdings, fill_price)
+            
+            # Add executed transactions to our list
+            transactions.extend(executed)
         
         return transactions
 
