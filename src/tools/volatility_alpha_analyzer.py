@@ -223,7 +223,8 @@ def analyze_volatility_alpha(
     ticker: str,
     start_date: date,
     end_date: date,
-    initial_qty: int = 100,
+    initial_qty: Optional[int] = None,
+    initial_investment: Optional[float] = None,
     profit_sharing: float = 50.0,
     auto_suggest: bool = True,
     sd_override: int = None,
@@ -245,7 +246,8 @@ def analyze_volatility_alpha(
         ticker: Stock symbol (e.g., "GLD", "NVDA")
         start_date: Backtest start date
         end_date: Backtest end date
-        initial_qty: Number of shares to start with
+        initial_qty: Number of shares to start with (optional)
+        initial_investment: Dollar amount to invest (optional, default $1M)
         profit_sharing: Profit sharing percentage (0-100)
         auto_suggest: If True, auto-suggest SD parameter based on volatility
         sd_override: Override SD parameter (e.g., 8 for SD8)
@@ -311,6 +313,7 @@ def analyze_volatility_alpha(
         df=df,
         ticker=ticker,
         initial_qty=initial_qty,
+        initial_investment=initial_investment,
         start_date=start_date,
         end_date=end_date,
         algo=algo_full,
@@ -337,6 +340,7 @@ def analyze_volatility_alpha(
         df=df,
         ticker=ticker,
         initial_qty=initial_qty,
+        initial_investment=initial_investment,
         start_date=start_date,
         end_date=end_date,
         algo=algo_ath,
@@ -439,14 +443,26 @@ def main():
     parser.add_argument("ticker", help="Stock ticker symbol (e.g., GLD, NVDA)")
     parser.add_argument("start_date", help="Start date (YYYY-MM-DD or MM/DD/YYYY)")
     parser.add_argument("end_date", help="End date (YYYY-MM-DD or MM/DD/YYYY)")
-    parser.add_argument(
-        "--qty", type=int, default=100, help="Initial quantity (default: 100)"
+    
+    # Initial position: prefer --investment, fallback to --qty
+    position_group = parser.add_mutually_exclusive_group()
+    position_group.add_argument(
+        "--investment",
+        type=float,
+        default=1_000_000.0,
+        help="Investment amount in dollars (default: $1,000,000)",
     )
+    position_group.add_argument(
+        "--qty",
+        type=int,
+        help="Number of shares (alternative to --investment)",
+    )
+    
     parser.add_argument(
         "--profit-sharing",
         type=float,
         default=50.0,
-        help="Profit sharing percentage (default: 50)",
+        help="Profit sharing percentage (default: 50.0)",
     )
     parser.add_argument(
         "--sd", type=int, help="Override SD parameter (e.g., 8 for SD8)"
@@ -473,12 +489,17 @@ def main():
     start_date = parse_date_str(args.start_date)
     end_date = parse_date_str(args.end_date)
     
+    # Determine initial position
+    initial_qty = args.qty if args.qty else None
+    initial_investment = args.investment if initial_qty is None else None
+    
     # Run analysis
     analyze_volatility_alpha(
         ticker=args.ticker,
         start_date=start_date,
         end_date=end_date,
-        initial_qty=args.qty,
+        initial_qty=initial_qty,
+        initial_investment=initial_investment,
         profit_sharing=args.profit_sharing,
         auto_suggest=not args.no_auto,
         sd_override=args.sd,

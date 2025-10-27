@@ -645,9 +645,9 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
 def run_algorithm_backtest(
     df: pd.DataFrame,
     ticker: str,
-    initial_qty: int,
-    start_date: date,
-    end_date: date,
+    initial_qty: Optional[int] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
     algo: Optional[Union[AlgorithmBase, Callable]] = None,
     algo_params: Optional[Dict[str, Any]] = None,
     reference_return_pct: float = 0.0,
@@ -667,6 +667,8 @@ def run_algorithm_backtest(
     normalize_prices: bool = False,
     # Bank behavior
     allow_margin: bool = True,
+    # Investment amount (alternative to initial_qty)
+    initial_investment: Optional[float] = None,
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Execute backtest of trading algorithm against historical price data.
 
@@ -682,9 +684,10 @@ def run_algorithm_backtest(
     Args:
         df: Historical OHLC price data (indexed by date)
         ticker: Stock symbol for reporting
-        initial_qty: Number of shares to purchase initially
-        start_date: Backtest start date (inclusive)
-        end_date: Backtest end date (inclusive)
+        initial_qty: Number of shares to purchase initially (optional)
+                    Either initial_qty OR initial_investment must be provided
+        start_date: Backtest start date (inclusive, optional - defaults to first date)
+        end_date: Backtest end date (inclusive, optional - defaults to last date)
         algo: Algorithm instance or callable (defaults to buy-and-hold)
         algo_params: Optional parameters dict (for callable algos)
         reference_return_pct: Annual return for opportunity cost calc (fallback if no asset data)
@@ -726,6 +729,11 @@ def run_algorithm_backtest(
                      If False (strict mode), bank never goes negative (closed system)
                      BUY transactions skipped if insufficient cash,
                      withdrawals must cover both amount AND repay any deficit.
+        initial_investment: Dollar amount to invest (optional, preferred method)
+                           If provided, calculates initial_qty based on start price
+                           Default: $1,000,000 (psychologically meaningful amount)
+                           Either initial_qty OR initial_investment must be provided
+                           If both provided, initial_qty takes precedence
 
     Returns:
         Tuple of (transaction_strings, summary_dict)
@@ -795,6 +803,39 @@ def run_algorithm_backtest(
     # Extract start/end prices for return calculations
     start_price: float = _get_close_scalar(df_indexed, first_idx, "Close")
     end_price: float = _get_close_scalar(df_indexed, last_idx, "Close")
+    
+    # Calculate initial quantity from investment amount or shares
+    # Prefer initial_qty if both are provided, otherwise use initial_investment
+    calculated_qty: int
+    investment_method: str
+    
+    if initial_qty is not None:
+        # Explicit share count provided
+        calculated_qty = int(initial_qty)
+        investment_method = "shares"
+        investment_amount = calculated_qty * start_price
+    elif initial_investment is not None:
+        # Dollar amount provided - calculate shares
+        calculated_qty = int(initial_investment / start_price)
+        investment_method = "investment"
+        investment_amount = initial_investment
+    else:
+        # Default to $1,000,000 investment (psychologically meaningful)
+        default_investment = 1_000_000.0
+        calculated_qty = int(default_investment / start_price)
+        investment_method = "default_investment"
+        investment_amount = default_investment
+    
+    # Display initial purchase info
+    actual_invested = calculated_qty * start_price
+    print(f"Initial purchase: {calculated_qty} shares × ${start_price:.2f} = ${actual_invested:,.2f}")
+    if investment_method in ("investment", "default_investment"):
+        if investment_method == "default_investment":
+            print(f"  (using default investment amount: ${investment_amount:,.2f})")
+        else:
+            print(f"  (target investment: ${investment_amount:,.2f})")
+        if abs(actual_invested - investment_amount) > 0.01:
+            print(f"  (difference due to whole shares: ${actual_invested - investment_amount:+,.2f})")
 
     # Price normalization (if enabled)
     # Normalize so that brackets are at standard positions relative to 1.0
@@ -846,7 +887,7 @@ def run_algorithm_backtest(
     transactions: List[Transaction] = []
 
     # Initialize portfolio state
-    holdings: int = int(initial_qty)
+    holdings: int = calculated_qty
     bank: float = 0.0  # Cash balance (may go negative)
 
     # Bank balance tracking for statistics (list of (date, balance) tuples)
@@ -1153,7 +1194,7 @@ def run_algorithm_backtest(
     # Time-based calculations
     days = (last_idx - first_idx).days
     years = days / 365.25 if days > 0 else 0.0
-    start_val = initial_qty * start_price
+    start_val = calculated_qty * start_price
 
     # Returns calculation
     total_return = (total - start_val) / start_val if start_val != 0 else 0.0
