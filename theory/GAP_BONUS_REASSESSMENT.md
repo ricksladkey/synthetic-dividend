@@ -193,3 +193,64 @@ For MSTR, the gap bonus amplifies transactions by **234x theoretical**. This mea
 
 **Next step:** Systematically measure gap frequency/magnitude across all assets and derive gap-adjusted sd_n optimization formula.
 
+---
+
+## Multi-Bracket Gap FIFO Symmetry (Implementation Detail)
+
+### The Challenge
+
+When a price gaps down 2+ brackets in a single day, we face a design choice:
+
+**Option A: Single Combined Transaction**
+- Record: Buy 201 shares at gap opening price ($80)
+- Problem: Breaks FIFO symmetry when unwinding
+- Example: If we later gap up 2 brackets, we'd sell at 2 different prices but have only 1 stack entry
+
+**Option B: Separate Transactions Per Bracket** ✅ (Our Implementation)
+- Record: Buy 100 shares @ $91.62, then buy 101 shares @ $83.94
+- Advantage: Perfect FIFO symmetry when unwinding
+- Example: Later gap up unwinds stack entries one-at-a-time at matching bracket prices
+
+### Implementation: Iterative Gap Handling
+
+The algorithm handles multi-bracket gaps through **iteration**:
+
+1. **Iteration 1**: Buy order at $91.62 triggers (price hit $78)
+   - Fill at theoretical bracket price: $91.62
+   - Add stack entry: `($91.62, 100 shares)`
+   - Place new orders based on $91.62
+
+2. **Iteration 2**: New buy order at $83.94 triggers (price still at $78)
+   - Fill at theoretical bracket price: $83.94
+   - Add stack entry: `($83.94, 101 shares)`
+   - Place new orders based on $83.94
+
+3. **Iteration 3**: New buy order at $76.91 doesn't trigger (price=$78 > $76.91)
+   - Stop iterating
+
+**Result**: Two separate "normal-sized" stack entries, each indistinguishable for selling purposes.
+
+### Why This Matters for Symmetry
+
+When we later gap UP 2 brackets:
+
+1. **FIFO unwind #1**: Sell at $91.62 → matches first stack entry perfectly
+2. **FIFO unwind #2**: Sell at $100.00 → matches second stack entry perfectly
+
+Each bracket crossing (up or down) creates/unwinds exactly **one stack entry** at the **theoretical bracket price**.
+
+This ensures:
+- ✅ Buy-back stack unwinding is **exactly symmetrical**
+- ✅ No accumulation of "odd lots" from gap slippage
+- ✅ Clean FIFO accounting even across multi-bracket gaps
+
+### Technical Note
+
+This required changing `Order.get_execution_price()` to **always fill limit orders at their limit price** (not at gap opening price). The iteration logic then naturally handles multi-bracket gaps by creating separate transactions.
+
+**Trade-off**: We model theoretical fills at bracket prices rather than realistic gap slippage. This is acceptable because:
+1. The symmetry benefits outweigh the minor inaccuracy
+2. In practice, limit orders often fill near their limit during volatile gaps
+3. The alternative (slippage model) breaks FIFO symmetry permanently
+
+

@@ -73,10 +73,14 @@ class Order:
         """Determine execution price for triggered order.
         
         Market orders use open price.
-        Limit orders use limit price unless gap causes slippage.
+        Limit orders ALWAYS fill at limit price to enable exact symmetry.
+        
+        Multi-bracket gaps are handled by iteration: each bracket crossing
+        creates a separate transaction at its theoretical price, enabling
+        perfect FIFO unwinding symmetry.
         
         Args:
-            open_price: Day's opening price (None if unavailable)
+            open_price: Day's opening price (used for market orders)
             
         Returns:
             Actual execution price
@@ -87,16 +91,10 @@ class Order:
             # Fallback if no open price available
             return self.limit_price if self.limit_price else 0.0
         
-        # Limit order execution
-        if open_price is None:
-            return self.limit_price
-        
-        if self.action == OrderAction.BUY:
-            # Buy limit: fill at open if gapped down past limit
-            return min(self.limit_price, open_price)
-        else:  # SELL
-            # Sell limit: fill at open if gapped up past limit
-            return max(self.limit_price, open_price)
+        # Limit orders ALWAYS fill at limit price
+        # The iteration logic handles multi-bracket gaps by creating
+        # multiple transactions (one per bracket level)
+        return self.limit_price
 
 
 class Market:
