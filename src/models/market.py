@@ -150,6 +150,14 @@ class Market:
         high = price_row.get("High")
         low = price_row.get("Low")
         
+        # Convert to scalars if they are Series
+        if open_price is not None and hasattr(open_price, 'item'):
+            open_price = open_price.item()
+        if high is not None and hasattr(high, 'item'):
+            high = high.item()
+        if low is not None and hasattr(low, 'item'):
+            low = low.item()
+        
         # Need high/low to evaluate orders
         if low is None or high is None:
             return transactions

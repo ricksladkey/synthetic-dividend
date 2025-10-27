@@ -241,8 +241,8 @@ def run_algorithm_backtest(
         daily_risk_free_rate_fallback = (1 + risk_free_rate_pct / 100.0) ** (1.0 / 365.25) - 1.0
 
     # Extract start/end prices for return calculations
-    start_price: float = float(df_indexed.loc[first_idx, "Close"])
-    end_price: float = float(df_indexed.loc[last_idx, "Close"])
+    start_price: float = df_indexed.loc[first_idx, "Close"].item()
+    end_price: float = df_indexed.loc[last_idx, "Close"].item()
     
     # Calculate initial quantity from investment amount or shares
     # Prefer initial_qty if both are provided, otherwise use initial_investment
@@ -447,7 +447,7 @@ def run_algorithm_backtest(
 
         # Get current day's prices
         price_row = df_indexed.loc[d]
-        price: float = float(df_indexed.loc[d, "Close"])
+        price: float = df_indexed.loc[d, "Close"].item()
 
         # Track deployed capital (market value of holdings) at start of day
         deployed_capital = holdings * price

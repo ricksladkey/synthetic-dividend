@@ -250,8 +250,10 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         # ATH-only mode: track all-time high for baseline comparison
         if not self.buyback_enabled:
             high = price_row.get("High")
-            if high is not None and high > self.ath_price:
-                self.ath_price = high
+            if high is not None:
+                high_val = high.item() if hasattr(high, 'item') else float(high)
+                if high_val > self.ath_price:
+                    self.ath_price = high_val
         
         # Iterate to handle multi-bracket gaps (each iteration = one bracket crossing)
         for iteration in range(1, self.MAX_ITERATIONS_PER_DAY + 1):
@@ -280,8 +282,8 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     
                 elif txn.action == "SELL":
                     if self.buyback_enabled:
-                        # Unwind from buyback stack (simple count decrement)
-                        # Only unwind what's in the stack - can't go negative
+                        # Track buyback stack unwinding (diagnostic only)
+                        # Can only unwind shares that are actually in the stack
                         shares_to_unwind = min(txn.qty, self.buyback_stack_count)
                         self.buyback_stack_count -= shares_to_unwind
                     
