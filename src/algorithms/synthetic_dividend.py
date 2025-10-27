@@ -134,6 +134,8 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         Uses lot selection strategy to determine unwinding order:
         - FIFO: Sells oldest purchases first (default for buy-and-hold parity)
         - LIFO: Sells newest purchases first (tax-efficient in some jurisdictions)
+        - HIGHEST_COST: Minimize taxable gains (tax-loss harvesting)
+        - LOWEST_COST: Maximize taxable gains (low-tax years)
         
         Multi-bracket gaps unwind one bracket at a time for exact symmetry.
         
@@ -142,35 +144,43 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         """
         remaining = sell_quantity
         
-        # Select unwinding direction based on lot_selection
+        # Determine unwinding order based on lot selection strategy
         if self.lot_selection == "LIFO":
-            # LIFO: Process from end of stack (newest first)
-            while remaining > 0 and self.buyback_stack:
-                buy_price, buy_qty = self.buyback_stack[-1]
-                to_unwind = min(remaining, buy_qty)
-                
-                if to_unwind == buy_qty:
-                    # Fully consumed this lot
-                    self.buyback_stack.pop()
-                else:
-                    # Partially consumed - update remaining quantity
-                    self.buyback_stack[-1] = (buy_price, buy_qty - to_unwind)
-                
-                remaining -= to_unwind
-        else:
-            # FIFO: Process from beginning of stack (oldest first)
-            while remaining > 0 and self.buyback_stack:
-                buy_price, buy_qty = self.buyback_stack[0]
-                to_unwind = min(remaining, buy_qty)
-                
-                if to_unwind == buy_qty:
-                    # Fully consumed this lot
-                    self.buyback_stack.pop(0)
-                else:
-                    # Partially consumed - update remaining quantity
-                    self.buyback_stack[0] = (buy_price, buy_qty - to_unwind)
-                
-                remaining -= to_unwind
+            # LIFO: Process from end (newest first)
+            stack_order = reversed(range(len(self.buyback_stack)))
+        elif self.lot_selection == "HIGHEST_COST":
+            # HIGHEST_COST: Process highest prices first
+            stack_order = sorted(range(len(self.buyback_stack)), 
+                               key=lambda i: self.buyback_stack[i][0], reverse=True)
+        elif self.lot_selection == "LOWEST_COST":
+            # LOWEST_COST: Process lowest prices first
+            stack_order = sorted(range(len(self.buyback_stack)), 
+                               key=lambda i: self.buyback_stack[i][0])
+        else:  # FIFO (default)
+            # FIFO: Process from beginning (oldest first)
+            stack_order = range(len(self.buyback_stack))
+        
+        # Process lots in the determined order
+        indices_to_remove = []
+        for i in stack_order:
+            if remaining <= 0:
+                break
+            
+            buy_price, buy_qty = self.buyback_stack[i]
+            to_unwind = min(remaining, buy_qty)
+            
+            if to_unwind == buy_qty:
+                # Fully consumed - mark for removal
+                indices_to_remove.append(i)
+            else:
+                # Partially consumed - update quantity
+                self.buyback_stack[i] = (buy_price, buy_qty - to_unwind)
+            
+            remaining -= to_unwind
+        
+        # Remove fully consumed lots (in reverse order to maintain indices)
+        for i in sorted(indices_to_remove, reverse=True):
+            self.buyback_stack.pop(i)
 
     def place_orders(self, holdings: int, current_price: float) -> None:
         """Calculate and place symmetric buy/sell orders with the market.
