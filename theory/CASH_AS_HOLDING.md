@@ -2,15 +2,92 @@
 
 ## Executive Summary
 
-**STATUS: DEFERRED** - Initial implementation revealed fundamental incompatibility between the Transaction/Holding model (designed for positive-only positions) and cash/margin (requires negative balances for borrowing).
+**STATUS: SOLVED** ✅ - The solution is **conceptual clarity**, not technical gymnastics.
 
-**Current Approach**: Keep `bank` variable for all accounting logic. Add USD to portfolio for reporting/visibility only.
+**Key Insight**: Margin isn't "negative cash" - it's **debt**. An Account contains:
+- **Portfolio**: What you OWN (assets, always positive)
+- **Debt**: What you OWE (liabilities, can be negative = cash on hand)
 
-**Future Work**: Would require extending Transaction/Holding model to support negative positions (borrowing/margin).
+**Implementation**: Created `Account` class that wraps Portfolio + debt tracking.
+
+**Result**: Clean separation of concerns, no corruption of Transaction/Holding model.
 
 ---
 
-## Original Vision
+## The Elegant Solution: Account = Portfolio + Debt
+
+### Conceptual Model
+
+```
+Account
+├── Portfolio (Assets: what you OWN)
+│   ├── NVDA: 1000 shares
+│   ├── VOO: 50 shares
+│   └── BTC: 0.5 coins
+└── Debt: $50,000 (Liabilities: what you OWE)
+    
+Net Worth = Portfolio Value - Debt
+```
+
+### Why This Works
+
+**Portfolio tracks ASSETS** (always positive):
+- Stocks, bonds, ETFs, crypto
+- Transaction-based model works perfectly
+- Clean FIFO/LIFO lot selection
+- Beautiful invariants preserved
+
+**Debt tracks LIABILITIES** (simple float):
+- Positive = borrowed money (margin)
+- Negative = cash on hand
+- Zero = fully invested, no cash, no borrowing
+- No complicated transaction history needed
+
+### Code Example
+
+```python
+# Initialize account
+account = Account()
+
+# Buy $1M of NVDA on margin (borrow the full amount)
+account.borrow(1_000_000, date(2024, 1, 1), "Margin loan for initial purchase")
+account.portfolio.buy("NVDA", shares=10000, purchase_date=date(2024, 1, 1), 
+                     purchase_price=100.0)
+
+# Sell some shares, repay part of loan
+proceeds = account.portfolio.sell("NVDA", shares=1000, sale_date=date(2024, 2, 1), 
+                                  sale_price=110.0)
+account.repay(110_000, date(2024, 2, 1), "Partial repayment from sale")
+
+# Check account status
+summary = account.account_summary(prices={"NVDA": 110.0})
+# Portfolio: 9000 × $110 = $990,000
+# Debt: $890,000
+# Net Worth: $100,000
+```
+
+### Benefits
+
+✅ **Conceptually correct**: Assets ≠ Liabilities  
+✅ **Clean separation**: Portfolio unchanged, debt isolated  
+✅ **Simple**: debt is just a float, not a complex model  
+✅ **Flexible**: Handles margin, cash, and hybrid states  
+✅ **Auditable**: Portfolio transactions + debt history  
+
+### Comparison to Previous Attempts
+
+| Approach | Problem | Solution |
+|----------|---------|----------|
+| USD as holding | Negative shares violate invariants | Debt is separate from portfolio |
+| Negative prices | Breaks validation | Debt is a float, not a transaction |
+| Complex adjust_cash() | 70+ lines of special cases | Debt methods are 3-5 lines each |
+| Bypass validation | Corrupts beautiful model | Model remains pristine |
+
+---
+
+## Original Problem Analysis
+
+[Preserved below for historical context...]
 
 Treat cash (USD) as just another holding in the portfolio, eliminating the special-case "bank" variable and unifying all accounting under the transaction-based Holding model.
 
@@ -101,30 +178,34 @@ if usd_holding.current_shares() < 0:
     usd_holding.add_transaction(...)  # Add interest charge
 ```
 
-## Decision: Not Worth It (Yet)
+## Decision: IMPLEMENTED ✅
 
-**The juice isn't worth the squeeze.** The current bank-based system works perfectly. Adding USD-as-holding would:
-- ❌ Require extensive changes to core Transaction/Holding model
-- ❌ Add complexity and special cases throughout
-- ❌ Risk breaking existing functionality
-- ❌ Provide mainly aesthetic benefits
+**The right abstraction makes everything simple.** 
 
-**When it WOULD be worth it:**
-- Multi-currency support (EUR, GBP, JPY alongside USD)
-- Interest-on-cash tracking with full transaction history
-- Crypto wallets (BTC, ETH as holdings with fractional shares)
-- Real lending/borrowing protocols (DeFi, margin trading)
+The Account/Portfolio/Debt separation:
+- ✅ Respects the nature of assets vs liabilities
+- ✅ Keeps the Transaction/Holding model pristine
+- ✅ Adds minimal complexity (simple Account wrapper)
+- ✅ Provides clean mental model
+- ✅ Ready for extension (interest on debt, multi-currency, etc.)
 
-For now: **Keep it simple. Bank works. Ship it.** 🚢
+**When it's ready for more:**
+- Interest accrual on debt (daily/monthly compounding)
+- Multi-currency accounts (EUR debt, USD assets)
+- Collateral tracking (portfolio value vs debt ratio)
+- Margin calls (automatic liquidation when overleveraged)
+
+For now: **Clean architecture. Ship it.** �
 
 ## Lessons Learned
 
-1. **Design patterns have contexts** - Transaction/Holding is beautiful for stocks, awkward for cash
-2. **Invariants are precious** - Don't corrupt clean models to force unification
-3. **Simplicity over elegance** - Working code > beautiful architecture
-4. **Know when to stop** - 3 failed approaches = wrong direction
+1. **Right abstraction > clever hacks** - Account/Debt is conceptually correct
+2. **Listen to the code** - When nothing works, question the approach
+3. **Separate concerns** - Assets and liabilities are fundamentally different
+4. **Simple is beautiful** - debt is just a float with history
+5. **User insight FTW** - "Margin is debt, not negative cash" unlocked everything
 
-The code is telling us something. Listen to it.
+The code is happy now. Listen to it. ✨
 
 ---
 
