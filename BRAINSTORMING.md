@@ -346,7 +346,32 @@ Each experiment should help answer fundamental questions:
 
 ---
 
+## 🏗️ Infrastructure & Extensibility (15 experiments)
+
+### Asset Provider Architecture
+
+121. 🟢 **Mock Asset Testing**: Use MOCK-FLAT, MOCK-LINEAR for deterministic algorithm validation
+122. 🟢 **Mock Volatility Scenarios**: Test MOCK-SINE patterns to isolate volatility effects
+123. 🟢 **Mathematical Signposts**: Create idealized price paths (perfect double, exact 2x return)
+124. 🟡 **Bond Provider Implementation**: Add individual bond support via TreasuryDirect API
+125. 🟡 **Commodity Spot Provider**: Integrate Quandl/World Bank for true spot prices (not futures)
+126. 🟡 **Custom CSV Provider**: Load user-supplied price data from CSV files
+127. 🔴 **Multi-Source Provider**: Combine Yahoo + Alpha Vantage for international stocks
+128. 🟡 **Money Market Provider**: Add interest-bearing cash (3-month T-bill rates)
+129. 🟢 **Provider Coverage Analysis**: Test which asset classes work with Yahoo vs need alternatives
+130. 🔴 **Real-Time Provider**: Add live market data for paper trading mode
+
+### Data Quality & Validation
+
+131. 🟡 **Dividend Data Validation**: Cross-check Yahoo dividends against known payment dates
+132. 🟢 **Price Data Completeness**: Identify gaps in historical data by asset
+133. 🟡 **Corporate Action Handling**: Test splits, mergers, symbol changes
+134. 🟡 **Currency Conversion**: Add forex support for international assets
+135. 🔴 **Alternative Data Sources**: News sentiment, social media volume as signals
+
+---
+
 *This brainstorming document is a living resource. Add experiments as new questions arise. Mark experiments as complete when documented in EXPERIMENTS/ folder.*
 
-**Current Status**: 0/120 experiments completed  
-**Last Updated**: 2025-10-26
+**Current Status**: 0/135 experiments completed  
+**Last Updated**: 2025-10-27
