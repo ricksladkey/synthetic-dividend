@@ -2,8 +2,13 @@
 
 User-facing documentation and guides for the Synthetic Dividend project.
 
+## 🌐 Live Website
+
+Visit our GitHub Pages site: **[ricksladkey.github.io/synthetic-dividend](https://ricksladkey.github.io/synthetic-dividend/)**
+
 ## Contents
 
+- **[index.html](index.html)** - GitHub Pages landing page
 - **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Quick reference for common commands and patterns
 - **[EXAMPLES.md](EXAMPLES.md)** - Comprehensive usage examples and real-world scenarios
 - **[CONTRIBUTORS.md](CONTRIBUTORS.md)** - Project contributors and the human-AI collaboration story

@@ -1,0 +1,7 @@
+# GitHub Pages Configuration
+
+# Enable GitHub Pages from the docs folder
+theme: jekyll-theme-minimal
+title: Synthetic Dividend Strategy
+description: Volatility Harvesting Through Systematic Rebalancing
+show_downloads: true
