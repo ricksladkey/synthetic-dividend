@@ -23,6 +23,65 @@ from src.models.backtest_utils import calculate_synthetic_dividend_orders
 from src.algorithms import AlgorithmBase, BuyAndHoldAlgorithm, SyntheticDividendAlgorithm, build_algo_from_name
 
 
+def calculate_time_weighted_average_holdings(
+    holdings_history: List[Tuple[date, int]],
+    period_start: date,
+    period_end: date
+) -> float:
+    """Calculate time-weighted average holdings over a period.
+    
+    This computes the IRS-approved average holdings by integrating daily holdings
+    over the time period, weighted by the number of days at each holding level.
+    
+    Formula: ∑(holdings_i × days_i) / total_days
+    
+    Args:
+        holdings_history: List of (date, holdings) tuples sorted by date
+        period_start: Start of accrual period (inclusive)
+        period_end: End of accrual period (inclusive, typically ex-dividend date)
+    
+    Returns:
+        Time-weighted average holdings as float (can be fractional)
+    
+    Example:
+        Holdings: 100 shares for 60 days, then 150 shares for 30 days
+        Average: (100×60 + 150×30) / 90 = 116.67 shares
+    """
+    if not holdings_history:
+        return 0.0
+    
+    # Filter to holdings changes within or before the period
+    relevant_history = [(d, h) for d, h in holdings_history if d <= period_end]
+    if not relevant_history:
+        return 0.0
+    
+    total_share_days = 0.0
+    total_days = (period_end - period_start).days + 1  # Inclusive
+    
+    # Process each holdings level
+    for i, (change_date, holdings) in enumerate(relevant_history):
+        # Determine when this holdings level starts
+        level_start = max(change_date, period_start)
+        
+        # Determine when this holdings level ends
+        if i + 1 < len(relevant_history):
+            next_change_date = relevant_history[i + 1][0]
+            level_end = min(next_change_date - pd.Timedelta(days=1).to_pytimedelta(), period_end)
+        else:
+            level_end = period_end
+        
+        # Skip if this level doesn't overlap with our period
+        if level_start > period_end or level_end < period_start:
+            continue
+        
+        # Calculate days at this level
+        days_at_level = (level_end - level_start).days + 1
+        if days_at_level > 0:
+            total_share_days += holdings * days_at_level
+    
+    return total_share_days / total_days if total_days > 0 else 0.0
+
+
 def run_algorithm_backtest(
     df: pd.DataFrame,
     ticker: str,
@@ -289,6 +348,10 @@ def run_algorithm_backtest(
     total_dividends: float = 0.0
     dividend_payment_count: int = 0
     
+    # Holdings history for time-weighted dividend calculation
+    # Each entry: (date, holdings_after_transactions)
+    holdings_history: List[Tuple[date, int]] = []
+    
     # Skipped transaction tracking (for strict mode)
     skipped_buys: int = 0
     skipped_buy_value: float = 0.0
@@ -331,6 +394,9 @@ def run_algorithm_backtest(
             notes="Initial purchase"
         )
     )
+    
+    # Record initial holdings for time-weighted calculations
+    holdings_history.append((first_idx, holdings))
 
     # Prepare sorted list of all trading days in range
     dates = sorted(d for d in df_indexed.index if d >= first_idx and d <= last_idx)
@@ -423,6 +489,8 @@ def run_algorithm_backtest(
                         notes=f"{tx.notes}, holdings = {holdings}, bank = {bank:.2f}"
                     )
                 )
+                # Record holdings change for time-weighted calculations
+                holdings_history.append((d, holdings))
                 # Track bank balance statistics
                 bank_history.append((d, bank))
                 bank_min = min(bank_min, bank)
@@ -462,6 +530,8 @@ def run_algorithm_backtest(
                             notes=f"{tx.notes}, holdings = {holdings}, bank = {bank:.2f}"
                         )
                     )
+                    # Record holdings change for time-weighted calculations
+                    holdings_history.append((d, holdings))
                     # Track bank balance statistics
                     bank_history.append((d, bank))
                     bank_min = min(bank_min, bank)
@@ -479,7 +549,17 @@ def run_algorithm_backtest(
                 # Find the dividend amount for this date
                 div_idx = list(div_dates).index(d)
                 div_per_share = dividend_series.iloc[div_idx]
-                div_payment = div_per_share * holdings
+                
+                # Calculate time-weighted average holdings over accrual period
+                # Use 90-day lookback (typical for quarterly dividends)
+                accrual_period_days = 90
+                period_start = d - pd.Timedelta(days=accrual_period_days).to_pytimedelta()
+                avg_holdings = calculate_time_weighted_average_holdings(
+                    holdings_history, period_start, d
+                )
+                
+                # Dividend payment based on average holdings during accrual period
+                div_payment = div_per_share * avg_holdings
                 
                 bank += div_payment
                 total_dividends += div_payment
@@ -489,10 +569,10 @@ def run_algorithm_backtest(
                     Transaction(
                         transaction_date=d,
                         action="DIVIDEND",
-                        qty=holdings,
+                        qty=int(avg_holdings),  # Display average holdings (rounded for display)
                         price=div_per_share,
                         ticker=ticker,
-                        notes=f"${div_payment:.2f}, bank = {bank:.2f}"
+                        notes=f"${div_payment:.2f} (avg {avg_holdings:.2f} shares over 90 days), bank = {bank:.2f}"
                     )
                 )
                 
@@ -543,6 +623,8 @@ def run_algorithm_backtest(
                             notes=f"For withdrawal, {withdrawal_result.notes}, holdings = {holdings}, bank = {bank:.2f}"
                         )
                     )
+                    # Record holdings change for time-weighted calculations
+                    holdings_history.append((d, holdings))
                 
                 # Withdraw cash from bank
                 actual_withdrawal = min(withdrawal_result.cash_from_bank, bank)
@@ -697,9 +779,38 @@ def run_algorithm_backtest(
         if capital_utilization > 0:
             return_on_deployed_capital = total_return / capital_utilization
 
+        # Income Classification Framework
+        # Calculate three-tier income breakdown for reporting
+        
+        # Universal Income: Real dividends (already tracked)
+        universal_income_dollars = total_dividends
+        universal_income_pct = (total_dividends / start_val * 100) if start_val > 0 else 0.0
+        
+        # Secondary Income: Volatility alpha (algorithm vs buy-and-hold)
+        # This is the outperformance from mean-reversion trading
+        secondary_income_dollars = volatility_alpha * start_val if start_val > 0 and volatility_alpha is not None else 0.0
+        secondary_income_pct = volatility_alpha * 100 if volatility_alpha is not None else 0.0
+        
+        # Primary Income: Everything else (ATH selling + general trading)
+        # Total gains = dividends + primary + secondary
+        # So: primary = total_gains - dividends - secondary
+        total_gains = total - start_val  # Absolute dollar gain
+        primary_income_dollars = total_gains - universal_income_dollars - secondary_income_dollars
+        primary_income_pct = (primary_income_dollars / start_val * 100) if start_val > 0 else 0.0
+        
         summary["baseline"] = baseline_summary
         summary["volatility_alpha"] = volatility_alpha
         summary["return_on_deployed_capital"] = return_on_deployed_capital
+        
+        # Add income classification metrics
+        summary["income_classification"] = {
+            "universal_dollars": universal_income_dollars,
+            "universal_pct": universal_income_pct,
+            "primary_dollars": primary_income_dollars,
+            "primary_pct": primary_income_pct,
+            "secondary_dollars": secondary_income_dollars,
+            "secondary_pct": secondary_income_pct,
+        }
     except Exception:
         # Gracefully handle edge cases in baseline computation
         summary["baseline"] = None
@@ -709,3 +820,50 @@ def run_algorithm_backtest(
     algo_obj.on_end_holding()
 
     return transactions, summary
+
+
+def print_income_classification(summary: Dict[str, Any], verbose: bool = True) -> None:
+    """Print three-tier income classification breakdown.
+    
+    Args:
+        summary: Backtest summary dict containing income_classification
+        verbose: If True, print detailed breakdown. If False, print compact summary.
+    """
+    if "income_classification" not in summary:
+        return
+    
+    ic = summary["income_classification"]
+    
+    if verbose:
+        print("\n" + "=" * 70)
+        print("INCOME CLASSIFICATION (Three-Tier Framework)")
+        print("=" * 70)
+        print()
+        print("Universal Income (Asset Dividends):")
+        print(f"  Total Dividends:              ${ic['universal_dollars']:>12,.2f}")
+        print(f"  Yield on Initial Investment:  {ic['universal_pct']:>12.2f}%")
+        if summary.get("dividend_payment_count", 0) > 0:
+            avg_payment = ic['universal_dollars'] / summary['dividend_payment_count']
+            print(f"  Payment Count:                {summary['dividend_payment_count']:>12,}")
+            print(f"  Average per Payment:          ${avg_payment:>12,.2f}")
+        print()
+        print("Primary Income (ATH Profit-Taking):")
+        print(f"  Total ATH Gains:              ${ic['primary_dollars']:>12,.2f}")
+        print(f"  Return on Initial:            {ic['primary_pct']:>12.2f}%")
+        print()
+        print("Secondary Income (Volatility Alpha):")
+        print(f"  Total Harvested:              ${ic['secondary_dollars']:>12,.2f}")
+        print(f"  Alpha vs Buy-and-Hold:        {ic['secondary_pct']:>12.2f}%")
+        print()
+        print("-" * 70)
+        total_income = ic['universal_dollars'] + ic['primary_dollars'] + ic['secondary_dollars']
+        total_pct = ic['universal_pct'] + ic['primary_pct'] + ic['secondary_pct']
+        print(f"Total Income:                   ${total_income:>12,.2f}")
+        print(f"Total Return:                   {total_pct:>12.2f}%")
+        print(f"Annualized Return:              {summary.get('annualized', 0) * 100:>12.2f}%")
+        print("=" * 70)
+    else:
+        # Compact one-liner
+        print(f"Income: Universal=${ic['universal_dollars']:.2f} ({ic['universal_pct']:.2f}%), "
+              f"Primary=${ic['primary_dollars']:.2f} ({ic['primary_pct']:.2f}%), "
+              f"Secondary=${ic['secondary_dollars']:.2f} ({ic['secondary_pct']:.2f}%)")
