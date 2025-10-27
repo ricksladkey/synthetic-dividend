@@ -240,33 +240,24 @@ class Holding:
         Raises:
             ValueError: If trying to sell more shares than currently held
         """
+        from src.models.lot_selector import get_selector
+        
         current = self.current_shares()
         if shares > current:
             raise ValueError(
                 f"Cannot sell {shares} shares of {self.ticker}: only {current} shares held"
             )
         
-        # Select lots based on method
-        if lot_selection == "FIFO":
-            # FIFO: Sell oldest purchases first (iterate forward)
-            lots_to_process = self.transactions
-        elif lot_selection == "LIFO":
-            # LIFO: Sell newest purchases first (iterate backward)
-            lots_to_process = reversed(self.transactions)
-        else:
-            raise NotImplementedError(f"Lot selection '{lot_selection}' not yet implemented")
+        # Use lot selector strategy to determine order
+        selector = get_selector(lot_selection)
         
         # Process lots in selected order
         remaining_to_sell = shares
         sell_transactions = []
         
-        for txn in lots_to_process:
+        for txn in selector.select_lots(self.transactions):
             if remaining_to_sell <= 0:
                 break
-            
-            # Only consider open BUY transactions
-            if txn.transaction_type != 'BUY' or txn.is_closed:
-                continue
             
             # Determine how many shares to sell from this lot
             shares_from_this_lot = min(remaining_to_sell, txn.shares)

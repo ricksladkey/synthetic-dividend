@@ -131,15 +131,11 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
     def _unwind_buyback_stack(self, sell_quantity: int) -> None:
         """Unwind buyback stack using configured lot selection method.
         
-        FIFO (First-In-First-Out) unwinding:
-        - Sells oldest purchases first (default for buy-and-hold parity)
-        - Multi-bracket gaps unwind one bracket at a time
-        - Exact lot tracking and symmetric profit calculation
+        Uses lot selection strategy to determine unwinding order:
+        - FIFO: Sells oldest purchases first (default for buy-and-hold parity)
+        - LIFO: Sells newest purchases first (tax-efficient in some jurisdictions)
         
-        LIFO (Last-In-First-Out) unwinding:
-        - Sells newest purchases first (tax-efficient in some jurisdictions)
-        - Potentially different profit characteristics
-        - Still maintains exact lot tracking
+        Multi-bracket gaps unwind one bracket at a time for exact symmetry.
         
         Args:
             sell_quantity: Number of shares being sold
