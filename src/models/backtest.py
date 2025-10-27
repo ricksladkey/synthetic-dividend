@@ -13,6 +13,9 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
+# Type aliases for clean abstraction
+Data = pd.DataFrame  # Pure data concept with no implementation baggage
+
 # Import common types
 from src.models.types import Transaction, WithdrawalResult
 
@@ -83,7 +86,7 @@ def calculate_time_weighted_average_holdings(
 
 
 def run_algorithm_backtest(
-    df: pd.DataFrame,
+    df: Data,
     ticker: str,
     initial_qty: Optional[int] = None,
     start_date: Optional[date] = None,
@@ -92,8 +95,8 @@ def run_algorithm_backtest(
     algo_params: Optional[Dict[str, Any]] = None,
     reference_return_pct: float = 0.0,
     risk_free_rate_pct: float = 0.0,
-    reference_asset_df: Optional[pd.DataFrame] = None,
-    risk_free_asset_df: Optional[pd.DataFrame] = None,
+    reference_data: Optional[Data] = None,
+    risk_free_data: Optional[Data] = None,
     reference_asset_ticker: str = "",
     risk_free_asset_ticker: str = "",
     # Dividend/interest payments
@@ -101,7 +104,7 @@ def run_algorithm_backtest(
     # Withdrawal policy parameters
     withdrawal_rate_pct: float = 0.0,
     withdrawal_frequency_days: int = 30,
-    cpi_adjustment_df: Optional[pd.DataFrame] = None,
+    cpi_data: Optional[Data] = None,
     simple_mode: bool = False,
     # Price normalization
     normalize_prices: bool = False,
@@ -136,10 +139,10 @@ def run_algorithm_backtest(
         risk_free_rate_pct: Annual return on cash (fallback if no asset data)
                            Applied when bank balance is positive (interest earned)
                            Ignored if simple_mode=True
-        reference_asset_df: Historical price data for reference asset (e.g., VOO)
+        reference_data: Historical price data for reference asset (e.g., VOO)
                            If provided, uses actual daily returns instead of fixed rate
                            Ignored if simple_mode=True
-        risk_free_asset_df: Historical price data for risk-free asset (e.g., BIL)
+        risk_free_data: Historical price data for risk-free asset (e.g., BIL)
                            If provided, uses actual daily returns instead of fixed rate
                            Ignored if simple_mode=True
         reference_asset_ticker: Ticker symbol for reference asset (for reporting)
@@ -153,7 +156,7 @@ def run_algorithm_backtest(
                             (e.g., 4.0 for 4% withdrawal rate)
                             Withdrawals are taken monthly and CPI-adjusted
         withdrawal_frequency_days: Days between withdrawals (default 30 for monthly)
-        cpi_adjustment_df: Historical CPI data for inflation adjustment
+        cpi_data: Historical CPI data for inflation adjustment
                           If provided, withdrawals adjust with inflation
                           If None, withdrawals remain constant in nominal terms
         simple_mode: If True, disables opportunity cost, risk-free gains, and CPI adjustment
@@ -204,8 +207,8 @@ def run_algorithm_backtest(
 
     # Prepare reference asset daily returns (for opportunity cost)
     reference_returns: Dict[date, float] = {}
-    if reference_asset_df is not None and not reference_asset_df.empty:
-        ref_indexed = reference_asset_df.copy()
+    if reference_data is not None and not reference_data.empty:
+        ref_indexed = reference_data.copy()
         ref_indexed.index = pd.to_datetime(ref_indexed.index).date
         if "Close" in ref_indexed.columns:
             # Calculate daily returns: (today - yesterday) / yesterday
@@ -219,8 +222,8 @@ def run_algorithm_backtest(
 
     # Prepare risk-free asset daily returns (for cash interest)
     risk_free_returns: Dict[date, float] = {}
-    if risk_free_asset_df is not None and not risk_free_asset_df.empty:
-        rf_indexed = risk_free_asset_df.copy()
+    if risk_free_data is not None and not risk_free_data.empty:
+        rf_indexed = risk_free_data.copy()
         rf_indexed.index = pd.to_datetime(rf_indexed.index).date
         if "Close" in rf_indexed.columns:
             # Calculate daily returns: (today - yesterday) / yesterday
@@ -368,8 +371,8 @@ def run_algorithm_backtest(
         
     # CPI adjustment setup
     cpi_returns: Dict[date, float] = {}
-    if cpi_adjustment_df is not None and not cpi_adjustment_df.empty and not simple_mode:
-        cpi_indexed = cpi_adjustment_df.copy()
+    if cpi_data is not None and not cpi_data.empty and not simple_mode:
+        cpi_indexed = cpi_data.copy()
         cpi_indexed.index = pd.to_datetime(cpi_indexed.index).date
         if "Close" in cpi_indexed.columns or "Value" in cpi_indexed.columns:
             value_col = "Value" if "Value" in cpi_indexed.columns else "Close"

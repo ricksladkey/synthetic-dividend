@@ -125,32 +125,33 @@ Examples:
         df = hf.get_history(ticker, start, end)
 
         # Fetch reference and risk-free assets
-        reference_df: Optional[pd.DataFrame] = None
-        risk_free_df: Optional[pd.DataFrame] = None
+        from src.models.backtest import Data
+        reference_data: Optional[Data] = None
+        risk_free_data: Optional[Data] = None
 
         if reference_asset:
             try:
-                reference_df = hf.get_history(reference_asset, start, end)
-                if reference_df.empty:
+                reference_data = hf.get_history(reference_asset, start, end)
+                if reference_data.empty:
                     print(
                         f"Warning: No data for reference asset {reference_asset}, using fallback rate"
                     )
-                    reference_df = None
+                    reference_data = None
             except Exception as e:
                 print(f"Warning: Failed to fetch {reference_asset}: {e}")
-                reference_df = None
+                reference_data = None
 
         if risk_free_asset:
             try:
-                risk_free_df = hf.get_history(risk_free_asset, start, end)
-                if risk_free_df.empty:
+                risk_free_data = hf.get_history(risk_free_asset, start, end)
+                if risk_free_data.empty:
                     print(
                         f"Warning: No data for risk-free asset {risk_free_asset}, using fallback rate"
                     )
-                    risk_free_df = None
+                    risk_free_data = None
             except Exception as e:
                 print(f"Warning: Failed to fetch {risk_free_asset}: {e}")
-                risk_free_df = None
+                risk_free_data = None
 
     except Exception as e:
         print("Fetcher error:", e)
@@ -173,8 +174,8 @@ Examples:
             start,
             end,
             algo=algo_inst,
-            reference_asset_df=reference_df,
-            risk_free_asset_df=risk_free_df,
+            reference_data=reference_data,
+            risk_free_data=risk_free_data,
             reference_asset_ticker=reference_asset,
             risk_free_asset_ticker=risk_free_asset,
         )

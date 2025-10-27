@@ -75,6 +75,109 @@ After running portfolio volatility alpha experiment, don't just commit the code�
 
 ---
 
+## Meta-Principle: Abstraction Level Determines Naming
+
+**Principle**: Variable and parameter names should match the abstraction level of the code they appear in. Use the most abstract term appropriate for that architectural layer.
+
+**Why**:
+- **Architectural clarity**: High-level code should read at a high level of abstraction
+- **Pythonic interoperability**: When in the Python ecosystem, use established conventions from that ecosystem
+- **Glue code flexibility**: Interface layers are free to use implementation-specific names
+- **Cognitive load reduction**: Don't force readers to context-switch between abstraction levels
+
+**The Abstraction Hierarchy** (from most abstract to most specific):
+1. **Domain concepts**: `price`, `quantity`, `transaction`, `balance`
+2. **Data architecture**: `row`, `record`, `series`, `dataset`
+3. **Implementation specifics**: `DataFrame`, `ndarray`, `dict`, `list`
+
+**Rules**:
+1. **High-level business logic**: Use domain concepts exclusively
+   - ✓ `process_transaction(price: float, quantity: int)`
+   - ✗ `process_transaction(df_row: pd.Series, qty: int)`
+
+2. **Mid-level architecture**: Use data structure abstractions
+   - ✓ `def calculate_returns(price_series: pd.Series) -> pd.Series`
+   - ✓ `def fetch_market_data(ticker: str) -> pd.DataFrame`  (pandas is THE Python standard)
+   - ✗ `def calculate_returns(price_list: List[float])`  (too specific for this level)
+
+3. **Pythonic naming**: When a concept has an established Python/pandas convention, use it
+   - ✓ `df` for DataFrame in local scopes (pandas convention)
+   - ✓ `Series` for time series data (pandas standard)
+   - ✗ `data_row` when `Series` is the Pythonic term everyone understands
+
+4. **Glue code is free**: Interface/adapter code can be implementation-specific
+   - ✓ `def convert_df_to_records(df: pd.DataFrame) -> List[Dict]`
+   - ✓ `def pandas_series_to_numpy(series: pd.Series) -> np.ndarray`
+
+**Naming Priority** (choose the first applicable):
+1. **Domain term** (if concept exists in business logic): `price`, `order`, `account`
+2. **Abstract data term** (if structural concept): `row`, `record`, `series`, `table`
+3. **Pythonic term** (if ecosystem standard): `DataFrame`, `Series`, `dict`, `list`
+4. **Implementation term** (only in glue/low-level code): `np.ndarray`, `pd.Index`
+
+**Examples**:
+
+```python
+# GOOD: Domain-level abstraction
+def calculate_portfolio_value(
+    holdings: int,
+    price: float,
+    cash_balance: float
+) -> float:
+    """High-level business logic uses domain concepts."""
+    return holdings * price + cash_balance
+
+# GOOD: Data architecture abstraction
+def run_algorithm_backtest(
+    price_data: pd.DataFrame,  # "price_data" is more abstract than "df"
+    ticker: str,
+    initial_qty: int,
+    reference_series: Optional[pd.Series] = None  # "series" is the data architecture term
+) -> Tuple[List[Transaction], Dict[str, Any]]:
+    """Mid-level uses data abstractions + Pythonic conventions."""
+    pass
+
+# AVOID: Mixed abstraction levels
+def run_algorithm_backtest(
+    reference_asset_df: Optional[pd.DataFrame] = None  # ❌ "asset" is domain, "df" is implementation
+):
+    """Mixing "asset" (domain) with "df" (pandas-specific) confuses the abstraction."""
+    pass
+
+# GOOD: Corrected
+def run_algorithm_backtest(
+    reference_data: Optional[pd.DataFrame] = None  # ✓ "data" is appropriately abstract
+):
+    """Or even better: reference_series if it's 1D time series data."""
+    pass
+
+# GOOD: Low-level glue code can be specific
+def _extract_close_prices_as_array(df: pd.DataFrame) -> np.ndarray:
+    """Implementation-specific helper is fine at this layer."""
+    return df['Close'].values
+
+# GOOD: Pythonic convention for local scope
+def process_data(price_data: pd.DataFrame) -> pd.Series:
+    df = price_data  # Local rename to idiomatic 'df' is fine
+    return df['Close'].pct_change()
+```
+
+**Database Analogy**:
+Database architects call it a "row" because that's the abstract concept. Pandas calls it a `Series` because that's the Pythonic term for a 1D labeled array. Both are correct at their abstraction levels:
+- Database layer: `row: DatabaseRow` ← domain abstraction
+- Pandas layer: `series: pd.Series` ← Pythonic ecosystem term
+- Glue layer: `df_row: pd.Series` ← explicit type bridge
+
+**When in doubt**:
+- If you're writing business logic → use domain terms
+- If you're writing data processing → use Pythonic terms
+- If you're writing adapters → be explicit about types
+- If your parameter name has multiple words and one is an implementation detail → you've mixed abstraction levels
+
+**Caveat**: "The most abstract word is the best, the first one after 'Noun'!" — but not so abstract it becomes meaningless. `data` is better than `reference_asset_df`, but `price_series` is better than `data` if it's specifically price data.
+
+---
+
 ## Core Tenets
 
 ### 1. Functional-Style Programming

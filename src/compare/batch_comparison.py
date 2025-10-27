@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 
 from src.data.fetcher import HistoryFetcher
-from src.models.backtest import build_algo_from_name, run_algorithm_backtest
+from src.models.backtest import build_algo_from_name, run_algorithm_backtest, Data
 
 
 def parse_date(s: str) -> date:
@@ -44,7 +44,7 @@ def parse_date(s: str) -> date:
 
 
 def run_single_backtest(
-    df: pd.DataFrame,
+    df: Data,
     ticker: str,
     start_date: date,
     end_date: date,
@@ -52,8 +52,8 @@ def run_single_backtest(
     initial_qty: int = 10000,
     reference_return_pct: float = 0.0,
     risk_free_rate_pct: float = 0.0,
-    reference_asset_df: pd.DataFrame = None,
-    risk_free_asset_df: pd.DataFrame = None,
+    reference_data: Data = None,
+    risk_free_data: Data = None,
     reference_asset_ticker: str = "",
     risk_free_asset_ticker: str = "",
 ) -> Dict[str, Any]:
@@ -87,8 +87,8 @@ def run_single_backtest(
             algo=algo,
             reference_return_pct=reference_return_pct,
             risk_free_rate_pct=risk_free_rate_pct,
-            reference_asset_df=reference_asset_df,
-            risk_free_asset_df=risk_free_asset_df,
+            reference_data=reference_data,
+            risk_free_data=risk_free_data,
             reference_asset_ticker=reference_asset_ticker,
             risk_free_asset_ticker=risk_free_asset_ticker,
         )
