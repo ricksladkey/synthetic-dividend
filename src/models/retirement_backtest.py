@@ -32,9 +32,7 @@ def run_retirement_backtest(
     annual_withdrawal_rate: float,  # e.g., 0.05 for 5%
     withdrawal_frequency: str = 'monthly',  # 'monthly', 'quarterly', 'annual'
     cpi_adjust: bool = True,
-    simple_mode: bool = False,
-    risk_free_data: Optional[Data] = None,
-    risk_free_asset_ticker: str = ""
+    simple_mode: bool = False
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Run backtest with periodic CPI-adjusted withdrawals.
     
@@ -53,8 +51,6 @@ def run_retirement_backtest(
         withdrawal_frequency: How often to withdraw ('monthly', 'quarterly', 'annual')
         cpi_adjust: If True, adjust withdrawals for CPI inflation
         simple_mode: If True, disable transaction costs and risk-free rate
-        risk_free_data: Price history for asset cash should earn returns from (e.g., VOO)
-        risk_free_asset_ticker: Ticker symbol for risk-free asset (for reporting)
         
     Returns:
         (transactions, summary) tuple where summary includes:
@@ -107,9 +103,7 @@ def run_retirement_backtest(
         withdrawal_rate_pct=withdrawal_rate_percentage,
         withdrawal_frequency_days=frequency_days,
         cpi_data=cpi_adjustment_df,
-        simple_mode=simple_mode,
-        risk_free_data=risk_free_data,
-        risk_free_asset_ticker=risk_free_asset_ticker
+        simple_mode=simple_mode
     )
     
     # The backtest already calculated withdrawal metrics
