@@ -299,9 +299,11 @@ def run_analyze(args) -> int:
     
     if args.analyze_type == 'gap-bonus':
         import subprocess
+        import os
         
-        # Run our analysis script
-        cmd = ['python', 'analyze_gap_bonus.py']
+        # Run our analysis script with proper Python interpreter
+        script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'analyze_gap_bonus.py')
+        cmd = [sys.executable, script_path]
         result = subprocess.run(cmd, capture_output=False)
         return result.returncode
     
