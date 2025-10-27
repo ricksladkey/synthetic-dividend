@@ -94,8 +94,8 @@ def test_drawdown_recovery_generates_alpha():
     
     # Run SD8 with standard 9.05% rebalancing, 50% profit sharing
     algo = SyntheticDividendAlgorithm(
-        rebalance_size_pct=9.05,
-        profit_sharing_pct=50.0,
+        rebalance_size=9.05/100.0,
+        profit_sharing=50.0/100.0,
         buyback_enabled=True,
     )
     

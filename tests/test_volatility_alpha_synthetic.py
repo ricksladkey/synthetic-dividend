@@ -119,8 +119,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         
         # ATH-only with sd8 trigger (9.05%)
         algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,
             buyback_enabled=False  # ATH-only
         )
         
@@ -153,8 +153,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         
         # ATH-only
         ath_algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,
             buyback_enabled=False
         )
         
@@ -169,8 +169,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         
         # Enhanced (with buybacks)
         enhanced_algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,
             buyback_enabled=True
         )
         
@@ -201,8 +201,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         
         # ATH-only
         ath_algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,
             buyback_enabled=False
         )
         
@@ -217,8 +217,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         
         # Enhanced
         enhanced_algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,
             buyback_enabled=True
         )
         
@@ -257,8 +257,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         df = create_synthetic_prices("symmetrical_wave", start_price=100.0)
         
         enhanced_algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,
             buyback_enabled=True
         )
         
@@ -287,8 +287,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         volatile_df = create_synthetic_prices("volatile_double", start_price=100.0)
         
         algo_params = {
-            'rebalance_size_pct': 9.05,
-            'profit_sharing_pct': 50.0,
+            'rebalance_size': 9.05 / 100.0,
+            'profit_sharing': 50.0 / 100.0,
             'buyback_enabled': True
         }
         
@@ -324,8 +324,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         
         # sd8 with 9.05% trigger should trigger on each 20% step
         algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,
             buyback_enabled=False  # ATH-only for predictability
         )
         
@@ -348,8 +348,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         df = create_synthetic_prices("gradual_double", start_price=100.0)
         
         algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,  # 50/50 split
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,  # 50/50 split
             buyback_enabled=False
         )
         
@@ -382,8 +382,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         
         # ATH-only
         ath_algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,
             buyback_enabled=False
         )
         
@@ -398,8 +398,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         
         # Enhanced
         enhanced_algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,
             buyback_enabled=True
         )
         
@@ -431,8 +431,8 @@ class TestProfitSharingSymmetry(unittest.TestCase):
         df = create_synthetic_prices("gradual_double", start_price=100.0)
         
         algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=0.0,  # Never sell
+            rebalance_size=9.05/100.0,
+            profit_sharing=0.0/100.0,  # Never sell
             buyback_enabled=True
         )
         
@@ -462,8 +462,8 @@ class TestProfitSharingSymmetry(unittest.TestCase):
         df = create_synthetic_prices("gradual_double", start_price=100.0)
         
         algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=100.0,  # Sell all profit
+            rebalance_size=9.05/100.0,
+            profit_sharing=100.0/100.0,  # Sell all profit
             buyback_enabled=False
         )
         

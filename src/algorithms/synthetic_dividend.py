@@ -18,13 +18,13 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
     2. ATH-only (buyback_enabled=False): Only sell at new all-time highs
 
     Parameters:
-        rebalance_size_pct: Rebalance threshold (e.g. 9.15 for 9.15%)
-        profit_sharing_pct: Portion of rebalance to trade (e.g. 50 for 50%)
+        rebalance_size: Rebalance threshold as decimal (e.g. 0.0915 for 9.15%)
+        profit_sharing: Portion of rebalance to trade as decimal (e.g. 0.5 for 50%)
         buyback_enabled: True for full algorithm, False for ATH-only
 
     Examples:
-        Full: SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=True)
-        ATH-only: SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=False)
+        Full: SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=True)
+        ATH-only: SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=False)
     """
     
     # Maximum iterations for multi-bracket gap handling per day
@@ -33,17 +33,24 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
     def __init__(
         self,
-        rebalance_size_pct: float = 0.0,
-        profit_sharing_pct: float = 0.0,
+        rebalance_size: float = 0.0,
+        profit_sharing: float = 0.0,
         buyback_enabled: bool = True,
         params: Optional[Dict[str, Any]] = None,
     ) -> None:
-        """Initialize algorithm with strategy parameters."""
+        """Initialize algorithm with strategy parameters.
+        
+        Args:
+            rebalance_size: Bracket spacing as decimal (e.g., 0.0915 for 9.15%)
+            profit_sharing: Trade size as fraction (e.g., 0.5 for 50%)
+            buyback_enabled: True for full mode, False for ATH-only
+            params: Optional dict for base class
+        """
         super().__init__(params)
 
-        # Convert percentages to decimals
-        self.rebalance_size: float = float(rebalance_size_pct) / 100.0
-        self.profit_sharing: float = float(profit_sharing_pct) / 100.0
+        # Store parameters as decimals (no conversion needed)
+        self.rebalance_size: float = float(rebalance_size)
+        self.profit_sharing: float = float(profit_sharing)
         self.buyback_enabled: bool = buyback_enabled
 
         # Cumulative alpha from volatility harvesting (full mode only)

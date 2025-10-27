@@ -52,8 +52,8 @@ def test_withdrawal_from_bank_balance():
     
     # Run SD8 with 4% withdrawal rate (monthly withdrawals)
     algo = SyntheticDividendAlgorithm(
-        rebalance_size_pct=9.05,
-        profit_sharing_pct=50.0,
+        rebalance_size=9.05/100.0,
+        profit_sharing=50.0/100.0,
         buyback_enabled=True,
     )
     
@@ -180,8 +180,8 @@ def test_simple_mode_no_opportunity_cost():
     
     # Run with buybacks (will go negative on bank)
     algo = SyntheticDividendAlgorithm(
-        rebalance_size_pct=9.05,
-        profit_sharing_pct=50.0,
+        rebalance_size=9.05/100.0,
+        profit_sharing=50.0/100.0,
         buyback_enabled=True,
     )
     
@@ -199,8 +199,8 @@ def test_simple_mode_no_opportunity_cost():
     # Test 2: WITHOUT simple_mode (normal mode with 10% opportunity cost)
     from copy import deepcopy
     algo2 = SyntheticDividendAlgorithm(
-        rebalance_size_pct=9.05,
-        profit_sharing_pct=50.0,
+        rebalance_size=9.05/100.0,
+        profit_sharing=50.0/100.0,
         buyback_enabled=True,
     )
     

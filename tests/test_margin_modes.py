@@ -28,8 +28,8 @@ def test_allow_margin_true_bank_can_go_negative():
     }, index=dates)
     
     algo = SyntheticDividendAlgorithm(
-        rebalance_size_pct=9.05,  # sd8
-        profit_sharing_pct=100.0,  # 100% profit sharing to trigger immediate buyback selling
+        rebalance_size=9.05/100.0,  # sd8
+        profit_sharing=100.0/100.0,  # 100% profit sharing to trigger immediate buyback selling
         buyback_enabled=True  # Enable buybacks so it BUYS on the way down
     )
     
@@ -81,8 +81,8 @@ def test_allow_margin_false_bank_never_negative():
     }, index=dates)
     
     algo = SyntheticDividendAlgorithm(
-        rebalance_size_pct=9.05,  # sd8
-        profit_sharing_pct=100.0,  # 100% profit sharing to trigger immediate buyback selling
+        rebalance_size=9.05/100.0,  # sd8
+        profit_sharing=100.0/100.0,  # 100% profit sharing to trigger immediate buyback selling
         buyback_enabled=True  # Enable buybacks so it BUYS on the way down
     )
     
@@ -182,8 +182,8 @@ def test_allow_margin_comparison():
     }, index=dates)
     
     algo = SyntheticDividendAlgorithm(
-        rebalance_size_pct=9.05,  # sd8
-        profit_sharing_pct=100.0,  # 100% profit sharing to trigger immediate buyback selling
+        rebalance_size=9.05/100.0,  # sd8
+        profit_sharing=100.0/100.0,  # 100% profit sharing to trigger immediate buyback selling
         buyback_enabled=True  # Enable buybacks so it BUYS on the way down
     )
     

@@ -63,7 +63,7 @@ def create_flat_reference_returns(num_days: int) -> pd.DataFrame:
 def run_test_comparison(
     price_path: List[float],
     rebalance_pct: float,
-    profit_sharing_pct: float,
+    profit_sharing: float,
     initial_qty: int = 10000,
 ) -> Tuple[int, int, int, bool]:
     """Run both SD Full and ATH-Only algorithms on synthetic data.
@@ -71,7 +71,7 @@ def run_test_comparison(
     Args:
         price_path: List of daily closing prices
         rebalance_pct: Rebalance trigger percentage
-        profit_sharing_pct: Profit sharing percentage
+        profit_sharing: Profit sharing as decimal (e.g., 0.5 for 50%)
         initial_qty: Initial share quantity
 
     Returns:
@@ -88,8 +88,8 @@ def run_test_comparison(
 
     # Run SD Full
     algo_full = SyntheticDividendAlgorithm(
-        rebalance_size_pct=rebalance_pct,
-        profit_sharing_pct=profit_sharing_pct,
+        rebalance_size=rebalance_pct / 100.0,
+        profit_sharing=profit_sharing,
         buyback_enabled=True,
     )
 
@@ -108,8 +108,8 @@ def run_test_comparison(
 
     # Run ATH-Only
     algo_ath = SyntheticDividendAlgorithm(
-        rebalance_size_pct=rebalance_pct,
-        profit_sharing_pct=profit_sharing_pct,
+        rebalance_size=rebalance_pct / 100.0,
+        profit_sharing=profit_sharing,
         buyback_enabled=False,
     )
 
@@ -155,8 +155,8 @@ class TestBuybackStackGradualRise:
         price_path = [100.0 + (i * 2.0) for i in range(50)]
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing_pct=50.0
-        )
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0
+        /100.0)
 
         # Both should have same final shares (no drawdown at end)
         assert (
@@ -174,8 +174,8 @@ class TestBuybackStackGradualRise:
         price_path = [100.0 * (2.0 ** (i / 99.0)) for i in range(100)]
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=9.05, profit_sharing_pct=50.0
-        )
+            price_path=price_path, rebalance_pct=9.05, profit_sharing=50.0
+        /100.0)
 
         assert (
             sd_full == ath_only
@@ -216,8 +216,8 @@ class TestBuybackStackVShape:
         price_path = rise1 + fall + rise2
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing_pct=50.0
-        )
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0
+        /100.0)
 
         # Enhanced should have MORE shares (volatility harvesting)
         assert (
@@ -243,8 +243,8 @@ class TestBuybackStackVShape:
         price_path = rise1 + fall + rise2
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing_pct=50.0
-        )
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0
+        /100.0)
 
         # Enhanced should have MORE shares (volatility harvesting)
         assert (
@@ -271,8 +271,8 @@ class TestBuybackStackDrawdown:
         price_path = rise + fall
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing_pct=50.0
-        )
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0
+        /100.0)
 
         # SD Full should have MORE shares (bought the dip)
         assert (
@@ -296,8 +296,8 @@ class TestBuybackStackDrawdown:
         price_path = rise + fall
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing_pct=50.0
-        )
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0
+        /100.0)
 
         # SD Full has more shares
         assert (
@@ -339,8 +339,8 @@ class TestBuybackStackMultipleCycles:
         price_path = cycle1_up + cycle1_down + cycle2_up + cycle2_down + cycle3_up
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing_pct=50.0
-        )
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0
+        /100.0)
 
         # Enhanced should have MORE shares (multiple volatility harvests)
         assert (
@@ -370,8 +370,8 @@ class TestBuybackStackParameterVariations:
         price_path = rise + fall + rise2
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=15.0, profit_sharing_pct=50.0
-        )
+            price_path=price_path, rebalance_pct=15.0, profit_sharing=50.0
+        /100.0)
 
         assert (
             sd_full >= ath_only
@@ -396,8 +396,8 @@ class TestBuybackStackParameterVariations:
         price_path = rise + fall + rise2
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=4.44, profit_sharing_pct=50.0
-        )
+            price_path=price_path, rebalance_pct=4.44, profit_sharing=50.0
+        /100.0)
 
         assert (
             sd_full >= ath_only
@@ -422,8 +422,8 @@ class TestBuybackStackParameterVariations:
         price_path = rise + fall + rise2
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing_pct=0.0
-        )
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=0.0
+        /100.0)
 
         # No transactions occur, so shares should be identical
         assert (
@@ -441,8 +441,8 @@ class TestBuybackStackParameterVariations:
         price_path = rise + fall + rise2
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing_pct=100.0
-        )
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=100.0
+        /100.0)
 
         assert (
             sd_full == ath_only

@@ -13,8 +13,11 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
         'sdN' → N-th root of 2 (exponential scaling), 50% profit sharing default
         'sdN,P' → N-th root of 2, P% profit sharing
         'buy-and-hold' → BuyAndHoldAlgorithm()
-        'sd-9.15,50' → SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=True)
-        'sd-ath-only-9.15,50' → SyntheticDividendAlgorithm(9.15, 50, buyback_enabled=False)
+        'sd-9.15,50' → SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=True)
+        'sd-ath-only-9.15,50' → SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=False)
+
+    Note: String format uses percentages (9.15, 50) for readability, but converts
+    to decimals (0.0915, 0.5) internally for mathematical clarity.
 
     Examples (exponential scaling - Nth root of 2):
         'sd8' → 2^(1/8) - 1 = 9.05% rebalance trigger, 50% profit sharing
@@ -43,48 +46,48 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
     m = re.match(r"^sd(\d+(?:\.\d+)?)(?:,(\d+(?:\.\d+)?))?$", name)
     if m:
         n = float(m.group(1))
-        profit = float(m.group(2)) if m.group(2) else 50.0
-        # Calculate rebalance trigger: Nth root of 2, minus 1, as percentage
-        rebalance = (pow(2.0, 1.0 / n) - 1.0) * 100.0
-        print(f"  Exponential scaling: 2^(1/{n}) - 1 = {rebalance:.4f}% trigger")
+        profit_pct = float(m.group(2)) if m.group(2) else 50.0
+        # Calculate rebalance trigger: Nth root of 2, minus 1 (as decimal)
+        rebalance = pow(2.0, 1.0 / n) - 1.0
+        print(f"  Exponential scaling: 2^(1/{n}) - 1 = {rebalance*100:.4f}% trigger")
         return SyntheticDividendAlgorithm(
-            rebalance_size_pct=rebalance, profit_sharing_pct=profit, buyback_enabled=True
+            rebalance_size=rebalance, profit_sharing=profit_pct / 100.0, buyback_enabled=True
         )
 
     # ATH-only variant: modern comma-based format
     m = re.match(r"^(sd|synthetic-dividend)-ath-only-(\d+(?:\.\d+)?),(\d+(?:\.\d+)?)$", name)
     if m:
-        rebalance = float(m.group(2))
-        profit = float(m.group(3))
+        rebalance_pct = float(m.group(2))
+        profit_pct = float(m.group(3))
         return SyntheticDividendAlgorithm(
-            rebalance_size_pct=rebalance, profit_sharing_pct=profit, buyback_enabled=False
+            rebalance_size=rebalance_pct / 100.0, profit_sharing=profit_pct / 100.0, buyback_enabled=False
         )
 
     # Full algorithm: modern comma-based format
     m = re.match(r"^(sd|synthetic-dividend)-(\d+(?:\.\d+)?),(\d+(?:\.\d+)?)$", name)
     if m:
-        rebalance = float(m.group(2))
-        profit = float(m.group(3))
+        rebalance_pct = float(m.group(2))
+        profit_pct = float(m.group(3))
         return SyntheticDividendAlgorithm(
-            rebalance_size_pct=rebalance, profit_sharing_pct=profit, buyback_enabled=True
+            rebalance_size=rebalance_pct / 100.0, profit_sharing=profit_pct / 100.0, buyback_enabled=True
         )
 
     # Legacy: ATH-only variant with slash/percent format
     m = re.match(r"^(sd|synthetic-dividend)-ath-only/(\d+(?:\.\d+)?)%/(\d+(?:\.\d+)?)%$", name)
     if m:
-        rebalance = float(m.group(2))
-        profit = float(m.group(3))
+        rebalance_pct = float(m.group(2))
+        profit_pct = float(m.group(3))
         return SyntheticDividendAlgorithm(
-            rebalance_size_pct=rebalance, profit_sharing_pct=profit, buyback_enabled=False
+            rebalance_size=rebalance_pct / 100.0, profit_sharing=profit_pct / 100.0, buyback_enabled=False
         )
 
     # Legacy: Full algorithm with slash/percent format
     m = re.match(r"^(sd|synthetic-dividend)/(\d+(?:\.\d+)?)%/(\d+(?:\.\d+)?)%$", name)
     if m:
-        rebalance = float(m.group(2))
-        profit = float(m.group(3))
+        rebalance_pct = float(m.group(2))
+        profit_pct = float(m.group(3))
         return SyntheticDividendAlgorithm(
-            rebalance_size_pct=rebalance, profit_sharing_pct=profit, buyback_enabled=True
+            rebalance_size=rebalance_pct / 100.0, profit_sharing=profit_pct / 100.0, buyback_enabled=True
         )
 
     raise ValueError(f"Unrecognized strategy name: {name}")

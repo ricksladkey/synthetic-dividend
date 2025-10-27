@@ -91,8 +91,8 @@ class TestMultiBracketGaps:
         )
         
         algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,
             buyback_enabled=True
         )
         
@@ -142,8 +142,8 @@ class TestMultiBracketGaps:
         )
         
         algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,
             buyback_enabled=True
         )
         
@@ -193,8 +193,8 @@ class TestMultiBracketGaps:
         )
         
         algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,
             buyback_enabled=True
         )
         
@@ -251,8 +251,8 @@ class TestMultiBracketGaps:
         df.set_index('Date', inplace=True)
         
         algo = SyntheticDividendAlgorithm(
-            rebalance_size_pct=9.05,
-            profit_sharing_pct=50.0,
+            rebalance_size=9.05/100.0,
+            profit_sharing=50.0/100.0,
             buyback_enabled=True
         )
         
@@ -326,8 +326,8 @@ class TestGapBonusVolatilityAlpha:
         
         # Run both scenarios
         params = {
-            'rebalance_size_pct': 9.05,
-            'profit_sharing_pct': 50.0,
+            'rebalance_size': 9.05 / 100.0,
+            'profit_sharing': 50.0 / 100.0,
             'buyback_enabled': False  # ATH-only for simpler comparison
         }
         
