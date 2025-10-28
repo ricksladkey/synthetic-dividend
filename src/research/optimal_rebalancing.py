@@ -50,25 +50,25 @@ def run_single_backtest(
     initial_qty: int = 10000,
 ) -> Optional[Dict]:
     """Run backtest for single asset and sdN configuration.
-    
+
     Returns:
         Dictionary with results or None if data unavailable
     """
     fetcher = HistoryFetcher()
     df = fetcher.get_history(ticker, start_date, end_date)
-    
+
     if df is None or df.empty:
         print(f"  [WARNING] No data for {ticker}")
         return None
-    
+
     # Build strategy name
     if profit_pct == 50.0:
         strategy = f"sd{sd_n}"
     else:
         strategy = f"sd{sd_n},{profit_pct}"
-    
+
     algo = build_algo_from_name(strategy)
-    
+
     try:
         transactions, summary = run_algorithm_backtest(
             df=df,
@@ -78,19 +78,19 @@ def run_single_backtest(
             end_date=end_date,
             algo=algo,
         )
-        
+
         # Extract key metrics from summary dict
         # Note: summary uses 'total_return' (decimal), 'holdings', 'bank', etc.
         # Convert to percentage and use correct key names
         total_return_pct = summary.get("total_return", 0) * 100  # Convert to percentage
         volatility_alpha_pct = summary.get("volatility_alpha", 0) * 100
         transaction_count = len(transactions)  # Count transactions (excluding initial buy)
-        
+
         # Get algorithm trigger percentage if available (from algo object)
         rebalance_trigger = 0
-        if hasattr(algo, 'alpha_pct'):
+        if hasattr(algo, "alpha_pct"):
             rebalance_trigger = algo.alpha_pct
-        
+
         result = {
             "ticker": ticker,
             "asset_class": get_class_for_ticker(ticker),
@@ -109,9 +109,9 @@ def run_single_backtest(
             "start_date": start_date.isoformat(),
             "end_date": end_date.isoformat(),
         }
-        
+
         return result
-        
+
     except Exception as e:
         print(f"  [ERROR] Error backtesting {ticker} with {strategy}: {e}")
         return None
@@ -128,12 +128,12 @@ def run_asset_class_sweep(
     print(f"\n{'='*70}")
     print(f"ASSET CLASS: {asset_class_name.upper()}")
     print(f"{'='*70}")
-    
+
     results = []
     asset_class = ASSET_CLASSES[asset_class_name]
     tickers = asset_class["tickers"]
     recommended_sd = asset_class["recommended_sd"]
-    
+
     for ticker in tickers:
         print(f"\n[{ticker}] ({asset_class_name}):")
         for sd_n in recommended_sd:
@@ -147,10 +147,12 @@ def run_asset_class_sweep(
             )
             if result:
                 results.append(result)
-                print(f"  [OK] sd{sd_n}: {result['total_return_pct']:.2f}% return, "
-                      f"{result['transaction_count']} txns, "
-                      f"{result['max_drawdown_pct']:.2f}% max drawdown")
-    
+                print(
+                    f"  [OK] sd{sd_n}: {result['total_return_pct']:.2f}% return, "
+                    f"{result['transaction_count']} txns, "
+                    f"{result['max_drawdown_pct']:.2f}% max drawdown"
+                )
+
     return results
 
 
@@ -162,9 +164,9 @@ def run_comprehensive_sweep(
 ) -> List[Dict]:
     """Run all asset classes with their recommended sdN values."""
     all_results = []
-    
+
     print_sd_reference_table()
-    
+
     for asset_class_name in ASSET_CLASSES.keys():
         results = run_asset_class_sweep(
             asset_class_name=asset_class_name,
@@ -174,7 +176,7 @@ def run_comprehensive_sweep(
             initial_qty=initial_qty,
         )
         all_results.extend(results)
-    
+
     return all_results
 
 
@@ -183,7 +185,7 @@ def save_results_to_csv(results: List[Dict], output_path: str):
     if not results:
         print("[WARNING] No results to save")
         return
-    
+
     fieldnames = [
         "ticker",
         "asset_class",
@@ -202,12 +204,12 @@ def save_results_to_csv(results: List[Dict], output_path: str):
         "start_date",
         "end_date",
     ]
-    
+
     with open(output_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(results)
-    
+
     print(f"\n[OK] Results saved to: {output_path}")
     print(f"   Total records: {len(results)}")
 
@@ -216,23 +218,25 @@ def print_summary_analysis(results: List[Dict]):
     """Print summary analysis of results."""
     if not results:
         return
-    
+
     df = pd.DataFrame(results)
-    
+
     print(f"\n{'='*70}")
     print("SUMMARY ANALYSIS")
     print(f"{'='*70}\n")
-    
+
     # Best performing sdN per asset class
     print("OPTIMAL sdN BY ASSET CLASS (by total return):")
     print("-" * 70)
     for asset_class in df["asset_class"].unique():
         class_data = df[df["asset_class"] == asset_class]
         best_row = class_data.loc[class_data["total_return_pct"].idxmax()]
-        print(f"{asset_class:20s}: sd{int(best_row['sd_n'])} "
-              f"({best_row['total_return_pct']:.2f}% return)")
-    
-    print("\n" + "="*70)
+        print(
+            f"{asset_class:20s}: sd{int(best_row['sd_n'])} "
+            f"({best_row['total_return_pct']:.2f}% return)"
+        )
+
+    print("\n" + "=" * 70)
 
 
 def main():
@@ -240,7 +244,7 @@ def main():
         description="Research optimal rebalancing frequencies across asset classes",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    
+
     parser.add_argument(
         "--start",
         default="2020-01-01",
@@ -282,21 +286,21 @@ def main():
         action="store_true",
         help="Quick test: 1-year lookback from end date",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Parse dates
     end_date = parse_date(args.end)
     if args.quick:
         start_date = date(end_date.year - 1, end_date.month, end_date.day)
     else:
         start_date = parse_date(args.start)
-    
+
     print(f"\nOPTIMAL REBALANCING RESEARCH")
     print(f"Date Range: {start_date} to {end_date}")
     print(f"Profit Sharing: {args.profit}%")
     print(f"Initial Quantity: {args.qty:,} shares\n")
-    
+
     # Run appropriate sweep
     if args.ticker:
         # Single ticker test
@@ -314,7 +318,7 @@ def main():
             )
             if result:
                 results.append(result)
-    
+
     elif args.asset_class:
         # Single asset class test
         results = run_asset_class_sweep(
@@ -324,7 +328,7 @@ def main():
             profit_pct=args.profit,
             initial_qty=args.qty,
         )
-    
+
     else:
         # Comprehensive sweep
         results = run_comprehensive_sweep(
@@ -333,14 +337,14 @@ def main():
             profit_pct=args.profit,
             initial_qty=args.qty,
         )
-    
+
     # Save and analyze results
     if results:
         save_results_to_csv(results, args.output)
         print_summary_analysis(results)
     else:
         print("[ERROR] No results generated")
-    
+
     return 0
 
 

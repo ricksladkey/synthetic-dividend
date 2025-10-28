@@ -15,7 +15,7 @@ class Transaction:
     transaction_date: Optional[date] = None  # Transaction date (filled by backtest engine)
     price: float = 0.0  # Execution price per share (filled by backtest engine)
     ticker: str = ""  # Stock symbol (filled by backtest engine)
-    
+
     def to_string(self) -> str:
         """Format transaction as human-readable string."""
         if self.transaction_date and self.price > 0:
@@ -32,7 +32,7 @@ class Transaction:
 @dataclass
 class WithdrawalResult:
     """Represents the result of a withdrawal request.
-    
+
     The algorithm decides how to fulfill a withdrawal request, returning:
     - shares_to_sell: Number of shares to liquidate (0 if using cash only)
     - cash_from_bank: Amount to withdraw from bank balance

@@ -10,9 +10,9 @@ Output: CSV table with all metrics
 """
 
 import csv
-from datetime import date, timedelta
-from typing import List, Dict
 import math
+from datetime import date, timedelta
+from typing import Dict, List
 
 from src.data.fetcher import HistoryFetcher
 from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
@@ -20,13 +20,13 @@ from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backte
 
 def calculate_annualized_volatility(df) -> float:
     """Calculate annualized volatility from daily returns."""
-    if df is None or df.empty or 'Close' not in df.columns:
+    if df is None or df.empty or "Close" not in df.columns:
         return 0.0
-    
-    returns = df['Close'].pct_change().dropna()
+
+    returns = df["Close"].pct_change().dropna()
     if len(returns) < 2:
         return 0.0
-    
+
     daily_vol = float(returns.std())
     annualized_vol = daily_vol * math.sqrt(252)
     return float(annualized_vol)
@@ -35,7 +35,7 @@ def calculate_annualized_volatility(df) -> float:
 def suggest_sd_parameter(volatility: float) -> int:
     """Suggest SD parameter based on volatility."""
     vol_pct = volatility * 100
-    
+
     if vol_pct >= 50:
         return 6
     elif vol_pct >= 30:
@@ -59,35 +59,33 @@ def collect_volatility_alpha_data(
     end_date: date,
 ) -> Dict:
     """Collect volatility alpha data for a single ticker and timeframe.
-    
+
     Returns:
         Dict with ticker, dates, algo, buy count, volatility alpha
     """
     fetcher = HistoryFetcher()
-    
+
     # Fetch data
     print(f"  Fetching {ticker} from {start_date} to {end_date}...")
     df = fetcher.get_history(ticker, start_date, end_date)
-    
+
     if df is None or df.empty:
         print(f"    ❌ No data for {ticker}")
         return None
-    
+
     # Calculate volatility and suggest SD
     volatility = calculate_annualized_volatility(df)
     sd_n = suggest_sd_parameter(volatility)
     trigger_pct = calculate_trigger_pct(sd_n)
     trigger_decimal = trigger_pct / 100.0
-    
+
     print(f"    Volatility: {volatility*100:.2f}% → SD{sd_n} ({trigger_pct:.2f}%)")
-    
+
     # Run full strategy
     algo_full = SyntheticDividendAlgorithm(
-        trigger_decimal * 100,
-        50.0,  # 50% profit sharing
-        buyback_enabled=True
+        trigger_decimal * 100, 50.0, buyback_enabled=True  # 50% profit sharing
     )
-    
+
     transactions_full, summary_full = run_algorithm_backtest(
         df=df,
         ticker=ticker,
@@ -95,16 +93,12 @@ def collect_volatility_alpha_data(
         start_date=start_date,
         end_date=end_date,
         algo=algo_full,
-        simple_mode=True
+        simple_mode=True,
     )
-    
+
     # Run ATH-only strategy
-    algo_ath = SyntheticDividendAlgorithm(
-        trigger_decimal * 100,
-        50.0,
-        buyback_enabled=False
-    )
-    
+    algo_ath = SyntheticDividendAlgorithm(trigger_decimal * 100, 50.0, buyback_enabled=False)
+
     transactions_ath, summary_ath = run_algorithm_backtest(
         df=df,
         ticker=ticker,
@@ -112,102 +106,110 @@ def collect_volatility_alpha_data(
         start_date=start_date,
         end_date=end_date,
         algo=algo_ath,
-        simple_mode=True
+        simple_mode=True,
     )
-    
+
     # Calculate metrics
-    vol_alpha = (summary_full['total_return'] - summary_ath['total_return']) * 100
-    
+    vol_alpha = (summary_full["total_return"] - summary_ath["total_return"]) * 100
+
     # Count buy rebalances (BUY transactions in full strategy)
-    buy_count = sum(1 for line in transactions_full if 'BUY' in line and 'BUYBACK' not in line.upper())
-    
-    print(f"    ✓ Full: {summary_full['total_return']*100:.2f}%, ATH-only: {summary_ath['total_return']*100:.2f}%")
+    buy_count = sum(
+        1 for line in transactions_full if "BUY" in line and "BUYBACK" not in line.upper()
+    )
+
+    print(
+        f"    ✓ Full: {summary_full['total_return']*100:.2f}%, ATH-only: {summary_ath['total_return']*100:.2f}%"
+    )
     print(f"    ✓ Volatility Alpha: {vol_alpha:+.2f}%, Buy rebalances: {buy_count}")
-    
+
     return {
-        'ticker': ticker,
-        'start_date': start_date.isoformat(),
-        'end_date': end_date.isoformat(),
-        'years': (end_date - start_date).days / 365.25,
-        'algo': f'SD{sd_n}',
-        'trigger_pct': f'{trigger_pct:.2f}',
-        'volatility_pct': f'{volatility*100:.2f}',
-        'buy_rebalances': buy_count,
-        'full_return_pct': f'{summary_full["total_return"]*100:.2f}',
-        'ath_return_pct': f'{summary_ath["total_return"]*100:.2f}',
-        'volatility_alpha_pct': f'{vol_alpha:.2f}',
+        "ticker": ticker,
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
+        "years": (end_date - start_date).days / 365.25,
+        "algo": f"SD{sd_n}",
+        "trigger_pct": f"{trigger_pct:.2f}",
+        "volatility_pct": f"{volatility*100:.2f}",
+        "buy_rebalances": buy_count,
+        "full_return_pct": f'{summary_full["total_return"]*100:.2f}',
+        "ath_return_pct": f'{summary_ath["total_return"]*100:.2f}',
+        "volatility_alpha_pct": f"{vol_alpha:.2f}",
     }
 
 
 def main():
     """Generate volatility alpha table for multiple assets and timeframes."""
-    
+
     # Define tickers
-    tickers = ['NVDA', 'MSTR', 'BTC-USD', 'ETH-USD', 'PLTR', 'GLD']
-    
+    tickers = ["NVDA", "MSTR", "BTC-USD", "ETH-USD", "PLTR", "GLD"]
+
     # Define end date (today)
     end_date = date(2025, 10, 26)
-    
+
     # Define timeframes (1, 2, 3 years back from end_date)
     timeframes = [
         (1, end_date - timedelta(days=365)),
         (2, end_date - timedelta(days=730)),
         (3, end_date - timedelta(days=1095)),
     ]
-    
+
     results = []
-    
+
     print("=" * 80)
     print("VOLATILITY ALPHA TABLE GENERATION")
     print("=" * 80)
     print()
-    
+
     for ticker in tickers:
         print(f"\n{ticker}:")
         print("-" * 40)
-        
+
         for years, start_date in timeframes:
             result = collect_volatility_alpha_data(ticker, start_date, end_date)
             if result:
                 results.append(result)
-    
+
     # Write to CSV
-    output_file = 'volatility_alpha_table.csv'
-    
+    output_file = "volatility_alpha_table.csv"
+
     if results:
         fieldnames = [
-            'ticker',
-            'start_date',
-            'end_date',
-            'years',
-            'algo',
-            'trigger_pct',
-            'volatility_pct',
-            'buy_rebalances',
-            'full_return_pct',
-            'ath_return_pct',
-            'volatility_alpha_pct',
+            "ticker",
+            "start_date",
+            "end_date",
+            "years",
+            "algo",
+            "trigger_pct",
+            "volatility_pct",
+            "buy_rebalances",
+            "full_return_pct",
+            "ath_return_pct",
+            "volatility_alpha_pct",
         ]
-        
-        with open(output_file, 'w', newline='') as csvfile:
+
+        with open(output_file, "w", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(results)
-        
+
         print("\n" + "=" * 80)
         print(f"✅ Results written to {output_file}")
         print(f"   Total rows: {len(results)}")
         print("=" * 80)
-        
+
         # Print summary table
         print("\nSUMMARY TABLE:")
         print("-" * 120)
-        print(f"{'Ticker':<8} {'Years':<6} {'Algo':<6} {'Volatility':<12} {'Buys':<6} {'Full Ret':<10} {'ATH Ret':<10} {'Vol Alpha':<10}")
+        print(
+            f"{'Ticker':<8} {'Years':<6} {'Algo':<6} {'Volatility':<12} {'Buys':<6} {'Full Ret':<10} {'ATH Ret':<10} {'Vol Alpha':<10}"
+        )
         print("-" * 120)
         for r in results:
-            print(f"{r['ticker']:<8} {r['years']:<6.1f} {r['algo']:<6} {r['volatility_pct']+'%':<12} "
-                  f"{r['buy_rebalances']:<6} {r['full_return_pct']+'%':<10} "
-                  f"{r['ath_return_pct']+'%':<10} {r['volatility_alpha_pct']+'%':<10}")
+            print(
+                f"{r['ticker']:<8} {r['years']:<6.1f} {r['algo']:<6} {r['volatility_pct']+'%':<12} "
+                f"{r['buy_rebalances']:<6} {r['full_return_pct']+'%':<10} "
+                f"{r['ath_return_pct']+'%':<10} {r['volatility_alpha_pct']+'%':<10}"
+            )
         print("-" * 120)
     else:
         print("\n❌ No results collected")

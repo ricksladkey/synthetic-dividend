@@ -56,7 +56,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     """
     if argv is None:
         argv = sys.argv[1:]
-        
+
     # Setup argument parser
     parser = argparse.ArgumentParser(
         description="Run backtest on historical stock data",
@@ -126,6 +126,7 @@ Examples:
 
         # Fetch reference and risk-free assets
         from src.models.backtest import Data
+
         reference_data: Optional[Data] = None
         risk_free_data: Optional[Data] = None
 

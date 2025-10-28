@@ -6,8 +6,9 @@ and mathematically convenient.
 """
 
 import math
-import pandas as pd
 from datetime import date, timedelta
+
+import pandas as pd
 
 from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
 
@@ -42,7 +43,7 @@ class TestPriceNormalization:
             df.set_index("Date", inplace=True)
 
             algo = SyntheticDividendAlgorithm(
-                rebalance_size=9.05/100.0, profit_sharing=50.0/100.0, buyback_enabled=True
+                rebalance_size=9.05 / 100.0, profit_sharing=50.0 / 100.0, buyback_enabled=True
             )
 
             txns, _ = run_algorithm_backtest(
@@ -62,9 +63,7 @@ class TestPriceNormalization:
         assert (
             len(set(transaction_counts)) == 1
         ), f"Transaction counts should match: {transaction_counts}"
-        assert (
-            transaction_counts[0] > 1
-        ), "Should have multiple transactions (not just initial buy)"
+        assert transaction_counts[0] > 1, "Should have multiple transactions (not just initial buy)"
 
     def test_normalization_lands_on_integer_bracket(self):
         """
@@ -90,7 +89,7 @@ class TestPriceNormalization:
         df.set_index("Date", inplace=True)
 
         algo = SyntheticDividendAlgorithm(
-            rebalance_size=9.05/100.0, profit_sharing=50.0/100.0, buyback_enabled=True
+            rebalance_size=9.05 / 100.0, profit_sharing=50.0 / 100.0, buyback_enabled=True
         )
 
         txns, _ = run_algorithm_backtest(
@@ -164,7 +163,7 @@ class TestPriceNormalization:
             df.set_index("Date", inplace=True)
 
             algo = SyntheticDividendAlgorithm(
-                rebalance_size=9.05/100.0, profit_sharing=50.0/100.0, buyback_enabled=True
+                rebalance_size=9.05 / 100.0, profit_sharing=50.0 / 100.0, buyback_enabled=True
             )
 
             txns, _ = run_algorithm_backtest(
@@ -188,9 +187,7 @@ class TestPriceNormalization:
                 relative_sequences.append(relative)
 
         # All relative sequences should be identical
-        assert (
-            len(relative_sequences) > 1
-        ), "Should have multiple test cases to compare"
+        assert len(relative_sequences) > 1, "Should have multiple test cases to compare"
         first_rel = relative_sequences[0]
 
         for i, rel in enumerate(relative_sequences[1:], 1):
@@ -220,7 +217,7 @@ class TestPriceNormalization:
         df.set_index("Date", inplace=True)
 
         algo = SyntheticDividendAlgorithm(
-            rebalance_size=9.05/100.0, profit_sharing=50.0/100.0, buyback_enabled=True
+            rebalance_size=9.05 / 100.0, profit_sharing=50.0 / 100.0, buyback_enabled=True
         )
 
         txns, _ = run_algorithm_backtest(
@@ -270,8 +267,8 @@ class TestPriceNormalization:
             df.set_index("Date", inplace=True)
 
             algo = SyntheticDividendAlgorithm(
-                rebalance_size=trigger_pct/100.0,
-                profit_sharing=50.0/100.0,
+                rebalance_size=trigger_pct / 100.0,
+                profit_sharing=50.0 / 100.0,
                 buyback_enabled=True,
             )
 
@@ -295,6 +292,4 @@ class TestPriceNormalization:
             n = math.log(normalized_price) / math.log(1 + trigger_decimal)
 
             # Should land on integer bracket
-            assert (
-                abs(n - round(n)) < 0.001
-            ), f"sd{sdn}: bracket {n} should be close to integer"
+            assert abs(n - round(n)) < 0.001, f"sd{sdn}: bracket {n} should be close to integer"

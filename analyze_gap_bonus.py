@@ -1,9 +1,10 @@
 """Analyze gap bonus impact from regenerated research data."""
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 # Load data
-df = pd.read_csv('research_phase1_1year_core.csv')
+df = pd.read_csv("research_phase1_1year_core.csv")
 
 print("=" * 70)
 print("GAP BONUS ANALYSIS - Multi-Bracket Fix Impact")
@@ -13,7 +14,9 @@ print()
 # Transaction counts by asset (sd_n=8 for comparison)
 print("Transaction Counts by Asset (sd_n=8):")
 print("-" * 70)
-sd8 = df[df['sd_n'] == 8][['ticker', 'transaction_count', 'volatility_alpha_pct', 'rebalance_trigger']].sort_values('transaction_count', ascending=False)
+sd8 = df[df["sd_n"] == 8][
+    ["ticker", "transaction_count", "volatility_alpha_pct", "rebalance_trigger"]
+].sort_values("transaction_count", ascending=False)
 print(sd8.to_string(index=False))
 print()
 
@@ -21,18 +24,19 @@ print()
 print("=" * 70)
 print("CORRELATION ANALYSIS")
 print("=" * 70)
-corr_txn_alpha = df['transaction_count'].corr(df['volatility_alpha_pct'])
+corr_txn_alpha = df["transaction_count"].corr(df["volatility_alpha_pct"])
 print(f"Transaction Count vs Volatility Alpha: {corr_txn_alpha:.3f}")
 print()
 
 # Group by ticker to see gap frequency patterns
 print("Average Metrics by Asset:")
 print("-" * 70)
-asset_avg = df.groupby('ticker').agg({
-    'transaction_count': 'mean',
-    'volatility_alpha_pct': 'mean',
-    'rebalance_trigger': 'mean'
-}).round(2).sort_values('transaction_count', ascending=False)
+asset_avg = (
+    df.groupby("ticker")
+    .agg({"transaction_count": "mean", "volatility_alpha_pct": "mean", "rebalance_trigger": "mean"})
+    .round(2)
+    .sort_values("transaction_count", ascending=False)
+)
 print(asset_avg)
 print()
 
@@ -40,8 +44,12 @@ print()
 print("=" * 70)
 print("GAP BONUS LEADERS (High Transaction Count)")
 print("=" * 70)
-high_txn = df[df['transaction_count'] > 200].sort_values('transaction_count', ascending=False)
-print(high_txn[['ticker', 'sd_n', 'transaction_count', 'volatility_alpha_pct', 'rebalance_trigger']].to_string(index=False))
+high_txn = df[df["transaction_count"] > 200].sort_values("transaction_count", ascending=False)
+print(
+    high_txn[
+        ["ticker", "sd_n", "transaction_count", "volatility_alpha_pct", "rebalance_trigger"]
+    ].to_string(index=False)
+)
 print()
 
 # Theory vs Practice divergence
@@ -58,16 +66,18 @@ print("Actual transaction counts (with gap bonus):")
 print()
 
 # Show actual vs theoretical for extreme assets
-for ticker in ['MSTR', 'ETH-USD', 'BTC-USD', 'NVDA']:
-    ticker_data = df[df['ticker'] == ticker].sort_values('sd_n')
+for ticker in ["MSTR", "ETH-USD", "BTC-USD", "NVDA"]:
+    ticker_data = df[df["ticker"] == ticker].sort_values("sd_n")
     if len(ticker_data) > 0:
         print(f"{ticker}:")
         for _, row in ticker_data.iterrows():
-            sd_n = int(row['sd_n'])
-            actual_txns = int(row['transaction_count'])
+            sd_n = int(row["sd_n"])
+            actual_txns = int(row["transaction_count"])
             theoretical = sd_n  # Theoretical transactions to double
             multiplier = actual_txns / theoretical if theoretical > 0 else 0
-            print(f"  sd{sd_n}: {actual_txns:4d} txns (theoretical: {theoretical:2d}, multiplier: {multiplier:5.1f}x)")
+            print(
+                f"  sd{sd_n}: {actual_txns:4d} txns (theoretical: {theoretical:2d}, multiplier: {multiplier:5.1f}x)"
+            )
         print()
 
 # Volatility alpha vs sd_n relationship
@@ -77,8 +87,12 @@ print("=" * 70)
 print()
 print("For each asset, optimal sd_n (by volatility alpha):")
 print("-" * 70)
-optimal = df.loc[df.groupby('ticker')['volatility_alpha_pct'].idxmax()]
-print(optimal[['ticker', 'sd_n', 'volatility_alpha_pct', 'transaction_count']].sort_values('volatility_alpha_pct', ascending=False).to_string(index=False))
+optimal = df.loc[df.groupby("ticker")["volatility_alpha_pct"].idxmax()]
+print(
+    optimal[["ticker", "sd_n", "volatility_alpha_pct", "transaction_count"]]
+    .sort_values("volatility_alpha_pct", ascending=False)
+    .to_string(index=False)
+)
 print()
 
 # Key insight: relationship may have changed
@@ -89,8 +103,8 @@ print()
 print(f"1. Transaction count strongly correlates with alpha (r={corr_txn_alpha:.3f})")
 print()
 print("2. Gap bonus multipliers:")
-high_vol_avg = df[df['ticker'].isin(['MSTR', 'ETH-USD', 'BTC-USD'])]['transaction_count'].mean()
-low_vol_avg = df[df['ticker'].isin(['SPY', 'DIA', 'GLD'])]['transaction_count'].mean()
+high_vol_avg = df[df["ticker"].isin(["MSTR", "ETH-USD", "BTC-USD"])]["transaction_count"].mean()
+low_vol_avg = df[df["ticker"].isin(["SPY", "DIA", "GLD"])]["transaction_count"].mean()
 print(f"   - High volatility assets: {high_vol_avg:.0f} avg transactions")
 print(f"   - Low volatility assets: {low_vol_avg:.0f} avg transactions")
 print(f"   - Multiplier: {high_vol_avg / low_vol_avg:.1f}x")

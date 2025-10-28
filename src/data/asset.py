@@ -1,4 +1,3 @@
-
 """Minimal Asset facade used by tests.
 
 This module provides a small, well-scoped `Asset` class that:
@@ -183,7 +182,9 @@ class Asset:
 
         try:
             ticker = yf.Ticker(self.ticker)
-            df = ticker.history(start=start.isoformat(), end=(end + pd.Timedelta(days=1)).isoformat())
+            df = ticker.history(
+                start=start.isoformat(), end=(end + pd.Timedelta(days=1)).isoformat()
+            )
             # Ensure index is a DatetimeIndex and return expected columns
             return df
         except Exception:
@@ -206,8 +207,8 @@ class Asset:
 try:
     from src.data.asset_provider import AssetRegistry
     from src.data.cash_provider import CashAssetProvider
-    from src.data.yahoo_provider import YahooAssetProvider
     from src.data.mock_provider import MockAssetProvider
+    from src.data.yahoo_provider import YahooAssetProvider
 
     try:
         AssetRegistry.register("USD", CashAssetProvider, priority=1)

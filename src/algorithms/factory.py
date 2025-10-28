@@ -1,6 +1,7 @@
 """Algorithm factory: parse string identifiers into algorithm instances."""
 
 import re
+
 from src.algorithms.base import AlgorithmBase
 from src.algorithms.buy_and_hold import BuyAndHoldAlgorithm
 from src.algorithms.synthetic_dividend import SyntheticDividendAlgorithm
@@ -60,7 +61,9 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
         rebalance_pct = float(m.group(2))
         profit_pct = float(m.group(3))
         return SyntheticDividendAlgorithm(
-            rebalance_size=rebalance_pct / 100.0, profit_sharing=profit_pct / 100.0, buyback_enabled=False
+            rebalance_size=rebalance_pct / 100.0,
+            profit_sharing=profit_pct / 100.0,
+            buyback_enabled=False,
         )
 
     # Full algorithm: modern comma-based format
@@ -69,7 +72,9 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
         rebalance_pct = float(m.group(2))
         profit_pct = float(m.group(3))
         return SyntheticDividendAlgorithm(
-            rebalance_size=rebalance_pct / 100.0, profit_sharing=profit_pct / 100.0, buyback_enabled=True
+            rebalance_size=rebalance_pct / 100.0,
+            profit_sharing=profit_pct / 100.0,
+            buyback_enabled=True,
         )
 
     # Legacy: ATH-only variant with slash/percent format
@@ -78,7 +83,9 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
         rebalance_pct = float(m.group(2))
         profit_pct = float(m.group(3))
         return SyntheticDividendAlgorithm(
-            rebalance_size=rebalance_pct / 100.0, profit_sharing=profit_pct / 100.0, buyback_enabled=False
+            rebalance_size=rebalance_pct / 100.0,
+            profit_sharing=profit_pct / 100.0,
+            buyback_enabled=False,
         )
 
     # Legacy: Full algorithm with slash/percent format
@@ -87,7 +94,9 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
         rebalance_pct = float(m.group(2))
         profit_pct = float(m.group(3))
         return SyntheticDividendAlgorithm(
-            rebalance_size=rebalance_pct / 100.0, profit_sharing=profit_pct / 100.0, buyback_enabled=True
+            rebalance_size=rebalance_pct / 100.0,
+            profit_sharing=profit_pct / 100.0,
+            buyback_enabled=True,
         )
 
     raise ValueError(f"Unrecognized strategy name: {name}")

@@ -3,8 +3,8 @@
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import Any, Dict, List, Optional
-import pandas as pd
 
+import pandas as pd
 
 # Import Transaction and WithdrawalResult from types module
 from src.models.types import Transaction, WithdrawalResult
@@ -69,10 +69,10 @@ class AlgorithmBase(ABC):
         allow_margin: bool,
     ) -> WithdrawalResult:
         """Handle a withdrawal request, deciding how to fulfill it.
-        
+
         Default implementation: Use cash first, then sell shares if needed.
         Subclasses can override to implement custom withdrawal strategies.
-        
+
         Args:
             date_: Current date
             requested_amount: Amount of cash requested for withdrawal
@@ -80,7 +80,7 @@ class AlgorithmBase(ABC):
             holdings: Current share count
             bank: Current cash balance (may be negative)
             allow_margin: Whether negative bank balance is allowed
-        
+
         Returns:
             WithdrawalResult specifying how to fulfill the withdrawal
         """
@@ -90,7 +90,7 @@ class AlgorithmBase(ABC):
             return WithdrawalResult(
                 shares_to_sell=0,
                 cash_from_bank=requested_amount,
-                notes="Withdrawal from cash balance"
+                notes="Withdrawal from cash balance",
             )
         else:
             # Insufficient cash - need to sell shares
@@ -101,15 +101,15 @@ class AlgorithmBase(ABC):
             else:
                 # Strict mode: also need to cover negative bank balance
                 cash_needed = requested_amount - bank  # If bank<0, this increases cash_needed
-            
+
             shares_to_sell = int(cash_needed / current_price) + 1  # Round up
             shares_to_sell = min(shares_to_sell, holdings)  # Cap at available
-            
+
             # Calculate actual cash available from bank after share sale
             cash_from_bank = requested_amount
-            
+
             return WithdrawalResult(
                 shares_to_sell=shares_to_sell,
                 cash_from_bank=cash_from_bank,
-                notes=f"Selling {shares_to_sell} shares for withdrawal (need ${requested_amount:.2f})"
+                notes=f"Selling {shares_to_sell} shares for withdrawal (need ${requested_amount:.2f})",
             )
