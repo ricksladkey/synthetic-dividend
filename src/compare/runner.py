@@ -29,6 +29,19 @@ def main(argv):
     algo_id = argv[4]
     out_png = argv[5]
 
+    # Normalize shorthand legacy algo identifiers used in the example batch file.
+    # Accept forms like:
+    #   - "ath-only/9.05%/50%"  -> "sd-ath-only/9.05%/50%"
+    #   - trailing "/full" is optional and not used by the factory (strip it)
+    if algo_id.endswith("/full"):
+        algo_id = algo_id[: -len("/full")]
+    if algo_id.startswith("ath-only/"):
+        algo_id = "sd-ath-only/" + algo_id.split("ath-only/", 1)[1]
+    # If ATH-only provided with only rebalance percent (no profit sharing),
+    # assume default 50% profit sharing (legacy shorthand used in the .bat).
+    if algo_id.startswith("sd-ath-only/") and algo_id.count("%") == 1:
+        algo_id = algo_id + "/50%"
+
     # load price history (uses fetcher cache)
     fetcher = HistoryFetcher()
     df = fetcher.get_history(ticker, start, end)
@@ -39,13 +52,15 @@ def main(argv):
     )
 
     # write transactions to a small file next to PNG
+    # Write transactions to a small file next to PNG and prepare string lines
     tx_file = os.path.splitext(out_png)[0] + "-tx.txt"
+    tx_lines = [str(t) for t in txs]
     with open(tx_file, "w") as f:
-        for t in txs:
-            f.write(t + "\n")
+        for line in tx_lines:
+            f.write(line + "\n")
 
-    # plot with markers
-    plot_price_with_trades(df, txs, ticker, out_png)
+    # plot with markers (plotter expects a list of string lines)
+    plot_price_with_trades(df, tx_lines, ticker, out_png)
 
     print(f"Wrote {out_png} and {tx_file}")
     print("Summary:")
