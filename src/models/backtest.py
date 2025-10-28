@@ -198,6 +198,9 @@ def run_algorithm_backtest(
         reference_data = kwargs.pop("reference_asset_df")
     if "risk_free_asset_df" in kwargs and risk_free_data is None:
         risk_free_data = kwargs.pop("risk_free_asset_df")
+    # Check for any remaining unexpected kwargs
+    if kwargs:
+        raise TypeError(f"Unexpected keyword arguments: {', '.join(kwargs.keys())}")
 
     if df is None or df.empty:
         raise ValueError("Empty price data")

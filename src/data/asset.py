@@ -110,6 +110,7 @@ class Asset:
                 self._provider.clear_cache()
                 return
             except Exception:
+                # Ignore provider clear_cache errors: fallback to manual cache deletion
                 pass
 
         for path in (self.pkl_path, self.csv_path, self.div_pkl_path, self.div_csv_path):
@@ -117,6 +118,7 @@ class Asset:
                 if os.path.exists(path):
                     os.remove(path)
             except Exception:
+                # Ignore file deletion errors: cache clearing is best-effort
                 pass
 
     # --- Internal helpers for the fallback implementation ---
@@ -133,6 +135,7 @@ class Asset:
             df.to_pickle(self.pkl_path)
             df.to_csv(self.csv_path, index=True)
         except Exception:
+            # Ignore cache write errors: cache is non-critical and failures should not interrupt main flow
             pass
 
     def _load_dividend_cache(self) -> Optional[pd.Series]:
@@ -148,6 +151,7 @@ class Asset:
             series.to_pickle(self.div_pkl_path)
             series.to_frame(name="Dividends").to_csv(self.div_csv_path)
         except Exception:
+            # Ignore cache write errors: cache is non-critical and failures should not interrupt main flow
             pass
 
     def _cache_covers_range(self, cached: Optional[pd.DataFrame], start: date, end: date) -> bool:
@@ -183,7 +187,7 @@ class Asset:
 
         try:
             ticker = yf.Ticker(self.ticker)
-            df = ticker.history(start=start.isoformat(), end=(end + pd.Timedelta(days=1)).isoformat())
+            df = ticker.history(start=start.isoformat(), end=(pd.Timestamp(end) + pd.Timedelta(days=1)).isoformat())
             # Ensure index is a DatetimeIndex and return expected columns
             return df
         except Exception:
