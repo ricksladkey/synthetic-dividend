@@ -28,17 +28,13 @@ class TestAssetBasics:
             assert asset.ticker == "NVDA"
 
     def test_cache_paths_set_correctly(self):
-        """Asset should delegate to YahooAssetProvider for equities."""
+        """Cache file paths should be set correctly."""
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("NVDA", cache_dir=tmpdir)
-            # Should use Yahoo provider
-            from src.data.yahoo_provider import YahooAssetProvider
-            assert isinstance(asset._provider, YahooAssetProvider)
-            # Provider should have cache paths set correctly
-            assert asset._provider.pkl_path == os.path.join(tmpdir, "NVDA.pkl")
-            assert asset._provider.csv_path == os.path.join(tmpdir, "NVDA.csv")
-            assert asset._provider.div_pkl_path == os.path.join(tmpdir, "NVDA_dividends.pkl")
-            assert asset._provider.div_csv_path == os.path.join(tmpdir, "NVDA_dividends.csv")
+            assert asset.pkl_path == os.path.join(tmpdir, "NVDA.pkl")
+            assert asset.csv_path == os.path.join(tmpdir, "NVDA.csv")
+            assert asset.div_pkl_path == os.path.join(tmpdir, "NVDA_dividends.pkl")
+            assert asset.div_csv_path == os.path.join(tmpdir, "NVDA_dividends.csv")
 
 
 class TestAssetPrices:
@@ -62,14 +58,12 @@ class TestAssetPrices:
             df = asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
             
             if not df.empty:
-                # Both cache files should exist (via YahooAssetProvider)
-                from src.data.yahoo_provider import YahooAssetProvider
-                assert isinstance(asset._provider, YahooAssetProvider)
-                assert os.path.exists(asset._provider.pkl_path)
-                assert os.path.exists(asset._provider.csv_path)
+                # Both cache files should exist
+                assert os.path.exists(asset.pkl_path)
+                assert os.path.exists(asset.csv_path)
                 
                 # CSV should be readable
-                df_csv = pd.read_csv(asset._provider.csv_path, index_col=0, parse_dates=True)
+                df_csv = pd.read_csv(asset.csv_path, index_col=0, parse_dates=True)
                 assert not df_csv.empty
 
     def test_get_prices_uses_cache_on_second_call(self):
@@ -82,10 +76,8 @@ class TestAssetPrices:
             
             if not df1.empty:
                 # Modify pkl cache to test that it's being used
-                from src.data.yahoo_provider import YahooAssetProvider
-                assert isinstance(asset._provider, YahooAssetProvider)
                 df_modified = df1.copy()
-                df_modified.to_pickle(asset._provider.pkl_path)
+                df_modified.to_pickle(asset.pkl_path)
                 
                 # Second call: should use cache
                 df2 = asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
@@ -123,14 +115,12 @@ class TestAssetDividends:
             divs = asset.get_dividends(date(2023, 1, 1), date(2023, 12, 31))
             
             if not divs.empty:
-                # Both cache files should exist (via YahooAssetProvider)
-                from src.data.yahoo_provider import YahooAssetProvider
-                assert isinstance(asset._provider, YahooAssetProvider)
-                assert os.path.exists(asset._provider.div_pkl_path)
-                assert os.path.exists(asset._provider.div_csv_path)
+                # Both cache files should exist
+                assert os.path.exists(asset.div_pkl_path)
+                assert os.path.exists(asset.div_csv_path)
                 
                 # CSV should be readable
-                df_csv = pd.read_csv(asset._provider.div_csv_path, index_col=0, parse_dates=True)
+                df_csv = pd.read_csv(asset.div_csv_path, index_col=0, parse_dates=True)
                 assert not df_csv.empty
 
     def test_get_dividends_validates_date_range(self):
@@ -164,23 +154,19 @@ class TestAssetCacheClear:
             asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
             asset.get_dividends(date(2023, 1, 1), date(2023, 12, 31))
             
-            # Get provider paths
-            from src.data.yahoo_provider import YahooAssetProvider
-            assert isinstance(asset._provider, YahooAssetProvider)
-            
             # At least some cache files should exist
             files_before = [
-                os.path.exists(asset._provider.pkl_path),
-                os.path.exists(asset._provider.csv_path),
-                os.path.exists(asset._provider.div_pkl_path),
-                os.path.exists(asset._provider.div_csv_path),
+                os.path.exists(asset.pkl_path),
+                os.path.exists(asset.csv_path),
+                os.path.exists(asset.div_pkl_path),
+                os.path.exists(asset.div_csv_path),
             ]
             
             # Clear cache
             asset.clear_cache()
             
             # All cache files should be removed
-            assert not os.path.exists(asset._provider.pkl_path)
-            assert not os.path.exists(asset._provider.csv_path)
-            assert not os.path.exists(asset._provider.div_pkl_path)
-            assert not os.path.exists(asset._provider.div_csv_path)
+            assert not os.path.exists(asset.pkl_path)
+            assert not os.path.exists(asset.csv_path)
+            assert not os.path.exists(asset.div_pkl_path)
+            assert not os.path.exists(asset.div_csv_path)
