@@ -97,6 +97,11 @@ def create_synthetic_prices(scenario: str, start_price: float = 100.0) -> pd.Dat
         # 100 -> 110 (sell) -> 101 (buy) -> 110 (unwind) -> 120
         prices = [100.0, 110.0, 101.0, 110.0, 120.0]
         
+    elif scenario == "negative_alpha_drawdown":
+        # Price rises then collapses into a sustained drawdown
+        # 100 -> 120 (peak) -> 80 -> 70 (ends in drawdown)
+        prices = [100.0, 120.0, 80.0, 70.0]
+        
     else:
         raise ValueError(f"Unknown scenario: {scenario}")
     
