@@ -187,7 +187,9 @@ class Asset:
 
         try:
             ticker = yf.Ticker(self.ticker)
-            df = ticker.history(start=start.isoformat(), end=(pd.Timestamp(end) + pd.Timedelta(days=1)).isoformat())
+            # yfinance requires end date to be exclusive, so add one day
+            end_date = pd.Timestamp(end) + pd.Timedelta(days=1)
+            df = ticker.history(start=start.isoformat(), end=end_date.isoformat())
             # Ensure index is a DatetimeIndex and return expected columns
             return df
         except Exception:

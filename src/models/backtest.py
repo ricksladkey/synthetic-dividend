@@ -200,7 +200,18 @@ def run_algorithm_backtest(
         risk_free_data = kwargs.pop("risk_free_asset_df")
     # Check for any remaining unexpected kwargs
     if kwargs:
-        raise TypeError(f"Unexpected keyword arguments: {', '.join(kwargs.keys())}")
+        valid_params = [
+            "df", "ticker", "initial_qty", "start_date", "end_date", "algo", "algo_params",
+            "reference_return_pct", "risk_free_rate_pct", "reference_data", "risk_free_data",
+            "reference_asset_ticker", "risk_free_asset_ticker", "dividend_series",
+            "withdrawal_rate_pct", "withdrawal_frequency_days", "cpi_data", "simple_mode",
+            "normalize_prices", "allow_margin", "initial_investment"
+        ]
+        raise TypeError(
+            f"run_algorithm_backtest() got unexpected keyword argument(s): "
+            f"{', '.join(repr(k) for k in kwargs.keys())}. "
+            f"Valid parameters are: {', '.join(valid_params)}"
+        )
 
     if df is None or df.empty:
         raise ValueError("Empty price data")
