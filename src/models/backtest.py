@@ -200,12 +200,15 @@ def run_algorithm_backtest(
         risk_free_data = kwargs.pop("risk_free_asset_df")
     # Check for any remaining unexpected kwargs
     if kwargs:
+        # List all parameters that can be passed to this function, including
+        # backwards-compatible aliases (even though they're consumed above)
         valid_params = [
             "df", "ticker", "initial_qty", "start_date", "end_date", "algo", "algo_params",
             "reference_return_pct", "risk_free_rate_pct", "reference_data", "risk_free_data",
             "reference_asset_ticker", "risk_free_asset_ticker", "dividend_series",
             "withdrawal_rate_pct", "withdrawal_frequency_days", "cpi_data", "simple_mode",
-            "normalize_prices", "allow_margin", "initial_investment"
+            "normalize_prices", "allow_margin", "initial_investment",
+            "reference_asset_df", "risk_free_asset_df"  # Backwards-compatible aliases
         ]
         raise TypeError(
             f"run_algorithm_backtest() got unexpected keyword argument(s): "
