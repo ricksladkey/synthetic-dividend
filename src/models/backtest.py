@@ -835,6 +835,15 @@ def run_algorithm_backtest(
     # Notify algorithm of completion
     algo_obj.on_end_holding()
 
+    # Expose algorithm-specific diagnostics in summary when available
+    # e.g., SyntheticDividendAlgorithm keeps buyback_stack_count for diagnostics
+    try:
+        if hasattr(algo_obj, "buyback_stack_count"):
+            summary["final_stack_size"] = getattr(algo_obj, "buyback_stack_count")
+    except Exception:
+        # Don't fail the backtest if diagnostic extraction fails
+        summary["final_stack_size"] = summary.get("final_stack_size", 0)
+
     return transactions, summary
 
 
