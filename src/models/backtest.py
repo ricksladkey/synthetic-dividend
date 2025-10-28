@@ -205,7 +205,9 @@ def run_algorithm_backtest(
             "reference_return_pct", "risk_free_rate_pct", "reference_data", "risk_free_data",
             "reference_asset_ticker", "risk_free_asset_ticker", "dividend_series",
             "withdrawal_rate_pct", "withdrawal_frequency_days", "cpi_data", "simple_mode",
-            "normalize_prices", "allow_margin", "initial_investment"
+            "normalize_prices", "allow_margin", "initial_investment",
+            # Backwards-compatible aliases (deprecated but supported)
+            "reference_asset_df", "risk_free_asset_df"
         ]
         raise TypeError(
             f"run_algorithm_backtest() got unexpected keyword argument(s): "
