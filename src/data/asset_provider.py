@@ -10,7 +10,7 @@ Registry pattern allows priority-based provider selection.
 
 from abc import ABC, abstractmethod
 from datetime import date
-from typing import Dict, List, Optional, Tuple, Type
+from typing import List, Tuple, Type
 
 import pandas as pd
 
@@ -46,7 +46,6 @@ class AssetProvider(ABC):
             Index: dates
             Empty DataFrame if no data available
         """
-        pass
 
     @abstractmethod
     def get_dividends(self, start_date: date, end_date: date) -> pd.Series:
@@ -60,14 +59,12 @@ class AssetProvider(ABC):
             Series with dividend amounts indexed by ex-dividend date
             Empty Series if no dividends
         """
-        pass
 
     def clear_cache(self) -> None:
         """Clear any cached data for this asset.
 
         Optional: providers that don't cache can leave this as no-op.
         """
-        pass
 
 
 class AssetRegistry:

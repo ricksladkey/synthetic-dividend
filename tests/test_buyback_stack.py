@@ -11,7 +11,6 @@ from datetime import date, timedelta
 from typing import List, Tuple
 
 import pandas as pd
-import pytest
 
 from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
 

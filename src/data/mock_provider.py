@@ -4,7 +4,7 @@ Provides synthetic/deterministic price data for testing algorithms without
 network dependencies or real market data variability.
 """
 
-from datetime import date, timedelta
+from datetime import date
 
 import numpy as np
 import pandas as pd
@@ -160,7 +160,6 @@ class MockAssetProvider(AssetProvider):
 
     def clear_cache(self) -> None:
         """No-op for mock provider (no caching)."""
-        pass
 
 
 # Convenience factory for common patterns

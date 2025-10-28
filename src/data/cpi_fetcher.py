@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Optional
 
 import pandas as pd
-import yfinance as yf
 
 # Cache directory for CPI data
 CACHE_DIR = Path("data/cache")

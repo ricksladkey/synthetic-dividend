@@ -22,7 +22,6 @@ import sys
 from datetime import date, datetime
 from typing import List, Optional
 
-import pandas as pd
 
 
 def parse_date(s: str) -> date:

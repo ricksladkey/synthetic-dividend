@@ -5,9 +5,6 @@ for backtesting against historical OHLC price data.
 """
 
 import math
-import re
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from datetime import date
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -21,14 +18,12 @@ from src.algorithms import (
     AlgorithmBase,
     BuyAndHoldAlgorithm,
     SyntheticDividendAlgorithm,
-    build_algo_from_name,
 )
 
 # Import utility functions
-from src.models.backtest_utils import calculate_synthetic_dividend_orders
 
 # Import common types
-from src.models.types import Transaction, WithdrawalResult
+from src.models.types import Transaction
 
 
 def calculate_time_weighted_average_holdings(
