@@ -3,6 +3,7 @@
 Shows how dividend payments from dividend-paying stocks are automatically
 credited to the bank, improving coverage ratio and reducing forced sales.
 """
+
 from datetime import date
 
 from src.data.fetcher import HistoryFetcher
@@ -17,13 +18,13 @@ def main():
 
     # Fetch historical data
     fetcher = HistoryFetcher()
-    
+
     print("Fetching AAPL price history (2024)...")
     price_df = fetcher.get_history("AAPL", date(2024, 1, 1), date(2024, 12, 31))
-    
+
     print("Fetching AAPL dividend history (2024)...")
     div_series = fetcher.get_dividends("AAPL", date(2024, 1, 1), date(2024, 12, 31))
-    
+
     print()
     print(f"AAPL dividend payments in 2024:")
     print(f"  Count: {len(div_series)}")
@@ -48,7 +49,7 @@ def main():
         dividend_series=None,  # Ignore dividends
         simple_mode=True,
     )
-    
+
     print(f"Total return: {summary1['total_return'] * 100:.2f}%")
     print(f"Bank balance: ${summary1['bank']:.2f}")
     print(f"Total value: ${summary1['total']:.2f}")
@@ -70,7 +71,7 @@ def main():
         dividend_series=div_series,  # Include real dividends
         simple_mode=True,
     )
-    
+
     print(f"Total return: {summary2['total_return'] * 100:.2f}%")
     print(f"Bank balance: ${summary2['bank']:.2f}")
     print(f"Total value: ${summary2['total']:.2f}")
@@ -82,14 +83,14 @@ def main():
     print("=" * 80)
     print("COMPARISON")
     print("=" * 80)
-    bank_diff = summary2['bank'] - summary1['bank']
-    total_diff = summary2['total'] - summary1['total']
-    
+    bank_diff = summary2["bank"] - summary1["bank"]
+    total_diff = summary2["total"] - summary1["total"]
+
     print(f"Bank balance increase: ${bank_diff:.2f}")
     print(f"Total value increase: ${total_diff:.2f}")
     print(f"Total dividends captured: ${summary2['total_dividends']:.2f}")
     print()
-    
+
     # Show dividend transactions
     print("Dividend transaction log (subset):")
     div_txns = [t for t in transactions2 if "DIVIDEND" in t]
@@ -98,7 +99,7 @@ def main():
     if len(div_txns) > 3:
         print(f"  ... and {len(div_txns) - 3} more")
     print()
-    
+
     print("=" * 80)
     print("KEY INSIGHT:")
     print("=" * 80)

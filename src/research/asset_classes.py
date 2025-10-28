@@ -3,6 +3,7 @@
 Categorizes assets by volatility regime and provides lookup functions
 for batch testing and analysis.
 """
+
 from typing import Dict, List
 
 # Asset class definitions with expected volatility characteristics
@@ -36,15 +37,15 @@ ASSET_CLASSES: Dict[str, Dict[str, any]] = {
 # Exponential scaling lookup: sdN → rebalance trigger %
 # Formula: 2^(1/N) - 1
 SD_LOOKUP: Dict[int, float] = {
-    4: 18.9207,   # 2^(1/4) - 1
-    5: 14.8698,   # 2^(1/5) - 1
-    6: 12.2462,   # 2^(1/6) - 1
-    8: 9.0508,    # 2^(1/8) - 1 (legacy default)
-    10: 7.1773,   # 2^(1/10) - 1
-    12: 5.9463,   # 2^(1/12) - 1
-    16: 4.4271,   # 2^(1/16) - 1
-    20: 3.5265,   # 2^(1/20) - 1
-    24: 2.9302,   # 2^(1/24) - 1
+    4: 18.9207,  # 2^(1/4) - 1
+    5: 14.8698,  # 2^(1/5) - 1
+    6: 12.2462,  # 2^(1/6) - 1
+    8: 9.0508,  # 2^(1/8) - 1 (legacy default)
+    10: 7.1773,  # 2^(1/10) - 1
+    12: 5.9463,  # 2^(1/12) - 1
+    16: 4.4271,  # 2^(1/16) - 1
+    20: 3.5265,  # 2^(1/20) - 1
+    24: 2.9302,  # 2^(1/24) - 1
 }
 
 
@@ -81,12 +82,12 @@ def get_recommended_sd_values(ticker: str) -> List[int]:
 
 def calculate_sd_trigger(n: int) -> float:
     """Calculate rebalance trigger % for sdN exponential scaling.
-    
+
     Formula: (2^(1/N) - 1) * 100
-    
+
     Args:
         n: Number of geometric steps to doubling
-        
+
     Returns:
         Rebalance trigger percentage
     """
@@ -95,12 +96,12 @@ def calculate_sd_trigger(n: int) -> float:
 
 def print_sd_reference_table():
     """Print comprehensive reference table for sdN values."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXPONENTIAL SCALING REFERENCE: sdN → Rebalance Trigger")
-    print("="*70)
+    print("=" * 70)
     print(f"{'sdN':<8} {'Trigger %':<12} {'Description':<50}")
-    print("-"*70)
-    
+    print("-" * 70)
+
     sd_values = [4, 5, 6, 8, 10, 12, 16, 20, 24]
     for n in sd_values:
         trigger = calculate_sd_trigger(n)
@@ -113,16 +114,16 @@ def print_sd_reference_table():
         else:
             desc = "(Conservative: stable assets)"
         print(f"sd{n:<6} {trigger:>10.4f}%  {desc}")
-    
-    print("="*70)
+
+    print("=" * 70)
     print("\nFormula: rebalance_trigger = (2^(1/N) - 1) * 100")
     print("N = number of equal geometric steps to reach doubling (100% gain)")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 if __name__ == "__main__":
     print_sd_reference_table()
-    
+
     print("\nASSET CLASSES:")
     for class_name, data in ASSET_CLASSES.items():
         print(f"\n{class_name.upper()}:")

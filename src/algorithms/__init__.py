@@ -11,8 +11,8 @@ Available algorithms:
 
 from .base import AlgorithmBase
 from .buy_and_hold import BuyAndHoldAlgorithm
-from .synthetic_dividend import SyntheticDividendAlgorithm
 from .factory import build_algo_from_name
+from .synthetic_dividend import SyntheticDividendAlgorithm
 
 __all__ = [
     "AlgorithmBase",

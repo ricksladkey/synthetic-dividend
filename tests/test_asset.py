@@ -28,17 +28,13 @@ class TestAssetBasics:
             assert asset.ticker == "NVDA"
 
     def test_cache_paths_set_correctly(self):
-        """Asset should delegate to YahooAssetProvider for equities."""
+        """Cache file paths should be set correctly."""
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("NVDA", cache_dir=tmpdir)
-            # Should use Yahoo provider
-            from src.data.yahoo_provider import YahooAssetProvider
-            assert isinstance(asset._provider, YahooAssetProvider)
-            # Provider should have cache paths set correctly
-            assert asset._provider.pkl_path == os.path.join(tmpdir, "NVDA.pkl")
-            assert asset._provider.csv_path == os.path.join(tmpdir, "NVDA.csv")
-            assert asset._provider.div_pkl_path == os.path.join(tmpdir, "NVDA_dividends.pkl")
-            assert asset._provider.div_csv_path == os.path.join(tmpdir, "NVDA_dividends.csv")
+            assert asset.pkl_path == os.path.join(tmpdir, "NVDA.pkl")
+            assert asset.csv_path == os.path.join(tmpdir, "NVDA.csv")
+            assert asset.div_pkl_path == os.path.join(tmpdir, "NVDA_dividends.pkl")
+            assert asset.div_csv_path == os.path.join(tmpdir, "NVDA_dividends.csv")
 
 
 class TestAssetPrices:
@@ -49,7 +45,7 @@ class TestAssetPrices:
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("NVDA", cache_dir=tmpdir)
             df = asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
-            
+
             # Should return DataFrame with OHLC columns
             assert isinstance(df, pd.DataFrame)
             if not df.empty:  # May be empty if yfinance fails
@@ -60,36 +56,32 @@ class TestAssetPrices:
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("NVDA", cache_dir=tmpdir)
             df = asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
-            
+
             if not df.empty:
-                # Both cache files should exist (via YahooAssetProvider)
-                from src.data.yahoo_provider import YahooAssetProvider
-                assert isinstance(asset._provider, YahooAssetProvider)
-                assert os.path.exists(asset._provider.pkl_path)
-                assert os.path.exists(asset._provider.csv_path)
-                
+                # Both cache files should exist
+                assert os.path.exists(asset.pkl_path)
+                assert os.path.exists(asset.csv_path)
+
                 # CSV should be readable
-                df_csv = pd.read_csv(asset._provider.csv_path, index_col=0, parse_dates=True)
+                df_csv = pd.read_csv(asset.csv_path, index_col=0, parse_dates=True)
                 assert not df_csv.empty
 
     def test_get_prices_uses_cache_on_second_call(self):
         """Second call with same range should use cache (no download)."""
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("NVDA", cache_dir=tmpdir)
-            
+
             # First call: download and cache
             df1 = asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
-            
+
             if not df1.empty:
                 # Modify pkl cache to test that it's being used
-                from src.data.yahoo_provider import YahooAssetProvider
-                assert isinstance(asset._provider, YahooAssetProvider)
                 df_modified = df1.copy()
-                df_modified.to_pickle(asset._provider.pkl_path)
-                
+                df_modified.to_pickle(asset.pkl_path)
+
                 # Second call: should use cache
                 df2 = asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
-                
+
                 # Should return same data
                 pd.testing.assert_frame_equal(df1, df2)
 
@@ -97,7 +89,7 @@ class TestAssetPrices:
         """Should raise ValueError if start_date > end_date."""
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("NVDA", cache_dir=tmpdir)
-            
+
             with pytest.raises(ValueError):
                 asset.get_prices(date(2024, 12, 31), date(2024, 1, 1))
 
@@ -110,7 +102,7 @@ class TestAssetDividends:
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("AAPL", cache_dir=tmpdir)  # AAPL pays dividends
             divs = asset.get_dividends(date(2023, 1, 1), date(2023, 12, 31))
-            
+
             # Should return Series
             assert isinstance(divs, pd.Series)
             # AAPL pays quarterly dividends, should have ~4 entries for full year
@@ -121,23 +113,21 @@ class TestAssetDividends:
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("AAPL", cache_dir=tmpdir)
             divs = asset.get_dividends(date(2023, 1, 1), date(2023, 12, 31))
-            
+
             if not divs.empty:
-                # Both cache files should exist (via YahooAssetProvider)
-                from src.data.yahoo_provider import YahooAssetProvider
-                assert isinstance(asset._provider, YahooAssetProvider)
-                assert os.path.exists(asset._provider.div_pkl_path)
-                assert os.path.exists(asset._provider.div_csv_path)
-                
+                # Both cache files should exist
+                assert os.path.exists(asset.div_pkl_path)
+                assert os.path.exists(asset.div_csv_path)
+
                 # CSV should be readable
-                df_csv = pd.read_csv(asset._provider.div_csv_path, index_col=0, parse_dates=True)
+                df_csv = pd.read_csv(asset.div_csv_path, index_col=0, parse_dates=True)
                 assert not df_csv.empty
 
     def test_get_dividends_validates_date_range(self):
         """Should raise ValueError if start_date > end_date."""
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("AAPL", cache_dir=tmpdir)
-            
+
             with pytest.raises(ValueError):
                 asset.get_dividends(date(2024, 12, 31), date(2024, 1, 1))
 
@@ -147,7 +137,7 @@ class TestAssetDividends:
             # Many growth stocks don't pay dividends
             asset = Asset("NVDA", cache_dir=tmpdir)
             divs = asset.get_dividends(date(2020, 1, 1), date(2020, 12, 31))
-            
+
             # Should return empty Series (NVDA didn't pay dividends in 2020)
             assert isinstance(divs, pd.Series)
 
@@ -159,28 +149,24 @@ class TestAssetCacheClear:
         """Should remove all cache files (prices + dividends, pkl + csv)."""
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("AAPL", cache_dir=tmpdir)
-            
+
             # Create cache files
             asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
             asset.get_dividends(date(2023, 1, 1), date(2023, 12, 31))
-            
-            # Get provider paths
-            from src.data.yahoo_provider import YahooAssetProvider
-            assert isinstance(asset._provider, YahooAssetProvider)
-            
+
             # At least some cache files should exist
             files_before = [
-                os.path.exists(asset._provider.pkl_path),
-                os.path.exists(asset._provider.csv_path),
-                os.path.exists(asset._provider.div_pkl_path),
-                os.path.exists(asset._provider.div_csv_path),
+                os.path.exists(asset.pkl_path),
+                os.path.exists(asset.csv_path),
+                os.path.exists(asset.div_pkl_path),
+                os.path.exists(asset.div_csv_path),
             ]
-            
+
             # Clear cache
             asset.clear_cache()
-            
+
             # All cache files should be removed
-            assert not os.path.exists(asset._provider.pkl_path)
-            assert not os.path.exists(asset._provider.csv_path)
-            assert not os.path.exists(asset._provider.div_pkl_path)
-            assert not os.path.exists(asset._provider.div_csv_path)
+            assert not os.path.exists(asset.pkl_path)
+            assert not os.path.exists(asset.csv_path)
+            assert not os.path.exists(asset.div_pkl_path)
+            assert not os.path.exists(asset.div_csv_path)
