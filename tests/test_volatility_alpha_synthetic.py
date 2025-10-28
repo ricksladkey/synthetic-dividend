@@ -91,6 +91,11 @@ def create_synthetic_prices(scenario: str, start_price: float = 100.0) -> pd.Dat
         # Then moon to 200
         moon_days = 40
         prices.extend([100 + 100 * i / moon_days for i in range(moon_days + 1)])
+
+    elif scenario == "positive_alpha_recovery":
+        # Sell, buyback, then recover to unwind the stack at a profit
+        # 100 -> 110 (sell) -> 101 (buy) -> 110 (unwind) -> 120
+        prices = [100.0, 110.0, 101.0, 110.0, 120.0]
         
     else:
         raise ValueError(f"Unknown scenario: {scenario}")
