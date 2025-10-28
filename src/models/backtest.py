@@ -112,6 +112,7 @@ def run_algorithm_backtest(
     allow_margin: bool = True,
     # Investment amount (alternative to initial_qty)
     initial_investment: Optional[float] = None,
+    **kwargs: Any,
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Execute backtest of trading algorithm against historical price data.
 
@@ -191,6 +192,13 @@ def run_algorithm_backtest(
               deployment_min/max, avg_deployed_capital
             * Baseline: buy-and-hold comparison data
     """
+    # Backwards-compatible aliases: accept older kwarg names used in tests/older code
+    # (e.g., reference_asset_df -> reference_data, risk_free_asset_df -> risk_free_data)
+    if "reference_asset_df" in kwargs and reference_data is None:
+        reference_data = kwargs.pop("reference_asset_df")
+    if "risk_free_asset_df" in kwargs and risk_free_data is None:
+        risk_free_data = kwargs.pop("risk_free_asset_df")
+
     if df is None or df.empty:
         raise ValueError("Empty price data")
 
