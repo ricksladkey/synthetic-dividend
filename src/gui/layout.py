@@ -11,8 +11,8 @@ from typing import Any, Dict, List
 
 import pandas as pd
 
-from data.fetcher import HistoryFetcher
-from models.backtest import build_algo_from_name, run_algorithm_backtest
+from src.data.asset import Asset
+from src.models.backtest import build_algo_from_name, run_algorithm_backtest
 
 # Default parameter values for GUI initialization
 DEFAULT_TICKER: str = "NVDA"
@@ -42,9 +42,6 @@ class FinancialModelingApp:
         """
         self.master: tk.Tk = master
         master.title("Financial Modeling Application")
-
-        # Data fetcher with disk cache
-        self.fetcher: HistoryFetcher = HistoryFetcher()
 
         # Tkinter variables for input fields
         self.ticker_var: tk.StringVar
@@ -142,7 +139,7 @@ class FinancialModelingApp:
 
         Workflow:
         1. Validate and parse user inputs (ticker, quantity, dates)
-        2. Fetch historical price data via HistoryFetcher
+        2. Fetch historical price data via the Asset class
         3. Build algorithm instance from strategy string
         4. Execute backtest via run_algorithm_backtest()
         5. Display transaction log and summary statistics in GUI
@@ -174,7 +171,7 @@ class FinancialModelingApp:
 
         # Fetch historical data (uses disk cache for efficiency)
         try:
-            df: pd.DataFrame = self.fetcher.get_history(ticker, start_date, end_date)
+            df: pd.DataFrame = Asset(ticker).get_prices(start_date, end_date)
         except Exception as e:
             messagebox.showerror("Fetcher error", str(e))
             return

@@ -194,7 +194,7 @@ class YahooAssetProvider(AssetProvider):
             cached_dates = pd.to_datetime(cached.index).date
             cache_min = min(cached_dates)
             cache_max = max(cached_dates)
-            return cache_min <= start and cache_max >= end
+            return bool(cache_min <= start and cache_max >= end)
         except Exception:
             return False
 
