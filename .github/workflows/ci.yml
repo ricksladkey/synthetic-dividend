@@ -50,7 +50,7 @@ jobs:
 
       - name: Mypy
         run: |
-          mypy src
+          mypy --explicit-package-bases src
 
   test:
     name: Tests (pytest + coverage)
