@@ -76,7 +76,9 @@ def main(argv):
             except Exception:
                 date_str = str(date_attr)
             # Standardized format: YYYY-MM-DD ACTION QTY @ PRICE TICKER
-            tx_lines.append(f"{date_str} {action.upper()} {qty} @ {price:.2f} {ticker_attr or ''}".strip())
+            tx_lines.append(
+                f"{date_str} {action.upper()} {qty} @ {price:.2f} {ticker_attr or ''}".strip()
+            )
             continue
         # Last resort: use str()
         tx_lines.append(str(t))
