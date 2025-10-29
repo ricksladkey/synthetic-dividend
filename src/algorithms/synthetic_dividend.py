@@ -76,7 +76,14 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         # Allow bracket_seed from params dict if not explicitly provided
         self.bracket_seed: Optional[float] = bracket_seed
         if self.bracket_seed is None and params:
-            self.bracket_seed = params.get("bracket_seed")
+            seed_value = params.get("bracket_seed")
+            # Validate that seed is numeric if provided via params
+            if seed_value is not None:
+                try:
+                    self.bracket_seed = float(seed_value)
+                except (TypeError, ValueError):
+                    # Invalid seed value, ignore it
+                    pass
 
         # Performance tracking: cumulative alpha from volatility harvesting
         self.total_volatility_alpha: float = 0.0

@@ -194,6 +194,41 @@ class TestBracketSeed(unittest.TestCase):
         self.assertEqual(orders_no_seed["next_buy_qty"], orders_with_seed["next_buy_qty"])
         self.assertEqual(orders_no_seed["next_sell_qty"], orders_with_seed["next_sell_qty"])
 
+    def test_params_dict_support(self):
+        """Test that SyntheticDividendAlgorithm can accept bracket_seed via params dict."""
+        from src.algorithms.synthetic_dividend import SyntheticDividendAlgorithm
+
+        # Test with valid numeric seed in params
+        algo1 = SyntheticDividendAlgorithm(
+            rebalance_size=0.0905,
+            profit_sharing=0.5,
+            params={"bracket_seed": 100.0},
+        )
+        self.assertEqual(algo1.bracket_seed, 100.0)
+
+        # Test with string numeric seed (should convert)
+        algo2 = SyntheticDividendAlgorithm(
+            rebalance_size=0.0905,
+            profit_sharing=0.5,
+            params={"bracket_seed": "100.0"},
+        )
+        self.assertEqual(algo2.bracket_seed, 100.0)
+
+        # Test with invalid seed (should be ignored)
+        algo3 = SyntheticDividendAlgorithm(
+            rebalance_size=0.0905,
+            profit_sharing=0.5,
+            params={"bracket_seed": "invalid"},
+        )
+        self.assertIsNone(algo3.bracket_seed)
+
+        # Test with no params
+        algo4 = SyntheticDividendAlgorithm(
+            rebalance_size=0.0905,
+            profit_sharing=0.5,
+        )
+        self.assertIsNone(algo4.bracket_seed)
+
 
 if __name__ == "__main__":
     unittest.main()
