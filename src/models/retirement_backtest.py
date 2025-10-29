@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Tuple
 import pandas as pd
 
 from src.algorithms.base import AlgorithmBase
-from src.data.cpi_fetcher import CPIFetcher
+from src.data.cpi_fetcher import CPIFetcher, FredCPIProvider
 from src.models.backtest import Data, run_algorithm_backtest
 from src.models.model_types import Transaction
 
@@ -79,7 +79,7 @@ def run_retirement_backtest(
     cpi_adjustment_df = None
     if cpi_adjust:
         try:
-            cpi_fetcher = CPIFetcher()
+            cpi_fetcher = CPIFetcher(FredCPIProvider())
             cpi_adjustment_df = cpi_fetcher.get_cpi(start_date, end_date)
         except Exception as e:
             print(f"Warning: CPI data unavailable: {e}. Proceeding without CPI adjustment.")

@@ -33,7 +33,8 @@ from typing import Any, Dict, List
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.data.fetcher import HistoryFetcher  # noqa: E402
-from src.models.backtest import build_algo_from_name, run_algorithm_backtest  # noqa: E402
+from src.algorithms.factory import build_algo_from_name
+from src.models.backtest import run_algorithm_backtest  # noqa: E402
 
 
 def parse_date(s: str) -> date:
@@ -200,7 +201,8 @@ def run_strategy_backtest(
         }
 
     # Calculate yearly cash flow
-    yearly_cash = calculate_yearly_cash_flow(transactions, start_date, end_date)
+    transaction_strings = [tx.to_string() for tx in transactions]
+    yearly_cash = calculate_yearly_cash_flow(transaction_strings, start_date, end_date)
     cash_flow_stats = analyze_cash_flow_patterns(yearly_cash)
 
     # Extract metrics

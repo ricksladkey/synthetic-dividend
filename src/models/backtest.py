@@ -87,7 +87,7 @@ def calculate_time_weighted_average_holdings(
 
 
 def run_algorithm_backtest(
-    df: Data,
+    df: pd.DataFrame,
     ticker: str,
     initial_qty: Optional[int] = None,
     start_date: Optional[date] = None,
@@ -96,11 +96,11 @@ def run_algorithm_backtest(
     algo_params: Optional[Dict[str, Any]] = None,
     reference_return_pct: float = 0.0,
     risk_free_rate_pct: float = 0.0,
-    reference_data: Optional[Data] = None,
-    risk_free_data: Optional[Data] = None,
+    reference_data: Optional[pd.DataFrame] = None,
+    risk_free_data: Optional[pd.DataFrame] = None,
     # Backward-compat legacy params (alias of *_data)
-    reference_asset_df: Optional[Data] = None,
-    risk_free_asset_df: Optional[Data] = None,
+    reference_asset_df: Optional[pd.DataFrame] = None,
+    risk_free_asset_df: Optional[pd.DataFrame] = None,
     reference_asset_ticker: str = "",
     risk_free_asset_ticker: str = "",
     # Dividend/interest payments
@@ -108,7 +108,7 @@ def run_algorithm_backtest(
     # Withdrawal policy parameters
     withdrawal_rate_pct: float = 0.0,
     withdrawal_frequency_days: int = 30,
-    cpi_data: Optional[Data] = None,
+    cpi_data: Optional[pd.DataFrame] = None,
     simple_mode: bool = False,
     # Price normalization
     normalize_prices: bool = False,
@@ -486,9 +486,9 @@ def run_algorithm_backtest(
                 holdings: int,
                 bank: float,
                 history: pd.DataFrame,
-            ) -> Optional[Transaction]:
+            ) -> List[Transaction]:
                 result = self.fn(date_, price_row, holdings, bank, history, algo_params)
-                return result  # type: ignore[no-any-return]
+                return [result] if result is not None else []
 
             def on_end_holding(self) -> None:
                 pass
@@ -816,6 +816,7 @@ def run_algorithm_backtest(
     # Compute buy-and-hold baseline for alpha comparison
     try:
         # Baseline: hold initial_qty shares, no trading
+        assert initial_qty is not None, "initial_qty should be set for baseline calculation"
         baseline_end_value = initial_qty * final_price
         baseline_total = baseline_end_value  # No cash, just shares
         baseline_total_return = (baseline_total - start_val) / start_val if start_val != 0 else 0.0

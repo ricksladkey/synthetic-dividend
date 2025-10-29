@@ -49,8 +49,10 @@ class Order:
             raise ValueError(f"Order quantity must be positive, got {self.quantity}")
         if self.order_type == OrderType.LIMIT and self.limit_price is None:
             raise ValueError("Limit orders require a limit_price")
-        if self.order_type == OrderType.LIMIT and self.limit_price <= 0:
-            raise ValueError(f"Limit price must be positive, got {self.limit_price}")
+        if self.order_type == OrderType.LIMIT:
+            assert self.limit_price is not None, "Limit price should be set for LIMIT orders"
+            if self.limit_price <= 0:
+                raise ValueError(f"Limit price must be positive, got {self.limit_price}")
 
     def is_triggered(self, low: float, high: float) -> bool:
         """Check if order is triggered by day's price action.
@@ -65,7 +67,8 @@ class Order:
         if self.order_type == OrderType.MARKET:
             return True
 
-        # Limit order logic
+        # Limit order logic - limit_price is guaranteed to be set
+        assert self.limit_price is not None, "Limit price should be set for LIMIT orders"
         if self.action == OrderAction.BUY:
             # Buy limit triggers when price drops to or below limit
             return low <= self.limit_price
@@ -98,6 +101,7 @@ class Order:
         # Limit orders ALWAYS fill at limit price
         # The iteration logic handles multi-bracket gaps by creating
         # multiple transactions (one per bracket level)
+        assert self.limit_price is not None, "Limit price should be set for LIMIT orders"
         return self.limit_price
 
 

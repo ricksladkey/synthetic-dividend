@@ -40,7 +40,7 @@ Output:
 
 from datetime import date
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict, List
 
 import pandas as pd
 
@@ -164,7 +164,7 @@ def run_portfolio_experiment() -> Dict:
 
     # Run portfolio strategies
     strategies = ["buy-hold", "ath-only", "full-sd8"]
-    portfolio_results = {strat: [] for strat in strategies}
+    portfolio_results: Dict[str, List[Dict[str, Any]]] = {strat: [] for strat in strategies}
 
     for strategy in strategies:
         print(f"\n[PORTFOLIO: {strategy.upper()}]")

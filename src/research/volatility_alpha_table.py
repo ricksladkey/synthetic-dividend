@@ -12,7 +12,7 @@ Output: CSV table with all metrics
 import csv
 import math
 from datetime import date, timedelta
-from typing import Dict
+from typing import Dict, Optional
 
 from src.data.fetcher import HistoryFetcher
 from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
@@ -57,7 +57,7 @@ def collect_volatility_alpha_data(
     ticker: str,
     start_date: date,
     end_date: date,
-) -> Dict:
+) -> Optional[Dict]:
     """Collect volatility alpha data for a single ticker and timeframe.
 
     Returns:
@@ -114,7 +114,7 @@ def collect_volatility_alpha_data(
 
     # Count buy rebalances (BUY transactions in full strategy)
     buy_count = sum(
-        1 for line in transactions_full if "BUY" in line and "BUYBACK" not in line.upper()
+        1 for tx in transactions_full if tx.action == "BUY" and "BUYBACK" not in tx.notes.upper()
     )
 
     print(

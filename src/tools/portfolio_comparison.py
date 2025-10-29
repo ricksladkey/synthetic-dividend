@@ -9,7 +9,7 @@ Usage:
 
 import argparse
 from datetime import date, datetime
-from typing import Dict
+from typing import Dict, TypedDict
 
 from src.models.portfolio_simulator import compare_portfolios, simulate_portfolio
 from src.visualization.composition_chart import (
@@ -17,8 +17,12 @@ from src.visualization.composition_chart import (
     plot_portfolio_composition,
 )
 
+class Preset(TypedDict):
+    name: str
+    allocations: Dict[str, float]
+
 # Preset portfolio allocations
-PRESETS = {
+PRESETS: Dict[str, Preset] = {
     "crypto_stocks": {
         "name": "Crypto/Stocks Mix",
         "allocations": {
@@ -132,7 +136,7 @@ Examples:
     # Comparison mode
     if args.compare:
         portfolio_configs = [
-            (PRESETS[preset]["name"], PRESETS[preset]["allocations"]) for preset in args.compare
+            (PRESETS[preset]["name"], PRESETS[preset]["allocations"]) for preset in args.compare  # type: ignore
         ]
 
         result = compare_portfolios(portfolio_configs, start_date, end_date, args.initial)
@@ -151,7 +155,7 @@ Examples:
     elif args.preset or args.custom:
         if args.preset:
             name = PRESETS[args.preset]["name"]
-            allocations = PRESETS[args.preset]["allocations"]
+            allocations = PRESETS[args.preset]["allocations"]  # type: ignore
         else:
             name = "Custom Portfolio"
             allocations = parse_custom_allocation(args.custom)

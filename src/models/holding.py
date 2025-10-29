@@ -127,6 +127,7 @@ class Transaction:
         if self.is_open:
             return None
 
+        assert self.sale_price is not None, "Closed position must have sale_price"
         cost_basis = self.shares * self.purchase_price
         proceeds = self.shares * self.sale_price
         return proceeds - cost_basis

@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import os
 from datetime import date
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import pandas as pd
 
@@ -31,6 +31,9 @@ try:
 except Exception:
     yf = None  # type: ignore
     YFINANCE_AVAILABLE = False
+
+if TYPE_CHECKING:
+    from src.data.asset_provider import AssetProvider
 
 
 class Asset:
@@ -51,6 +54,9 @@ class Asset:
         self.csv_path = os.path.join(cache_dir, f"{self.ticker}.csv")
         self.div_pkl_path = os.path.join(cache_dir, f"{self.ticker}_dividends.pkl")
         self.div_csv_path = os.path.join(cache_dir, f"{self.ticker}_dividends.csv")
+
+        # Provider instance (None = use fallback)
+        self._provider: Optional["AssetProvider"] = None
 
         # Attempt to use a registered provider if available. Import locally to
         # avoid import cycles during package import.
@@ -80,6 +86,7 @@ class Asset:
     # Public API
     def get_prices(self, start_date: date, end_date: date) -> pd.DataFrame:
         if getattr(self, "_provider", None) is not None:
+            assert self._provider is not None
             return self._provider.get_prices(start_date, end_date)
 
         if start_date > end_date:
@@ -96,6 +103,7 @@ class Asset:
 
     def get_dividends(self, start_date: date, end_date: date) -> pd.Series:
         if getattr(self, "_provider", None) is not None:
+            assert self._provider is not None
             return self._provider.get_dividends(start_date, end_date)
 
         if start_date > end_date:
@@ -112,6 +120,7 @@ class Asset:
 
     def clear_cache(self) -> None:
         if getattr(self, "_provider", None) is not None:
+            assert self._provider is not None
             try:
                 self._provider.clear_cache()
                 return
@@ -165,7 +174,7 @@ class Asset:
             return False
         try:
             dates = pd.to_datetime(cached.index).date
-            return min(dates) <= start and max(dates) >= end
+            return bool(min(dates) <= start and max(dates) >= end)
         except Exception:
             return False
 

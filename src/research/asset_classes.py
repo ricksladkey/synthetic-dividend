@@ -4,7 +4,7 @@ Categorizes assets by volatility regime and provides lookup functions
 for batch testing and analysis.
 """
 
-from typing import Dict, List, Any
+from typing import Any, Dict, List, Any, TypedDict, cast
 
 # Asset class definitions with expected volatility characteristics
 ASSET_CLASSES: Dict[str, Dict[str, Any]] = {
@@ -61,7 +61,7 @@ def get_tickers_by_class(class_name: str) -> List[str]:
     """Return tickers for a specific asset class."""
     if class_name not in ASSET_CLASSES:
         raise ValueError(f"Unknown asset class: {class_name}")
-    return ASSET_CLASSES[class_name]["tickers"]
+    return cast(List[str], ASSET_CLASSES[class_name]["tickers"])
 
 
 def get_class_for_ticker(ticker: str) -> str:
@@ -77,7 +77,7 @@ def get_recommended_sd_values(ticker: str) -> List[int]:
     class_name = get_class_for_ticker(ticker)
     if class_name == "unknown":
         return [4, 6, 8, 10, 12, 16]  # Default test range
-    return ASSET_CLASSES[class_name]["recommended_sd"]
+    return cast(List[int], ASSET_CLASSES[class_name]["recommended_sd"])
 
 
 def calculate_sd_trigger(n: int) -> float:
@@ -91,7 +91,7 @@ def calculate_sd_trigger(n: int) -> float:
     Returns:
         Rebalance trigger percentage
     """
-    return (pow(2.0, 1.0 / n) - 1.0) * 100.0
+    return cast(float, (pow(2.0, 1.0 / n) - 1.0) * 100.0)
 
 
 def print_sd_reference_table():

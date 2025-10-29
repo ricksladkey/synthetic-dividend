@@ -249,10 +249,10 @@ def analyze_volatility_alpha(
     initial_investment: Optional[float] = None,
     profit_sharing: float = 50.0,
     auto_suggest: bool = True,
-    sd_override: int = None,
+    sd_override: Optional[int] = None,
     plot: bool = False,
-    plot_output: str = None,
-) -> Dict[str, any]:
+    plot_output: Optional[str] = None,
+) -> Dict[str, Any]:
     """Analyze volatility alpha for a ticker.
 
     Workflow:
@@ -376,7 +376,7 @@ def analyze_volatility_alpha(
 
     # Count buyback transactions (BUY transactions in full strategy)
     buy_count = sum(
-        1 for line in transactions_full if "BUY" in line and "BUYBACK" not in line.upper()
+        1 for tx in transactions_full if tx.action == "BUY" and "BUYBACK" not in tx.notes.upper()
     )
 
     # Calculate theoretical minimum alpha
@@ -423,7 +423,7 @@ def analyze_volatility_alpha(
         output_file = plot_volatility_alpha_chart(
             df=df,
             ticker=ticker,
-            transactions=transactions_full,
+                        transactions=[tx.to_string() for tx in transactions_full],
             sd_n=sd_n,
             volatility=volatility,
             vol_alpha=vol_alpha,

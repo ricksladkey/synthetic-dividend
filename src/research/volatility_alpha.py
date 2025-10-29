@@ -31,12 +31,15 @@ import argparse
 import csv
 import sys
 from pathlib import Path
+from typing import Optional
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.data.fetcher import HistoryFetcher  # noqa: E402
-from src.models.backtest import build_algo_from_name, run_algorithm_backtest  # noqa: E402
+from src.algorithms.factory import build_algo_from_name
+from src.algorithms.synthetic_dividend import SyntheticDividendAlgorithm
+from src.models.backtest import run_algorithm_backtest  # noqa: E402
 
 # Asset classes matching Phase 1 research
 ASSET_CLASSES = {
@@ -65,7 +68,7 @@ BEST_SDN = {
 
 def run_single_comparison(
     ticker: str, start_date: str, end_date: str, profit_pct: float, initial_qty: int
-) -> dict:
+) -> Optional[dict]:
     """
     Compare best sdN strategy vs ATH-only for a single ticker.
 
@@ -119,7 +122,8 @@ def run_single_comparison(
     enhanced_name = f"sd{best_sdn}"
     print(f"\n[1/2] Running ENHANCED strategy: {enhanced_name}")
     enhanced_algo = build_algo_from_name(enhanced_name)
-    enhanced_algo.profit_taking_pct = profit_pct
+    assert isinstance(enhanced_algo, SyntheticDividendAlgorithm)
+    enhanced_algo.profit_sharing = profit_pct / 100.0  # Convert percentage to decimal
 
     enhanced_transactions, enhanced_summary = run_algorithm_backtest(
         df=df,
