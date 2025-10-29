@@ -7,19 +7,26 @@ import pandas as pd
 
 def _parse_transaction_line(line: str):
     """Return dict with date (str), action (BUY/SELL), price (float) if parseable."""
-    parts = line.split()
-    if not parts:
+    if not line or not line.strip():
         return None
-    date = parts[0]
-    action = parts[1].upper() if len(parts) > 1 else None
-    # find price after '@'
-    m = re.search(r"@\s*([0-9,.]+)", line)
+
+    # Attempt to find an ISO date anywhere in the line
+    date_match = re.search(r"(\d{4}-\d{2}-\d{2})", line)
+    date = date_match.group(1) if date_match else None
+
+    # Find action token (BUY or SELL)
+    action_match = re.search(r"\b(BUY|SELL)\b", line, flags=re.IGNORECASE)
+    action = action_match.group(1).upper() if action_match else None
+
+    # Find price after '@' optionally preceded by $ and/or followed by '=' (e.g. '@ $123.45' or '@ 123.45 = 12345.00')
+    m = re.search(r"@\s*\$?([0-9,]+(?:\.[0-9]+)?)", line)
     price = None
     if m:
         try:
             price = float(m.group(1).replace(",", ""))
         except Exception:
             price = None
+
     return {"date": date, "action": action, "price": price}
 
 

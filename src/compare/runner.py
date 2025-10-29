@@ -51,10 +51,35 @@ def main(argv):
         df, ticker, initial_qty=10000, start_date=start, end_date=end, algo=algo
     )
 
-    # write transactions to a small file next to PNG
-    # Write transactions to a small file next to PNG and prepare string lines
+    # Write transactions to a small file next to PNG and prepare stable string lines
     tx_file = os.path.splitext(out_png)[0] + "-tx.txt"
-    tx_lines = [str(t) for t in txs]
+    tx_lines = []
+    for t in txs:
+        # If already a string, use it directly
+        if isinstance(t, str):
+            tx_lines.append(t)
+            continue
+        # Prefer a to_string() method if available
+        to_string = getattr(t, "to_string", None)
+        if callable(to_string):
+            tx_lines.append(to_string())
+            continue
+        # Fallback: try common attributes used by transaction types
+        action = getattr(t, "action", getattr(t, "transaction_type", None))
+        date_attr = getattr(t, "transaction_date", getattr(t, "purchase_date", None))
+        qty = getattr(t, "qty", getattr(t, "shares", None))
+        price = getattr(t, "price", getattr(t, "purchase_price", None))
+        ticker_attr = getattr(t, "ticker", None)
+        if date_attr is not None and action is not None and qty is not None and price is not None:
+            try:
+                date_str = date_attr.isoformat()
+            except Exception:
+                date_str = str(date_attr)
+            # Standardized format: YYYY-MM-DD ACTION QTY @ PRICE TICKER
+            tx_lines.append(f"{date_str} {action.upper()} {qty} @ {price:.2f} {ticker_attr or ''}".strip())
+            continue
+        # Last resort: use str()
+        tx_lines.append(str(t))
     with open(tx_file, "w") as f:
         for line in tx_lines:
             f.write(line + "\n")
