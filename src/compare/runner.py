@@ -60,7 +60,8 @@ def main(argv):
             f.write(line + "\n")
 
     # plot with markers (plotter expects a list of string lines)
-    plot_price_with_trades(df, tx_lines, ticker, out_png)
+    # Pass the summary so the plotter can annotate metrics like volatility alpha.
+    plot_price_with_trades(df, tx_lines, ticker, out_png, summary)
 
     print(f"Wrote {out_png} and {tx_file}")
     print("Summary:")

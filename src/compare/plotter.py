@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import Any, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -23,7 +23,13 @@ def _parse_transaction_line(line: str):
     return {"date": date, "action": action, "price": price}
 
 
-def plot_price_with_trades(df: pd.DataFrame, transactions: List[str], ticker: str, out_png: str):
+def plot_price_with_trades(
+    df: pd.DataFrame,
+    transactions: List[str],
+    ticker: str,
+    out_png: str,
+    summary: Optional[Dict[str, Any]] = None,
+):
     """Plot price series and overlay buy/sell markers parsed from transactions.
 
     Buys = red dots, Sells = green dots. Saves PNG to out_png.
@@ -83,6 +89,25 @@ def plot_price_with_trades(df: pd.DataFrame, transactions: List[str], ticker: st
     ax.set_xlabel("Date")
     ax.set_ylabel("Price")
     ax.legend()
+    # Optionally annotate the chart with summary metrics (e.g., volatility alpha)
+    if summary:
+        try:
+            va = summary.get("volatility_alpha")
+            if va is not None:
+                text = f"Volatility alpha: {va*100:.2f}%"
+                # Place annotation in the upper-left inside the axes
+                ax.text(
+                    0.01,
+                    0.98,
+                    text,
+                    transform=ax.transAxes,
+                    fontsize=10,
+                    verticalalignment="top",
+                    bbox=dict(facecolor="white", alpha=0.6, edgecolor="none"),
+                )
+        except Exception:
+            # Non-critical: chart should still render even if annotation fails
+            pass
     fig.tight_layout()
     fig.savefig(out_png)
     plt.close(fig)
