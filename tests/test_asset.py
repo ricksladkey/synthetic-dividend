@@ -45,7 +45,7 @@ class TestAssetPrices:
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("NVDA", cache_dir=tmpdir)
             df = asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
-            
+
             # Should return DataFrame with OHLC columns
             assert isinstance(df, pd.DataFrame)
             if not df.empty:  # May be empty if yfinance fails
@@ -56,7 +56,7 @@ class TestAssetPrices:
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("NVDA", cache_dir=tmpdir)
             df = asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
-            
+
             if not df.empty:
                 # Both cache files should exist
                 assert os.path.exists(asset.pkl_path)
@@ -70,10 +70,10 @@ class TestAssetPrices:
         """Second call with same range should use cache (no download)."""
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("NVDA", cache_dir=tmpdir)
-            
+
             # First call: download and cache
             df1 = asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
-            
+
             if not df1.empty:
                 # Modify pkl cache to test that it's being used
                 df_modified = df1.copy()
@@ -81,7 +81,7 @@ class TestAssetPrices:
                 
                 # Second call: should use cache
                 df2 = asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
-                
+
                 # Should return same data
                 pd.testing.assert_frame_equal(df1, df2)
 
@@ -89,7 +89,7 @@ class TestAssetPrices:
         """Should raise ValueError if start_date > end_date."""
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("NVDA", cache_dir=tmpdir)
-            
+
             with pytest.raises(ValueError):
                 asset.get_prices(date(2024, 12, 31), date(2024, 1, 1))
 
@@ -102,7 +102,7 @@ class TestAssetDividends:
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("AAPL", cache_dir=tmpdir)  # AAPL pays dividends
             divs = asset.get_dividends(date(2023, 1, 1), date(2023, 12, 31))
-            
+
             # Should return Series
             assert isinstance(divs, pd.Series)
             # AAPL pays quarterly dividends, should have ~4 entries for full year
@@ -113,7 +113,7 @@ class TestAssetDividends:
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("AAPL", cache_dir=tmpdir)
             divs = asset.get_dividends(date(2023, 1, 1), date(2023, 12, 31))
-            
+
             if not divs.empty:
                 # Both cache files should exist
                 assert os.path.exists(asset.div_pkl_path)
@@ -127,7 +127,7 @@ class TestAssetDividends:
         """Should raise ValueError if start_date > end_date."""
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("AAPL", cache_dir=tmpdir)
-            
+
             with pytest.raises(ValueError):
                 asset.get_dividends(date(2024, 12, 31), date(2024, 1, 1))
 
@@ -137,7 +137,7 @@ class TestAssetDividends:
             # Many growth stocks don't pay dividends
             asset = Asset("NVDA", cache_dir=tmpdir)
             divs = asset.get_dividends(date(2020, 1, 1), date(2020, 12, 31))
-            
+
             # Should return empty Series (NVDA didn't pay dividends in 2020)
             assert isinstance(divs, pd.Series)
 
@@ -149,7 +149,7 @@ class TestAssetCacheClear:
         """Should remove all cache files (prices + dividends, pkl + csv)."""
         with tempfile.TemporaryDirectory() as tmpdir:
             asset = Asset("AAPL", cache_dir=tmpdir)
-            
+
             # Create cache files
             asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
             asset.get_dividends(date(2023, 1, 1), date(2023, 12, 31))
@@ -161,10 +161,10 @@ class TestAssetCacheClear:
                 os.path.exists(asset.div_pkl_path),
                 os.path.exists(asset.div_csv_path),
             ]
-            
+
             # Clear cache
             asset.clear_cache()
-            
+
             # All cache files should be removed
             assert not os.path.exists(asset.pkl_path)
             assert not os.path.exists(asset.csv_path)

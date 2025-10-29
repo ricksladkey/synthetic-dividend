@@ -17,10 +17,9 @@ import sys
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-import pandas as pd
 
 from src.data.fetcher import HistoryFetcher
-from src.models.backtest import build_algo_from_name, run_algorithm_backtest, Data
+from src.models.backtest import Data, build_algo_from_name, run_algorithm_backtest
 
 
 def parse_date(s: str) -> date:

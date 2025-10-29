@@ -5,9 +5,6 @@ for backtesting against historical OHLC price data.
 """
 
 import math
-import re
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from datetime import date
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -16,72 +13,73 @@ import pandas as pd
 # Type aliases for clean abstraction
 Data = pd.DataFrame  # Pure data concept with no implementation baggage
 
-# Import common types
-from src.models.types import Transaction, WithdrawalResult
+# Import algorithm classes from dedicated package
+from src.algorithms import (
+    AlgorithmBase,
+    BuyAndHoldAlgorithm,
+    SyntheticDividendAlgorithm,
+)
 
 # Import utility functions
-from src.models.backtest_utils import calculate_synthetic_dividend_orders
 
-# Import algorithm classes from dedicated package
-from src.algorithms import AlgorithmBase, BuyAndHoldAlgorithm, SyntheticDividendAlgorithm, build_algo_from_name
+# Import common types
+from src.models.types import Transaction
 
 
 def calculate_time_weighted_average_holdings(
-    holdings_history: List[Tuple[date, int]],
-    period_start: date,
-    period_end: date
+    holdings_history: List[Tuple[date, int]], period_start: date, period_end: date
 ) -> float:
     """Calculate time-weighted average holdings over a period.
-    
+
     This computes the IRS-approved average holdings by integrating daily holdings
     over the time period, weighted by the number of days at each holding level.
-    
+
     Formula: ∑(holdings_i × days_i) / total_days
-    
+
     Args:
         holdings_history: List of (date, holdings) tuples sorted by date
         period_start: Start of accrual period (inclusive)
         period_end: End of accrual period (inclusive, typically ex-dividend date)
-    
+
     Returns:
         Time-weighted average holdings as float (can be fractional)
-    
+
     Example:
         Holdings: 100 shares for 60 days, then 150 shares for 30 days
         Average: (100×60 + 150×30) / 90 = 116.67 shares
     """
     if not holdings_history:
         return 0.0
-    
+
     # Filter to holdings changes within or before the period
     relevant_history = [(d, h) for d, h in holdings_history if d <= period_end]
     if not relevant_history:
         return 0.0
-    
+
     total_share_days = 0.0
     total_days = (period_end - period_start).days + 1  # Inclusive
-    
+
     # Process each holdings level
     for i, (change_date, holdings) in enumerate(relevant_history):
         # Determine when this holdings level starts
         level_start = max(change_date, period_start)
-        
+
         # Determine when this holdings level ends
         if i + 1 < len(relevant_history):
             next_change_date = relevant_history[i + 1][0]
             level_end = min(next_change_date - pd.Timedelta(days=1).to_pytimedelta(), period_end)
         else:
             level_end = period_end
-        
+
         # Skip if this level doesn't overlap with our period
         if level_start > period_end or level_end < period_start:
             continue
-        
+
         # Calculate days at this level
         days_at_level = (level_end - level_start).days + 1
         if days_at_level > 0:
             total_share_days += holdings * days_at_level
-    
+
     return total_share_days / total_days if total_days > 0 else 0.0
 
 
@@ -97,6 +95,9 @@ def run_algorithm_backtest(
     risk_free_rate_pct: float = 0.0,
     reference_data: Optional[Data] = None,
     risk_free_data: Optional[Data] = None,
+    # Backward-compat legacy params (alias of *_data)
+    reference_asset_df: Optional[Data] = None,
+    risk_free_asset_df: Optional[Data] = None,
     reference_asset_ticker: str = "",
     risk_free_asset_ticker: str = "",
     # Dividend/interest payments
@@ -219,6 +220,12 @@ def run_algorithm_backtest(
     if df is None or df.empty:
         raise ValueError("Empty price data")
 
+    # Backward compatibility: map legacy args if provided
+    if reference_data is None and reference_asset_df is not None:
+        reference_data = reference_asset_df
+    if risk_free_data is None and risk_free_asset_df is not None:
+        risk_free_data = risk_free_asset_df
+
     # Normalize index to date objects for consistent lookup
     df_indexed = df.copy()
     df_indexed.index = pd.to_datetime(df_indexed.index).date
@@ -271,12 +278,12 @@ def run_algorithm_backtest(
     # Extract start/end prices for return calculations
     start_price: float = df_indexed.loc[first_idx, "Close"].item()
     end_price: float = df_indexed.loc[last_idx, "Close"].item()
-    
+
     # Calculate initial quantity from investment amount or shares
     # Prefer initial_qty if both are provided, otherwise use initial_investment
     calculated_qty: int
     investment_method: str
-    
+
     if initial_qty is not None:
         # Explicit share count provided
         calculated_qty = int(initial_qty)
@@ -293,17 +300,21 @@ def run_algorithm_backtest(
         calculated_qty = int(default_investment / start_price)
         investment_method = "default_investment"
         investment_amount = default_investment
-    
+
     # Display initial purchase info
     actual_invested = calculated_qty * start_price
-    print(f"Initial purchase: {calculated_qty} shares × ${start_price:.2f} = ${actual_invested:,.2f}")
+    print(
+        f"Initial purchase: {calculated_qty} shares × ${start_price:.2f} = ${actual_invested:,.2f}"
+    )
     if investment_method in ("investment", "default_investment"):
         if investment_method == "default_investment":
             print(f"  (using default investment amount: ${investment_amount:,.2f})")
         else:
             print(f"  (target investment: ${investment_amount:,.2f})")
         if abs(actual_invested - investment_amount) > 0.01:
-            print(f"  (difference due to whole shares: ${actual_invested - investment_amount:+,.2f})")
+            print(
+                f"  (difference due to whole shares: ${actual_invested - investment_amount:+,.2f})"
+            )
 
     # Price normalization (if enabled)
     # Normalize so that brackets are at standard positions relative to 1.0
@@ -315,36 +326,36 @@ def run_algorithm_backtest(
         if algo is not None:
             if isinstance(algo, SyntheticDividendAlgorithm):
                 rebalance_trigger = algo.rebalance_size  # Already in decimal form
-            elif hasattr(algo, 'rebalance_size'):
+            elif hasattr(algo, "rebalance_size"):
                 rebalance_trigger = algo.rebalance_size
-        
+
         if rebalance_trigger > 0:
             # Find which bracket the start_price should be on
             # Brackets are at: 1.0 * (1 + r)^n for integer n
             # We want: start_price * scale = 1.0 * (1 + r)^n for some integer n
             # So: n = log(start_price * scale) / log(1 + r)
             # We want n to be an integer, so find closest integer bracket
-            
+
             # Start by assuming scale=1, find which bracket that gives us
             n_float = math.log(start_price) / math.log(1 + rebalance_trigger)
             n_int = round(n_float)  # Round to nearest integer bracket
-            
+
             # Now calculate the scale to land exactly on that bracket
             # target_price = 1.0 * (1 + r)^n
             # scale = target_price / start_price
             target_price = math.pow(1 + rebalance_trigger, n_int)
             price_scale_factor = target_price / start_price
-            
+
             # Scale all prices in the dataframe
             df_indexed = df_indexed.copy()
-            for col in ['Open', 'High', 'Low', 'Close']:
+            for col in ["Open", "High", "Low", "Close"]:
                 if col in df_indexed.columns:
                     df_indexed[col] = df_indexed[col] * price_scale_factor
-            
+
             # Update start/end prices
             start_price = start_price * price_scale_factor
             end_price = end_price * price_scale_factor
-            
+
             print(f"Price normalization: scaling factor = {price_scale_factor:.6f}")
             print(f"  Original start price: ${start_price / price_scale_factor:.2f}")
             print(f"  Normalized start price: ${start_price:.2f} (bracket n={n_int})")
@@ -365,29 +376,29 @@ def run_algorithm_backtest(
 
     # Deployed capital tracking for capital utilization metrics
     deployment_history: List[Tuple[date, float]] = []  # (date, deployed_capital)
-    
+
     # Withdrawal tracking
     total_withdrawn: float = 0.0
     withdrawal_count: int = 0
     shares_sold_for_withdrawals: int = 0
     last_withdrawal_date: Optional[date] = None
-    
+
     # Dividend/interest income tracking
     total_dividends: float = 0.0
     dividend_payment_count: int = 0
-    
+
     # Holdings history for time-weighted dividend calculation
     # Each entry: (date, holdings_after_transactions)
     holdings_history: List[Tuple[date, int]] = []
-    
+
     # Skipped transaction tracking (for strict mode)
     skipped_buys: int = 0
     skipped_buy_value: float = 0.0
-    
+
     # Opportunity cost and risk-free gains tracking
     opportunity_cost_total: float = 0.0
     risk_free_gains_total: float = 0.0
-    
+
     # Calculate initial withdrawal amount (if withdrawal policy enabled)
     start_value = holdings * start_price
     if withdrawal_rate_pct > 0:
@@ -397,7 +408,7 @@ def run_algorithm_backtest(
         base_withdrawal_amount = annual_withdrawal * (withdrawal_frequency_days / 365.25)
     else:
         base_withdrawal_amount = 0.0
-        
+
     # CPI adjustment setup
     cpi_returns: Dict[date, float] = {}
     if cpi_data is not None and not cpi_data.empty and not simple_mode:
@@ -423,10 +434,10 @@ def run_algorithm_backtest(
             qty=holdings,
             price=start_price,
             ticker=ticker,
-            notes="Initial purchase"
+            notes="Initial purchase",
         )
     )
-    
+
     # Record initial holdings for time-weighted calculations
     holdings_history.append((first_idx, holdings))
 
@@ -505,7 +516,9 @@ def run_algorithm_backtest(
 
         # Let algorithm evaluate the day (may return multiple transactions for multi-bracket gaps)
         try:
-            daily_transactions: List[Transaction] = algo_obj.on_day(d, price_row, holdings, bank, history)
+            daily_transactions: List[Transaction] = algo_obj.on_day(
+                d, price_row, holdings, bank, history
+            )
         except Exception as e:
             raise RuntimeError(f"Algorithm raised an error on {d}: {e}")
 
@@ -533,7 +546,7 @@ def run_algorithm_backtest(
                         qty=sell_qty,
                         price=price,
                         ticker=ticker,
-                        notes=f"{tx.notes}, holdings = {holdings}, bank = {bank:.2f}"
+                        notes=f"{tx.notes}, holdings = {holdings}, bank = {bank:.2f}",
                     )
                 )
                 # Record holdings change for time-weighted calculations
@@ -547,7 +560,7 @@ def run_algorithm_backtest(
             elif tx.action.upper() == "BUY":
                 buy_qty = int(tx.qty)
                 cost = buy_qty * price
-                
+
                 # Check if we can afford this buy
                 if not allow_margin and bank < cost:
                     # Strict mode: skip buy if insufficient cash
@@ -560,7 +573,7 @@ def run_algorithm_backtest(
                             qty=buy_qty,
                             price=price,
                             ticker=ticker,
-                            notes=f"{tx.notes}, insufficient cash: ${bank:.2f} < ${cost:.2f}"
+                            notes=f"{tx.notes}, insufficient cash: ${bank:.2f} < ${cost:.2f}",
                         )
                     )
                 else:
@@ -574,7 +587,7 @@ def run_algorithm_backtest(
                             qty=buy_qty,
                             price=price,
                             ticker=ticker,
-                            notes=f"{tx.notes}, holdings = {holdings}, bank = {bank:.2f}"
+                            notes=f"{tx.notes}, holdings = {holdings}, bank = {bank:.2f}",
                         )
                     )
                     # Record holdings change for time-weighted calculations
@@ -586,7 +599,7 @@ def run_algorithm_backtest(
 
             else:
                 raise ValueError("Transaction action must be 'BUY' or 'SELL'")
-        
+
         # Process dividend/interest payments (if available for this date)
         if dividend_series is not None and not dividend_series.empty:
             # Check if this date has a dividend payment
@@ -596,7 +609,7 @@ def run_algorithm_backtest(
                 # Find the dividend amount for this date
                 div_idx = list(div_dates).index(d)
                 div_per_share = dividend_series.iloc[div_idx]
-                
+
                 # Calculate time-weighted average holdings over accrual period
                 # Use 90-day lookback (typical for quarterly dividends)
                 accrual_period_days = 90
@@ -604,14 +617,14 @@ def run_algorithm_backtest(
                 avg_holdings = calculate_time_weighted_average_holdings(
                     holdings_history, period_start, d
                 )
-                
+
                 # Dividend payment based on average holdings during accrual period
                 div_payment = div_per_share * avg_holdings
-                
+
                 bank += div_payment
                 total_dividends += div_payment
                 dividend_payment_count += 1
-                
+
                 transactions.append(
                     Transaction(
                         transaction_date=d,
@@ -619,14 +632,14 @@ def run_algorithm_backtest(
                         qty=int(avg_holdings),  # Display average holdings (rounded for display)
                         price=div_per_share,
                         ticker=ticker,
-                        notes=f"${div_payment:.2f} (avg {avg_holdings:.2f} shares over 90 days), bank = {bank:.2f}"
+                        notes=f"${div_payment:.2f} (avg {avg_holdings:.2f} shares over 90 days), bank = {bank:.2f}",
                     )
                 )
-                
+
                 # Track bank balance statistics
                 bank_history.append((d, bank))
                 bank_max = max(bank_max, bank)
-        
+
         # Process withdrawals (if enabled and due)
         if base_withdrawal_amount > 0:
             # Check if withdrawal is due
@@ -636,12 +649,12 @@ def run_algorithm_backtest(
                 days_since_last = (d - first_idx).days
             else:
                 days_since_last = (d - last_withdrawal_date).days
-            
+
             if days_since_last is not None and days_since_last >= withdrawal_frequency_days:
                 # Calculate CPI-adjusted withdrawal amount
                 cpi_multiplier = cpi_returns.get(d, 1.0)
                 withdrawal_amount = base_withdrawal_amount * cpi_multiplier
-                
+
                 # Let algorithm decide how to fulfill withdrawal
                 withdrawal_result = algo_obj.on_withdrawal(
                     date_=d,
@@ -651,7 +664,7 @@ def run_algorithm_backtest(
                     bank=bank,
                     allow_margin=allow_margin,
                 )
-                
+
                 # Execute share sale if algorithm decided to liquidate
                 if withdrawal_result.shares_to_sell > 0:
                     shares_to_sell = withdrawal_result.shares_to_sell
@@ -659,7 +672,7 @@ def run_algorithm_backtest(
                     holdings -= shares_to_sell
                     bank += proceeds
                     shares_sold_for_withdrawals += shares_to_sell
-                    
+
                     transactions.append(
                         Transaction(
                             transaction_date=d,
@@ -667,12 +680,12 @@ def run_algorithm_backtest(
                             qty=shares_to_sell,
                             price=price,
                             ticker=ticker,
-                            notes=f"For withdrawal, {withdrawal_result.notes}, holdings = {holdings}, bank = {bank:.2f}"
+                            notes=f"For withdrawal, {withdrawal_result.notes}, holdings = {holdings}, bank = {bank:.2f}",
                         )
                     )
                     # Record holdings change for time-weighted calculations
                     holdings_history.append((d, holdings))
-                
+
                 # Withdraw cash from bank
                 actual_withdrawal = min(withdrawal_result.cash_from_bank, bank)
                 bank -= actual_withdrawal
@@ -683,14 +696,14 @@ def run_algorithm_backtest(
                         qty=0,
                         price=0.0,
                         ticker=ticker,
-                        notes=f"${actual_withdrawal:.2f} from bank, bank = {bank:.2f}"
+                        notes=f"${actual_withdrawal:.2f} from bank, bank = {bank:.2f}",
                     )
                 )
-                
+
                 total_withdrawn += actual_withdrawal
                 withdrawal_count += 1
                 last_withdrawal_date = d
-                
+
                 # Track bank balance after withdrawal
                 bank_history.append((d, bank))
                 bank_min = min(bank_min, bank)
@@ -721,13 +734,15 @@ def run_algorithm_backtest(
 
     # Calculate capital deployment statistics
     deployed_amounts = [dep for d, dep in deployment_history]
-    avg_deployed_capital: float = sum(deployed_amounts) / len(deployed_amounts) if deployed_amounts else 0.0
+    avg_deployed_capital: float = (
+        sum(deployed_amounts) / len(deployed_amounts) if deployed_amounts else 0.0
+    )
     min_deployed_capital: float = min(deployed_amounts) if deployed_amounts else 0.0
     max_deployed_capital: float = max(deployed_amounts) if deployed_amounts else 0.0
-    
+
     # Capital utilization rate: average deployed capital as % of initial investment
     capital_utilization: float = avg_deployed_capital / start_val if start_val > 0 else 0.0
-    
+
     # Deployment range as percentages
     deployment_min_pct: float = min_deployed_capital / start_val if start_val > 0 else 0.0
     deployment_max_pct: float = max_deployed_capital / start_val if start_val > 0 else 0.0
@@ -813,27 +828,29 @@ def run_algorithm_backtest(
 
         # Income Classification Framework
         # Calculate three-tier income breakdown for reporting
-        
+
         # Universal Income: Real dividends (already tracked)
         universal_income_dollars = total_dividends
         universal_income_pct = (total_dividends / start_val * 100) if start_val > 0 else 0.0
-        
+
         # Secondary Income: Volatility alpha (algorithm vs buy-and-hold)
         # This is the outperformance from mean-reversion trading
-        secondary_income_dollars = volatility_alpha * start_val if start_val > 0 and volatility_alpha is not None else 0.0
+        secondary_income_dollars = (
+            volatility_alpha * start_val if start_val > 0 and volatility_alpha is not None else 0.0
+        )
         secondary_income_pct = volatility_alpha * 100 if volatility_alpha is not None else 0.0
-        
+
         # Primary Income: Everything else (ATH selling + general trading)
         # Total gains = dividends + primary + secondary
         # So: primary = total_gains - dividends - secondary
         total_gains = total - start_val  # Absolute dollar gain
         primary_income_dollars = total_gains - universal_income_dollars - secondary_income_dollars
         primary_income_pct = (primary_income_dollars / start_val * 100) if start_val > 0 else 0.0
-        
+
         summary["baseline"] = baseline_summary
         summary["volatility_alpha"] = volatility_alpha
         summary["return_on_deployed_capital"] = return_on_deployed_capital
-        
+
         # Add income classification metrics
         summary["income_classification"] = {
             "universal_dollars": universal_income_dollars,
@@ -856,16 +873,16 @@ def run_algorithm_backtest(
 
 def print_income_classification(summary: Dict[str, Any], verbose: bool = True) -> None:
     """Print three-tier income classification breakdown.
-    
+
     Args:
         summary: Backtest summary dict containing income_classification
         verbose: If True, print detailed breakdown. If False, print compact summary.
     """
     if "income_classification" not in summary:
         return
-    
+
     ic = summary["income_classification"]
-    
+
     if verbose:
         print("\n" + "=" * 70)
         print("INCOME CLASSIFICATION (Three-Tier Framework)")
@@ -875,7 +892,7 @@ def print_income_classification(summary: Dict[str, Any], verbose: bool = True) -
         print(f"  Total Dividends:              ${ic['universal_dollars']:>12,.2f}")
         print(f"  Yield on Initial Investment:  {ic['universal_pct']:>12.2f}%")
         if summary.get("dividend_payment_count", 0) > 0:
-            avg_payment = ic['universal_dollars'] / summary['dividend_payment_count']
+            avg_payment = ic["universal_dollars"] / summary["dividend_payment_count"]
             print(f"  Payment Count:                {summary['dividend_payment_count']:>12,}")
             print(f"  Average per Payment:          ${avg_payment:>12,.2f}")
         print()
@@ -888,14 +905,16 @@ def print_income_classification(summary: Dict[str, Any], verbose: bool = True) -
         print(f"  Alpha vs Buy-and-Hold:        {ic['secondary_pct']:>12.2f}%")
         print()
         print("-" * 70)
-        total_income = ic['universal_dollars'] + ic['primary_dollars'] + ic['secondary_dollars']
-        total_pct = ic['universal_pct'] + ic['primary_pct'] + ic['secondary_pct']
+        total_income = ic["universal_dollars"] + ic["primary_dollars"] + ic["secondary_dollars"]
+        total_pct = ic["universal_pct"] + ic["primary_pct"] + ic["secondary_pct"]
         print(f"Total Income:                   ${total_income:>12,.2f}")
         print(f"Total Return:                   {total_pct:>12.2f}%")
         print(f"Annualized Return:              {summary.get('annualized', 0) * 100:>12.2f}%")
         print("=" * 70)
     else:
         # Compact one-liner
-        print(f"Income: Universal=${ic['universal_dollars']:.2f} ({ic['universal_pct']:.2f}%), "
-              f"Primary=${ic['primary_dollars']:.2f} ({ic['primary_pct']:.2f}%), "
-              f"Secondary=${ic['secondary_dollars']:.2f} ({ic['secondary_pct']:.2f}%)")
+        print(
+            f"Income: Universal=${ic['universal_dollars']:.2f} ({ic['universal_pct']:.2f}%), "
+            f"Primary=${ic['primary_dollars']:.2f} ({ic['primary_pct']:.2f}%), "
+            f"Secondary=${ic['secondary_dollars']:.2f} ({ic['secondary_pct']:.2f}%)"
+        )

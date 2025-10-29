@@ -7,38 +7,39 @@ This demonstrates the three-dimensional return analysis:
 """
 
 from datetime import date
+
 from src.models.return_adjustments import (
     calculate_adjusted_returns,
-    print_adjusted_returns,
     format_adjustment_summary,
+    print_adjusted_returns,
 )
 
 
 def demo_return_adjustments():
     """Demonstrate return adjustment calculations."""
-    
+
     print("=" * 70)
     print("RETURN ADJUSTMENT FRAMEWORK DEMO")
     print("=" * 70)
     print()
-    
+
     # Example: Strong performing asset in high inflation environment
     print("Example 1: NVDA 2024 - Strong performance")
     print("-" * 70)
-    
+
     nvda_summary = {
-        'total_return': 1.50,  # 150% return
-        'start_value': 10000.0,
-        'total': 25000.0,  # $15,000 gain
+        "total_return": 1.50,  # 150% return
+        "start_value": 10000.0,
+        "total": 25000.0,  # $15,000 gain
     }
-    
+
     print(f"Investment: $10,000 → $25,000")
     print(f"Nominal Return: +150% ($15,000)")
     print()
-    
+
     # Note: This demo uses mock data since we don't have real CPI/VOO prices
     # In real usage, calculate_adjusted_returns() would fetch actual prices
-    
+
     # Manually show what the framework would calculate:
     print("What the framework calculates:")
     print("  → Fetches CPI data for period")
@@ -51,20 +52,20 @@ def demo_return_adjustments():
     print("  Real: +143% ($14,300) - beat inflation")
     print("  Alpha: +100% ($10,000 vs VOO) - crushed market")
     print()
-    
+
     print("=" * 70)
     print()
-    
+
     # Example 2: Gold in high inflation
     print("Example 2: GLD 2024 - Inflation hedge")
     print("-" * 70)
-    
+
     gld_summary = {
-        'total_return': 0.08,  # 8% return
-        'start_value': 10000.0,
-        'total': 10800.0,  # $800 gain
+        "total_return": 0.08,  # 8% return
+        "start_value": 10000.0,
+        "total": 10800.0,  # $800 gain
     }
-    
+
     print(f"Investment: $10,000 → $10,800")
     print(f"Nominal Return: +8% ($800)")
     print()
@@ -73,20 +74,20 @@ def demo_return_adjustments():
     print("  Real: +5% ($500) - barely beat inflation")
     print("  Alpha: -17% (-$1,700 vs VOO) - underperformed market")
     print()
-    
+
     print("=" * 70)
     print()
-    
+
     # Example 3: Bonds in bear market
     print("Example 3: AGG 2022 - Bonds in bear market")
     print("-" * 70)
-    
+
     agg_summary = {
-        'total_return': -0.13,  # -13% return
-        'start_value': 10000.0,
-        'total': 8700.0,  # -$1,300 loss
+        "total_return": -0.13,  # -13% return
+        "start_value": 10000.0,
+        "total": 8700.0,  # -$1,300 loss
     }
-    
+
     print(f"Investment: $10,000 → $8,700")
     print(f"Nominal Return: -13% (-$1,300)")
     print()
@@ -95,10 +96,10 @@ def demo_return_adjustments():
     print("  Real: -19.4% (-$1,940) - crushed by inflation")
     print("  Alpha: +5% (+$500 vs VOO) - lost less than market")
     print()
-    
+
     print("=" * 70)
     print()
-    
+
     print("KEY INSIGHT:")
     print("Returns are multi-dimensional. Each perspective tells a different story:")
     print()
@@ -109,10 +110,10 @@ def demo_return_adjustments():
     print("The framework shows ALL THREE simultaneously, letting you decide")
     print("which matters most for your investment goals.")
     print()
-    
+
     print("=" * 70)
     print()
-    
+
     print("USAGE IN CLI:")
     print()
     print("  # Show all three perspectives:")
@@ -130,9 +131,9 @@ def demo_return_adjustments():
     print("      --start 2024-01-01 --end 2024-12-31 \\")
     print("      --adjust-market --market-ticker GLD")
     print()
-    
+
     print("=" * 70)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     demo_return_adjustments()

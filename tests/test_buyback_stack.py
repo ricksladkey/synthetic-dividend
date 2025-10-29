@@ -11,7 +11,6 @@ from datetime import date, timedelta
 from typing import List, Tuple
 
 import pandas as pd
-import pytest
 
 from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
 
@@ -154,8 +153,8 @@ class TestBuybackStackGradualRise:
         price_path = [100.0 + (i * 2.0) for i in range(50)]
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0
-        /100.0)
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0 / 100.0
+        )
 
         # Both should have same final shares (no drawdown at end)
         assert (
@@ -173,8 +172,8 @@ class TestBuybackStackGradualRise:
         price_path = [100.0 * (2.0 ** (i / 99.0)) for i in range(100)]
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=9.05, profit_sharing=50.0
-        /100.0)
+            price_path=price_path, rebalance_pct=9.05, profit_sharing=50.0 / 100.0
+        )
 
         assert (
             sd_full == ath_only
@@ -199,11 +198,11 @@ class TestBuybackStackVShape:
 
     def test_v_shape_symmetric(self):
         """Symmetric V: 100 → 200 → 100 → 200 over 120 days.
-        
+
         Enhanced accumulates shares during the dip, then sells them during recovery.
         Because it's selling a percentage of a larger base, it retains MORE shares
         than ATH-only after the recovery. This is the volatility alpha in action.
-        
+
         Note: Stack may not be fully empty because price only RETURNS to previous ATH
         (doesn't exceed it). Full unwinding only guaranteed when exceeding all previous ATHs.
         """
@@ -215,8 +214,8 @@ class TestBuybackStackVShape:
         price_path = rise1 + fall + rise2
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0
-        /100.0)
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0 / 100.0
+        )
 
         # Enhanced should have MORE shares (volatility harvesting)
         assert (
@@ -231,7 +230,7 @@ class TestBuybackStackVShape:
 
     def test_v_shape_exceeds_ath(self):
         """V-shape exceeding initial ATH: 100 → 200 → 100 → 250.
-        
+
         Enhanced buys during dip, then sells during recovery beyond previous ATH.
         It retains more shares than ATH-only due to volatility harvesting.
         """
@@ -242,8 +241,8 @@ class TestBuybackStackVShape:
         price_path = rise1 + fall + rise2
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0
-        /100.0)
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0 / 100.0
+        )
 
         # Enhanced should have MORE shares (volatility harvesting)
         assert (
@@ -270,8 +269,8 @@ class TestBuybackStackDrawdown:
         price_path = rise + fall
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0
-        /100.0)
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0 / 100.0
+        )
 
         # SD Full should have MORE shares (bought the dip)
         assert (
@@ -295,8 +294,8 @@ class TestBuybackStackDrawdown:
         price_path = rise + fall
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0
-        /100.0)
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0 / 100.0
+        )
 
         # SD Full has more shares
         assert (
@@ -320,11 +319,11 @@ class TestBuybackStackMultipleCycles:
 
     def test_three_complete_cycles(self):
         """Three V-shapes: 100→200→100→200→100→200.
-        
+
         Each cycle allows Enhanced to harvest volatility by buying low and selling high.
         Enhanced accumulates more shares through multiple volatility cycles.
-        
-        Note: Stack may not be empty at final ATH since price only returns to (not exceeds) 
+
+        Note: Stack may not be empty at final ATH since price only returns to (not exceeds)
         previous peaks.
         """
         cycle1_up = [100.0 + (i * 5.0) for i in range(20)]  # 100 → 200
@@ -338,8 +337,8 @@ class TestBuybackStackMultipleCycles:
         price_path = cycle1_up + cycle1_down + cycle2_up + cycle2_down + cycle3_up
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0
-        /100.0)
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=50.0 / 100.0
+        )
 
         # Enhanced should have MORE shares (multiple volatility harvests)
         assert (
@@ -358,7 +357,7 @@ class TestBuybackStackParameterVariations:
 
     def test_aggressive_rebalance(self):
         """High rebalance trigger (15%) with V-shape recovery.
-        
+
         Larger rebalance triggers mean fewer but larger transactions.
         Enhanced still harvests volatility, retaining more shares.
         """
@@ -369,8 +368,8 @@ class TestBuybackStackParameterVariations:
         price_path = rise + fall + rise2
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=15.0, profit_sharing=50.0
-        /100.0)
+            price_path=price_path, rebalance_pct=15.0, profit_sharing=50.0 / 100.0
+        )
 
         assert (
             sd_full >= ath_only
@@ -384,7 +383,7 @@ class TestBuybackStackParameterVariations:
 
     def test_granular_rebalance(self):
         """Very granular rebalance trigger (4.44%) with V-shape recovery.
-        
+
         Smaller rebalance triggers mean more frequent but smaller transactions.
         Enhanced still harvests volatility through numerous small cycles.
         """
@@ -395,8 +394,8 @@ class TestBuybackStackParameterVariations:
         price_path = rise + fall + rise2
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=4.44, profit_sharing=50.0
-        /100.0)
+            price_path=price_path, rebalance_pct=4.44, profit_sharing=50.0 / 100.0
+        )
 
         assert (
             sd_full >= ath_only
@@ -410,7 +409,7 @@ class TestBuybackStackParameterVariations:
 
     def test_zero_profit_sharing(self):
         """0% profit sharing (reinvest all) with recovery.
-        
+
         With 0% profit sharing, buy_qty and sell_qty are both 0, so no transactions occur.
         Both strategies should have identical holdings (no rebalancing).
         """
@@ -421,8 +420,8 @@ class TestBuybackStackParameterVariations:
         price_path = rise + fall + rise2
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing=0.0
-        /100.0)
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=0.0 / 100.0
+        )
 
         # No transactions occur, so shares should be identical
         assert (
@@ -440,8 +439,8 @@ class TestBuybackStackParameterVariations:
         price_path = rise + fall + rise2
 
         sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-            price_path=price_path, rebalance_pct=10.0, profit_sharing=100.0
-        /100.0)
+            price_path=price_path, rebalance_pct=10.0, profit_sharing=100.0 / 100.0
+        )
 
         assert (
             sd_full == ath_only

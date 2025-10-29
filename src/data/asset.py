@@ -1,12 +1,18 @@
 
-"""Minimal Asset facade used by tests.
+This module provides a factory, `Asset`, that delegates to registered providers
+based on the asset's ticker. This allows for a consistent interface regardless
+of the data source.
 
-This module provides a small, well-scoped `Asset` class that:
-- Prefers registered providers from `src.data.asset_provider.AssetRegistry`.
-- Falls back to a tiny yfinance-backed downloader that caches to disk if no
-  provider is available.
+Usage:
+    >>> from src.data.asset import Asset
+    >>>
+    >>> # Asset factory delegates to the appropriate provider
+    >>> usd = Asset("USD")  # Uses CashAssetProvider
+    >>> nvda = Asset("NVDA") # Uses YahooAssetProvider
 
-The file is intentionally minimal to make it safe for focused cherry-picks.
+Default Providers:
+- "USD": CashAssetProvider (provides a constant $1.00 price)
+- "*": YahooAssetProvider (wildcard for any other ticker, uses yfinance)
 """
 
 from __future__ import annotations

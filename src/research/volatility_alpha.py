@@ -1,13 +1,13 @@
 """
 Volatility Alpha Research
 
-Compares the best synthetic dividend strategy (with buybacks) against 
+Compares the best synthetic dividend strategy (with buybacks) against
 the all-time-high-    # Build ATH-only algorithm (no buybacks)
     # Use same rebalance trigger as enhanced, but disable buybacks
     ath_name = f"sd-ath-only-{enhanced_algo.alpha_pct},{profit_pct}"
     print(f"\n[2/2] Running ATH-ONLY baseline: {ath_name}")
     ath_algo = build_algo_from_name(ath_name)
-    
+
     ath_transactions, ath_summary = run_algorithm_backtest(
         df=df,
         ticker=ticker,
@@ -16,10 +16,10 @@ the all-time-high-    # Build ATH-only algorithm (no buybacks)
         end_date=end_dt,
         algo=ath_algo,
     )
-    
+
     ath_return = ath_summary['total_return'] * 100
     ath_txns = len(ath_transactions)
-    ath_final = ath_summary.get('total', 0)to quantify "volatility alpha" - the 
+    ath_final = ath_summary.get('total', 0)to quantify "volatility alpha" - the
 extra profit earned by capitalizing on price volatility.
 
 Usage:
@@ -30,7 +30,6 @@ Usage:
 import argparse
 import csv
 import sys
-from datetime import datetime
 from pathlib import Path
 
 # Add project root to path
@@ -38,7 +37,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.data.fetcher import HistoryFetcher
 from src.models.backtest import build_algo_from_name, run_algorithm_backtest
-
 
 # Asset classes matching Phase 1 research
 ASSET_CLASSES = {
@@ -65,11 +63,12 @@ BEST_SDN = {
 }
 
 
-def run_single_comparison(ticker: str, start_date: str, end_date: str, 
-                         profit_pct: float, initial_qty: int) -> dict:
+def run_single_comparison(
+    ticker: str, start_date: str, end_date: str, profit_pct: float, initial_qty: int
+) -> dict:
     """
     Compare best sdN strategy vs ATH-only for a single ticker.
-    
+
     Returns dict with:
         - ticker
         - asset_class
@@ -84,43 +83,44 @@ def run_single_comparison(ticker: str, start_date: str, end_date: str,
     print(f"\n{'='*70}")
     print(f"Analyzing {ticker}: Best sdN vs ATH-Only")
     print(f"{'='*70}")
-    
+
     # Determine asset class
     asset_class = None
     for cls, tickers in ASSET_CLASSES.items():
         if ticker in tickers:
             asset_class = cls
             break
-    
+
     # Get best sdN from Phase 1 results
     best_sdn = BEST_SDN.get(ticker)
     if best_sdn is None:
         print(f"ERROR: No best sdN found for {ticker}")
         return None
-    
+
     # Fetch data once
     print(f"\nFetching {ticker} data from {start_date} to {end_date}...")
     fetcher = HistoryFetcher()
-    
+
     # Convert string dates to date objects
     from datetime import datetime
+
     start_dt = datetime.strptime(start_date, "%m/%d/%Y").date()
     end_dt = datetime.strptime(end_date, "%m/%d/%Y").date()
-    
+
     df = fetcher.get_history(ticker, start_dt, end_dt)
     if df is None or df.empty:
         print(f"ERROR: No data for {ticker}")
         return None
-    
+
     print(f"  Data points: {len(df)}")
     print(f"  Price range: ${float(df['Close'].min()):.2f} - ${float(df['Close'].max()):.2f}")
-    
+
     # Build enhanced algorithm (with buybacks)
     enhanced_name = f"sd{best_sdn}"
     print(f"\n[1/2] Running ENHANCED strategy: {enhanced_name}")
     enhanced_algo = build_algo_from_name(enhanced_name)
     enhanced_algo.profit_taking_pct = profit_pct
-    
+
     enhanced_transactions, enhanced_summary = run_algorithm_backtest(
         df=df,
         ticker=ticker,
@@ -129,23 +129,23 @@ def run_single_comparison(ticker: str, start_date: str, end_date: str,
         end_date=end_dt,
         algo=enhanced_algo,
     )
-    
-    enhanced_return = enhanced_summary['total_return'] * 100
+
+    enhanced_return = enhanced_summary["total_return"] * 100
     enhanced_txns = len(enhanced_transactions)
-    enhanced_final = enhanced_summary.get('total', 0)
-    
+    enhanced_final = enhanced_summary.get("total", 0)
+
     print(f"\n  Enhanced Results:")
     print(f"    Total Return: {enhanced_return:.2f}%")
     print(f"    Transactions: {enhanced_txns}")
     print(f"    Final Value: ${enhanced_final:,.2f}")
-    
+
     # Build ATH-only algorithm (no buybacks)
     # Use same rebalance trigger as enhanced, but disable buybacks
     rebalance_pct = enhanced_algo.rebalance_size * 100  # Convert decimal to percentage
     ath_name = f"sd-ath-only-{rebalance_pct},{profit_pct}"
     print(f"\n[2/2] Running ATH-ONLY baseline: {ath_name}")
     ath_algo = build_algo_from_name(ath_name)
-    
+
     ath_transactions, ath_summary = run_algorithm_backtest(
         df=df,
         ticker=ticker,
@@ -154,31 +154,31 @@ def run_single_comparison(ticker: str, start_date: str, end_date: str,
         end_date=end_dt,
         algo=ath_algo,
     )
-    
-    ath_return = ath_summary['total_return'] * 100
+
+    ath_return = ath_summary["total_return"] * 100
     ath_txns = len(ath_transactions)
-    ath_final = ath_summary.get('total', 0)
-    
+    ath_final = ath_summary.get("total", 0)
+
     print(f"\n  ATH-Only Results:")
     print(f"    Total Return: {ath_return:.2f}%")
     print(f"    Transactions: {ath_txns}")
     print(f"    Final Value: ${ath_final:,.2f}")
-    
+
     # Calculate volatility alpha
     volatility_alpha = enhanced_return - ath_return
     alpha_per_txn = volatility_alpha / enhanced_txns if enhanced_txns > 0 else 0
-    
+
     print(f"\n  VOLATILITY ALPHA:")
     print(f"    Extra Return: {volatility_alpha:+.2f}%")
     print(f"    Alpha per Transaction: {alpha_per_txn:+.4f}%")
-    
+
     if volatility_alpha > 0:
         print(f"    ✓ Enhanced strategy OUTPERFORMS ATH-only by {volatility_alpha:.2f}%")
     elif volatility_alpha < 0:
         print(f"    ✗ Enhanced strategy UNDERPERFORMS ATH-only by {abs(volatility_alpha):.2f}%")
     else:
         print(f"    = No difference (unusual!)")
-    
+
     return {
         "ticker": ticker,
         "asset_class": asset_class or "unknown",
@@ -196,7 +196,9 @@ def run_single_comparison(ticker: str, start_date: str, end_date: str,
         # Volatility alpha
         "volatility_alpha_pct": round(volatility_alpha, 2),
         "alpha_per_transaction": round(alpha_per_txn, 4),
-        "alpha_percentage_gain": round((volatility_alpha / ath_return * 100) if ath_return != 0 else 0, 2),
+        "alpha_percentage_gain": round(
+            (volatility_alpha / ath_return * 100) if ath_return != 0 else 0, 2
+        ),
     }
 
 
@@ -204,54 +206,33 @@ def main():
     parser = argparse.ArgumentParser(
         description="Measure volatility alpha by comparing best sdN vs ATH-only"
     )
+    parser.add_argument("--ticker", help="Single ticker to analyze (e.g., NVDA)")
     parser.add_argument(
-        "--ticker",
-        help="Single ticker to analyze (e.g., NVDA)"
+        "--comprehensive", action="store_true", help="Run all 12 assets from Phase 1 research"
     )
+    parser.add_argument("--start", required=True, help="Start date (MM/DD/YYYY)")
+    parser.add_argument("--end", required=True, help="End date (MM/DD/YYYY)")
     parser.add_argument(
-        "--comprehensive",
-        action="store_true",
-        help="Run all 12 assets from Phase 1 research"
+        "--profit", type=float, default=50.0, help="Profit-taking percentage (default: 50%%)"
     )
-    parser.add_argument(
-        "--start",
-        required=True,
-        help="Start date (MM/DD/YYYY)"
-    )
-    parser.add_argument(
-        "--end",
-        required=True,
-        help="End date (MM/DD/YYYY)"
-    )
-    parser.add_argument(
-        "--profit",
-        type=float,
-        default=50.0,
-        help="Profit-taking percentage (default: 50%%)"
-    )
-    parser.add_argument(
-        "--qty",
-        type=int,
-        default=10000,
-        help="Initial quantity (default: 10000)"
-    )
+    parser.add_argument("--qty", type=int, default=10000, help="Initial quantity (default: 10000)")
     parser.add_argument(
         "--output",
         default="volatility_alpha_results.csv",
-        help="Output CSV filename (default: volatility_alpha_results.csv)"
+        help="Output CSV filename (default: volatility_alpha_results.csv)",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Validate inputs
     if not args.ticker and not args.comprehensive:
         print("ERROR: Must specify either --ticker or --comprehensive")
         sys.exit(1)
-    
+
     if args.ticker and args.comprehensive:
         print("ERROR: Cannot use both --ticker and --comprehensive")
         sys.exit(1)
-    
+
     # Determine which tickers to run
     if args.comprehensive:
         tickers = [t for tickers in ASSET_CLASSES.values() for t in tickers]
@@ -259,16 +240,14 @@ def main():
     else:
         tickers = [args.ticker]
         print(f"Running single asset: {args.ticker}")
-    
+
     # Run comparisons
     results = []
     for ticker in tickers:
-        result = run_single_comparison(
-            ticker, args.start, args.end, args.profit, args.qty
-        )
+        result = run_single_comparison(ticker, args.start, args.end, args.profit, args.qty)
         if result:
             results.append(result)
-    
+
     # Save results to CSV
     if results:
         fieldnames = [
@@ -287,37 +266,37 @@ def main():
             "alpha_per_transaction",
             "alpha_percentage_gain",
         ]
-        
-        with open(args.output, 'w', newline='') as f:
+
+        with open(args.output, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(results)
-        
+
         print(f"\n{'='*70}")
         print(f"[OK] Results saved to: {args.output}")
         print(f"   Total records: {len(results)}")
         print(f"{'='*70}")
-        
+
         # Print summary
         print(f"\n{'='*70}")
         print("VOLATILITY ALPHA SUMMARY")
         print(f"{'='*70}")
-        
+
         for cls in ASSET_CLASSES.keys():
-            cls_results = [r for r in results if r['asset_class'] == cls]
+            cls_results = [r for r in results if r["asset_class"] == cls]
             if cls_results:
-                avg_alpha = sum(r['volatility_alpha_pct'] for r in cls_results) / len(cls_results)
-                best = max(cls_results, key=lambda r: r['volatility_alpha_pct'])
+                avg_alpha = sum(r["volatility_alpha_pct"] for r in cls_results) / len(cls_results)
+                best = max(cls_results, key=lambda r: r["volatility_alpha_pct"])
                 print(f"\n{cls.upper().replace('_', ' ')}:")
                 print(f"  Average Volatility Alpha: {avg_alpha:+.2f}%")
                 print(f"  Best: {best['ticker']} ({best['volatility_alpha_pct']:+.2f}%)")
-        
-        overall_avg = sum(r['volatility_alpha_pct'] for r in results) / len(results)
+
+        overall_avg = sum(r["volatility_alpha_pct"] for r in results) / len(results)
         print(f"\nOVERALL AVERAGE: {overall_avg:+.2f}%")
-        
-        positive = sum(1 for r in results if r['volatility_alpha_pct'] > 0)
+
+        positive = sum(1 for r in results if r["volatility_alpha_pct"] > 0)
         print(f"Positive Alpha: {positive}/{len(results)} ({positive/len(results)*100:.1f}%)")
-        
+
         print(f"\n{'='*70}")
     else:
         print("\nERROR: No results generated")

@@ -8,50 +8,79 @@ import os
 import sys
 from datetime import datetime
 
-# Add the app root to sys.path so we can import from src
-_app_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-if _app_root not in sys.path:
-    sys.path.insert(0, _app_root)
-
 from src.compare.plotter import plot_price_with_trades
-from src.data.fetcher import HistoryFetcher
+from src.data.asset import Asset
 from src.models.backtest import build_algo_from_name, run_algorithm_backtest
 
 
-def main(argv):
-    if len(argv) < 6:
-        print("Usage: runner.py <TICKER> <START> <END> <ALGO_ID> <OUT_PNG>")
+def main() -> int:
+    """Main entry point for the runner script."""
+    if len(sys.argv) < 6:
+        print("Usage: python -m src.compare.runner <TICKER> <START> <END> <ALGO_ID> <OUT_PNG>")
         return 2
 
-    ticker = argv[1]
-    start = datetime.fromisoformat(argv[2]).date()
-    end = datetime.fromisoformat(argv[3]).date()
-    algo_id = argv[4]
-    out_png = argv[5]
+    ticker = sys.argv[1]
+    start = datetime.fromisoformat(sys.argv[2]).date()
+    end = datetime.fromisoformat(sys.argv[3]).date()
+    algo_id = sys.argv[4]
+    out_png = sys.argv[5]
 
-    # load price history (uses fetcher cache)
-    fetcher = HistoryFetcher()
-    df = fetcher.get_history(ticker, start, end)
+    # Load price history using the modern Asset class
+    df = Asset(ticker).get_prices(start, end)
+    if df.empty:
+        print(f"Error: No price data found for {ticker} in the given date range.")
+        return 1
+
     algo = build_algo_from_name(algo_id)
 
     txs, summary = run_algorithm_backtest(
         df, ticker, initial_qty=10000, start_date=start, end_date=end, algo=algo
     )
 
-    # write transactions to a small file next to PNG
+    # Write transactions to a small file next to PNG and prepare stable string lines
     tx_file = os.path.splitext(out_png)[0] + "-tx.txt"
+    tx_lines = []
+    for t in txs:
+        # If already a string, use it directly
+        if isinstance(t, str):
+            tx_lines.append(t)
+            continue
+        # Prefer a to_string() method if available
+        to_string = getattr(t, "to_string", None)
+        if callable(to_string):
+            tx_lines.append(to_string())
+            continue
+        # Fallback: try common attributes used by transaction types
+        action = getattr(t, "action", getattr(t, "transaction_type", None))
+        date_attr = getattr(t, "transaction_date", getattr(t, "purchase_date", None))
+        qty = getattr(t, "qty", getattr(t, "shares", None))
+        price = getattr(t, "price", getattr(t, "purchase_price", None))
+        ticker_attr = getattr(t, "ticker", None)
+        if date_attr is not None and action is not None and qty is not None and price is not None:
+            try:
+                date_str = date_attr.isoformat()
+            except Exception:
+                date_str = str(date_attr)
+            # Standardized format: YYYY-MM-DD ACTION QTY @ PRICE TICKER
+            tx_lines.append(f"{date_str} {action.upper()} {qty} @ {price:.2f} {ticker_attr or ''}".strip())
+            continue
+        # Last resort: use str()
+        tx_lines.append(str(t))
     with open(tx_file, "w") as f:
-        for t in txs:
-            f.write(t + "\n")
+        for line in tx_lines:
+            f.write(line + "\n")
 
-    # plot with markers
-    plot_price_with_trades(df, txs, ticker, out_png)
+    # plot with markers (plotter expects a list of string lines)
+    # Pass the summary so the plotter can annotate metrics like volatility alpha.
+    plot_price_with_trades(df, tx_lines, ticker, out_png, summary)
 
     print(f"Wrote {out_png} and {tx_file}")
     print("Summary:")
     for k, v in summary.items():
         print(f"  {k}: {v}")
+    
+    return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv))
+    sys.exit(main())
