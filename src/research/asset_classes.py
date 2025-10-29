@@ -121,7 +121,8 @@ def print_sd_reference_table():
     print("=" * 70 + "\n")
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for asset classes research."""
     print_sd_reference_table()
 
     print("\nASSET CLASSES:")
@@ -130,3 +131,7 @@ if __name__ == "__main__":
         print(f"  Tickers: {', '.join(data['tickers'])}")
         print(f"  Volatility: {data['expected_volatility']}")
         print(f"  Recommended sdN values: {data['recommended_sd']}")
+
+
+if __name__ == "__main__":
+    main()

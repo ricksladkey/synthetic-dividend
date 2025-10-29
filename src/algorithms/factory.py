@@ -16,6 +16,7 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
         'buy-and-hold' → BuyAndHoldAlgorithm()
         'sd-9.15,50' → SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=True)
         'sd-ath-only-9.15,50' → SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=False)
+        'sd-ath-sell-9.15,50' → SyntheticDividendAlgorithm(0.0915, 0.5, sell_at_new_ath=True)
 
     Note: String format uses percentages (9.15, 50) for readability, but converts
     to decimals (0.0915, 0.5) internally for mathematical clarity.
@@ -53,6 +54,18 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
         print(f"  Exponential scaling: 2^(1/{n}) - 1 = {rebalance*100:.4f}% trigger")
         return SyntheticDividendAlgorithm(
             rebalance_size=rebalance, profit_sharing=profit_pct / 100.0, buyback_enabled=True
+        )
+
+    # ATH-sell variant: buys on dips, sells only at new ATHs
+    m = re.match(r"^(sd|synthetic-dividend)-ath-sell-(\d+(?:\.\d+)?),(\d+(?:\.\d+)?)$", name)
+    if m:
+        rebalance_pct = float(m.group(2))
+        profit_pct = float(m.group(3))
+        return SyntheticDividendAlgorithm(
+            rebalance_size=rebalance_pct / 100.0,
+            profit_sharing=profit_pct / 100.0,
+            buyback_enabled=True,
+            sell_at_new_ath=True,
         )
 
     # ATH-only variant: modern comma-based format

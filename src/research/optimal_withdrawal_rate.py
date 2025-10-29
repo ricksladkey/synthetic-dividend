@@ -39,10 +39,23 @@ from typing import List, Optional
 
 import numpy as np
 import pandas as pd
+from typing import TypedDict
 
 from src.algorithms.factory import build_algo_from_name
 from src.data.fetcher import HistoryFetcher
 from src.models.retirement_backtest import run_retirement_backtest
+
+
+class Scenario(TypedDict):
+    """Type definition for experiment scenarios."""
+    ticker: str
+    start: date
+    end: date
+    algo: str
+    min_rate: float
+    max_rate: float
+    step: float
+    qty: int
 
 
 @dataclass
@@ -139,8 +152,6 @@ def find_optimal_withdrawal_rate(
             withdrawal_frequency="monthly",
             cpi_adjust=True,
             simple_mode=simple_mode,
-            risk_free_data=risk_free_data,
-            risk_free_asset_ticker=risk_free_asset_ticker,
         )
 
         # Calculate statistics
@@ -257,7 +268,7 @@ def run_experiment():
     """Run the optimal withdrawal rate experiment."""
 
     # Experiment parameters
-    scenarios = [
+    scenarios: list[Scenario] = [
         {
             "ticker": "NVDA",
             "start": date(2023, 1, 1),

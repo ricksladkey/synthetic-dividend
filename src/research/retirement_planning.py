@@ -233,7 +233,7 @@ def run_retirement_experiment() -> Dict[str, Any]:
     print(f"CPI Adjustment: {'Yes' if CPI_ADJUST else 'No'}")
     print("=" * 80)
 
-    all_results = {}
+    all_results: Dict[str, Dict[str, Any]] = {}
 
     # Test each asset category
     for category, tickers in ASSETS.items():

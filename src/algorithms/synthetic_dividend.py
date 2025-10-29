@@ -28,10 +28,16 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             Baseline comparison mode that only sells at new all-time highs.
             No buybacks, no stack management - pure upside capture only.
 
+        ATH-sell (sell_at_new_ath=True):
+            Advanced volatility harvesting: buys on dips but only sells bought-back
+            shares when price reaches a NEW all-time high. This maximizes compounding
+            during recovery phases by holding bought shares through the entire recovery.
+
     Parameters:
         rebalance_size: Bracket spacing as decimal (e.g., 0.0915 = 9.15% brackets)
         profit_sharing: Trade size as fraction of rebalance (e.g., 0.5 = 50%)
         buyback_enabled: True for full algorithm, False for ATH-only baseline
+        sell_at_new_ath: True for ATH-sell variant (only sell at new ATHs)
 
     Mathematical Foundation:
         The algorithm places symmetric limit orders at prices:
@@ -43,6 +49,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
     Examples:
         Full: SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=True)
         ATH-only: SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=False)
+        ATH-sell: SyntheticDividendAlgorithm(0.0915, 0.5, sell_at_new_ath=True)
     """
 
     # Maximum iterations for multi-bracket gap handling per day
@@ -56,6 +63,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         profit_sharing: float = 0.0,
         buyback_enabled: bool = True,
         bracket_seed: Optional[float] = None,
+        sell_at_new_ath: bool = False,
         params: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize algorithm with strategy parameters.
@@ -66,6 +74,8 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             buyback_enabled: True for full mode, False for ATH-only
             bracket_seed: Optional seed price to align bracket positions (e.g., 100.0)
             params: Optional dict for base class compatibility (can include 'bracket_seed')
+            sell_at_new_ath: True for ATH-sell variant (sell only at new ATHs)
+            params: Optional dict for base class compatibility
         """
         super().__init__(params)
 
@@ -84,12 +94,13 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                 except (TypeError, ValueError):
                     # Invalid seed value, ignore it
                     pass
+        self.sell_at_new_ath: bool = sell_at_new_ath
 
         # Performance tracking: cumulative alpha from volatility harvesting
         self.total_volatility_alpha: float = 0.0
 
-        # ATH-only mode: track all-time high for baseline comparison
-        self.ath_price: float = 0.0
+        # ATH tracking for sell conditions
+        self.all_time_high: float = 0.0
 
         # Buyback stack: simple count of shares purchased for volatility harvesting
         # We don't track individual lots since tax consequences (LTCG) don't matter here
@@ -192,14 +203,28 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                 self.market.place_order(buy_order)
 
             if orders["next_sell_qty"] > 0:
-                sell_order = Order(
-                    action=OrderAction.SELL,
-                    quantity=int(orders["next_sell_qty"]),
-                    order_type=OrderType.LIMIT,
-                    limit_price=orders["next_sell_price"],
-                    notes="Taking profits",
-                )
-                self.market.place_order(sell_order)
+                # ATH-sell variant: only sell if price exceeds all-time high
+                if self.sell_at_new_ath:
+                    # Only place sell order if current price exceeds all-time high
+                    if current_price > self.all_time_high:
+                        sell_order = Order(
+                            action=OrderAction.SELL,
+                            quantity=int(orders["next_sell_qty"]),
+                            order_type=OrderType.LIMIT,
+                            limit_price=orders["next_sell_price"],
+                            notes=f"ATH-sell at new ATH ${self.all_time_high:.2f}",
+                        )
+                        self.market.place_order(sell_order)
+                else:
+                    # Standard sell logic
+                    sell_order = Order(
+                        action=OrderAction.SELL,
+                        quantity=int(orders["next_sell_qty"]),
+                        order_type=OrderType.LIMIT,
+                        limit_price=orders["next_sell_price"],
+                        notes="Taking profits",
+                    )
+                    self.market.place_order(sell_order)
         else:
             # ATH-only mode: only sell at new highs (no buybacks)
             if orders["next_sell_qty"] > 0:
@@ -222,6 +247,9 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             holdings: Initial share quantity
             current_price: Initial purchase price
         """
+        # Initialize ATH tracking
+        self.all_time_high = current_price
+
         # ATH-only mode: seed with initial price as baseline
         if not self.buyback_enabled:
             self.ath_price = current_price
@@ -261,6 +289,13 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             List of executed transactions for this day
         """
         transactions: List[Transaction] = []
+
+        # ATH tracking for sell conditions (used by ATH-sell variant)
+        high = price_row.get("High")
+        if high is not None:
+            high_val = high.item() if hasattr(high, "item") else float(high)
+            if high_val > self.all_time_high:
+                self.all_time_high = high_val
 
         # ATH-only mode: track all-time high for baseline comparison
         if not self.buyback_enabled:
@@ -319,9 +354,15 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         Outputs performance metrics and final state for analysis.
         """
         if self.buyback_enabled:
-            print(
-                f"Synthetic Dividend Algorithm total volatility alpha: {self.total_volatility_alpha:.2f}%"
-            )
+            if self.sell_at_new_ath:
+                print(
+                    f"ATH-Sell Algorithm total volatility alpha: {self.total_volatility_alpha:.2f}%"
+                )
+                print(f"  Final ATH: ${self.all_time_high:.2f}")
+            else:
+                print(
+                    f"Synthetic Dividend Algorithm total volatility alpha: {self.total_volatility_alpha:.2f}%"
+                )
             # Report buyback stack status (unwound shares indicate complete cycles)
             if self.buyback_stack_count > 0:
                 print(f"  Buyback stack: {self.buyback_stack_count} shares not yet unwound")

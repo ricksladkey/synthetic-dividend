@@ -19,7 +19,8 @@ from typing import Any, Dict, List, Optional
 
 
 from src.data.fetcher import HistoryFetcher
-from src.models.backtest import Data, build_algo_from_name, run_algorithm_backtest
+from src.algorithms.factory import build_algo_from_name
+from src.models.backtest import Data, run_algorithm_backtest  # noqa: E402
 
 
 def parse_date(s: str) -> date:
@@ -237,8 +238,8 @@ def run_batch_comparison(
             end_date=end_date,
             algo_name=algo_name,
             initial_qty=initial_qty,
-            reference_asset_df=reference_df,
-            risk_free_asset_df=risk_free_df,
+            reference_data=reference_df,
+            risk_free_data=risk_free_df,
             reference_asset_ticker=reference_asset,
             risk_free_asset_ticker=risk_free_asset,
         )

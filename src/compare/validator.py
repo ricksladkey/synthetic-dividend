@@ -12,7 +12,8 @@ from typing import Dict, List, Tuple
 import pandas as pd
 
 from src.data.asset import Asset
-from src.models.backtest import build_algo_from_name, run_algorithm_backtest
+from src.algorithms.factory import build_algo_from_name
+from src.models.backtest import run_algorithm_backtest  # noqa: E402
 
 
 def parse_date(s: str) -> date:
@@ -142,8 +143,8 @@ def compare_algorithms(
     print(f"  Total return: {ath_summary['total_return']*100:.2f}%")
 
     # Extract holdings timelines
-    full_holdings = extract_holdings_from_transactions(full_tx)
-    ath_holdings = extract_holdings_from_transactions(ath_tx)
+    full_holdings = extract_holdings_from_transactions([tx.to_string() for tx in full_tx])
+    ath_holdings = extract_holdings_from_transactions([tx.to_string() for tx in ath_tx])
 
     # Find ATH dates
     ath_dates = find_ath_dates(df, start_date, end_date)
@@ -191,16 +192,17 @@ def compare_algorithms(
     resell_count = 0
 
     for tx in full_tx[1:]:
-        if " BUY " in tx and "Buying back" in tx:
+        tx_str = tx.to_string()
+        if " BUY " in tx_str and "Buying back" in tx_str:
             buyback_count += 1
-        elif " SELL " in tx and "Taking profits" in tx:
-            parts = tx.split()
+        elif " SELL " in tx_str and "Taking profits" in tx_str:
+            parts = tx_str.split()
             if len(parts) >= 3:
                 # qty_str = parts[2]  # Unused - kept for reference
                 # Check if this is a buyback resell (not an ATH sell)
                 # ATH sells would have higher holdings in ATH-only at same date
                 # For now, count all non-ATH sells
-                if "ATH-only" not in tx:
+                if "ATH-only" not in tx_str:
                     resell_count += 1
 
     print("\nFull algorithm buyback/resell analysis:")
