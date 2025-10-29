@@ -62,6 +62,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         rebalance_size: float = 0.0,
         profit_sharing: float = 0.0,
         buyback_enabled: bool = True,
+        bracket_seed: Optional[float] = None,
         sell_at_new_ath: bool = False,
         params: Optional[Dict[str, Any]] = None,
     ) -> None:
@@ -71,6 +72,8 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             rebalance_size: Bracket spacing as decimal (e.g., 0.0915 for 9.15%)
             profit_sharing: Trade size as fraction (e.g., 0.5 for 50%)
             buyback_enabled: True for full mode, False for ATH-only
+            bracket_seed: Optional seed price to align bracket positions (e.g., 100.0)
+            params: Optional dict for base class compatibility (can include 'bracket_seed')
             sell_at_new_ath: True for ATH-sell variant (sell only at new ATHs)
             params: Optional dict for base class compatibility
         """
@@ -80,6 +83,17 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         self.rebalance_size: float = float(rebalance_size)
         self.profit_sharing: float = float(profit_sharing)
         self.buyback_enabled: bool = buyback_enabled
+        # Allow bracket_seed from params dict if not explicitly provided
+        self.bracket_seed: Optional[float] = bracket_seed
+        if self.bracket_seed is None and params:
+            seed_value = params.get("bracket_seed")
+            # Validate that seed is numeric if provided via params
+            if seed_value is not None:
+                try:
+                    self.bracket_seed = float(seed_value)
+                except (TypeError, ValueError):
+                    # Invalid seed value, ignore it
+                    pass
         self.sell_at_new_ath: bool = sell_at_new_ath
 
         # Performance tracking: cumulative alpha from volatility harvesting
@@ -173,6 +187,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             last_transaction_price=current_price,
             rebalance_size=self.rebalance_size,
             profit_sharing=self.profit_sharing,
+            bracket_seed=self.bracket_seed,
         )
 
         if self.buyback_enabled:
