@@ -85,12 +85,39 @@ class Asset:
 
     # Public API
     def get_prices(self, start_date: date, end_date: date) -> pd.DataFrame:
-        if getattr(self, "_provider", None) is not None:
-            assert self._provider is not None
-            return self._provider.get_prices(start_date, end_date)
-
         if start_date > end_date:
             raise ValueError("start_date must be <= end_date")
+
+        if getattr(self, "_provider", None) is not None:
+            assert self._provider is not None
+            result = self._provider.get_prices(start_date, end_date)
+            # If primary provider returns empty data, try fallback providers
+            if not result.empty:
+                # Cache the result
+                self._save_price_cache(result)
+                return result
+            
+            # Try fallback providers in priority order (excluding the primary)
+            # Skip fallback for mock assets, cash assets, and static assets - they should remain isolated
+            from src.data.static_provider import StaticAssetProvider
+            if not (self.ticker.startswith("MOCK-") or self.ticker == "USD" or isinstance(self._provider, StaticAssetProvider)):
+                try:
+                    from src.data.asset_provider import AssetRegistry
+                    for pattern, provider_class, priority in AssetRegistry._providers:
+                        if provider_class == type(self._provider):
+                            continue  # Skip the primary provider that failed
+                        if AssetRegistry._pattern_matches(pattern, self.ticker):
+                            fallback_provider = provider_class(self.ticker, self.cache_dir)
+                            fallback_result = fallback_provider.get_prices(start_date, end_date)
+                            if not fallback_result.empty:
+                                # Cache the result
+                                self._save_price_cache(fallback_result)
+                                return fallback_result
+                except Exception:
+                    pass
+            
+            # Return empty result if no provider worked
+            return result
 
         cached = self._load_price_cache()
         if self._cache_covers_range(cached, start_date, end_date):
@@ -102,12 +129,39 @@ class Asset:
         return df
 
     def get_dividends(self, start_date: date, end_date: date) -> pd.Series:
-        if getattr(self, "_provider", None) is not None:
-            assert self._provider is not None
-            return self._provider.get_dividends(start_date, end_date)
-
         if start_date > end_date:
             raise ValueError("start_date must be <= end_date")
+
+        if getattr(self, "_provider", None) is not None:
+            assert self._provider is not None
+            result = self._provider.get_dividends(start_date, end_date)
+            # If primary provider returns empty data, try fallback providers
+            if not result.empty:
+                # Cache the result
+                self._save_dividend_cache(result)
+                return result
+            
+            # Try fallback providers in priority order (excluding the primary)
+            # Skip fallback for mock assets, cash assets, and static assets - they should remain isolated
+            from src.data.static_provider import StaticAssetProvider
+            if not (self.ticker.startswith("MOCK-") or self.ticker == "USD" or isinstance(self._provider, StaticAssetProvider)):
+                try:
+                    from src.data.asset_provider import AssetRegistry
+                    for pattern, provider_class, priority in AssetRegistry._providers:
+                        if provider_class == type(self._provider):
+                            continue  # Skip the primary provider that failed
+                        if AssetRegistry._pattern_matches(pattern, self.ticker):
+                            fallback_provider = provider_class(self.ticker, self.cache_dir)
+                            fallback_result = fallback_provider.get_dividends(start_date, end_date)
+                            if not fallback_result.empty:
+                                # Cache the result
+                                self._save_dividend_cache(fallback_result)
+                                return fallback_result
+                except Exception:
+                    pass
+            
+            # Return empty result if no provider worked
+            return result
 
         cached = self._load_dividend_cache()
         if cached is not None and not cached.empty:

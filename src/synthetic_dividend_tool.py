@@ -597,7 +597,7 @@ def run_analyze(args) -> int:
 
         # Run our analysis script with proper Python interpreter
         script_path = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), "analyze_gap_bonus.py"
+            os.path.dirname(os.path.dirname(__file__)), "tools", "analyze_gap_bonus.py"
         )
         cmd = [sys.executable, script_path]
         result = subprocess.run(cmd, capture_output=False)

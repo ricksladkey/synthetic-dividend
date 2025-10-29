@@ -51,7 +51,7 @@ class TestStaticAssetProvider:
 
     def test_returns_empty_for_missing_ticker(self):
         """Should return empty DataFrame if ticker file doesn't exist."""
-        asset = Asset("NVDA")  # Not in testdata yet
+        asset = Asset("MISSING")  # Not in testdata
         prices = asset.get_prices(date(2020, 1, 2), date(2020, 12, 31))
 
         # Should be empty but have correct columns

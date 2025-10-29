@@ -157,7 +157,7 @@ With just 10 uncorrelated assets, margin usage drops to 9.7% (√10 reduction vi
 
 Cash reserves aren't dead weight - they earn market returns while buffering withdrawals!
 
-📄 **[Read the feature documentation →](RISK_FREE_GAINS_FEATURE.md)**
+📄 **[Read the feature documentation →](theory/RISK_FREE_GAINS_FEATURE.md)**
 
 ## 🚀 Key Features
 

@@ -242,7 +242,7 @@ class YahooAssetProvider(AssetProvider):
             )
 
             if df is None or df.empty:
-                return pd.DataFrame()
+                return pd.DataFrame(columns=["Open", "High", "Low", "Close"])
 
             # Flatten MultiIndex columns (yfinance quirk)
             if isinstance(df.columns, pd.MultiIndex):
@@ -251,13 +251,13 @@ class YahooAssetProvider(AssetProvider):
             # Keep only OHLC columns
             cols = [c for c in ("Open", "High", "Low", "Close") if c in df.columns]
             if not cols:
-                return pd.DataFrame()
+                return pd.DataFrame(columns=["Open", "High", "Low", "Close"])
 
             df = df[cols].dropna(how="all")
             return df
 
         except Exception:
-            return pd.DataFrame()
+            return pd.DataFrame(columns=["Open", "High", "Low", "Close"])
 
     def _download_dividends(self) -> pd.Series:
         """Download complete dividend history from yfinance."""
