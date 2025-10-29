@@ -1,6 +1,6 @@
 # Retirement Planning Experiment Results
 
-**Date**: 2025-10-27
+**Date**: 2025-10-29
 **Period**: 2020-01-01 to 2024-12-31
 **Initial Investment**: $1,000,000
 **Annual Withdrawal**: 5.0%
@@ -13,9 +13,9 @@
 
 | Strategy | Final Value | Total Withdrawn | Survived | Final Purchasing Power |
 |----------|-------------|-----------------|----------|------------------------|
-| buy-hold | $20,687,642 | $242,300 | OK | $17,889,353 |
-| ath-only | $4,647,105 | $242,300 | OK | $4,018,520 |
-| full-sd8 | $6,606,933 | $186,395 | OK | $5,713,255 |
+| buy-hold | $21,092,795 | $247,046 | OK | $18,239,704 |
+| ath-only | $4,738,020 | $247,046 | OK | $4,097,137 |
+| full-sd8 | $6,735,852 | $190,090 | OK | $5,824,735 |
 
 ### BTC-USD
 
@@ -37,9 +37,9 @@
 
 | Strategy | Final Value | Total Withdrawn | Survived | Final Purchasing Power |
 |----------|-------------|-----------------|----------|------------------------|
-| buy-hold | $1,460,175 | $242,229 | OK | $1,262,666 |
-| ath-only | $1,297,993 | $242,229 | OK | $1,122,422 |
-| full-sd8 | $1,352,413 | $121,873 | OK | $1,169,481 |
+| buy-hold | $1,473,107 | $244,398 | OK | $1,273,849 |
+| ath-only | $1,309,308 | $244,398 | OK | $1,132,206 |
+| full-sd8 | $1,364,806 | $122,948 | OK | $1,180,197 |
 
 ## MSTR Unrealized Volatility Alpha Analysis
 
