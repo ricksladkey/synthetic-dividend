@@ -73,8 +73,30 @@ For detailed help on any command:
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # ========================================================================
-    # BACKTEST command
+    # PORTFOLIO command
     # ========================================================================
+    portfolio_parser = subparsers.add_parser(
+        "portfolio",
+        help="Run portfolio backtests",
+        description="Execute multi-asset portfolio backtests with algorithmic strategies",
+    )
+    portfolio_parser.add_argument("--allocations", required=True,
+                                 help='Asset allocations as JSON string, e.g., \'{"NVDA": 0.4, "VOO": 0.6}\'')
+    portfolio_parser.add_argument("--start", required=True, help="Start date (YYYY-MM-DD)")
+    portfolio_parser.add_argument("--end", required=True, help="End date (YYYY-MM-DD)")
+    portfolio_parser.add_argument(
+        "--initial-investment", type=float, default=1_000_000,
+        help="Initial investment amount (default: 1,000,000)"
+    )
+    portfolio_parser.add_argument(
+        "--algo", default="buy-and-hold",
+        help='Algorithm to use: "buy-and-hold", "sd-9.05,50.0", etc. (default: buy-and-hold)'
+    )
+    portfolio_parser.add_argument("--output", help="Output file for detailed results (JSON)")
+    portfolio_parser.add_argument("--verbose", action="store_true", help="Verbose output")
+
+    # ========================================================================
+    # BACKTEST command
     backtest_parser = subparsers.add_parser(
         "backtest",
         help="Run backtest on a single asset",
@@ -355,6 +377,89 @@ For detailed help on any command:
     return parser
 
 
+def run_portfolio(args) -> int:
+    """Execute portfolio backtest command."""
+    import json
+    from datetime import datetime
+    from src.models.backtest import run_portfolio_backtest
+
+    try:
+        # Parse allocations JSON
+        allocations = json.loads(args.allocations)
+        
+        # Validate allocations sum to ~1.0
+        total_alloc = sum(allocations.values())
+        if abs(total_alloc - 1.0) > 0.01:
+            print(f"Error: Allocations must sum to 1.0, got {total_alloc:.3f}")
+            return 1
+            
+        # Parse dates
+        start_date = datetime.strptime(args.start, "%Y-%m-%d").date()
+        end_date = datetime.strptime(args.end, "%Y-%m-%d").date()
+        
+        print(f"Running portfolio backtest...")
+        print(f"Period: {start_date} to {end_date}")
+        print(f"Initial investment: ${args.initial_investment:,.0f}")
+        print(f"Algorithm: {args.algo}")
+        print("Allocations:")
+        for ticker, alloc in allocations.items():
+            print(f"  {ticker}: {alloc*100:.1f}%")
+        print()
+        
+        # Run the backtest
+        transactions, summary = run_portfolio_backtest(
+            allocations=allocations,
+            start_date=start_date,
+            end_date=end_date,
+            initial_investment=args.initial_investment,
+            algo=args.algo,
+            simple_mode=True,  # Keep it simple for CLI
+        )
+        
+        # Print results
+        print("RESULTS:")
+        print(f"Final portfolio value: ${summary['total_final_value']:,.0f}")
+        print(f"Total return: {summary['total_return']:.2f}%")
+        print(f"Annualized return: {summary['annualized_return']:.2f}%")
+        print()
+        print("Asset breakdown:")
+        for ticker, data in summary['assets'].items():
+            print(f"  {ticker}: ${data['final_value']:,.0f} ({data['total_return']:.2f}%)")
+        
+        # Save detailed results if requested
+        if args.output:
+            import json
+            output_data = {
+                'summary': summary,
+                'transactions': [{'action': t.action, 'ticker': t.ticker, 'qty': t.qty, 
+                                'price': t.price, 'date': str(t.transaction_date)} 
+                               for t in transactions[:100]],  # Limit transactions for file size
+                'metadata': {
+                    'command': 'portfolio',
+                    'allocations': allocations,
+                    'start_date': str(start_date),
+                    'end_date': str(end_date),
+                    'initial_investment': args.initial_investment,
+                    'algo': args.algo,
+                    'run_date': str(datetime.now())
+                }
+            }
+            
+            with open(args.output, 'w') as f:
+                json.dump(output_data, f, indent=2, default=str)
+            print(f"\nDetailed results saved to {args.output}")
+        
+        return 0
+        
+    except json.JSONDecodeError as e:
+        print(f"Error parsing allocations JSON: {e}")
+        print("Example: '{\"NVDA\": 0.4, \"VOO\": 0.6}'")
+        return 1
+    except Exception as e:
+        print(f"Error running portfolio backtest: {e}")
+        return 1
+
+
 def run_backtest(args) -> int:
     """Execute backtest command."""
 
@@ -559,6 +664,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     # Dispatch to appropriate handler
     if args.command == "backtest":
         return run_backtest(args)
+
+    elif args.command == "portfolio":
+        return run_portfolio(args)
 
     elif args.command == "research":
         if not args.research_type:

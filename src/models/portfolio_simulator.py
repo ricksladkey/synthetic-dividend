@@ -44,12 +44,16 @@ def simulate_portfolio(
 ) -> Dict:
     """Simulate buy-and-hold portfolio across multiple assets.
 
+    DEPRECATED: This function now uses the unified run_portfolio_backtest infrastructure.
+    For algorithmic strategies, use run_portfolio_backtest directly.
+
     Args:
         allocations: Dict mapping ticker → target allocation (must sum to 1.0)
         start_date: Portfolio start date
         end_date: Portfolio end date
         initial_value: Initial investment in dollars
         rebalance: Rebalancing strategy ('none', 'monthly', 'quarterly', 'annual')
+                  NOTE: Rebalancing not yet implemented in unified backtest
 
     Returns:
         Dict with keys:
@@ -67,132 +71,65 @@ def simulate_portfolio(
     Raises:
         ValueError: If allocations don't sum to ~1.0 or dates are invalid
     """
-    # Validate allocations
-    total_allocation = sum(allocations.values())
-    if abs(total_allocation - 1.0) > 0.01:
-        raise ValueError(f"Allocations must sum to 1.0, got {total_allocation:.3f}")
+    if rebalance != "none":
+        raise NotImplementedError("Rebalancing not yet implemented in unified backtest. Use rebalance='none' for now.")
 
-    if start_date >= end_date:
-        raise ValueError(f"start_date must be before end_date: {start_date} >= {end_date}")
+    # Use the unified portfolio backtest infrastructure
+    from src.models.backtest import run_portfolio_backtest
 
-    # Fetch price data for all assets
-    fetcher = HistoryFetcher()
-    price_data: Dict[str, pd.DataFrame] = {}
-
-    print(f"\nFetching data for {len(allocations)} assets...")
-    for ticker in allocations.keys():
-        print(f"  - {ticker}...", end=" ")
-        df = fetcher.get_history(ticker, start_date, end_date)
-        if df is None or df.empty:
-            raise ValueError(f"No data available for {ticker}")
-        price_data[ticker] = df
-        print(f"✓ ({len(df)} days)")
-
-    # Find common date range (intersection of all available dates)
-    all_dates = set(pd.to_datetime(price_data[list(allocations.keys())[0]].index).date)
-    for df in price_data.values():
-        all_dates = all_dates.intersection(set(pd.to_datetime(df.index).date))
-
-    if not all_dates:
-        raise ValueError("No common dates across all assets")
-
-    dates = sorted(list(all_dates))
-    print(f"\nCommon trading days: {len(dates)} (from {dates[0]} to {dates[-1]})")
-
-    # Initialize holdings: buy shares on first day according to allocation
-    first_date = dates[0]
-    shares: Dict[str, float] = {}
-
-    print(f"\nInitial purchase on {first_date}:")
-    for ticker, allocation in allocations.items():
-        # Find first_date in this ticker's data (convert back to datetime for lookup)
-        df_dates = pd.to_datetime(price_data[ticker].index).date
-        idx = list(df_dates).index(first_date)
-        first_price = price_data[ticker].iloc[idx]["Close"].item()  # Use .item() to extract scalar
-        investment = initial_value * allocation
-        shares[ticker] = investment / first_price
-        print(f"  {ticker}: {shares[ticker]:.4f} shares @ ${first_price:.2f} = ${investment:,.0f}")
-
-    # Build daily value history
-    daily_values = []
-
-    for d in dates:
-        row = {"date": d, "total": 0.0}
-
-        for ticker in allocations.keys():
-            # Find this date in ticker's data
-            df_dates = pd.to_datetime(price_data[ticker].index).date
-            idx = list(df_dates).index(d)
-            price = price_data[ticker].iloc[idx]["Close"].item()  # Use .item() to extract scalar
-            value = shares[ticker] * price
-
-            row[f"{ticker}_price"] = price
-            row[f"{ticker}_shares"] = shares[ticker]
-            row[f"{ticker}_value"] = value
-            row["total"] += value
-
-        daily_values.append(row)
-
-    # Convert to DataFrame
-    df_values = pd.DataFrame(daily_values)
-    df_values.set_index("date", inplace=True)
-
-    # Calculate returns
-    final_value = df_values["total"].iloc[-1]
-    total_return = ((final_value - initial_value) / initial_value) * 100
-
-    # Annualized return
-    days = (dates[-1] - dates[0]).days
-    years = days / 365.25
-    annualized_return = (
-        (((final_value / initial_value) ** (1 / years)) - 1) * 100 if years > 0 else 0
+    transactions, portfolio_summary = run_portfolio_backtest(
+        allocations=allocations,
+        start_date=start_date,
+        end_date=end_date,
+        initial_investment=initial_value,
+        algo='buy-and-hold',
+        simple_mode=True,  # Keep it simple like the original
     )
 
-    # Build summary
+    # Convert to the expected format for backward compatibility
+    # Reconstruct daily_values DataFrame in the original format
+    daily_values_df = pd.DataFrame({
+        'date': list(portfolio_summary["daily_values"].keys()),
+        'total': list(portfolio_summary["daily_values"].values())
+    }).set_index('date')
+
+    result = {
+        "final_value": portfolio_summary["total_final_value"],
+        "total_return": portfolio_summary["total_return"],
+        "annualized_return": portfolio_summary["annualized_return"],
+        "daily_values": daily_values_df,
+        "allocations": portfolio_summary["allocations"],
+        "initial_value": portfolio_summary["initial_investment"],
+        "start_date": portfolio_summary["start_date"],
+        "end_date": portfolio_summary["end_date"],
+    }
+
+    # Build summary string
     summary_lines = [
         "Portfolio Performance Summary",
         "=" * 60,
-        f"Period: {dates[0]} to {dates[-1]} ({days} days, {years:.2f} years)",
-        f"Initial Investment: ${initial_value:,.0f}",
-        f"Final Value: ${final_value:,.0f}",
-        f"Total Return: {total_return:+.2f}%",
-        f"Annualized Return: {annualized_return:+.2f}%",
+        f"Period: {result['start_date']} to {result['end_date']} ({portfolio_summary['trading_days']} days)",
+        f"Initial Investment: ${result['initial_value']:,.0f}",
+        f"Final Value: ${result['final_value']:,.0f}",
+        f"Total Return: {result['total_return']:+.2f}%",
+        f"Annualized Return: {result['annualized_return']:+.2f}%",
         "",
         "Asset Allocation:",
     ]
 
-    for ticker, allocation in allocations.items():
-        final_price = df_values[f"{ticker}_price"].iloc[-1]
-        final_shares = shares[ticker]
-        final_asset_value = df_values[f"{ticker}_value"].iloc[-1]
-
-        # Calculate asset return
-        df_dates = pd.to_datetime(price_data[ticker].index).date
-        first_idx = list(df_dates).index(first_date)
-        first_price_for_return = (
-            price_data[ticker].iloc[first_idx]["Close"].item()
-        )  # Use .item() to extract scalar
-        asset_return = ((final_price / first_price_for_return) - 1) * 100
+    for ticker, data in portfolio_summary["assets"].items():
+        allocation = data["allocation"]
+        final_value = data["final_value"]
+        total_return = data["total_return"]
 
         summary_lines.append(
             f"  {ticker:10s}: {allocation*100:5.1f}% → "
-            f"{final_shares:10.4f} shares @ ${final_price:8.2f} = "
-            f"${final_asset_value:12,.0f} ({asset_return:+7.2f}%)"
+            f"${final_value:12,.0f} ({total_return:+7.2f}%)"
         )
 
-    summary = "\n".join(summary_lines)
+    result["summary"] = "\n".join(summary_lines)
 
-    return {
-        "final_value": final_value,
-        "total_return": total_return,
-        "annualized_return": annualized_return,
-        "daily_values": df_values,
-        "allocations": allocations,
-        "summary": summary,
-        "initial_value": initial_value,
-        "start_date": dates[0],
-        "end_date": dates[-1],
-    }
+    return result
 
 
 def compare_portfolios(

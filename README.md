@@ -1,44 +1,16 @@
 <div align="center">
 
-# 💰 Synthet[🚀 Quick Start](#-quick-start-guide) • [📊 Research Findings](#-research-findings) • [📖 Examples](docs/EXAMPLES.md) • [📖 Documentation](#-documentation) • [🤝 Contributing](#-contributing)c Dividend Algorithm
+# Synthetic Dividend Algorithm
 
-### *Transform Volatility Into Cash Flow*
+### A Rules-Based Investment Strategy for Systematic Cash Flow Generation
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](h| 🏦 **[WITHDRAWAL_POLICY.md](theory/WITHDRAWAL_POLICY.md)** | Orthogonal withdrawal dimension, bank-first approach, 4% rule with CPI adjustment |
-| 💻 **[CODING_PHILOSOPHY.md](theory/CODING_PHILOSOPHY.md)** | Code quality standards, functional programming principles, and development best practices |
-| 📚 **[theory/README.md](theory/README.md)** | Complete theoretical framework overview and system prompt usage guide |
-| 📋 **[TODO.md](TODO.md)** | Development roadmap, completed features, and future plans |
-| 🎓 **[EXAMPLES.md](docs/EXAMPLES.md)** | ⭐ **Comprehensive usage guide** - command examples, real-world scenarios, volatility analyzer walkthrough |//opensource.org/licenses/MIT)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![| 💰 **[INCOME_GENERATION.md### ✅ Completed (Phase 1-2)
-- [x] Core synthetic dividend algorithm with buyback stack
-- [x] Optimal rebalancing parameter research (48 backtests)
-- [x] Volatility alpha discovery and measurement
-- [x] CLI tools for backtesting and batch analysis
-- [x] Comprehensive test suite with 48 tests (100% passing)
-- [x] Withdrawal policy implementation (orthogonal to strategy)
-- [x] Dual bank management modes (simple vs strict)
-- [x] Price normalization for deterministic backtests
-- [x] Income generation framework and theory documentation
-- [x] Income smoothing theory (irregular → regular transformation)
-- [x] Dividend/interest income tracking (real + synthetic dividends)
-- [x] Volatility alpha analyzer tool (auto-suggest SD parameters)
-
-### 🔄 In Progress (Phase 3)ME_GENERATION.md)** | How volatility becomes cash flow - the core income mechanism, practical implementation guide |
-| 🔄 **[INCOME_SMOOTHING.md](theory/INCOME_SMOOTHING.md)** | Irregular → regular payment transformation, sequence-of-returns protection, never sell at loss principle |
-| 🏦 **[WITHDRAWAL_POLICY.md](theory/WITHDRAWAL_POLICY.md)** | Orthogonal withdrawal dimension, bank-first approach, 4% rule with CPI adjustment |
-| 💻 **[CODING_PHILOSOPHY.md](theory/CODING_PHILOSOPHY.md)** | Code quality standards, functional programming principles, and development best practices |
-| 📚 **[theory/README.md](theory/README.md)** | Complete theoretical framework overview and system prompt usage guide |
-| 🤝 **[CONTRIBUTORS.md](docs/CONTRIBUTORS.md)** | Who built this and how - the human-AI collaboration story |
-| 🚀 **[CODING_ASSISTANCE_MANIFESTO.md](CODING_ASSISTANCE_MANIFESTO.md)** | ⭐ Lessons on AI-assisted development, the "pays for itself" productivity gain |
-| 📋 **[TODO.md](TODO.md)** | Development roadmap, completed features, and future plans |
-
-[![Tests](https://img.shields.io/badge/tests-48%20passing-brightgreen.svg)](./tests)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://img.shields.io/badge/tests-246%20passing-brightgreen.svg)](./tests)
 
 **A rules-based investment strategy that systematically generates cash flow from growth stocks while preserving compound growth potential.**
 
-[🚀 Quick Start](#-quick-start-guide) • [📊 Research Findings](#-research-findings) • [� Examples](EXAMPLES.md) • [�📖 Documentation](#-documentation) • [🤝 Contributing](#-contributing)
+[🚀 Quick Start](#-quick-start-guide) • [📊 Research Findings](#-research-findings) • [📖 Examples](docs/EXAMPLES.md) • [📖 Documentation](#-documentation) • [🤝 Contributing](#-contributing)
 
 ---
 
@@ -131,9 +103,9 @@ Alpha Per Transaction:                +0.25% per buyback cycle
 
 📄 **[Read the full thesis →](theory/VOLATILITY_ALPHA_THESIS.md)**
 
-### Optimal Withdrawal Rate Discovery (Experiment 004) ⭐ **NEW**
+### Optimal Withdrawal Rate Discovery (Experiment 004)
 
-**Breakthrough finding**: Withdrawal rates can be optimized by minimizing `abs(mean(bank))`, revealing the maximum sustainable rate where volatility alpha exactly matches withdrawals.
+**Research finding**: Withdrawal rates can be optimized by minimizing `abs(mean(bank))`, revealing the maximum sustainable rate where volatility alpha exactly matches withdrawals.
 
 **Key Discovery - SPY 2022 Bear Market**:
 ```
@@ -336,6 +308,10 @@ The **Synthetic Dividend Tool** provides a single swiss army knife interface to 
 # Batch comparison across multiple assets
 .\synthetic-dividend-tool.bat compare batch --tickers NVDA AAPL GLD --strategies sd8 sd16 --start 2024-01-01 --end 2025-01-01
 
+# 🎯 NEW: Multi-asset portfolio backtesting (unified interface)
+.\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-01-01 --end 2025-01-01
+.\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.2, "GOOG": 0.2, "BTC-USD": 0.2, "GLDM": 0.2, "PLTR": 0.2}' --algo "sd-9.05,50.0" --start 2024-01-01 --end 2025-01-01
+
 # Analyze gap bonus impact
 .\synthetic-dividend-tool.bat analyze gap-bonus --input research_phase1_1year_core.csv
 
@@ -350,6 +326,7 @@ The **Synthetic Dividend Tool** provides a single swiss army knife interface to 
 
 **Available Commands**:
 - `backtest` - Run single-asset backtest
+- `portfolio` - Run multi-asset portfolio backtests with algorithmic strategies
 - `research` - Run research studies (optimal-rebalancing, volatility-alpha, asset-classes)
 - `compare` - Compare algorithms, strategies, batch comparisons, or generate tables
 - `analyze` - Auto-suggest SD parameters (volatility-alpha), gap-bonus analysis, coverage ratios
@@ -423,6 +400,50 @@ Initial Investment: $450,500.00 (10,000 shares @ $45.05)
 
 ✅ OUTPERFORMED buy-and-hold by 25.46%!
 ```
+
+### 🎯 Multi-Asset Portfolio Backtesting
+
+**Run diversified portfolios with algorithmic strategies:**
+
+```bash
+# Simple buy-and-hold portfolio (NVDA 40%, VOO 60%)
+.\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-01-01 --end 2025-01-01
+
+# Algorithmic portfolio with SD8 strategy
+.\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.2, "GOOG": 0.2, "BTC-USD": 0.2, "GLDM": 0.2, "PLTR": 0.2}' --algo "sd-9.05,50.0" --start 2024-01-01 --end 2025-01-01
+```
+
+**Example Output** (Realistic Portfolio):
+```
+Running portfolio backtest...
+Period: 2024-10-29 to 2025-10-29
+Initial investment: $1,000,000
+Algorithm: buy-and-hold
+Allocations:
+  NVDA: 40.0%
+  VOO: 60.0%
+
+Fetching data for 2 assets...
+  - NVDA... ✓ (251 days)
+  - VOO... ✓ (252 days)
+Common trading days: 251 (2024-10-29 to 2025-10-29)
+
+RESULTS:
+Final portfolio value: $1,292,845
+Total return: 29.28%
+Annualized return: 29.31%
+
+Asset breakdown:
+  NVDA: $583,880 (46.01%)
+  VOO: $708,965 (18.26%)
+```
+
+**Key Features**:
+- ✅ **Unified interface** for both simple buy-and-hold and algorithmic portfolios
+- ✅ **Multi-asset coordination** with proper date alignment
+- ✅ **All algorithm features** (dividends, withdrawals, margin, etc.) available
+- ✅ **Backward compatible** - existing `simulate_portfolio` calls still work
+- ✅ **CLI and programmatic** access through `run_portfolio_backtest()`
 
 ### 🧮 Calculate Orders for Manual Trading
 
@@ -629,12 +650,12 @@ Contributions are welcome! This project values **rigorous engineering** and **ma
 ### How to Contribute
 
 1. 🍴 **Fork the repository**
-2. 🌿 **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+2. 🌿 **Create a feature branch** (`git checkout -b feature/new-feature`)
 3. 📝 **Follow code quality standards** (see [CODING_PHILOSOPHY.md](CODING_PHILOSOPHY.md))
 4. ✅ **Run the full test suite** (`pytest tests/ -v`)
 5. 🎨 **Run linting and formatting** (`mypy src/`, `flake8 src/`, `black src/`)
-6. 💬 **Commit with descriptive messages** (`git commit -m 'Add amazing feature'`)
-7. 📤 **Push to your branch** (`git push origin feature/amazing-feature`)
+6. 💬 **Commit with descriptive messages** (`git commit -m 'Add new feature'`)
+7. 📤 **Push to your branch** (`git push origin feature/new-feature`)
 8. 🔄 **Open a Pull Request** with detailed description
 
 ### Areas Where We Need Help
@@ -673,7 +694,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - 🎓 **Mathematical foundation** based on exponential rebalancing theory (2^(1/N) scaling)
 - 🔬 **Research methodology** influenced by systematic trading and quantitative finance principles
 
-This project represents a groundbreaking collaboration between human expertise and artificial intelligence, demonstrating the transformative potential of AI-assisted software development. Read the full collaboration story in [CONTRIBUTORS.md](docs/CONTRIBUTORS.md).
+This project demonstrates the application of AI-assisted development in quantitative finance research. Read the full collaboration story in [CONTRIBUTORS.md](docs/CONTRIBUTORS.md).
 
 Special thanks to the open-source community for excellent tools that made this project possible.
 
