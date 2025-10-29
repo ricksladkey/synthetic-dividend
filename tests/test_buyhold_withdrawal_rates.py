@@ -368,14 +368,14 @@ class TestSequenceOfReturnsRisk:
         )
 
         start_price_y1 = df1.iloc[0]["Close"].item()
-        end_price_y2 = df2.iloc[-1]["Close"].item()
+        _end_price_y2 = df2.iloc[-1]["Close"].item()  # noqa: F841
 
         initial_value = initial_qty * start_price_y1
         final_value = summary2["final_value"]
         total_withdrawn = summary1["total_withdrawn"] + summary2["total_withdrawn"]
         net_result = final_value + total_withdrawn - initial_value
 
-        print(f"\nGOOD SEQUENCE (Bull → Bear):")
+        print("\nGOOD SEQUENCE (Bull → Bear):")
         print(
             f"  Year 1 (2019 +31%): ${initial_value:,.0f} → ${summary1['final_value']:,.0f} "
             f"(withdrew ${summary1['total_withdrawn']:,.0f})"
@@ -438,14 +438,14 @@ class TestSequenceOfReturnsRisk:
         )
 
         start_price_y1 = df1.iloc[0]["Close"].item()
-        end_price_y2 = df2.iloc[-1]["Close"].item()
+        _end_price_y2 = df2.iloc[-1]["Close"].item()  # noqa: F841
 
         initial_value = initial_qty * start_price_y1
         final_value = summary2["final_value"]
         total_withdrawn = summary1["total_withdrawn"] + summary2["total_withdrawn"]
         net_result = final_value + total_withdrawn - initial_value
 
-        print(f"\nBAD SEQUENCE (Bear → Bull):")
+        print("\nBAD SEQUENCE (Bear → Bull):")
         print(
             f"  Year 1 (2022 -18%): ${initial_value:,.0f} → ${summary1['final_value']:,.0f} "
             f"(withdrew ${summary1['total_withdrawn']:,.0f})"
@@ -462,9 +462,9 @@ class TestSequenceOfReturnsRisk:
         assert summary2["portfolio_survived"], "Bad sequence should survive (but worse outcome)"
 
         # Compare to good sequence
-        print(f"\nSEQUENCE RISK COMPARISON:")
-        print(f"  Same withdrawals, same total market return")
-        print(f"  But different ORDER of returns!")
+        print("\nSEQUENCE RISK COMPARISON:")
+        print("  Same withdrawals, same total market return")
+        print("  But different ORDER of returns!")
         print(f"  Good sequence net: ${getattr(self, 'good_sequence_net', 0):+,.0f}")
         print(f"  Bad sequence net:  ${net_result:+,.0f}")
         if hasattr(self, "good_sequence_net"):

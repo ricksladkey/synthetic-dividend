@@ -23,11 +23,11 @@ from typing import Dict
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
 
-from data.fetcher import HistoryFetcher
-from models.backtest import build_algo_from_name, run_algorithm_backtest
+from data.fetcher import HistoryFetcher  # noqa: E402
+from models.backtest import build_algo_from_name, run_algorithm_backtest  # noqa: E402
 
 
 def analyze_profit_sharing_spectrum(
@@ -57,7 +57,7 @@ def analyze_profit_sharing_spectrum(
         Dictionary with results for each profit sharing ratio
     """
     print(f"\n{'='*70}")
-    print(f"Profit Sharing Composition Analysis")
+    print("Profit Sharing Composition Analysis")
     print(f"{'='*70}")
     print(f"Ticker: {ticker}")
     print(f"Period: {start_date} to {end_date}")
@@ -122,11 +122,11 @@ def analyze_profit_sharing_spectrum(
         results[ps_ratio] = summary
 
         # Quick summary
-        final_value = summary["end_value"]
+        _final_value = summary["end_value"]  # noqa: F841
         total_return = summary["total_return"]
         final_holdings = summary["holdings"]
         final_bank = summary["bank"]
-        utilization = summary.get("capital_utilization", 0.0)
+        _utilization = summary.get("capital_utilization", 0.0)  # noqa: F841
 
         print(
             f"Return: {total_return:+.1%}, Holdings: {final_holdings:.0f}, Cash: ${final_bank:,.0f}"

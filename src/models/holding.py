@@ -151,7 +151,7 @@ class Transaction:
     def __str__(self) -> str:
         """Human-readable transaction summary."""
         status = "OPEN" if self.is_open else "CLOSED"
-        base = f"{self.purchase_date} {self.transaction_type} {self.shares} @ ${self.purchase_price:.2f}"
+        base = f"[{status}] {self.purchase_date} {self.transaction_type} {self.shares} @ ${self.purchase_price:.2f}"
 
         if self.is_closed:
             gain_loss = self.realized_gain_loss()

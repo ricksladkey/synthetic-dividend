@@ -12,7 +12,7 @@ from typing import List, Optional
 
 import pandas as pd
 
-from src.models.types import Transaction
+from src.models.model_types import Transaction
 
 
 class OrderType(Enum):

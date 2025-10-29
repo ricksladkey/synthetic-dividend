@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 
 from src.algorithms.base import AlgorithmBase
-from src.models.types import Transaction
+from src.models.model_types import Transaction
 
 
 class BuyAndHoldAlgorithm(AlgorithmBase):

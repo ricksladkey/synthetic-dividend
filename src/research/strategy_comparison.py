@@ -32,8 +32,8 @@ from typing import Any, Dict, List
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.data.fetcher import HistoryFetcher
-from src.models.backtest import build_algo_from_name, run_algorithm_backtest
+from src.data.fetcher import HistoryFetcher  # noqa: E402
+from src.models.backtest import build_algo_from_name, run_algorithm_backtest  # noqa: E402
 
 
 def parse_date(s: str) -> date:
@@ -255,7 +255,7 @@ def run_strategy_backtest(
     }
 
     # Print summary
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  Total Return: {result['total_return_pct']:.2f}%")
     print(f"  Annualized: {result['annualized_return_pct']:.2f}%")
     print(f"  Volatility Alpha: {result['volatility_alpha_pct']:.2f}%")
@@ -264,7 +264,7 @@ def run_strategy_backtest(
     )
     print(f"  Final Value: ${result['total']:,.2f}")
     print(f"  Bank Balance: ${result['bank']:,.2f}")
-    print(f"\nCash Flow Analysis:")
+    print("\nCash Flow Analysis:")
     print(
         f"  Positive Cash Years: {result['positive_cash_years']} / {cash_flow_stats['total_years']}"
     )
@@ -521,24 +521,24 @@ def print_comparison_summary(results: List[Dict[str, Any]]) -> None:
         sd8_full = next((r for r in results if r.get("strategy") == "sd8"), None)
         sd8_ath = next((r for r in results if "ath-only" in r.get("strategy", "")), None)
 
-        print(f"1. BUY-AND-HOLD REALITY CHECK:")
+        print("1. BUY-AND-HOLD REALITY CHECK:")
         print(f"   - Final value: ${baseline['total']:,.0f}")
         print(f"   - Cash generated: ${baseline.get('total_cash_generated', 0.0):,.0f}")
-        print(f"   - To fund expenses, you MUST sell shares")
-        print(f"   - This reduces your final position and compounds negatively")
+        print("   - To fund expenses, you MUST sell shares")
+        print("   - This reduces your final position and compounds negatively")
         print()
 
         if sd8_full and "error" not in sd8_full:
-            print(f"2. SD8 FULL (Buyback Strategy):")
+            print("2. SD8 FULL (Buyback Strategy):")
             print(f"   - Final value: ${sd8_full['total']:,.0f}")
             print(f"   - Cash generated: ${sd8_full.get('total_cash_generated', 0.0):,.0f}")
             coverage = sd8_full.get("withdrawal_coverage_pct", 0.0)
             if coverage >= 100:
                 print(f"   ✓ FULLY COVERS withdrawals ({coverage:.0f}%)")
-                print(f"   ✓ No forced selling required!")
+                print("   ✓ No forced selling required!")
             else:
                 print(f"   - Covers {coverage:.0f}% of withdrawals")
-                print(f"   - Some share sales needed for shortfall")
+                print("   - Some share sales needed for shortfall")
             print(f"   - Annualized return: {sd8_full['annualized_return_pct']:.2f}%")
             print(
                 f"   - Transactions: {sd8_full['transactions_per_year']:.1f}/year (mix LTCG/STCG)"
@@ -546,34 +546,34 @@ def print_comparison_summary(results: List[Dict[str, Any]]) -> None:
             print()
 
         if sd8_ath and "error" not in sd8_ath:
-            print(f"3. SD8 ATH-ONLY (Long-term Capital Gains Only):")
+            print("3. SD8 ATH-ONLY (Long-term Capital Gains Only):")
             print(f"   - Final value: ${sd8_ath['total']:,.0f}")
             print(f"   - Cash generated: ${sd8_ath.get('total_cash_generated', 0.0):,.0f}")
             coverage = sd8_ath.get("withdrawal_coverage_pct", 0.0)
             if coverage >= 100:
                 print(f"   ✓ FULLY COVERS withdrawals ({coverage:.0f}%)")
-                print(f"   ✓ No forced selling required!")
+                print("   ✓ No forced selling required!")
             else:
                 print(f"   - Covers {coverage:.0f}% of withdrawals")
-                print(f"   - Some share sales needed for shortfall")
+                print("   - Some share sales needed for shortfall")
             print(f"   - Annualized return: {sd8_ath['annualized_return_pct']:.2f}%")
             print(f"   - Transactions: {sd8_ath['transactions_per_year']:.1f}/year (all LTCG)")
-            print(f"   - Tax advantage: Better suited for taxable accounts")
+            print("   - Tax advantage: Better suited for taxable accounts")
             print()
 
         if sd8_full and sd8_ath and "error" not in sd8_full and "error" not in sd8_ath:
             buyback_premium = sd8_full["annualized_return_pct"] - sd8_ath["annualized_return_pct"]
-            print(f"4. BUYBACK PREMIUM (SD8 Full vs ATH-Only):")
+            print("4. BUYBACK PREMIUM (SD8 Full vs ATH-Only):")
             print(f"   - Extra annualized return: {buyback_premium:.2f}%")
-            print(f"   - This is from embracing downside volatility")
-            print(f"   - Best utilized in tax-advantaged accounts (401k, IRA)")
+            print("   - This is from embracing downside volatility")
+            print("   - Best utilized in tax-advantaged accounts (401k, IRA)")
             print()
 
-        print(f"5. THE BOTTOM LINE:")
-        print(f"   - In strong bull markets, buy-and-hold has highest UNREALIZED gains")
-        print(f"   - But you cannot spend unrealized gains!")
-        print(f"   - SD8 strategies sacrifice some upside to generate SPENDABLE cash")
-        print(f"   - The real comparison: sustainable income vs. forced share sales")
+        print("5. THE BOTTOM LINE:")
+        print("   - In strong bull markets, buy-and-hold has highest UNREALIZED gains")
+        print("   - But you cannot spend unrealized gains!")
+        print("   - SD8 strategies sacrifice some upside to generate SPENDABLE cash")
+        print("   - The real comparison: sustainable income vs. forced share sales")
 
 
 def main():

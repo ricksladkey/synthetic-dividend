@@ -12,7 +12,7 @@ This tool:
 import math
 import re
 from datetime import date
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
@@ -96,7 +96,7 @@ def calculate_minimum_alpha_per_cycle(trigger_pct: float) -> float:
     return (trigger_decimal**2) / 2.0
 
 
-def _parse_transaction_line(line: str) -> Optional[Dict[str, any]]:
+def _parse_transaction_line(line: str) -> Optional[Dict[str, Any]]:
     """Parse transaction log line to extract date, action, and price.
 
     Args:
@@ -131,7 +131,7 @@ def plot_volatility_alpha_chart(
     sd_n: int,
     volatility: float,
     vol_alpha: float,
-    output_file: str = None,
+    output_file: Optional[str] = None,
 ) -> str:
     """Plot price chart with buy/sell markers and save to file.
 
@@ -315,7 +315,7 @@ def analyze_volatility_alpha(
     else:
         sd_n = 8
         trigger_pct = 9.05
-        print(f"⚙️ Using default: SD8 (9.05% trigger)")
+        print("⚙️ Using default: SD8 (9.05% trigger)")
 
     # Convert trigger to decimal for algorithm
     trigger_decimal = trigger_pct / 100.0
@@ -384,19 +384,19 @@ def analyze_volatility_alpha(
     predicted_min_alpha = buy_count * min_alpha_per_cycle * 100  # As percentage
 
     print(f"\n{'=' * 80}")
-    print(f"VOLATILITY ALPHA RESULTS")
+    print("VOLATILITY ALPHA RESULTS")
     print(f"{'=' * 80}")
     print(f"Asset: {ticker}")
     print(f"Period: {start_date} to {end_date}")
     print(f"Historical Volatility: {volatility * 100:.2f}%")
     print(f"Strategy: SD{sd_n} ({trigger_pct:.2f}% trigger, {profit_sharing:.0f}% profit sharing)")
-    print(f"")
+    print("")
     print(f"SD{sd_n} (Full) Return:      {summary_full['total_return'] * 100:>8.2f}%")
     print(f"SD{sd_n}-ATH-Only Return:    {summary_ath['total_return'] * 100:>8.2f}%")
     print(f"{'─' * 80}")
     print(f"Volatility Alpha:        {vol_alpha:>+8.2f}%")
-    print(f"")
-    print(f"📊 Theoretical Analysis:")
+    print("")
+    print("📊 Theoretical Analysis:")
     print(f"   Buyback cycles: {buy_count}")
     print(f"   Min alpha/cycle: {min_alpha_per_cycle * 100:.3f}% (formula: trigger²/2)")
     print(f"   Predicted min alpha: {predicted_min_alpha:.2f}%")
@@ -404,14 +404,14 @@ def analyze_volatility_alpha(
     if vol_alpha > predicted_min_alpha:
         bonus = vol_alpha - predicted_min_alpha
         print(f"   ✨ Bonus alpha from gaps: +{bonus:.2f}% (actual exceeds minimum)")
-    print(f"")
+    print("")
 
     if vol_alpha > 0.5:
         print(f"✅ Strong positive alpha! Buybacks added {vol_alpha:.2f}% extra return.")
     elif vol_alpha > 0.1:
         print(f"✓ Positive alpha. Buybacks added {vol_alpha:.2f}% extra return.")
     elif vol_alpha > -0.1:
-        print(f"➡️ Neutral. Minimal difference between strategies.")
+        print("➡️ Neutral. Minimal difference between strategies.")
     else:
         print(f"⚠️ Negative alpha. Smooth trend - buybacks cost {abs(vol_alpha):.2f}%.")
 
@@ -419,7 +419,7 @@ def analyze_volatility_alpha(
 
     # Generate plot if requested
     if plot:
-        print(f"📊 Generating price chart with trade markers...")
+        print("📊 Generating price chart with trade markers...")
         output_file = plot_volatility_alpha_chart(
             df=df,
             ticker=ticker,

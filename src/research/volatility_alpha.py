@@ -35,8 +35,8 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.data.fetcher import HistoryFetcher
-from src.models.backtest import build_algo_from_name, run_algorithm_backtest
+from src.data.fetcher import HistoryFetcher  # noqa: E402
+from src.models.backtest import build_algo_from_name, run_algorithm_backtest  # noqa: E402
 
 # Asset classes matching Phase 1 research
 ASSET_CLASSES = {
@@ -134,7 +134,7 @@ def run_single_comparison(
     enhanced_txns = len(enhanced_transactions)
     enhanced_final = enhanced_summary.get("total", 0)
 
-    print(f"\n  Enhanced Results:")
+    print("\n  Enhanced Results:")
     print(f"    Total Return: {enhanced_return:.2f}%")
     print(f"    Transactions: {enhanced_txns}")
     print(f"    Final Value: ${enhanced_final:,.2f}")
@@ -159,7 +159,7 @@ def run_single_comparison(
     ath_txns = len(ath_transactions)
     ath_final = ath_summary.get("total", 0)
 
-    print(f"\n  ATH-Only Results:")
+    print("\n  ATH-Only Results:")
     print(f"    Total Return: {ath_return:.2f}%")
     print(f"    Transactions: {ath_txns}")
     print(f"    Final Value: ${ath_final:,.2f}")
@@ -168,7 +168,7 @@ def run_single_comparison(
     volatility_alpha = enhanced_return - ath_return
     alpha_per_txn = volatility_alpha / enhanced_txns if enhanced_txns > 0 else 0
 
-    print(f"\n  VOLATILITY ALPHA:")
+    print("\n  VOLATILITY ALPHA:")
     print(f"    Extra Return: {volatility_alpha:+.2f}%")
     print(f"    Alpha per Transaction: {alpha_per_txn:+.4f}%")
 
@@ -177,7 +177,7 @@ def run_single_comparison(
     elif volatility_alpha < 0:
         print(f"    ✗ Enhanced strategy UNDERPERFORMS ATH-only by {abs(volatility_alpha):.2f}%")
     else:
-        print(f"    = No difference (unusual!)")
+        print("    = No difference (unusual!)")
 
     return {
         "ticker": ticker,

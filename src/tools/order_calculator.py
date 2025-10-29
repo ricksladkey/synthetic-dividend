@@ -81,15 +81,15 @@ def format_order_display(
     """
     # Calculate price changes
     price_change = current_price - last_price
-    price_change_pct = (price_change / last_price * 100) if last_price > 0 else 0
+    _price_change_pct = (price_change / last_price * 100) if last_price > 0 else 0  # noqa: F841
 
     # Calculate distances to triggers
-    buy_trigger_pct = (last_price - buy_price) / last_price * 100
-    sell_trigger_pct = (sell_price - last_price) / last_price * 100
+    _buy_trigger_pct = (last_price - buy_price) / last_price * 100  # noqa: F841
+    _sell_trigger_pct = (sell_price - last_price) / last_price * 100  # noqa: F841
 
     # Distance from current price to triggers
-    to_buy_pct = (current_price - buy_price) / current_price * 100
-    to_sell_pct = (sell_price - current_price) / current_price * 100
+    _to_buy_pct = (current_price - buy_price) / current_price * 100  # noqa: F841
+    _to_sell_pct = (sell_price - current_price) / current_price * 100  # noqa: F841
 
     rebalance_pct = ((2.0 ** (1.0 / float(sdn))) - 1.0) * 100
 
@@ -98,17 +98,17 @@ def format_order_display(
 
     # Current bracket (based on last transaction price)
     current_bracket_n = math.log(last_price) / math.log(1 + trigger_decimal)
-    current_bracket_normalized = math.pow(1 + trigger_decimal, round(current_bracket_n))
+    _current_bracket_normalized = math.pow(1 + trigger_decimal, round(current_bracket_n))  # noqa: F841
 
     # Buy bracket (one step down)
     buy_bracket_n = math.log(buy_price) / math.log(1 + trigger_decimal)
-    buy_bracket_normalized = math.pow(1 + trigger_decimal, round(buy_bracket_n))
+    _buy_bracket_normalized = math.pow(1 + trigger_decimal, round(buy_bracket_n))  # noqa: F841
 
     # Sell bracket (one step up)
     sell_bracket_n = math.log(sell_price) / math.log(1 + trigger_decimal)
-    sell_bracket_normalized = math.pow(1 + trigger_decimal, round(sell_bracket_n))
+    _sell_bracket_normalized = math.pow(1 + trigger_decimal, round(sell_bracket_n))  # noqa: F841
 
-    output = f"""
+    output = """
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║                       SYNTHETIC DIVIDEND ORDER CALCULATOR                 ║
 ╚══════════════════════════════════════════════════════════════════════════╝

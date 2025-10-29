@@ -30,11 +30,11 @@ class TestSyntheticCPIProvider:
 
     def test_inflation_rate(self):
         """Check if the synthetic data reflects the specified inflation rate."""
-        provider = SyntheticCPIProvider(annual_inflation=0.05) # 5% inflation
+        provider = SyntheticCPIProvider(annual_inflation=0.05)  # 5% inflation
         df = provider.fetch()
         # Check CPI after one year
         cpi_year_0 = df['CPI'].iloc[0]
-        cpi_year_1 = df['CPI'].iloc[12] # 12 months later
+        cpi_year_1 = df['CPI'].iloc[12]  # 12 months later
         assert cpi_year_1 == pytest.approx(cpi_year_0 * 1.05, rel=1e-3)
 
 
@@ -84,7 +84,7 @@ class TestCPIFetcher:
 
     def test_inflation_adjustment(self, temp_cache_dir: Path):
         """Test the inflation adjustment calculation."""
-        provider = SyntheticCPIProvider(annual_inflation=0.1) # 10% for easy math
+        provider = SyntheticCPIProvider(annual_inflation=0.1)  # 10% for easy math
         fetcher = CPIFetcher(provider=provider, cache_dir=str(temp_cache_dir))
 
         adj = fetcher.get_inflation_adjustment(date(2010, 1, 1), date(2011, 1, 1))
@@ -95,6 +95,7 @@ class TestCPIFetcher:
         # Mock provider to track calls
         class MockProvider(SyntheticCPIProvider):
             fetch_calls = 0
+
             def fetch(self):
                 self.fetch_calls += 1
                 return super().fetch()
@@ -111,7 +112,7 @@ class TestCPIFetcher:
 
         # 2. Second call: should use cache, not fetch
         fetcher.get_cpi(date(2020, 1, 1), date(2020, 1, 31))
-        assert provider.fetch_calls == 1 # Should not have increased
+        assert provider.fetch_calls == 1  # Should not have increased
 
     def test_clear_cache(self, temp_cache_dir: Path):
         """Test that clear_cache removes the cache file."""

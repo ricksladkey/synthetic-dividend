@@ -4,10 +4,10 @@ Categorizes assets by volatility regime and provides lookup functions
 for batch testing and analysis.
 """
 
-from typing import Dict, List
+from typing import Dict, List, Any
 
 # Asset class definitions with expected volatility characteristics
-ASSET_CLASSES: Dict[str, Dict[str, any]] = {
+ASSET_CLASSES: Dict[str, Dict[str, Any]] = {
     "growth_stocks": {
         "tickers": ["NVDA", "GOOG", "PLTR", "MSTR", "SHOP"],
         "description": "High-growth technology and data companies",
@@ -51,7 +51,7 @@ SD_LOOKUP: Dict[int, float] = {
 
 def get_all_tickers() -> List[str]:
     """Return flattened list of all tickers across asset classes."""
-    tickers = []
+    tickers: List[str] = []
     for asset_class in ASSET_CLASSES.values():
         tickers.extend(asset_class["tickers"])
     return tickers

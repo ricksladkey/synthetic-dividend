@@ -128,17 +128,17 @@ def test_drawdown_recovery_generates_alpha():
     num_buys = len(buy_txns)
 
     # Assertions
-    print(f"\n=== Drawdown-Recovery Volatility Alpha Test ===")
-    print(f"Price path: $100 -> $49 -> $125")
+    print("\n=== Drawdown-Recovery Volatility Alpha Test ===")
+    print("Price path: $100 -> $49 -> $125")
     print(f"Buy-and-Hold return: {buy_and_hold_return:.2f}%")
     print(f"SD8 return: {sd8_return:.2f}%")
     print(f"Volatility alpha: {volatility_alpha:.2f}%")
     print(f"Number of BUY transactions: {num_buys}")
-    print(f"Expected alpha per buy: ~0.3%")
+    print("Expected alpha per buy: ~0.3%")
     print(f"Total expected alpha: ~{num_buys * 0.3:.1f}%")
     print(f"Final value: ${final_value:,.2f}")
     print(f"Bank balance: ${bank_balance:,.2f}")
-    print(f"\nTransactions:")
+    print("\nTransactions:")
     for tx in txns:
         print(f"  {tx}")
 
@@ -174,7 +174,7 @@ def test_drawdown_recovery_generates_alpha():
     print(f"\n✅ Test passed: SD8 generated {volatility_alpha:.2f}% alpha from {num_buys} buybacks")
     print(f"   Alpha per buy: {volatility_alpha / num_buys:.2f}%")
     print(
-        f"   This validates the core mechanism: buying dips and selling rallies generates measurable alpha!"
+        "   This validates the core mechanism: buying dips and selling rallies generates measurable alpha!"
     )
 
 

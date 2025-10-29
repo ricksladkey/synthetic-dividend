@@ -61,7 +61,7 @@ class TestAssetPrices:
                 # Both cache files should exist
                 assert os.path.exists(asset.pkl_path)
                 assert os.path.exists(asset.csv_path)
-                
+
                 # CSV should be readable
                 df_csv = pd.read_csv(asset.csv_path, index_col=0, parse_dates=True)
                 assert not df_csv.empty
@@ -78,7 +78,7 @@ class TestAssetPrices:
                 # Modify pkl cache to test that it's being used
                 df_modified = df1.copy()
                 df_modified.to_pickle(asset.pkl_path)
-                
+
                 # Second call: should use cache
                 df2 = asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
 
@@ -118,7 +118,7 @@ class TestAssetDividends:
                 # Both cache files should exist
                 assert os.path.exists(asset.div_pkl_path)
                 assert os.path.exists(asset.div_csv_path)
-                
+
                 # CSV should be readable
                 df_csv = pd.read_csv(asset.div_csv_path, index_col=0, parse_dates=True)
                 assert not df_csv.empty
@@ -153,9 +153,9 @@ class TestAssetCacheClear:
             # Create cache files
             asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
             asset.get_dividends(date(2023, 1, 1), date(2023, 12, 31))
-            
+
             # At least some cache files should exist
-            files_before = [
+            _files_before = [  # noqa: F841
                 os.path.exists(asset.pkl_path),
                 os.path.exists(asset.csv_path),
                 os.path.exists(asset.div_pkl_path),

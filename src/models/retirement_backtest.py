@@ -20,7 +20,7 @@ import pandas as pd
 from src.algorithms.base import AlgorithmBase
 from src.data.cpi_fetcher import CPIFetcher
 from src.models.backtest import Data, run_algorithm_backtest
-from src.models.types import Transaction
+from src.models.model_types import Transaction
 
 
 def run_retirement_backtest(

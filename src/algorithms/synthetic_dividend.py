@@ -8,7 +8,7 @@ import pandas as pd
 from src.algorithms.base import AlgorithmBase
 from src.models.backtest_utils import calculate_synthetic_dividend_orders
 from src.models.market import Market, Order, OrderAction, OrderType
-from src.models.types import Transaction
+from src.models.model_types import Transaction
 
 
 class SyntheticDividendAlgorithm(AlgorithmBase):

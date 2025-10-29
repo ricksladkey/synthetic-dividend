@@ -1,4 +1,9 @@
-"""Common data types for backtesting algorithms."""
+"""Common data types for backtesting algorithms.
+
+Renamed from `types.py` to avoid shadowing the Python standard library module
+`types` which causes mypy confusion. Consumers should import from
+`src.models.model_types`.
+"""
 
 from dataclasses import dataclass
 from datetime import date

@@ -21,6 +21,7 @@ _log = logging.getLogger(__name__)
 
 # --- CPI Data Providers ---
 
+
 class _CPIProvider(ABC):
     """Abstract base class for a CPI data provider."""
 
@@ -96,7 +97,7 @@ class CPIFetcher:
 
         start_ts = pd.Timestamp(start_date)
         end_ts = pd.Timestamp(end_date)
-        
+
         # Ensure cache index is timezone-naive before filtering
         cache_index = self._cache.index
         if cache_index.tz is not None:
@@ -142,7 +143,7 @@ class CPIFetcher:
             _log.warning("Fetched CPI data is empty. Using stale cache if available.")
             if self.cache_file.exists():
                 return pd.read_csv(self.cache_file, index_col=0, parse_dates=True)
-            return df # Return empty df if no cache exists
+            return df  # Return empty df if no cache exists
 
         # Process and cache the new data
         df = df.resample('D').ffill()

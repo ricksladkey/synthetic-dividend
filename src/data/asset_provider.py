@@ -133,7 +133,7 @@ class AssetRegistry:
 
         raise ValueError(
             f"No asset provider registered for ticker: {ticker}. "
-            f"Register a wildcard provider with AssetRegistry.register('*', ProviderClass)"
+            "Register a wildcard provider with AssetRegistry.register('*', ProviderClass)"
         )
 
     @staticmethod

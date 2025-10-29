@@ -142,7 +142,7 @@ def run_portfolio_experiment() -> Dict:
     print("=" * 80)
     print(f"\nPeriod: {START_DATE} to {END_DATE}")
     print(f"Initial Investment: ${INITIAL_VALUE:,.0f}")
-    print(f"\nPortfolio Allocation:")
+    print("\nPortfolio Allocation:")
     for ticker, alloc in ALLOCATIONS.items():
         print(f"  {ticker}: {alloc*100:.0f}%")
     print(f"\nBaseline: 100% {BASELINE_TICKER}")
@@ -398,10 +398,10 @@ def main():
     print("\n" + "=" * 80)
     print("EXPERIMENT COMPLETE")
     print("=" * 80)
-    print(f"\nKey Finding:")
+    print("\nKey Finding:")
     print(f"  Volatility Alpha: {results['volatility_alpha']['full_vs_ath']:+.2f}%")
     print(f"  Portfolio vs VOO: {results['volatility_alpha']['vs_voo']:+.2f}%")
-    print(f"\nResults saved to: experiments/portfolio_volatility_alpha/")
+    print("\nResults saved to: experiments/portfolio_volatility_alpha/")
 
 
 if __name__ == "__main__":

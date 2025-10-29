@@ -12,7 +12,6 @@ from datetime import date
 from typing import Any, Dict
 
 
-
 def calculate_adjusted_returns(
     summary: Dict[str, Any],
     start_date: date,

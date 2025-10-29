@@ -111,7 +111,7 @@ class TestMultiBracketGaps:
             t for t in txns if t.action == "SELL" and t.transaction_date == date(2024, 1, 21)
         ]
 
-        print(f"\nSingle-bracket gap (10%):")
+        print("\nSingle-bracket gap (10%):")
         print(f"  Total transactions: {len(txns)}")
         print(f"  Buys: {len(buys)}")
         print(f"  Total sells: {len(sells)}")
@@ -158,7 +158,7 @@ class TestMultiBracketGaps:
         buys = [t for t in txns if t.action == "BUY" and "Initial purchase" not in t.notes]
         sells = [t for t in txns if t.action == "SELL"]
 
-        print(f"\nDouble-bracket gap (20%):")
+        print("\nDouble-bracket gap (20%):")
         print(f"  Total transactions: {len(txns)}")
         print(f"  Buys: {len(buys)}")
         print(f"  Sells: {len(sells)}")
@@ -206,7 +206,7 @@ class TestMultiBracketGaps:
         buys = [t for t in txns if t.action == "BUY" and "Initial purchase" not in t.notes]
         sells = [t for t in txns if t.action == "SELL"]
 
-        print(f"\nTriple-bracket gap (30%):")
+        print("\nTriple-bracket gap (30%):")
         print(f"  Total transactions: {len(txns)}")
         print(f"  Buys: {len(buys)}")
         print(f"  Sells: {len(sells)}")
@@ -263,7 +263,7 @@ class TestMultiBracketGaps:
         # Exclude initial purchase from counts
         buys = [t for t in txns if t.action == "BUY" and "Initial purchase" not in t.notes]
 
-        print(f"\nGap DOWN (20% crash):")
+        print("\nGap DOWN (20% crash):")
         print(f"  Total buys: {len(buys)}")
 
         # EXPECTED: 2 buys (one at each bracket level)
@@ -349,7 +349,7 @@ class TestGapBonusVolatilityAlpha:
             algo=gradual_algo,
         )
 
-        print(f"\nGap vs Gradual Comparison (100 -> 120):")
+        print("\nGap vs Gradual Comparison (100 -> 120):")
         print(f"  Gap transactions: {len(gap_txns)}")
         print(f"  Gradual transactions: {len(gradual_txns)}")
         print(f"  Gap return: {gap_summary['total_return']*100:.2f}%")

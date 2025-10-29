@@ -10,9 +10,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
-# Type aliases for clean abstraction
-Data = pd.DataFrame  # Pure data concept with no implementation baggage
-
 # Import algorithm classes from dedicated package
 from src.algorithms import (
     AlgorithmBase,
@@ -23,7 +20,11 @@ from src.algorithms import (
 # Import utility functions
 
 # Import common types
-from src.models.types import Transaction
+from src.models.model_types import Transaction
+from src.models.backtest_utils import calculate_synthetic_dividend_orders  # noqa: F401  (re-exported for backwards compatibility)
+
+# Type aliases for clean abstraction
+Data = pd.DataFrame  # Pure data concept with no implementation baggage
 
 
 def calculate_time_weighted_average_holdings(
@@ -212,7 +213,7 @@ def run_algorithm_backtest(
             "reference_asset_df", "risk_free_asset_df"  # Backwards-compatible aliases
         ]
         raise TypeError(
-            f"run_algorithm_backtest() got unexpected keyword argument(s): "
+            "run_algorithm_backtest() got unexpected keyword argument(s): "
             f"{', '.join(repr(k) for k in kwargs.keys())}. "
             f"Valid parameters are: {', '.join(valid_params)}"
         )
@@ -866,7 +867,22 @@ def run_algorithm_backtest(
         summary["volatility_alpha"] = None
 
     # Notify algorithm of completion
-    algo_obj.on_end_holding()
+    try:
+        algo_obj.on_end_holding()
+    except Exception:
+        # Ensure backtest completion proceeds even if algorithm cleanup prints/logs fail
+        pass
+
+    # Include algorithm-specific final stats when available for tests and reporting
+    try:
+        # Buyback stack final size (used by volatility-alpha tests)
+        summary["final_stack_size"] = getattr(algo_obj, "buyback_stack_count", 0)
+        # Total volatility alpha accumulated by algorithm (percentage)
+        summary["total_volatility_alpha"] = getattr(algo_obj, "total_volatility_alpha", 0.0)
+    except Exception:
+        # Be tolerant of algorithms that don't expose these attributes
+        summary.setdefault("final_stack_size", 0)
+        summary.setdefault("total_volatility_alpha", 0.0)
 
     return transactions, summary
 

@@ -205,17 +205,17 @@ def print_results(results: List[WithdrawalRateResult], ticker: str, top_n: int =
     print("OPTIMAL WITHDRAWAL RATE (Most Balanced)")
     print("=" * 80)
     print(f"\nWithdrawal Rate: {optimal.withdrawal_rate*100:.1f}% annually")
-    print(f"\nBank Balance Statistics:")
+    print("\nBank Balance Statistics:")
     print(f"  Mean: ${optimal.mean_bank:,.0f}")
     print(f"  Std Dev: ${optimal.std_bank:,.0f}")
     print(f"  Min: ${optimal.bank_min:,.0f}")
     print(f"  Max: ${optimal.bank_max:,.0f}")
     print(f"  |Mean|: ${optimal.abs_mean_bank:,.0f} (optimization target)")
-    print(f"\nMargin Usage:")
+    print("\nMargin Usage:")
     print(f"  Days in margin: {optimal.bank_negative_count}")
     print(f"  Days with cash: {optimal.bank_positive_count}")
     print(f"  Margin usage: {optimal.margin_usage_pct:.1f}%")
-    print(f"\nPortfolio Performance:")
+    print("\nPortfolio Performance:")
     print(f"  Total return: {optimal.total_return*100:+.1f}%")
     print(f"  Final value: ${optimal.final_value:,.0f}")
     print(f"  Total withdrawn: ${optimal.total_withdrawn:,.0f}")
@@ -226,7 +226,7 @@ def print_results(results: List[WithdrawalRateResult], ticker: str, top_n: int =
     print("STATISTICAL INTERPRETATION")
     print("=" * 80)
     print(
-        f"""
+        """
 At {optimal.withdrawal_rate*100:.1f}% withdrawal rate:
 
 1. **Balanced Withdrawals**: Mean bank ≈ ${optimal.mean_bank:,.0f}

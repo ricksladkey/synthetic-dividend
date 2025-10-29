@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 
 # Import Transaction and WithdrawalResult from types module
-from src.models.types import Transaction, WithdrawalResult
+from src.models.model_types import Transaction, WithdrawalResult
 
 
 class AlgorithmBase(ABC):

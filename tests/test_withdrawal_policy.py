@@ -75,7 +75,7 @@ def test_withdrawal_from_bank_balance():
     withdrawal_count = results["withdrawal_count"]
     shares_sold_for_withdrawals = results["shares_sold_for_withdrawals"]
 
-    print(f"\n=== Withdrawal from Bank Balance Test ===")
+    print("\n=== Withdrawal from Bank Balance Test ===")
     print(f"Total withdrawn: ${total_withdrawn:,.2f}")
     print(f"Withdrawal count: {withdrawal_count}")
     print(f"Shares sold for withdrawals: {shares_sold_for_withdrawals}")
@@ -106,7 +106,7 @@ def test_withdrawal_from_bank_balance():
         abs(actual_per_withdrawal - expected_per_withdrawal) / expected_per_withdrawal < 0.2
     ), f"Withdrawal amount off: expected ~${expected_per_withdrawal:.2f}, got ${actual_per_withdrawal:.2f}"
 
-    print(f"\n✅ Test passed: SD8 funded withdrawals from bank balance")
+    print("\n✅ Test passed: SD8 funded withdrawals from bank balance")
 
 
 def test_withdrawal_forces_selling_for_buy_and_hold():
@@ -143,7 +143,7 @@ def test_withdrawal_forces_selling_for_buy_and_hold():
     shares_sold_for_withdrawals = results["shares_sold_for_withdrawals"]
     final_holdings = results["holdings"]
 
-    print(f"\n=== Withdrawal Forces Selling (Buy-and-Hold) Test ===")
+    print("\n=== Withdrawal Forces Selling (Buy-and-Hold) Test ===")
     print(f"Total withdrawn: ${total_withdrawn:,.2f}")
     print(f"Withdrawal count: {withdrawal_count}")
     print(f"Shares sold for withdrawals: {shares_sold_for_withdrawals}")
@@ -223,13 +223,13 @@ def test_simple_mode_no_opportunity_cost():
         reference_return_pct=10.0,  # 10% opportunity cost
     )
 
-    print(f"\n=== Simple Mode Test ===")
-    print(f"\nSimple Mode:")
+    print("\n=== Simple Mode Test ===")
+    print("\nSimple Mode:")
     print(f"  Opportunity cost: ${results_simple['opportunity_cost']:,.2f}")
     print(f"  Risk-free gains: ${results_simple['risk_free_gains']:,.2f}")
     print(f"  Bank min: ${results_simple['bank_min']:,.2f}")
 
-    print(f"\nNormal Mode (10% opportunity cost):")
+    print("\nNormal Mode (10% opportunity cost):")
     print(f"  Opportunity cost: ${results_normal['opportunity_cost']:,.2f}")
     print(f"  Risk-free gains: ${results_normal['risk_free_gains']:,.2f}")
     print(f"  Bank min: ${results_normal['bank_min']:,.2f}")
@@ -251,7 +251,7 @@ def test_simple_mode_no_opportunity_cost():
         ), "Normal mode with negative bank should have opportunity cost"
 
     print(
-        f"\n✅ Test passed: Simple mode provides clean behavior (free borrowing, cash holds value)"
+        "\n✅ Test passed: Simple mode provides clean behavior (free borrowing, cash holds value)"
     )
 
 

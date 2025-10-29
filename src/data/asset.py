@@ -1,4 +1,4 @@
-
+﻿"""
 This module provides a factory, `Asset`, that delegates to registered providers
 based on the asset's ticker. This allows for a consistent interface regardless
 of the data source.
@@ -229,5 +229,5 @@ try:
         # best-effort: ignore registration failures
         pass
 except Exception:
-    # provider modules not available — fallback behavior will be used
+    # provider modules not available  fallback behavior will be used
     pass

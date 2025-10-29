@@ -80,7 +80,7 @@ def main() -> int:
     print("Summary:")
     for k, v in summary.items():
         print(f"  {k}: {v}")
-    
+
     return 0
 
 

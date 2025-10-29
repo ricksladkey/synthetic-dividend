@@ -150,15 +150,15 @@ def simulate_portfolio(
 
     # Build summary
     summary_lines = [
-        f"Portfolio Performance Summary",
-        f"=" * 60,
+        "Portfolio Performance Summary",
+        "=" * 60,
         f"Period: {dates[0]} to {dates[-1]} ({days} days, {years:.2f} years)",
         f"Initial Investment: ${initial_value:,.0f}",
         f"Final Value: ${final_value:,.0f}",
         f"Total Return: {total_return:+.2f}%",
         f"Annualized Return: {annualized_return:+.2f}%",
-        f"",
-        f"Asset Allocation:",
+        "",
+        "Asset Allocation:",
     ]
 
     for ticker, allocation in allocations.items():
@@ -247,13 +247,13 @@ def compare_portfolios(
     # Build summary
     summary_lines = [
         f"\n{'='*70}",
-        f"Portfolio Comparison Summary",
+        "Portfolio Comparison Summary",
         f"{'='*70}",
         f"Period: {start_date} to {end_date}",
         f"Initial Investment: ${initial_value:,.0f}",
-        f"",
+        "",
         df_comparison.to_string(index=False),
-        f"",
+        "",
     ]
 
     # Calculate best vs worst

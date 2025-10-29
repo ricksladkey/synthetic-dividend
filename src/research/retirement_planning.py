@@ -142,7 +142,7 @@ def run_mstr_unrealized_alpha_analysis(
     Returns:
         Dict with analysis results
     """
-    print(f"\n[MSTR UNREALIZED ALPHA ANALYSIS]")
+    print("\n[MSTR UNREALIZED ALPHA ANALYSIS]")
     print(f"Scenario: Bought at peak ${peak_price} on {peak_date}")
     print(f"Analysis period: {peak_date} to {end_date}")
 
@@ -195,15 +195,15 @@ def run_mstr_unrealized_alpha_analysis(
     }
 
     # Print results
-    print(f"\nBuy-and-Hold:")
+    print("\nBuy-and-Hold:")
     print(f"  Final Value: ${bh_final:,.0f}")
     print(f"  Drawdown: {bh_drawdown*100:.2f}%")
 
-    print(f"\nFull SD8:")
+    print("\nFull SD8:")
     print(f"  Final Value: ${sd8_final:,.0f}")
     print(f"  Drawdown: {sd8_drawdown*100:.2f}%")
 
-    print(f"\nUnrealized Volatility Alpha:")
+    print("\nUnrealized Volatility Alpha:")
     print(f"  Alpha: {unrealized_alpha*100:.2f}%")
     print(f"  Value: ${results['alpha_value']:,.0f}")
     print(

@@ -20,9 +20,9 @@ import pandas as pd
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.data.fetcher import HistoryFetcher
-from src.models.backtest import build_algo_from_name, run_algorithm_backtest
-from src.research.asset_classes import (
+from src.data.fetcher import HistoryFetcher  # noqa: E402
+from src.models.backtest import build_algo_from_name, run_algorithm_backtest  # noqa: E402
+from src.research.asset_classes import (  # noqa: E402
     ASSET_CLASSES,
     get_class_for_ticker,
     get_recommended_sd_values,
@@ -295,7 +295,7 @@ def main():
     else:
         start_date = parse_date(args.start)
 
-    print(f"\nOPTIMAL REBALANCING RESEARCH")
+    print("\nOPTIMAL REBALANCING RESEARCH")
     print(f"Date Range: {start_date} to {end_date}")
     print(f"Profit Sharing: {args.profit}%")
     print(f"Initial Quantity: {args.qty:,} shares\n")

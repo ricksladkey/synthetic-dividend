@@ -23,7 +23,6 @@ from datetime import date, datetime
 from typing import List, Optional
 
 
-
 def parse_date(s: str) -> date:
     """Parse date string in MM/DD/YYYY or YYYY-MM-DD format.
 

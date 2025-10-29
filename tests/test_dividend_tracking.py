@@ -227,7 +227,7 @@ def test_monthly_interest_payments_like_bil():
     ), f"Time-weighted should be less than snapshot ${snapshot_total}"
     assert (
         summary["total_dividends"] > 0.75 * snapshot_total
-    ), f"But should be >75% of snapshot (held most of the year)"
+    ), "But should be >75% of snapshot (held most of the year)"
 
     # Bank balance should equal total dividends (buy-and-hold, no other transactions)
     assert summary["bank"] == pytest.approx(
