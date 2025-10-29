@@ -65,7 +65,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             profit_sharing: Trade size as fraction (e.g., 0.5 for 50%)
             buyback_enabled: True for full mode, False for ATH-only
             bracket_seed: Optional seed price to align bracket positions (e.g., 100.0)
-            params: Optional dict for base class compatibility
+            params: Optional dict for base class compatibility (can include 'bracket_seed')
         """
         super().__init__(params)
 
@@ -73,7 +73,10 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         self.rebalance_size: float = float(rebalance_size)
         self.profit_sharing: float = float(profit_sharing)
         self.buyback_enabled: bool = buyback_enabled
+        # Allow bracket_seed from params dict if not explicitly provided
         self.bracket_seed: Optional[float] = bracket_seed
+        if self.bracket_seed is None and params:
+            self.bracket_seed = params.get("bracket_seed")
 
         # Performance tracking: cumulative alpha from volatility harvesting
         self.total_volatility_alpha: float = 0.0
