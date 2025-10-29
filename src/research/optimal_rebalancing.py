@@ -240,6 +240,7 @@ def print_summary_analysis(results: List[Dict]):
 
 
 def main():
+    """Command-line interface for optimal rebalancing research."""
     parser = argparse.ArgumentParser(
         description="Research optimal rebalancing frequencies across asset classes",
         formatter_class=argparse.RawDescriptionHelpFormatter,

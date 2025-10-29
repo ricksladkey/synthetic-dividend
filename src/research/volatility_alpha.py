@@ -207,6 +207,7 @@ def run_single_comparison(
 
 
 def main():
+    """Command-line interface for volatility alpha analysis."""
     parser = argparse.ArgumentParser(
         description="Measure volatility alpha by comparing best sdN vs ATH-only"
     )

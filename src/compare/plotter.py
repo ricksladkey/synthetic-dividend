@@ -1,3 +1,9 @@
+"""Visualization tools for plotting price charts with trade markers.
+
+This module provides functions to create matplotlib charts showing
+historical price data overlaid with buy/sell transaction points.
+"""
+
 import re
 from typing import Any, Dict, List, Optional
 

@@ -116,6 +116,7 @@ def print_table(df: pd.DataFrame):
 
 
 def main():
+    """Command-line interface for running comparison table analysis."""
     if len(sys.argv) < 6:
         print(
             "Usage: python -m src.compare.table TICKER START END REBALANCE% PROFIT% [INITIAL_QTY]"

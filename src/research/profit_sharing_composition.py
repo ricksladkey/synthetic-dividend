@@ -152,6 +152,14 @@ def plot_composition_over_time(results: Dict, ticker: str):
 
     # Color map: negative=blue, standard=green, aggressive=orange, extreme=red
     def get_color(ps_ratio):
+        """Map profit sharing ratio to color for visualization.
+
+        Args:
+            ps_ratio: Profit sharing ratio (negative to >1.0)
+
+        Returns:
+            RGBA color tuple
+        """
         if ps_ratio < 0:
             return plt.cm.Blues(0.7)  # Accumulation (blue)
         elif ps_ratio <= 0.50:

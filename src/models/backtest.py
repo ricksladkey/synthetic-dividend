@@ -472,11 +472,24 @@ def run_algorithm_backtest(
     elif callable(algo):
         # Wrap legacy callable in adapter
         class _FuncAdapter(AlgorithmBase):
+            """Adapter that wraps a callable function as an AlgorithmBase.
+
+            This allows using simple functions as algorithms without implementing
+            the full AlgorithmBase interface. Useful for quick prototyping and
+            backward compatibility with function-based algorithms.
+            """
+
             def __init__(self, fn: Callable) -> None:
+                """Initialize adapter with callable.
+
+                Args:
+                    fn: Callable that implements algorithm logic
+                """
                 super().__init__()
                 self.fn = fn
 
             def on_new_holdings(self, holdings: int, current_price: float) -> None:
+                """Initialize algorithm state - no-op for function adapters."""
                 pass
 
             def on_day(
@@ -487,10 +500,23 @@ def run_algorithm_backtest(
                 bank: float,
                 history: pd.DataFrame,
             ) -> List[Transaction]:
+                """Execute algorithm by calling wrapped function.
+
+                Args:
+                    date_: Current date
+                    price_row: OHLC prices for current day
+                    holdings: Current share count
+                    bank: Current cash balance
+                    history: All price data up to previous day
+
+                Returns:
+                    List of transactions (converted from function return value)
+                """
                 result = self.fn(date_, price_row, holdings, bank, history, algo_params)
                 return [result] if result is not None else []
 
             def on_end_holding(self) -> None:
+                """Cleanup - no-op for function adapters."""
                 pass
 
         algo_obj = _FuncAdapter(algo)
