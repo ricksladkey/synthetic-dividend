@@ -5,7 +5,6 @@ as just another asset in the portfolio without special casing.
 """
 
 from datetime import date
-
 import pandas as pd
 
 from src.data.asset_provider import AssetProvider
@@ -38,18 +37,15 @@ class CashAssetProvider(AssetProvider):
             raise ValueError(f"start_date ({start_date}) must be <= end_date ({end_date})")
 
         # Generate daily date range (business days not needed - cash is 24/7)
-        dates = pd.date_range(start=start_date, end=end_date, freq="D")
+        dates = pd.date_range(start=start_date, end=end_date, freq='D')
 
         # All prices are exactly $1.00
-        return pd.DataFrame(
-            {
-                "Open": 1.0,
-                "High": 1.0,
-                "Low": 1.0,
-                "Close": 1.0,
-            },
-            index=dates,
-        )
+        return pd.DataFrame({
+            'Open': 1.0,
+            'High': 1.0,
+            'Low': 1.0,
+            'Close': 1.0,
+        }, index=dates)
 
     def get_dividends(self, start_date: date, end_date: date) -> pd.Series:
         """Cash doesn't pay dividends.
