@@ -82,9 +82,9 @@ def plot_income_bands(
     Plot income band chart showing portfolio value as stacked bands.
 
     This shows the TOTAL portfolio value including all withdrawals as stacked bands:
-    - Asset values (colored bands for each asset)
-    - Expenses/withdrawals (red band showing cumulative withdrawals)
+    - Expenses/withdrawals (red band at bottom showing cumulative withdrawals)
     - Cash reserves (green band for USD cash)
+    - Asset values (colored bands for each asset)
 
     The total height = portfolio value + all historical withdrawals
 
@@ -143,31 +143,31 @@ def plot_income_bands(
             asset_columns.append(col)
 
     # Prepare data for stacking
-    # Stack order (bottom to top): cash, assets, expenses
+    # Stack order (bottom to top): expenses, cash, assets
     stack_data = []
     stack_labels = []
     stack_colors = []
 
-    # 1. Cash layer (bottom, green)
+    # 1. Expenses layer (bottom, red wedge above zero line)
+    if expense_columns:
+        for expense_col in expense_columns:
+            stack_data.append(income_data[expense_col].values)
+            stack_labels.append(expense_col.title())
+            stack_colors.append(ASSET_COLORS["expenses"])
+
+    # 2. Cash layer (middle, green)
     if cash_columns:
         for cash_col in cash_columns:
             stack_data.append(income_data[cash_col].values)
             stack_labels.append(f"{cash_col.title()} Reserves")
             stack_colors.append(ASSET_COLORS["cash"])
 
-    # 2. Asset layers (middle, various colors)
+    # 3. Asset layers (top, various colors)
     if asset_columns:
         for asset_col in asset_columns:
             stack_data.append(income_data[asset_col].values)
             stack_labels.append(asset_col)
             stack_colors.append(get_asset_color(asset_col))
-
-    # 3. Expenses layer (top, red)
-    if expense_columns:
-        for expense_col in expense_columns:
-            stack_data.append(income_data[expense_col].values)
-            stack_labels.append(expense_col.title())
-            stack_colors.append(ASSET_COLORS["expenses"])
 
     # Create figure
     fig, ax = plt.subplots(figsize=figsize)
