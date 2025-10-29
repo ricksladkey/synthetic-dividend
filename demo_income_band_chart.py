@@ -178,8 +178,8 @@ def main():
     print(f"\n✓ Income band chart saved to: {output_file}")
     print("\nThe chart shows:")
     print("- Each asset's current value in different colored bands")
-    print("- Red band at top: Cumulative withdrawals over time")
-    print("- Green band at bottom: USD cash reserves")
+    print("- Red band at bottom: Cumulative withdrawals over time (wedge above zero)")
+    print("- Green band in middle: USD cash reserves")
     print("- Total height = Portfolio value + All withdrawals")
     print("- Demonstrates wealth preservation through volatility harvesting")
 
