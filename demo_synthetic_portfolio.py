@@ -15,9 +15,7 @@ def demo_portfolio_creation():
 
     # Create a retirement portfolio
     portfolio = SyntheticPortfolio(
-        cash=500_000,
-        name="Retirement Portfolio",
-        withdrawal_rate=0.08  # 8% annual withdrawal
+        cash=500_000, name="Retirement Portfolio", withdrawal_rate=0.08  # 8% annual withdrawal
     )
 
     print(f"Created: {portfolio}")
@@ -27,10 +25,10 @@ def demo_portfolio_creation():
 
     # Add diversified assets
     print("Adding assets...")
-    portfolio.add_asset('NVDA', shares=200, price=450.0, strategy='sd8')
-    portfolio.add_asset('SPY', shares=150, price=400.0, strategy='sd10')
-    portfolio.add_asset('BTC-USD', shares=300, price=35_000.0, strategy='sd6')
-    portfolio.add_asset('GLD', shares=400, price=180.0, strategy='sd12')
+    portfolio.add_asset("NVDA", shares=200, price=450.0, strategy="sd8")
+    portfolio.add_asset("SPY", shares=150, price=400.0, strategy="sd10")
+    portfolio.add_asset("BTC-USD", shares=300, price=35_000.0, strategy="sd6")
+    portfolio.add_asset("GLD", shares=400, price=180.0, strategy="sd12")
 
     print(f"Assets added: {len(portfolio.assets)}")
     print(f"Holdings: {portfolio.get_holdings()}")
@@ -58,16 +56,16 @@ def demo_portfolio_creation():
     print("Simulating price movements and NAV updates...")
 
     # NVDA hits new high
-    portfolio.assets['NVDA'].update_nav(475.0)
+    portfolio.assets["NVDA"].update_nav(475.0)
     print(f"NVDA NAV updated to ${portfolio.assets['NVDA'].nav:.2f}")
 
     # SPY drops (buy opportunity)
     current_spy = 380.0
-    premium = portfolio.assets['SPY'].nav_premium(current_spy)
+    premium = portfolio.assets["SPY"].nav_premium(current_spy)
     print(f"SPY at ${current_spy:.2f} ({premium:.1%} premium)")
 
     # BTC volatile movement
-    portfolio.assets['BTC-USD'].update_nav(38_000.0)
+    portfolio.assets["BTC-USD"].update_nav(38_000.0)
     print(f"BTC NAV updated to ${portfolio.assets['BTC-USD'].nav:.2f}")
 
     print()

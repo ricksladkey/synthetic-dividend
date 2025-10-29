@@ -27,6 +27,7 @@ class Preset(TypedDict):
         name: Display name for the preset
         allocations: Dictionary mapping ticker symbols to allocation weights
     """
+
     name: str
     allocations: Dict[str, float]
 

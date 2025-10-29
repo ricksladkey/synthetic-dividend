@@ -13,12 +13,13 @@ import tempfile
 
 # Add src to path for imports
 import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from visualization.income_band_chart import (  # noqa: E402
     plot_income_bands,
     create_sample_income_data,
-    get_asset_color
+    get_asset_color,
 )
 
 
@@ -27,11 +28,11 @@ class TestIncomeBandChart:
 
     def test_get_asset_color(self):
         """Test asset color assignment."""
-        assert get_asset_color('NVDA') == '#1f77b4'  # Blue for NVDA
-        assert get_asset_color('SPY') == '#74c476'   # Green for SPY
-        assert get_asset_color('expenses') == '#d62728'  # Red for expenses
-        assert get_asset_color('cash') == '#2ca02c'      # Green for cash
-        assert get_asset_color('UNKNOWN') == '#7f7f7f'   # Default gray
+        assert get_asset_color("NVDA") == "#1f77b4"  # Blue for NVDA
+        assert get_asset_color("SPY") == "#74c476"  # Green for SPY
+        assert get_asset_color("expenses") == "#d62728"  # Red for expenses
+        assert get_asset_color("cash") == "#2ca02c"  # Green for cash
+        assert get_asset_color("UNKNOWN") == "#7f7f7f"  # Default gray
 
     def test_create_sample_income_data(self):
         """Test sample data creation."""
@@ -42,7 +43,7 @@ class TestIncomeBandChart:
         assert isinstance(df.index, pd.DatetimeIndex)
 
         # Check required columns exist
-        required_cols = ['NVDA', 'SPY', 'BTC', 'GLD', 'expenses', 'cash']
+        required_cols = ["NVDA", "SPY", "BTC", "GLD", "expenses", "cash"]
         for col in required_cols:
             assert col in df.columns
 
@@ -50,13 +51,13 @@ class TestIncomeBandChart:
         assert (df >= 0).all().all()
 
         # Check expenses are constant (as designed)
-        assert df['expenses'].nunique() == 1
+        assert df["expenses"].nunique() == 1
 
     def test_plot_income_bands_basic(self):
         """Test basic band chart plotting."""
         df = create_sample_income_data()
 
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             output_file = tmp.name
 
         try:
@@ -64,7 +65,7 @@ class TestIncomeBandChart:
                 income_data=df,
                 title="Test Income Bands",
                 output_file=output_file,
-                show_legend=False  # Avoid display issues in tests
+                show_legend=False,  # Avoid display issues in tests
             )
 
             assert result == output_file
@@ -80,17 +81,15 @@ class TestIncomeBandChart:
         # Skip in headless environments
         try:
             import matplotlib
-            matplotlib.use('Agg')  # Use non-interactive backend
+
+            matplotlib.use("Agg")  # Use non-interactive backend
         except ImportError:
             pytest.skip("matplotlib not available")
 
         df = create_sample_income_data()
 
         result = plot_income_bands(
-            income_data=df,
-            title="Test Display Only",
-            output_file=None,
-            show_legend=False
+            income_data=df, title="Test Display Only", output_file=None, show_legend=False
         )
 
         assert result == "displayed"
@@ -99,7 +98,7 @@ class TestIncomeBandChart:
         """Test custom styling options."""
         df = create_sample_income_data()
 
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             output_file = tmp.name
 
         try:
@@ -109,7 +108,7 @@ class TestIncomeBandChart:
                 output_file=output_file,
                 figsize=(12, 8),
                 alpha=0.5,
-                show_legend=True
+                show_legend=True,
             )
 
             assert result == output_file
@@ -128,11 +127,10 @@ class TestIncomeBandChart:
 
     def test_invalid_date_index_error(self):
         """Test error handling for non-datetime index."""
-        df = pd.DataFrame({
-            'NVDA': [100, 200],
-            'expenses': [50, 50],
-            'cash': [1000, 1000]
-        }, index=['date1', 'date2'])
+        df = pd.DataFrame(
+            {"NVDA": [100, 200], "expenses": [50, 50], "cash": [1000, 1000]},
+            index=["date1", "date2"],
+        )
 
         with pytest.raises(ValueError, match="Could not convert index to datetime"):
             plot_income_bands(df, "Test")
@@ -142,7 +140,8 @@ class TestIncomeBandChart:
         # Skip in headless environments
         try:
             import matplotlib
-            matplotlib.use('Agg')  # Use non-interactive backend
+
+            matplotlib.use("Agg")  # Use non-interactive backend
         except ImportError:
             pytest.skip("matplotlib not available")
 

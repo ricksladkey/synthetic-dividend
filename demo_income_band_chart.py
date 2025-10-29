@@ -14,7 +14,8 @@ from pathlib import Path
 
 # Add src to path for imports
 import sys
-sys.path.insert(0, str(Path(__file__).parent / 'src'))
+
+sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from models.synthetic_portfolio import SyntheticPortfolio  # noqa: E402
 from visualization.income_band_chart import plot_income_bands  # noqa: E402
@@ -29,7 +30,7 @@ def create_retirement_portfolio() -> SyntheticPortfolio:
         cash=500_000,
         name="Diversified Retirement Portfolio",
         rebalancing_mode="nav_opportunistic",
-        withdrawal_rate=0.08  # 8% annual withdrawal
+        withdrawal_rate=0.08,  # 8% annual withdrawal
     )
 
     # Add diversified assets with different strategies
@@ -39,21 +40,19 @@ def create_retirement_portfolio() -> SyntheticPortfolio:
             self.name = name
 
     assets = [
-        ('NVDA', 50, 450.0, 'sd8'),       # Tech growth - $22,500
-        ('SPY', 100, 400.0, 'sd10'),      # Broad market - $40,000
-        ('BTC-USD', 5, 35_000.0, 'sd6'),  # Crypto - $175,000 (smaller position)
-        ('GLD', 200, 180.0, 'sd12'),      # Gold - $36,000
-        ('TLT', 300, 95.0, 'ath_only'),   # Bonds - $28,500
+        ("NVDA", 50, 450.0, "sd8"),  # Tech growth - $22,500
+        ("SPY", 100, 400.0, "sd10"),  # Broad market - $40,000
+        ("BTC-USD", 5, 35_000.0, "sd6"),  # Crypto - $175,000 (smaller position)
+        ("GLD", 200, 180.0, "sd12"),  # Gold - $36,000
+        ("TLT", 300, 95.0, "ath_only"),  # Bonds - $28,500
     ]
 
     for ticker, shares, price, strategy in assets:
         # Manually create asset without using factory (for demo)
         from models.synthetic_portfolio import SyntheticAsset
+
         asset = SyntheticAsset(
-            ticker=ticker,
-            holdings=shares,
-            nav=price,
-            algorithm=MockAlgorithm(strategy)
+            ticker=ticker, holdings=shares, nav=price, algorithm=MockAlgorithm(strategy)
         )
         portfolio.assets[ticker] = asset
 
@@ -83,7 +82,7 @@ def simulate_backtest_data(portfolio: SyntheticPortfolio) -> pd.DataFrame:
     print("Simulating backtest data...")
 
     # Create date range (5 years monthly)
-    dates = pd.date_range('2019-01-01', '2024-01-01', freq='ME')
+    dates = pd.date_range("2019-01-01", "2024-01-01", freq="ME")
 
     # Simulate realistic market data with volatility
     np.random.seed(42)  # For reproducible results
@@ -92,21 +91,11 @@ def simulate_backtest_data(portfolio: SyntheticPortfolio) -> pd.DataFrame:
     cumulative_withdrawals = 0
 
     # Base prices and volatility assumptions
-    base_prices = {
-        'NVDA': 150, 'SPY': 250, 'BTC-USD': 8000, 'GLD': 120, 'TLT': 120
-    }
-    volatilities = {
-        'NVDA': 0.4, 'SPY': 0.2, 'BTC-USD': 0.8, 'GLD': 0.15, 'TLT': 0.1
-    }
+    base_prices = {"NVDA": 150, "SPY": 250, "BTC-USD": 8000, "GLD": 120, "TLT": 120}
+    volatilities = {"NVDA": 0.4, "SPY": 0.2, "BTC-USD": 0.8, "GLD": 0.15, "TLT": 0.1}
 
     # Track holdings for each asset
-    holdings = {
-        'NVDA': 50,
-        'SPY': 100,
-        'BTC-USD': 5,
-        'GLD': 200,
-        'TLT': 300
-    }
+    holdings = {"NVDA": 50, "SPY": 100, "BTC-USD": 5, "GLD": 200, "TLT": 300}
 
     for i, current_date in enumerate(dates):
         # Update prices with random walk
@@ -118,8 +107,7 @@ def simulate_backtest_data(portfolio: SyntheticPortfolio) -> pd.DataFrame:
 
         # Calculate current asset values
         asset_values = {
-            ticker: holdings[ticker] * base_prices[ticker]
-            for ticker in holdings.keys()
+            ticker: holdings[ticker] * base_prices[ticker] for ticker in holdings.keys()
         }
 
         # Monthly withdrawal
@@ -127,28 +115,29 @@ def simulate_backtest_data(portfolio: SyntheticPortfolio) -> pd.DataFrame:
         cumulative_withdrawals += monthly_withdrawal
 
         # Calculate cash (starts at $500K total - asset costs, decreases by withdrawals)
-        initial_cash = 500_000 - sum(holdings[t] * p for t, p in
-                                     [('NVDA', 450), ('SPY', 400), ('BTC-USD', 35000),
-                                      ('GLD', 180), ('TLT', 95)])
+        initial_cash = 500_000 - sum(
+            holdings[t] * p
+            for t, p in [("NVDA", 450), ("SPY", 400), ("BTC-USD", 35000), ("GLD", 180), ("TLT", 95)]
+        )
         current_cash = max(0, initial_cash - (i * monthly_withdrawal))
 
         # Build row
         row = {
-            'date': current_date,
+            "date": current_date,
             **asset_values,  # Add all asset values
-            'cash': current_cash,
-            'cumulative_withdrawals': cumulative_withdrawals
+            "cash": current_cash,
+            "cumulative_withdrawals": cumulative_withdrawals,
         }
         portfolio_data.append(row)
 
     # Create DataFrame
     df = pd.DataFrame(portfolio_data)
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.set_index('date')
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date")
 
     print(f"Simulated {len(dates)} months of data")
     print(f"Final cumulative withdrawals: ${cumulative_withdrawals:,.0f}")
-    final_value = df[['NVDA', 'SPY', 'BTC-USD', 'GLD', 'TLT', 'cash']].iloc[-1].sum()
+    final_value = df[["NVDA", "SPY", "BTC-USD", "GLD", "TLT", "cash"]].iloc[-1].sum()
     print(f"Final portfolio value: ${final_value:,.0f}")
 
     return df
@@ -172,7 +161,7 @@ def main():
         income_data=income_data,
         title="Retirement Portfolio Income Streams (8% Withdrawal Rate)",
         output_file=output_file,
-        figsize=(16, 10)
+        figsize=(16, 10),
     )
 
     # Show portfolio summary

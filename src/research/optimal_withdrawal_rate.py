@@ -48,6 +48,7 @@ from src.models.retirement_backtest import run_retirement_backtest
 
 class Scenario(TypedDict):
     """Type definition for experiment scenarios."""
+
     ticker: str
     start: date
     end: date

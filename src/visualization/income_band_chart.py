@@ -38,34 +38,28 @@ ASSET_COLORS = {
     "AAPL": "#6baed6",
     "MSFT": "#3182bd",
     "PLTR": "#08519c",
-
     # Indexes/ETFs (greens)
     "VOO": "#2ca02c",
     "SPY": "#74c476",
     "QQQ": "#a1d99b",
     "VTI": "#41ab5d",
-
     # Crypto (purples)
     "BTC-USD": "#756bb1",
     "ETH-USD": "#9e9ac8",
     "BTC": "#756bb1",
     "ETH": "#9e9ac8",
-
     # Commodities (oranges)
     "GLD": "#ff7f0e",
     "SLV": "#fd8d3c",
     "USO": "#fdae6b",
-
     # Bonds (reds)
     "TLT": "#d62728",
     "BND": "#e6550d",
     "AGG": "#fd8d3c",
-
     # Special bands
     "expenses": "#d62728",  # Red for expenses
-    "cash": "#2ca02c",      # Green for cash
+    "cash": "#2ca02c",  # Green for cash
     "withdrawals": "#d62728",  # Red for withdrawals
-
     # Default
     "default": "#7f7f7f",
 }
@@ -117,7 +111,8 @@ def plot_income_bands(
     # Set non-interactive backend if saving to file
     if output_file:
         import matplotlib
-        matplotlib.use('Agg')
+
+        matplotlib.use("Agg")
 
     import matplotlib.pyplot as plt
 
@@ -140,9 +135,9 @@ def plot_income_bands(
 
     for col in income_data.columns:
         col_lower = col.lower()
-        if col_lower in ['expenses', 'withdrawals', 'withdrawal', 'cumulative_withdrawals']:
+        if col_lower in ["expenses", "withdrawals", "withdrawal", "cumulative_withdrawals"]:
             expense_columns.append(col)
-        elif col_lower in ['cash', 'usd', 'bank']:
+        elif col_lower in ["cash", "usd", "bank"]:
             cash_columns.append(col)
         else:
             asset_columns.append(col)
@@ -199,9 +194,15 @@ def plot_income_bands(
 
     # Legend
     if show_legend:
-        ax.legend(loc="upper left", framealpha=0.9, fontsize=10,
-                  title="Portfolio Components", title_fontsize=11,
-                  bbox_to_anchor=(1.02, 1), borderaxespad=0)
+        ax.legend(
+            loc="upper left",
+            framealpha=0.9,
+            fontsize=10,
+            title="Portfolio Components",
+            title_fontsize=11,
+            bbox_to_anchor=(1.02, 1),
+            borderaxespad=0,
+        )
 
     # Grid
     ax.grid(True, alpha=0.3, linestyle="--")
@@ -233,19 +234,19 @@ def create_sample_income_data() -> pd.DataFrame:
         DataFrame with sample income streams, expenses, and cash reserves
     """
     # Create date range
-    dates = pd.date_range('2024-01-01', '2025-01-01', freq='ME')
+    dates = pd.date_range("2024-01-01", "2025-01-01", freq="ME")
 
     # Sample income streams (monthly)
     np.random.seed(42)  # For reproducible results
 
     n_periods = len(dates)
     data = {
-        'NVDA': np.random.normal(500, 50, n_periods) + np.sin(np.arange(n_periods) * 0.5) * 100,
-        'SPY': np.random.normal(300, 30, n_periods) + np.cos(np.arange(n_periods) * 0.3) * 50,
-        'BTC': np.random.normal(800, 200, n_periods) + np.sin(np.arange(n_periods) * 0.8) * 300,
-        'GLD': np.random.normal(150, 20, n_periods),
-        'expenses': np.full(n_periods, 1200),  # Constant expenses
-        'cash': np.linspace(50000, 45000, n_periods) + np.random.normal(0, 2000, n_periods)
+        "NVDA": np.random.normal(500, 50, n_periods) + np.sin(np.arange(n_periods) * 0.5) * 100,
+        "SPY": np.random.normal(300, 30, n_periods) + np.cos(np.arange(n_periods) * 0.3) * 50,
+        "BTC": np.random.normal(800, 200, n_periods) + np.sin(np.arange(n_periods) * 0.8) * 300,
+        "GLD": np.random.normal(150, 20, n_periods),
+        "expenses": np.full(n_periods, 1200),  # Constant expenses
+        "cash": np.linspace(50000, 45000, n_periods) + np.random.normal(0, 2000, n_periods),
     }
 
     df = pd.DataFrame(data, index=dates)
@@ -268,7 +269,7 @@ def demo_income_bands():
     result = plot_income_bands(
         income_data=income_data,
         title="Sample Retirement Portfolio Income Streams",
-        output_file=output_file
+        output_file=output_file,
     )
 
     print(f"Demo chart created: {result}")

@@ -56,6 +56,7 @@ class SyntheticAsset:
 @dataclass
 class PortfolioTransaction:
     """Transaction record for portfolio-level tracking."""
+
     date: date
     ticker: str
     action: str  # 'BUY', 'SELL', 'INITIAL_BUY', 'WITHDRAWAL'
@@ -69,6 +70,7 @@ class PortfolioTransaction:
 @dataclass
 class PortfolioSnapshot:
     """Daily snapshot of portfolio state."""
+
     date: date
     total_value: float
     bank: float
@@ -118,7 +120,7 @@ class SyntheticPortfolio:
         cash: float = 0.0,
         name: str = "Synthetic Portfolio",
         rebalancing_mode: str = "nav_opportunistic",
-        withdrawal_rate: float = 0.0  # Annual withdrawal rate (e.g., 0.08 for 8%)
+        withdrawal_rate: float = 0.0,  # Annual withdrawal rate (e.g., 0.08 for 8%)
     ):
         """
         Create a synthetic dividend portfolio.
@@ -154,7 +156,7 @@ class SyntheticPortfolio:
         shares: int = 0,
         price: float = 0.0,
         strategy: str = "sd8",
-        profit_sharing: float = 50.0
+        profit_sharing: float = 50.0,
     ) -> None:
         """
         Add an asset to the portfolio with synthetic dividend strategy.
@@ -182,10 +184,7 @@ class SyntheticPortfolio:
 
         # Create asset
         asset = SyntheticAsset(
-            ticker=ticker,
-            holdings=shares,
-            nav=price if price > 0 else 0.0,
-            algorithm=algorithm
+            ticker=ticker, holdings=shares, nav=price if price > 0 else 0.0, algorithm=algorithm
         )
 
         self.assets[ticker] = asset
@@ -196,15 +195,17 @@ class SyntheticPortfolio:
             self.bank -= cost
             asset.total_invested = cost
 
-            self.transactions.append(PortfolioTransaction(
-                date=date.today(),
-                ticker=ticker,
-                action='INITIAL_BUY',
-                quantity=shares,
-                price=price,
-                total=cost,
-                bank_after=self.bank
-            ))
+            self.transactions.append(
+                PortfolioTransaction(
+                    date=date.today(),
+                    ticker=ticker,
+                    action="INITIAL_BUY",
+                    quantity=shares,
+                    price=price,
+                    total=cost,
+                    bank_after=self.bank,
+                )
+            )
 
     def remove_asset(self, ticker: str) -> None:
         """Remove an asset from the portfolio."""
@@ -213,7 +214,9 @@ class SyntheticPortfolio:
 
         asset = self.assets[ticker]
         if asset.holdings > 0:
-            logger.warning(f"Removing {ticker} with {asset.holdings} shares - consider selling first")
+            logger.warning(
+                f"Removing {ticker} with {asset.holdings} shares - consider selling first"
+            )
 
         del self.assets[ticker]
 
@@ -247,15 +250,17 @@ class SyntheticPortfolio:
         if deposit_date is None:
             deposit_date = date.today()
 
-        self.transactions.append(PortfolioTransaction(
-            date=deposit_date,
-            ticker='CASH',
-            action='DEPOSIT',
-            quantity=0,
-            price=0.0,
-            total=amount,
-            bank_after=self.bank
-        ))
+        self.transactions.append(
+            PortfolioTransaction(
+                date=deposit_date,
+                ticker="CASH",
+                action="DEPOSIT",
+                quantity=0,
+                price=0.0,
+                total=amount,
+                bank_after=self.bank,
+            )
+        )
 
     def withdraw(self, amount: float, withdrawal_date: Optional[date] = None) -> bool:
         """
@@ -272,15 +277,17 @@ class SyntheticPortfolio:
         if withdrawal_date is None:
             withdrawal_date = date.today()
 
-        self.transactions.append(PortfolioTransaction(
-            date=withdrawal_date,
-            ticker='CASH',
-            action='WITHDRAWAL',
-            quantity=0,
-            price=0.0,
-            total=-amount,
-            bank_after=self.bank
-        ))
+        self.transactions.append(
+            PortfolioTransaction(
+                date=withdrawal_date,
+                ticker="CASH",
+                action="WITHDRAWAL",
+                quantity=0,
+                price=0.0,
+                total=-amount,
+                bank_after=self.bank,
+            )
+        )
 
         return True
 
@@ -301,9 +308,7 @@ class SyntheticPortfolio:
 
     # Core backtesting logic
     def process_day(
-        self,
-        current_date: date,
-        market_data: Dict[str, Dict[str, float]]
+        self, current_date: date, market_data: Dict[str, Dict[str, float]]
     ) -> List[PortfolioTransaction]:
         """
         Process one trading day for the entire portfolio.
@@ -322,7 +327,7 @@ class SyntheticPortfolio:
                 continue
 
             ohlc = market_data[ticker]
-            close_price = ohlc['close']
+            close_price = ohlc["close"]
 
             # Update NAV (all-time high)
             asset.update_nav(close_price)
@@ -331,9 +336,9 @@ class SyntheticPortfolio:
             try:
                 transactions, cash_impact = self._process_asset_day(asset, ohlc)
                 proposals[ticker] = {
-                    'transactions': transactions,
-                    'cash_impact': cash_impact,
-                    'nav_premium': asset.nav_premium(close_price)
+                    "transactions": transactions,
+                    "cash_impact": cash_impact,
+                    "nav_premium": asset.nav_premium(close_price),
                 }
             except Exception as e:
                 logger.warning(f"Error processing {ticker}: {e}")
@@ -351,9 +356,7 @@ class SyntheticPortfolio:
         return executed
 
     def _process_asset_day(
-        self,
-        asset: SyntheticAsset,
-        ohlc: Dict[str, float]
+        self, asset: SyntheticAsset, ohlc: Dict[str, float]
     ) -> Tuple[List[Transaction], float]:
         """Process one day for a single asset using its algorithm."""
         if not asset.algorithm:
@@ -364,49 +367,48 @@ class SyntheticPortfolio:
         return [], 0.0
 
     def _execute_strategy(
-        self,
-        current_date: date,
-        proposals: Dict,
-        market_data: Dict[str, Dict[str, float]]
+        self, current_date: date, proposals: Dict, market_data: Dict[str, Dict[str, float]]
     ) -> List[PortfolioTransaction]:
         """Execute transactions based on portfolio strategy."""
-        if self.rebalancing_mode == 'simple':
+        if self.rebalancing_mode == "simple":
             return self._execute_simple(current_date, proposals)
-        elif self.rebalancing_mode == 'nav_opportunistic':
+        elif self.rebalancing_mode == "nav_opportunistic":
             return self._execute_nav_opportunistic(current_date, proposals)
         else:
             raise ValueError(f"Unknown rebalancing mode: {self.rebalancing_mode}")
 
-    def _execute_simple(
-        self,
-        current_date: date,
-        proposals: Dict
-    ) -> List[PortfolioTransaction]:
+    def _execute_simple(self, current_date: date, proposals: Dict) -> List[PortfolioTransaction]:
         """Execute all affordable transactions in order."""
         executed = []
 
         # Execute sells first (generate cash)
         for ticker, proposal in proposals.items():
-            for tx in proposal['transactions']:
-                if tx.action == 'SELL':
-                    self._execute_transaction(current_date, ticker, tx, proposal['nav_premium'])
-                    executed.append(self._to_portfolio_transaction(current_date, ticker, tx, proposal['nav_premium']))
+            for tx in proposal["transactions"]:
+                if tx.action == "SELL":
+                    self._execute_transaction(current_date, ticker, tx, proposal["nav_premium"])
+                    executed.append(
+                        self._to_portfolio_transaction(
+                            current_date, ticker, tx, proposal["nav_premium"]
+                        )
+                    )
 
         # Execute buys if cash available
         for ticker, proposal in proposals.items():
-            for tx in proposal['transactions']:
-                if tx.action == 'BUY':
+            for tx in proposal["transactions"]:
+                if tx.action == "BUY":
                     cost = tx.qty * tx.price
                     if self.bank >= cost:
-                        self._execute_transaction(current_date, ticker, tx, proposal['nav_premium'])
-                        executed.append(self._to_portfolio_transaction(current_date, ticker, tx, proposal['nav_premium']))
+                        self._execute_transaction(current_date, ticker, tx, proposal["nav_premium"])
+                        executed.append(
+                            self._to_portfolio_transaction(
+                                current_date, ticker, tx, proposal["nav_premium"]
+                            )
+                        )
 
         return executed
 
     def _execute_nav_opportunistic(
-        self,
-        current_date: date,
-        proposals: Dict
+        self, current_date: date, proposals: Dict
     ) -> List[PortfolioTransaction]:
         """
         Prioritize transactions by NAV deviation magnitude.
@@ -419,53 +421,57 @@ class SyntheticPortfolio:
         # Collect all transactions with NAV context
         all_txns = []
         for ticker, proposal in proposals.items():
-            for tx in proposal['transactions']:
-                all_txns.append({
-                    'ticker': ticker,
-                    'transaction': tx,
-                    'nav_premium': proposal['nav_premium']
-                })
+            for tx in proposal["transactions"]:
+                all_txns.append(
+                    {"ticker": ticker, "transaction": tx, "nav_premium": proposal["nav_premium"]}
+                )
 
         # Sort sells by NAV premium (highest first = most overvalued)
-        sells = [t for t in all_txns if t['transaction'].action == 'SELL']
-        sells.sort(key=lambda x: x['nav_premium'], reverse=True)
+        sells = [t for t in all_txns if t["transaction"].action == "SELL"]
+        sells.sort(key=lambda x: x["nav_premium"], reverse=True)
 
         # Sort buys by NAV premium (most negative first = most undervalued)
-        buys = [t for t in all_txns if t['transaction'].action == 'BUY']
-        buys.sort(key=lambda x: x['nav_premium'])
+        buys = [t for t in all_txns if t["transaction"].action == "BUY"]
+        buys.sort(key=lambda x: x["nav_premium"])
 
         # Execute sells to generate cash
         for item in sells:
-            self._execute_transaction(current_date, item['ticker'], item['transaction'], item['nav_premium'])
-            executed.append(self._to_portfolio_transaction(current_date, item['ticker'], item['transaction'], item['nav_premium']))
+            self._execute_transaction(
+                current_date, item["ticker"], item["transaction"], item["nav_premium"]
+            )
+            executed.append(
+                self._to_portfolio_transaction(
+                    current_date, item["ticker"], item["transaction"], item["nav_premium"]
+                )
+            )
 
         # Execute buys if cash available
         for item in buys:
-            tx = item['transaction']
+            tx = item["transaction"]
             cost = tx.qty * tx.price
             if self.bank >= cost:
-                self._execute_transaction(current_date, item['ticker'], tx, item['nav_premium'])
-                executed.append(self._to_portfolio_transaction(current_date, item['ticker'], tx, item['nav_premium']))
+                self._execute_transaction(current_date, item["ticker"], tx, item["nav_premium"])
+                executed.append(
+                    self._to_portfolio_transaction(
+                        current_date, item["ticker"], tx, item["nav_premium"]
+                    )
+                )
 
         return executed
 
     def _execute_transaction(
-        self,
-        current_date: date,
-        ticker: str,
-        transaction: Transaction,
-        nav_premium: float
+        self, current_date: date, ticker: str, transaction: Transaction, nav_premium: float
     ) -> None:
         """Execute a transaction and update portfolio state."""
         asset = self.assets[ticker]
 
-        if transaction.action == 'BUY':
+        if transaction.action == "BUY":
             cost = transaction.qty * transaction.price
             self.bank -= cost
             asset.holdings += transaction.qty
             asset.total_invested += cost
 
-        elif transaction.action == 'SELL':
+        elif transaction.action == "SELL":
             proceeds = transaction.qty * transaction.price
             self.bank += proceeds
             asset.holdings -= transaction.qty
@@ -475,11 +481,7 @@ class SyntheticPortfolio:
         asset.transaction_count += 1
 
     def _to_portfolio_transaction(
-        self,
-        current_date: date,
-        ticker: str,
-        transaction: Transaction,
-        nav_premium: float
+        self, current_date: date, ticker: str, transaction: Transaction, nav_premium: float
     ) -> PortfolioTransaction:
         """Convert algorithm transaction to portfolio transaction."""
         return PortfolioTransaction(
@@ -490,27 +492,25 @@ class SyntheticPortfolio:
             price=transaction.price,
             total=transaction.qty * transaction.price,
             bank_after=self.bank,
-            nav_premium=nav_premium
+            nav_premium=nav_premium,
         )
 
     def _create_snapshot(
-        self,
-        current_date: date,
-        market_data: Dict[str, Dict[str, float]]
+        self, current_date: date, market_data: Dict[str, Dict[str, float]]
     ) -> None:
         """Create daily portfolio snapshot."""
-        current_prices = {ticker: data['close'] for ticker, data in market_data.items()}
+        current_prices = {ticker: data["close"] for ticker, data in market_data.items()}
 
         snapshot = PortfolioSnapshot(
             date=current_date,
             total_value=self.get_total_value(current_prices),
             bank=self.bank,
-            asset_values={ticker: self.get_asset_value(ticker,
-                                                       current_prices.get(ticker, 0))
-                          for ticker in self.assets},
-            asset_navs={ticker: self.assets[ticker].nav_value()
-                        for ticker in self.assets},
-            holdings=self.get_holdings()
+            asset_values={
+                ticker: self.get_asset_value(ticker, current_prices.get(ticker, 0))
+                for ticker in self.assets
+            },
+            asset_navs={ticker: self.assets[ticker].nav_value() for ticker in self.assets},
+            holdings=self.get_holdings(),
         )
 
         self.snapshots.append(snapshot)
@@ -554,19 +554,19 @@ class SyntheticPortfolio:
     def summary(self) -> Dict[str, Any]:
         """Get comprehensive portfolio summary."""
         return {
-            'name': self.name,
-            'total_value': self.total_value,
-            'bank_balance': self.bank,
-            'total_return': self.total_return,
-            'max_drawdown': self.max_drawdown,
-            'total_dividends': self.total_dividends,
-            'total_withdrawals': self.total_withdrawals,
-            'assets': len(self.assets),
-            'transactions': len(self.transactions),
-            'days': len(self.snapshots),
-            'rebalancing_mode': self.rebalancing_mode,
-            'withdrawal_rate': self.withdrawal_rate,
-            'holdings': self.get_holdings()
+            "name": self.name,
+            "total_value": self.total_value,
+            "bank_balance": self.bank,
+            "total_return": self.total_return,
+            "max_drawdown": self.max_drawdown,
+            "total_dividends": self.total_dividends,
+            "total_withdrawals": self.total_withdrawals,
+            "assets": len(self.assets),
+            "transactions": len(self.transactions),
+            "days": len(self.snapshots),
+            "rebalancing_mode": self.rebalancing_mode,
+            "withdrawal_rate": self.withdrawal_rate,
+            "holdings": self.get_holdings(),
         }
 
     def get_income_data(self) -> Any:
@@ -593,7 +593,7 @@ class SyntheticPortfolio:
         income_data = []
 
         for i, snapshot in enumerate(self.snapshots):  # noqa: B007
-            row = {'date': snapshot.date}
+            row = {"date": snapshot.date}
 
             # Asset income streams (simplified: assume dividends are monthly)
             # In a real implementation, this would track actual dividend payments
@@ -606,7 +606,7 @@ class SyntheticPortfolio:
 
             # Calculate income from sell transactions (dividends)
             for tx in self.transactions:
-                if period_start <= tx.date <= period_end and tx.action == 'SELL':
+                if period_start <= tx.date <= period_end and tx.action == "SELL":
                     if tx.ticker not in asset_income:
                         asset_income[tx.ticker] = 0.0
                     asset_income[tx.ticker] += tx.total
@@ -617,40 +617,46 @@ class SyntheticPortfolio:
 
             # Expenses/withdrawals (monthly)
             withdrawal_txns = [
-                tx for tx in self.transactions
-                if period_start <= tx.date <= period_end
-                and tx.action == 'WITHDRAWAL'
+                tx
+                for tx in self.transactions
+                if period_start <= tx.date <= period_end and tx.action == "WITHDRAWAL"
             ]
-            row['expenses'] = sum(abs(tx.total) for tx in withdrawal_txns)
+            row["expenses"] = sum(abs(tx.total) for tx in withdrawal_txns)
 
             # Cash reserves
-            row['cash'] = snapshot.bank
+            row["cash"] = snapshot.bank
 
             income_data.append(row)
 
         # Create DataFrame
         df = pd.DataFrame(income_data)
-        df['date'] = pd.to_datetime(df['date'])
-        df = df.set_index('date')
+        df["date"] = pd.to_datetime(df["date"])
+        df = df.set_index("date")
 
         # Resample to monthly for cleaner visualization
-        monthly_df = df.resample('M').agg({
-            **{col: 'sum' for col in df.columns if col not in ['cash']},  # Sum income/expenses
-            'cash': 'last'  # Use last cash value for month
-        })
+        monthly_df = df.resample("M").agg(
+            {
+                **{col: "sum" for col in df.columns if col not in ["cash"]},  # Sum income/expenses
+                "cash": "last",  # Use last cash value for month
+            }
+        )
 
         return monthly_df
 
     def __str__(self) -> str:
         """String representation of portfolio."""
-        return (f"SyntheticPortfolio('{self.name}'): "
-                f"${self.total_value:,.0f} "
-                f"({self.total_return:.1%}) "
-                f"across {len(self.assets)} assets")
+        return (
+            f"SyntheticPortfolio('{self.name}'): "
+            f"${self.total_value:,.0f} "
+            f"({self.total_return:.1%}) "
+            f"across {len(self.assets)} assets"
+        )
 
     def __repr__(self) -> str:
         """Detailed representation."""
-        return (f"SyntheticPortfolio(name='{self.name}', "
-                f"assets={len(self.assets)}, "
-                f"value=${self.total_value:,.0f}, "
-                f"return={self.total_return:.1%})")
+        return (
+            f"SyntheticPortfolio(name='{self.name}', "
+            f"assets={len(self.assets)}, "
+            f"value=${self.total_value:,.0f}, "
+            f"return={self.total_return:.1%})"
+        )
