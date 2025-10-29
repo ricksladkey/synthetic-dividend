@@ -46,8 +46,8 @@ class TestStaticAssetProvider:
         prices = asset.get_prices(date(2020, 1, 2), date(2020, 1, 10))
 
         # All dates should be in range
-        assert prices.index.min() >= date(2020, 1, 2)
-        assert prices.index.max() <= date(2020, 1, 10)
+        assert prices.index.min().date() >= date(2020, 1, 2)
+        assert prices.index.max().date() <= date(2020, 1, 10)
 
     def test_returns_empty_for_missing_ticker(self):
         """Should return empty DataFrame if ticker file doesn't exist."""
