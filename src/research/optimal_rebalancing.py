@@ -24,7 +24,6 @@ from src.data.fetcher import HistoryFetcher
 from src.models.backtest import build_algo_from_name, run_algorithm_backtest
 from src.research.asset_classes import (
     ASSET_CLASSES,
-    get_all_tickers,
     get_class_for_ticker,
     get_recommended_sd_values,
     print_sd_reference_table,

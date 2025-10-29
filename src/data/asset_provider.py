@@ -10,8 +10,7 @@ Registry pattern allows priority-based provider selection.
 
 from abc import ABC, abstractmethod
 from datetime import date
-from typing import Dict, List, Optional, Tuple, Type
-
+from typing import Type, List, Tuple
 import pandas as pd
 
 
@@ -46,7 +45,6 @@ class AssetProvider(ABC):
             Index: dates
             Empty DataFrame if no data available
         """
-        pass
 
     @abstractmethod
     def get_dividends(self, start_date: date, end_date: date) -> pd.Series:
@@ -60,14 +58,12 @@ class AssetProvider(ABC):
             Series with dividend amounts indexed by ex-dividend date
             Empty Series if no dividends
         """
-        pass
 
     def clear_cache(self) -> None:
         """Clear any cached data for this asset.
 
         Optional: providers that don't cache can leave this as no-op.
         """
-        pass
 
 
 class AssetRegistry:
@@ -90,7 +86,12 @@ class AssetRegistry:
     _providers: List[Tuple[str, Type[AssetProvider], int]] = []
 
     @classmethod
-    def register(cls, pattern: str, provider_class: Type[AssetProvider], priority: int = 5) -> None:
+    def register(
+        cls,
+        pattern: str,
+        provider_class: Type[AssetProvider],
+        priority: int = 5
+    ) -> None:
         """Register a provider for ticker pattern.
 
         Args:
@@ -99,7 +100,9 @@ class AssetRegistry:
             priority: Lower number = higher priority (checked first)
         """
         # Remove existing registration for same pattern
-        cls._providers = [(p, pc, pr) for p, pc, pr in cls._providers if p != pattern]
+        cls._providers = [
+            (p, pc, pr) for p, pc, pr in cls._providers if p != pattern
+        ]
 
         # Add new registration
         cls._providers.append((pattern, provider_class, priority))

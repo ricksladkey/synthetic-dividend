@@ -5,9 +5,6 @@ for backtesting against historical OHLC price data.
 """
 
 import math
-import re
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from datetime import date
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -21,14 +18,12 @@ from src.algorithms import (
     AlgorithmBase,
     BuyAndHoldAlgorithm,
     SyntheticDividendAlgorithm,
-    build_algo_from_name,
 )
 
 # Import utility functions
-from src.models.backtest_utils import calculate_synthetic_dividend_orders
 
 # Import common types
-from src.models.types import Transaction, WithdrawalResult
+from src.models.types import Transaction
 
 
 def calculate_time_weighted_average_holdings(
@@ -100,6 +95,9 @@ def run_algorithm_backtest(
     risk_free_rate_pct: float = 0.0,
     reference_data: Optional[Data] = None,
     risk_free_data: Optional[Data] = None,
+    # Backward-compat legacy params (alias of *_data)
+    reference_asset_df: Optional[Data] = None,
+    risk_free_asset_df: Optional[Data] = None,
     reference_asset_ticker: str = "",
     risk_free_asset_ticker: str = "",
     # Dividend/interest payments
@@ -204,6 +202,12 @@ def run_algorithm_backtest(
 
     if df is None or df.empty:
         raise ValueError("Empty price data")
+
+    # Backward compatibility: map legacy args if provided
+    if reference_data is None and reference_asset_df is not None:
+        reference_data = reference_asset_df
+    if risk_free_data is None and risk_free_asset_df is not None:
+        risk_free_data = risk_free_asset_df
 
     # Normalize index to date objects for consistent lookup
     df_indexed = df.copy()

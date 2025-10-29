@@ -1,6 +1,5 @@
 """Tests for asset registry pattern and providers."""
 
-import os
 from datetime import date
 
 import pandas as pd

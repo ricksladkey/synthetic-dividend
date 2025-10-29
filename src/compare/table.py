@@ -10,18 +10,18 @@ from datetime import date, datetime
 
 import pandas as pd
 
-from src.data.fetcher import HistoryFetcher
+from src.data.asset import Asset
 from src.models.backtest import build_algo_from_name, run_algorithm_backtest
 
 
 def parse_date(s: str) -> date:
     """Parse date from MM/DD/YYYY or YYYY-MM-DD format."""
-    if "/" in s:
-        parts = s.split("/")
-        if len(parts) == 3:
-            m, d, y = int(parts[0]), int(parts[1]), int(parts[2])
-            return date(y, m, d)
-    return datetime.strptime(s, "%Y-%m-%d").date()
+    for fmt in ("%m/%d/%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except ValueError:
+            pass
+    raise ValueError(f"Unrecognized date format: {s}")
 
 
 def run_comparison_table(
@@ -45,8 +45,7 @@ def run_comparison_table(
     """
 
     # Fetch price data
-    fetcher = HistoryFetcher()
-    df = fetcher.get_history(ticker, start_date, end_date)
+    df = Asset(ticker).get_prices(start_date, end_date)
 
     if df is None or df.empty:
         raise ValueError(f"No price data for {ticker}")

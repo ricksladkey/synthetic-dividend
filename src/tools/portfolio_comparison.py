@@ -83,10 +83,10 @@ def main():
 Examples:
   # Compare crypto/stocks mix vs VOO
   python -m src.tools.portfolio_comparison --compare crypto_stocks conservative
-  
+
   # Single portfolio with custom allocation
   python -m src.tools.portfolio_comparison --custom "NVDA:0.5,VOO:0.5"
-  
+
   # Use preset
   python -m src.tools.portfolio_comparison --preset tech_heavy --start 2023-01-01
         """,
