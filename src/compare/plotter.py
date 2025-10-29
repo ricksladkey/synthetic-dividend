@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import Any, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -7,23 +7,36 @@ import pandas as pd
 
 def _parse_transaction_line(line: str):
     """Return dict with date (str), action (BUY/SELL), price (float) if parseable."""
-    parts = line.split()
-    if not parts:
+    if not line or not line.strip():
         return None
-    date = parts[0]
-    action = parts[1].upper() if len(parts) > 1 else None
-    # find price after '@'
-    m = re.search(r"@\s*([0-9,.]+)", line)
+
+    # Attempt to find an ISO date anywhere in the line
+    date_match = re.search(r"(\d{4}-\d{2}-\d{2})", line)
+    date = date_match.group(1) if date_match else None
+
+    # Find action token (BUY or SELL)
+    action_match = re.search(r"\b(BUY|SELL)\b", line, flags=re.IGNORECASE)
+    action = action_match.group(1).upper() if action_match else None
+
+    # Find price after '@' optionally preceded by $ and/or followed by '=' (e.g. '@ $123.45' or '@ 123.45 = 12345.00')
+    m = re.search(r"@\s*\$?([0-9,]+(?:\.[0-9]+)?)", line)
     price = None
     if m:
         try:
             price = float(m.group(1).replace(",", ""))
         except Exception:
             price = None
+
     return {"date": date, "action": action, "price": price}
 
 
-def plot_price_with_trades(df: pd.DataFrame, transactions: List[str], ticker: str, out_png: str):
+def plot_price_with_trades(
+    df: pd.DataFrame,
+    transactions: List[str],
+    ticker: str,
+    out_png: str,
+    summary: Optional[Dict[str, Any]] = None,
+):
     """Plot price series and overlay buy/sell markers parsed from transactions.
 
     Buys = red dots, Sells = green dots. Saves PNG to out_png.
@@ -83,6 +96,25 @@ def plot_price_with_trades(df: pd.DataFrame, transactions: List[str], ticker: st
     ax.set_xlabel("Date")
     ax.set_ylabel("Price")
     ax.legend()
+    # Optionally annotate the chart with summary metrics (e.g., volatility alpha)
+    if summary:
+        try:
+            va = summary.get("volatility_alpha")
+            if va is not None:
+                text = f"Volatility alpha: {va*100:.2f}%"
+                # Place annotation in the upper-left inside the axes
+                ax.text(
+                    0.01,
+                    0.98,
+                    text,
+                    transform=ax.transAxes,
+                    fontsize=10,
+                    verticalalignment="top",
+                    bbox=dict(facecolor="white", alpha=0.6, edgecolor="none"),
+                )
+        except Exception:
+            # Non-critical: chart should still render even if annotation fails
+            pass
     fig.tight_layout()
     fig.savefig(out_png)
     plt.close(fig)
