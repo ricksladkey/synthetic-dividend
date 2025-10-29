@@ -33,8 +33,8 @@ class TestSyntheticCPIProvider:
         provider = SyntheticCPIProvider(annual_inflation=0.05)  # 5% inflation
         df = provider.fetch()
         # Check CPI after one year
-        cpi_year_0 = df['CPI'].iloc[0]
-        cpi_year_1 = df['CPI'].iloc[12]  # 12 months later
+        cpi_year_0 = df["CPI"].iloc[0]
+        cpi_year_1 = df["CPI"].iloc[12]  # 12 months later
         assert cpi_year_1 == pytest.approx(cpi_year_0 * 1.05, rel=1e-3)
 
 
@@ -42,7 +42,7 @@ class TestFredCPIProvider:
     def test_fetch_with_mock(self, monkeypatch):
         """Tests the FRED provider by mocking the pandas_datareader call."""
         # Create a mock DataFrame that looks like FRED data
-        mock_dates = pd.date_range(start="2023-01-01", periods=3, freq='MS')
+        mock_dates = pd.date_range(start="2023-01-01", periods=3, freq="MS")
         mock_df = pd.DataFrame({"CPIAUCSL": [300, 301, 302]}, index=mock_dates)
 
         # Mock the DataReader function
@@ -57,7 +57,7 @@ class TestFredCPIProvider:
         assert isinstance(df, pd.DataFrame)
         assert "CPI" in df.columns  # Should be renamed from CPIAUCSL
         assert not df.empty
-        pd.testing.assert_series_equal(df['CPI'], mock_df['CPIAUCSL'], check_names=False)
+        pd.testing.assert_series_equal(df["CPI"], mock_df["CPIAUCSL"], check_names=False)
 
 
 class TestCPIFetcher:
@@ -92,6 +92,7 @@ class TestCPIFetcher:
 
     def test_cache_creation_and_usage(self, temp_cache_dir: Path, monkeypatch):
         """Ensure cache is created on first call and used on second call."""
+
         # Mock provider to track calls
         class MockProvider(SyntheticCPIProvider):
             fetch_calls = 0

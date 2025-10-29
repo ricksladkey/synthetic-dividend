@@ -50,7 +50,7 @@ class FredCPIProvider(_CPIProvider):
         except Exception as e:
             _log.error(f"Failed to fetch CPI data from FRED: {e}")
             # Return an empty DataFrame on failure
-            return pd.DataFrame({'CPI': []})
+            return pd.DataFrame({"CPI": []})
 
 
 class SyntheticCPIProvider(_CPIProvider):
@@ -70,15 +70,16 @@ class SyntheticCPIProvider(_CPIProvider):
 
         start_date = pd.Timestamp(f"{self.start_year}-01-01")
         end_date = pd.Timestamp.today()
-        dates = pd.date_range(start=start_date, end=end_date, freq='MS')
+        dates = pd.date_range(start=start_date, end=end_date, freq="MS")
 
         months = range(len(dates))
         cpi_values = [base_cpi * ((1 + monthly_inflation) ** m) for m in months]
 
-        return pd.DataFrame({'CPI': cpi_values}, index=dates)
+        return pd.DataFrame({"CPI": cpi_values}, index=dates)
 
 
 # --- Main CPI Fetcher Class ---
+
 
 class CPIFetcher:
     """Fetches, caches, and processes Consumer Price Index data."""
@@ -112,18 +113,18 @@ class CPIFetcher:
         if len(cpi_data) < 2:
             raise ValueError(f"Insufficient CPI data for range {from_date} to {to_date}")
 
-        from_cpi = cpi_data.iloc[0]['CPI']
-        to_cpi = cpi_data.iloc[-1]['CPI']
+        from_cpi = cpi_data.iloc[0]["CPI"]
+        to_cpi = cpi_data.iloc[-1]["CPI"]
         return float(to_cpi / from_cpi)
 
     def get_monthly_inflation_series(self, start_date: date, end_date: date) -> pd.DataFrame:
         """Get a series of monthly CPI changes."""
         cpi_data = self.get_cpi(start_date, end_date)
-        monthly = cpi_data.resample('MS').first()
+        monthly = cpi_data.resample("MS").first()
 
-        monthly['MonthlyChange'] = monthly['CPI'] / monthly['CPI'].shift(1)
-        monthly['CumulativeChange'] = monthly['CPI'] / monthly['CPI'].iloc[0]
-        monthly['MonthlyChange'].fillna(1.0, inplace=True)
+        monthly["MonthlyChange"] = monthly["CPI"] / monthly["CPI"].shift(1)
+        monthly["CumulativeChange"] = monthly["CPI"] / monthly["CPI"].iloc[0]
+        monthly["MonthlyChange"].fillna(1.0, inplace=True)
         return monthly
 
     def _load_or_fetch_cpi(self) -> pd.DataFrame:
@@ -146,7 +147,7 @@ class CPIFetcher:
             return df  # Return empty df if no cache exists
 
         # Process and cache the new data
-        df = df.resample('D').ffill()
+        df = df.resample("D").ffill()
         if df.index.tz is not None:
             df.index = df.index.tz_localize(None)
 

@@ -98,7 +98,9 @@ def format_order_display(
 
     # Current bracket (based on last transaction price)
     current_bracket_n = math.log(last_price) / math.log(1 + trigger_decimal)
-    _current_bracket_normalized = math.pow(1 + trigger_decimal, round(current_bracket_n))  # noqa: F841
+    _current_bracket_normalized = math.pow(
+        1 + trigger_decimal, round(current_bracket_n)
+    )  # noqa: F841
 
     # Buy bracket (one step down)
     buy_bracket_n = math.log(buy_price) / math.log(1 + trigger_decimal)

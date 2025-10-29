@@ -21,7 +21,9 @@ from src.algorithms import (
 
 # Import common types
 from src.models.model_types import Transaction
-from src.models.backtest_utils import calculate_synthetic_dividend_orders  # noqa: F401  (re-exported for backwards compatibility)
+from src.models.backtest_utils import (
+    calculate_synthetic_dividend_orders,
+)  # noqa: F401  (re-exported for backwards compatibility)
 
 # Type aliases for clean abstraction
 Data = pd.DataFrame  # Pure data concept with no implementation baggage
@@ -205,12 +207,29 @@ def run_algorithm_backtest(
         # List all parameters that can be passed to this function, including
         # backwards-compatible aliases (even though they're consumed above)
         valid_params = [
-            "df", "ticker", "initial_qty", "start_date", "end_date", "algo", "algo_params",
-            "reference_return_pct", "risk_free_rate_pct", "reference_data", "risk_free_data",
-            "reference_asset_ticker", "risk_free_asset_ticker", "dividend_series",
-            "withdrawal_rate_pct", "withdrawal_frequency_days", "cpi_data", "simple_mode",
-            "normalize_prices", "allow_margin", "initial_investment",
-            "reference_asset_df", "risk_free_asset_df"  # Backwards-compatible aliases
+            "df",
+            "ticker",
+            "initial_qty",
+            "start_date",
+            "end_date",
+            "algo",
+            "algo_params",
+            "reference_return_pct",
+            "risk_free_rate_pct",
+            "reference_data",
+            "risk_free_data",
+            "reference_asset_ticker",
+            "risk_free_asset_ticker",
+            "dividend_series",
+            "withdrawal_rate_pct",
+            "withdrawal_frequency_days",
+            "cpi_data",
+            "simple_mode",
+            "normalize_prices",
+            "allow_margin",
+            "initial_investment",
+            "reference_asset_df",
+            "risk_free_asset_df",  # Backwards-compatible aliases
         ]
         raise TypeError(
             "run_algorithm_backtest() got unexpected keyword argument(s): "

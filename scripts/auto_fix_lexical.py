@@ -17,7 +17,9 @@ ROOT = Path(__file__).resolve().parents[1]
 TARGET_DIRS = [ROOT / "src", ROOT / "tests"]
 
 # Regex to find f-strings (simple, conservative). Captures the quote char and the body.
-FSTRING_RE = re.compile(r"(?P<prefix>\b)(?P<f>[fF])(?P<quote>['\"])(?P<body>(?:[^\\]|\\.)*?)(?P=quote)")
+FSTRING_RE = re.compile(
+    r"(?P<prefix>\b)(?P<f>[fF])(?P<quote>['\"])(?P<body>(?:[^\\]|\\.)*?)(?P=quote)"
+)
 
 files_changed = []
 for base in TARGET_DIRS:

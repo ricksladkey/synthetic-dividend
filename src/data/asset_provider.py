@@ -86,12 +86,7 @@ class AssetRegistry:
     _providers: List[Tuple[str, Type[AssetProvider], int]] = []
 
     @classmethod
-    def register(
-        cls,
-        pattern: str,
-        provider_class: Type[AssetProvider],
-        priority: int = 5
-    ) -> None:
+    def register(cls, pattern: str, provider_class: Type[AssetProvider], priority: int = 5) -> None:
         """Register a provider for ticker pattern.
 
         Args:
@@ -100,9 +95,7 @@ class AssetRegistry:
             priority: Lower number = higher priority (checked first)
         """
         # Remove existing registration for same pattern
-        cls._providers = [
-            (p, pc, pr) for p, pc, pr in cls._providers if p != pattern
-        ]
+        cls._providers = [(p, pc, pr) for p, pc, pr in cls._providers if p != pattern]
 
         # Add new registration
         cls._providers.append((pattern, provider_class, priority))
