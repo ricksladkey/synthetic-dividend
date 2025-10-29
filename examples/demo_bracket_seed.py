@@ -22,8 +22,8 @@ def demo_bracket_seed():
     prices = [120.50, 121.00, 119.80]
 
     # Validate inputs
-    if rebalance_size <= -1 or rebalance_size <= 0:
-        print("Error: Invalid rebalance_size. Must be > 0 and > -1")
+    if rebalance_size <= 0:
+        print("Error: Invalid rebalance_size. Must be > 0")
         return
     if any(p <= 0 for p in prices):
         print("Error: All prices must be positive")
