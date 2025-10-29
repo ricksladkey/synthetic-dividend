@@ -7,10 +7,12 @@ Usage (from repo root):
 import os
 import sys
 from datetime import datetime
+from typing import List
 
 from src.compare.plotter import plot_price_with_trades
 from src.data.asset import Asset
-from src.models.backtest import build_algo_from_name, run_algorithm_backtest
+from src.algorithms.factory import build_algo_from_name
+from src.models.backtest import run_algorithm_backtest
 
 
 def main() -> int:
@@ -39,7 +41,7 @@ def main() -> int:
 
     # Write transactions to a small file next to PNG and prepare stable string lines
     tx_file = os.path.splitext(out_png)[0] + "-tx.txt"
-    tx_lines = []
+    tx_lines: List[str] = []
     for t in txs:
         # If already a string, use it directly
         if isinstance(t, str):
