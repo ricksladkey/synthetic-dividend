@@ -17,9 +17,20 @@ from src.visualization.composition_chart import (
     plot_portfolio_composition,
 )
 
+
 class Preset(TypedDict):
+    """Portfolio preset configuration.
+
+    TypedDict defining the structure for preset portfolio allocations.
+
+    Attributes:
+        name: Display name for the preset
+        allocations: Dictionary mapping ticker symbols to allocation weights
+    """
+
     name: str
     allocations: Dict[str, float]
+
 
 # Preset portfolio allocations
 PRESETS: Dict[str, Preset] = {
@@ -80,6 +91,7 @@ def parse_date(date_str: str) -> date:
 
 
 def main():
+    """Command-line interface for portfolio comparison tool."""
     parser = argparse.ArgumentParser(
         description="Compare portfolio allocations",
         formatter_class=argparse.RawDescriptionHelpFormatter,

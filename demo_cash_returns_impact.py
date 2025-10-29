@@ -4,7 +4,7 @@ This script compares simple_mode=True (cash earns 0%) vs simple_mode=False (cash
 over longer time periods to show the compounding effect.
 """
 
-from datetime import date
+from datetime import date  # noqa: F401
 
 from src.algorithms.factory import build_algo_from_name
 from src.data.fetcher import HistoryFetcher
@@ -164,13 +164,13 @@ def compare_multi_year_scenarios():
 1. **Compounding Matters**: Over multiple years, daily compounding of cash returns
    creates significant improvements compared to 1-year tests.
 
-2. **Cash Isn't Dead Weight**: SD8 builds substantial cash reserves through 
+2. **Cash Isn't Dead Weight**: SD8 builds substantial cash reserves through
    volatility harvesting. With simple_mode=False, this cash earns market returns.
 
 3. **True 2-Asset Portfolio**: This is effectively a dynamic allocation between
    the main asset and VOO, with the allocation determined by harvested volatility alpha.
 
-4. **Realistic vs Unrealistic**: 
+4. **Realistic vs Unrealistic**:
    - simple_mode=True: Unrealistic (cash earns 0%, borrowing is free)
    - simple_mode=False: Realistic (cash earns returns, borrowing has cost)
 

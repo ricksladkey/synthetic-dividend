@@ -55,6 +55,7 @@ class FIFOSelector(LotSelector):
                 yield txn
 
     def name(self) -> str:
+        """Return 'FIFO' as the strategy name."""
         return "FIFO"
 
 
@@ -82,6 +83,7 @@ class LIFOSelector(LotSelector):
                 yield txn
 
     def name(self) -> str:
+        """Return 'LIFO' as the strategy name."""
         return "LIFO"
 
 
@@ -107,6 +109,7 @@ class HighestCostSelector(LotSelector):
         yield from sorted_buys
 
     def name(self) -> str:
+        """Return 'HIGHEST_COST' as the strategy name."""
         return "HIGHEST_COST"
 
 
@@ -132,6 +135,7 @@ class LowestCostSelector(LotSelector):
         yield from sorted_buys
 
     def name(self) -> str:
+        """Return 'LOWEST_COST' as the strategy name."""
         return "LOWEST_COST"
 
 

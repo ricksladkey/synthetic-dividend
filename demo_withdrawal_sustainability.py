@@ -152,8 +152,8 @@ def main():
     )
 
     print("GOOD SEQUENCE (Bull 2019 → Bear 2022):")
-    print(f"  Year 1: +31% market, 5% withdrawal")
-    print(f"  Year 2: -20% market, 5% withdrawal")
+    print("  Year 1: +31% market, 5% withdrawal")
+    print("  Year 2: -20% market, 5% withdrawal")
     print(f"  Net result: ${good_net:+,.0f}")
 
     # Bad sequence: Bear first, bull later
@@ -192,8 +192,8 @@ def main():
     )
 
     print("\nBAD SEQUENCE (Bear 2022 → Bull 2019):")
-    print(f"  Year 1: -20% market, 5% withdrawal")
-    print(f"  Year 2: +31% market, 5% withdrawal")
+    print("  Year 1: -20% market, 5% withdrawal")
+    print("  Year 2: +31% market, 5% withdrawal")
     print(f"  Net result: ${bad_net:+,.0f}")
 
     print(f"\n→ SEQUENCE RISK COST: ${good_net - bad_net:,.0f}")

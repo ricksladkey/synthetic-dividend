@@ -141,7 +141,7 @@ class TestBracketSeed(unittest.TestCase):
         rebalance_size = 0.0905  # sd8
         profit_sharing = 0.50
 
-        orders_seed_100 = calculate_synthetic_dividend_orders(
+        _ = calculate_synthetic_dividend_orders(  # noqa: F841
             holdings=holdings,
             last_transaction_price=last_price,
             rebalance_size=rebalance_size,
@@ -149,7 +149,7 @@ class TestBracketSeed(unittest.TestCase):
             bracket_seed=100.0,
         )
 
-        orders_seed_50 = calculate_synthetic_dividend_orders(
+        _ = calculate_synthetic_dividend_orders(  # noqa: F841
             holdings=holdings,
             last_transaction_price=last_price,
             rebalance_size=rebalance_size,

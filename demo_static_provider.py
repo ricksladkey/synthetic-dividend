@@ -14,10 +14,10 @@ asset = Asset("SPY")
 # Get prices
 prices = asset.get_prices(date(2020, 1, 2), date(2020, 1, 31))
 
-print(f"✅ StaticAssetProvider loaded {len(prices)} rows for SPY")
-print(f"\nFirst few rows:")
+print("✅ StaticAssetProvider loaded {} rows for SPY".format(len(prices)))
+print("\nFirst few rows:")
 print(prices.head())
-print(f"\nLast few rows:")
+print("\nLast few rows:")
 print(prices.tail())
 print(f"\nPrice range: ${prices['Close'].min():.2f} - ${prices['Close'].max():.2f}")
 print("\n✅ StaticAssetProvider working correctly!")

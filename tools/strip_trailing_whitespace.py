@@ -18,7 +18,7 @@ def strip_dir(root):
             except Exception:
                 continue
             lines = orig.splitlines()
-            new = "\n".join([l.rstrip() for l in lines]) + ("\n" if lines else "")
+            new = "\n".join([line.rstrip() for line in lines]) + ("\n" if lines else "")
             if new != orig:
                 with open(path, "w", encoding="utf-8") as f:
                     f.write(new)

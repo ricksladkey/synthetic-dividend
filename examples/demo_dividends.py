@@ -26,10 +26,10 @@ def main():
     div_series = fetcher.get_dividends("AAPL", date(2024, 1, 1), date(2024, 12, 31))
 
     print()
-    print(f"AAPL dividend payments in 2024:")
+    print("AAPL dividend payments in 2024:")
     print(f"  Count: {len(div_series)}")
     print(f"  Total per share: ${div_series.sum():.4f}")
-    print(f"  Payments:")
+    print("  Payments:")
     for dt, amt in div_series.items():
         print(f"    {dt.strftime('%Y-%m-%d')}: ${amt:.4f}")
     print()

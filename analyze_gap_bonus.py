@@ -1,6 +1,5 @@
 """Analyze gap bonus impact from regenerated research data."""
 
-import numpy as np
 import pandas as pd
 
 # Load data

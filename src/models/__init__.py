@@ -16,4 +16,5 @@ __all__ = [
     "portfolio_simulator",
     "retirement_backtest",
     "return_adjustments",
+    "synthetic_portfolio",
 ]

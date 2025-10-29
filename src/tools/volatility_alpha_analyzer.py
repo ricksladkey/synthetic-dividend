@@ -423,7 +423,7 @@ def analyze_volatility_alpha(
         output_file = plot_volatility_alpha_chart(
             df=df,
             ticker=ticker,
-                        transactions=[tx.to_string() for tx in transactions_full],
+            transactions=[tx.to_string() for tx in transactions_full],
             sd_n=sd_n,
             volatility=volatility,
             vol_alpha=vol_alpha,

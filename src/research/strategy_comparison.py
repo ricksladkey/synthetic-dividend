@@ -33,7 +33,7 @@ from typing import Any, Dict, List
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.data.fetcher import HistoryFetcher  # noqa: E402
-from src.algorithms.factory import build_algo_from_name
+from src.algorithms.factory import build_algo_from_name  # noqa: E402
 from src.models.backtest import run_algorithm_backtest  # noqa: E402
 
 

@@ -21,7 +21,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.data.fetcher import HistoryFetcher  # noqa: E402
-from src.algorithms.factory import build_algo_from_name
+from src.algorithms.factory import build_algo_from_name  # noqa: E402
 from src.models.backtest import run_algorithm_backtest  # noqa: E402
 from src.research.asset_classes import (  # noqa: E402
     ASSET_CLASSES,
@@ -240,6 +240,7 @@ def print_summary_analysis(results: List[Dict]):
 
 
 def main():
+    """Command-line interface for optimal rebalancing research."""
     parser = argparse.ArgumentParser(
         description="Research optimal rebalancing frequencies across asset classes",
         formatter_class=argparse.RawDescriptionHelpFormatter,

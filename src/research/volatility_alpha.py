@@ -37,8 +37,8 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.data.fetcher import HistoryFetcher  # noqa: E402
-from src.algorithms.factory import build_algo_from_name
-from src.algorithms.synthetic_dividend import SyntheticDividendAlgorithm
+from src.algorithms.factory import build_algo_from_name  # noqa: E402
+from src.algorithms.synthetic_dividend import SyntheticDividendAlgorithm  # noqa: E402
 from src.models.backtest import run_algorithm_backtest  # noqa: E402
 
 # Asset classes matching Phase 1 research
@@ -207,6 +207,7 @@ def run_single_comparison(
 
 
 def main():
+    """Command-line interface for volatility alpha analysis."""
     parser = argparse.ArgumentParser(
         description="Measure volatility alpha by comparing best sdN vs ATH-only"
     )

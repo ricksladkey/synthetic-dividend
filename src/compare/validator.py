@@ -224,6 +224,7 @@ def compare_algorithms(
 
 
 def main():
+    """Command-line interface for running algorithm comparison and validation."""
     if len(sys.argv) < 6:
         print("Usage: python -m src.compare.validator TICKER START END REBALANCE% PROFIT%")
         print("Example: python -m src.compare.validator NVDA 10/22/2024 10/22/2025 9.05 50")
