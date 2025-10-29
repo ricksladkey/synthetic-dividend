@@ -37,14 +37,42 @@ def main() -> int:
         df, ticker, initial_qty=10000, start_date=start, end_date=end, algo=algo
     )
 
-    # Write transactions to a small file next to PNG
+    # Write transactions to a small file next to PNG and prepare stable string lines
     tx_file = os.path.splitext(out_png)[0] + "-tx.txt"
-    with open(tx_file, "w", encoding="utf-8") as f:
-        for t in txs:
-            f.write(t + "\n")
+    tx_lines = []
+    for t in txs:
+        # If already a string, use it directly
+        if isinstance(t, str):
+            tx_lines.append(t)
+            continue
+        # Prefer a to_string() method if available
+        to_string = getattr(t, "to_string", None)
+        if callable(to_string):
+            tx_lines.append(to_string())
+            continue
+        # Fallback: try common attributes used by transaction types
+        action = getattr(t, "action", getattr(t, "transaction_type", None))
+        date_attr = getattr(t, "transaction_date", getattr(t, "purchase_date", None))
+        qty = getattr(t, "qty", getattr(t, "shares", None))
+        price = getattr(t, "price", getattr(t, "purchase_price", None))
+        ticker_attr = getattr(t, "ticker", None)
+        if date_attr is not None and action is not None and qty is not None and price is not None:
+            try:
+                date_str = date_attr.isoformat()
+            except Exception:
+                date_str = str(date_attr)
+            # Standardized format: YYYY-MM-DD ACTION QTY @ PRICE TICKER
+            tx_lines.append(f"{date_str} {action.upper()} {qty} @ {price:.2f} {ticker_attr or ''}".strip())
+            continue
+        # Last resort: use str()
+        tx_lines.append(str(t))
+    with open(tx_file, "w") as f:
+        for line in tx_lines:
+            f.write(line + "\n")
 
-    # Plot with markers
-    plot_price_with_trades(df, txs, ticker, out_png)
+    # plot with markers (plotter expects a list of string lines)
+    # Pass the summary so the plotter can annotate metrics like volatility alpha.
+    plot_price_with_trades(df, tx_lines, ticker, out_png, summary)
 
     print(f"Wrote {out_png} and {tx_file}")
     print("Summary:")
