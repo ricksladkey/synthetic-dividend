@@ -21,9 +21,9 @@ from src.algorithms import (
 
 # Import common types
 from src.models.model_types import Transaction
-from src.models.backtest_utils import (
+from src.models.backtest_utils import (  # noqa: F401
     calculate_synthetic_dividend_orders,
-)  # noqa: F401  (re-exported for backwards compatibility)
+)  # (re-exported for backwards compatibility)
 
 # Type aliases for clean abstraction
 Data = pd.DataFrame  # Pure data concept with no implementation baggage

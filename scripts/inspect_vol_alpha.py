@@ -6,7 +6,7 @@ import sys
 # Ensure project imports work
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
+from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest  # noqa: E402
 
 # Build the positive_alpha_recovery price series
 prices = [100.0, 110.0, 101.0, 110.0, 120.0]

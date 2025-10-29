@@ -6,7 +6,6 @@ Enables tests to run without network access by using pre-downloaded snapshots.
 
 import os
 from datetime import date
-from typing import Optional
 
 import pandas as pd
 

@@ -17,6 +17,7 @@ from src.visualization.composition_chart import (
     plot_portfolio_composition,
 )
 
+
 class Preset(TypedDict):
     """Portfolio preset configuration.
 
@@ -28,6 +29,7 @@ class Preset(TypedDict):
     """
     name: str
     allocations: Dict[str, float]
+
 
 # Preset portfolio allocations
 PRESETS: Dict[str, Preset] = {

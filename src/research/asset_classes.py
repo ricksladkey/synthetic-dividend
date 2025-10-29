@@ -4,7 +4,7 @@ Categorizes assets by volatility regime and provides lookup functions
 for batch testing and analysis.
 """
 
-from typing import Any, Dict, List, Any, TypedDict, cast
+from typing import Any, Dict, List, cast
 
 # Asset class definitions with expected volatility characteristics
 ASSET_CLASSES: Dict[str, Dict[str, Any]] = {

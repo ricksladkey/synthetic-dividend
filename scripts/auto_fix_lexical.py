@@ -34,8 +34,7 @@ for base in TARGET_DIRS:
         changed = False
 
         # 1) Convert constant f-strings with no braces
-        def replace_f(match):
-            f = match.group("f")
+        def replace_f(match):  # noqa: F841
             quote = match.group("quote")
             body = match.group("body")
             # if there are braces, skip

@@ -6,9 +6,9 @@ This demonstrates the three-dimensional return analysis:
 3. Alpha - Did I beat the market?
 """
 
-from datetime import date
+from datetime import date  # noqa: F401
 
-from src.models.return_adjustments import (
+from src.models.return_adjustments import (  # noqa: F401
     calculate_adjusted_returns,
     format_adjustment_summary,
     print_adjusted_returns,
@@ -27,14 +27,14 @@ def demo_return_adjustments():
     print("Example 1: NVDA 2024 - Strong performance")
     print("-" * 70)
 
-    nvda_summary = {
+    _ = {  # noqa: F841
         "total_return": 1.50,  # 150% return
         "start_value": 10000.0,
         "total": 25000.0,  # $15,000 gain
     }
 
-    print(f"Investment: $10,000 → $25,000")
-    print(f"Nominal Return: +150% ($15,000)")
+    print("Investment: $10,000 → $25,000")
+    print("Nominal Return: +150% ($15,000)")
     print()
 
     # Note: This demo uses mock data since we don't have real CPI/VOO prices
@@ -60,14 +60,14 @@ def demo_return_adjustments():
     print("Example 2: GLD 2024 - Inflation hedge")
     print("-" * 70)
 
-    gld_summary = {
+    _ = {  # noqa: F841
         "total_return": 0.08,  # 8% return
         "start_value": 10000.0,
         "total": 10800.0,  # $800 gain
     }
 
-    print(f"Investment: $10,000 → $10,800")
-    print(f"Nominal Return: +8% ($800)")
+    print("Investment: $10,000 → $10,800")
+    print("Nominal Return: +8% ($800)")
     print()
     print("Example output (with hypothetical CPI +3%, VOO +25%):")
     print("  Nominal: +8% ($800)")
@@ -82,14 +82,14 @@ def demo_return_adjustments():
     print("Example 3: AGG 2022 - Bonds in bear market")
     print("-" * 70)
 
-    agg_summary = {
+    _ = {  # noqa: F841
         "total_return": -0.13,  # -13% return
         "start_value": 10000.0,
         "total": 8700.0,  # -$1,300 loss
     }
 
-    print(f"Investment: $10,000 → $8,700")
-    print(f"Nominal Return: -13% (-$1,300)")
+    print("Investment: $10,000 → $8,700")
+    print("Nominal Return: -13% (-$1,300)")
     print()
     print("Example output (with hypothetical CPI +8%, VOO -18%):")
     print("  Nominal: -13% (-$1,300)")

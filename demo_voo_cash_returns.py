@@ -170,7 +170,7 @@ def main():
     print("   - Cash is invested in risk-free asset, not sitting idle")
     print("   - Creates a true 2-asset portfolio: main position + VOO")
 
-    print(f"\n3. Actual improvements from cash earning VOO returns:")
+    print("\n3. Actual improvements from cash earning VOO returns:")
     for name, imp in improvements:
         print(f"   - {name}: ${imp:+,.0f}")
 

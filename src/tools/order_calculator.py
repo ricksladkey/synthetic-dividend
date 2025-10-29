@@ -102,23 +102,23 @@ def format_order_display(
 
     # Current bracket (based on last transaction price)
     current_bracket_n = math.log(last_price) / math.log(1 + trigger_decimal)
-    _current_bracket_normalized = math.pow(
+    _ = math.pow(  # noqa: F841
         1 + trigger_decimal, round(current_bracket_n)
-    )  # noqa: F841
+    )
 
     # Buy bracket (one step down)
     buy_bracket_n = math.log(buy_price) / math.log(1 + trigger_decimal)
-    _buy_bracket_normalized = math.pow(1 + trigger_decimal, round(buy_bracket_n))  # noqa: F841
+    _ = math.pow(1 + trigger_decimal, round(buy_bracket_n))  # noqa: F841
 
     # Sell bracket (one step up)
     sell_bracket_n = math.log(sell_price) / math.log(1 + trigger_decimal)
-    _sell_bracket_normalized = math.pow(1 + trigger_decimal, round(sell_bracket_n))  # noqa: F841
+    _ = math.pow(1 + trigger_decimal, round(sell_bracket_n))  # noqa: F841
 
     # Build seed information text if seed is provided
-    seed_info = ""
+    _ = ""  # noqa: F841
     if bracket_seed is not None and bracket_seed > 0:
         seed_bracket_n = math.log(bracket_seed) / math.log(1 + trigger_decimal)
-        seed_info = f"\n  Bracket Seed:          ${bracket_seed:.2f}  (bracket n={round(seed_bracket_n)}, aligns all positions)"
+        _ = f"\n  Bracket Seed:          ${bracket_seed:.2f}  (bracket n={round(seed_bracket_n)}, aligns all positions)"  # noqa: F841
 
     output = """
 ╔══════════════════════════════════════════════════════════════════════════╗

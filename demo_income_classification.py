@@ -6,7 +6,7 @@ Demonstrates the three-tier income breakdown:
   - Secondary: Volatility alpha (what volatility gives you)
 """
 
-from datetime import date
+from datetime import date  # noqa: F401
 
 import pandas as pd
 
@@ -71,7 +71,7 @@ def demo_income_classification():
     )
 
     print()
-    print(f"Final Results:")
+    print("Final Results:")
     print(f"  Holdings: {summary['holdings']} shares")
     print(f"  Bank: ${summary['bank']:.2f}")
     print(f"  End Value: ${summary['end_value']:.2f}")
@@ -100,11 +100,11 @@ def demo_income_classification():
         simple_mode=True,
     )
 
-    print(f"Buy-and-Hold:")
+    print("Buy-and-Hold:")
     print(f"  Total Return: {summary_bh['total_return']*100:.2f}%")
     print(f"  Dividends: ${summary_bh.get('total_dividends', 0):.2f}")
     print()
-    print(f"Synthetic Dividend:")
+    print("Synthetic Dividend:")
     print(f"  Total Return: {summary['total_return']*100:.2f}%")
     ic = summary["income_classification"]
     print(f"  Universal (dividends): ${ic['universal_dollars']:.2f}")
