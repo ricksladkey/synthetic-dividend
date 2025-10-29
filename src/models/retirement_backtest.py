@@ -33,7 +33,7 @@ def run_retirement_backtest(
     annual_withdrawal_rate: float,  # e.g., 0.05 for 5%
     withdrawal_frequency: str = "monthly",  # 'monthly', 'quarterly', 'annual'
     cpi_adjust: bool = True,
-    simple_mode: bool = False,
+    simple_mode: bool = False
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Run backtest with periodic CPI-adjusted withdrawals.
 
@@ -109,7 +109,7 @@ def run_retirement_backtest(
         withdrawal_rate_pct=withdrawal_rate_percentage,
         withdrawal_frequency_days=frequency_days,
         cpi_data=cpi_adjustment_df,
-        simple_mode=simple_mode,
+        simple_mode=simple_mode
     )
 
     # The backtest already calculated withdrawal metrics
