@@ -55,6 +55,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         rebalance_size: float = 0.0,
         profit_sharing: float = 0.0,
         buyback_enabled: bool = True,
+        bracket_seed: Optional[float] = None,
         params: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize algorithm with strategy parameters.
@@ -63,6 +64,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             rebalance_size: Bracket spacing as decimal (e.g., 0.0915 for 9.15%)
             profit_sharing: Trade size as fraction (e.g., 0.5 for 50%)
             buyback_enabled: True for full mode, False for ATH-only
+            bracket_seed: Optional seed price to align bracket positions (e.g., 100.0)
             params: Optional dict for base class compatibility
         """
         super().__init__(params)
@@ -71,6 +73,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         self.rebalance_size: float = float(rebalance_size)
         self.profit_sharing: float = float(profit_sharing)
         self.buyback_enabled: bool = buyback_enabled
+        self.bracket_seed: Optional[float] = bracket_seed
 
         # Performance tracking: cumulative alpha from volatility harvesting
         self.total_volatility_alpha: float = 0.0
@@ -163,6 +166,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             last_transaction_price=current_price,
             rebalance_size=self.rebalance_size,
             profit_sharing=self.profit_sharing,
+            bracket_seed=self.bracket_seed,
         )
 
         if self.buyback_enabled:

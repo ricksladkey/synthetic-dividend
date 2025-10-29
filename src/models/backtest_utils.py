@@ -1,12 +1,17 @@
 """Utility functions for backtesting algorithms."""
 
+import math
 from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 
 
 def calculate_synthetic_dividend_orders(
-    holdings: int, last_transaction_price: float, rebalance_size: float, profit_sharing: float
+    holdings: int,
+    last_transaction_price: float,
+    rebalance_size: float,
+    profit_sharing: float,
+    bracket_seed: Optional[float] = None,
 ) -> Dict[str, Union[float, int]]:
     """Pure function to calculate synthetic dividend buy/sell orders.
 
@@ -21,22 +26,35 @@ def calculate_synthetic_dividend_orders(
 
     Where r = rebalance_size, H = holdings, s = profit_sharing
 
+    When bracket_seed is provided, prices are normalized to align with seed-based
+    bracket positions, ensuring all calculations use the same bracket ladder.
+
     Args:
         holdings: Current number of shares held
         last_transaction_price: Price of last transaction
         rebalance_size: Rebalance threshold as decimal (e.g., 0.0905 for 9.05%)
         profit_sharing: Profit sharing ratio as decimal (e.g., 0.5 for 50%)
+        bracket_seed: Optional seed price to align bracket positions (e.g., 100.0)
 
     Returns:
         Dict with keys: next_buy_price, next_buy_qty, next_sell_price, next_sell_qty
     """
-    # Buy at r% below last price
-    next_buy_price: float = last_transaction_price / (1 + rebalance_size)
+    # If bracket_seed is provided, normalize last_transaction_price to bracket ladder
+    anchor_price = last_transaction_price
+    if bracket_seed is not None and bracket_seed > 0 and rebalance_size > 0:
+        # Calculate which bracket the current price is on
+        bracket_n = math.log(last_transaction_price) / math.log(1 + rebalance_size)
+        bracket_rounded = round(bracket_n)
+        # Normalize to the exact bracket position
+        anchor_price = math.pow(1 + rebalance_size, bracket_rounded)
+
+    # Buy at r% below anchor price
+    next_buy_price: float = anchor_price / (1 + rebalance_size)
     # Buy quantity: r * H * s, rounded to nearest integer
     next_buy_qty: int = int(rebalance_size * holdings * profit_sharing + 0.5)
 
-    # Sell at r% above last price
-    next_sell_price: float = last_transaction_price * (1 + rebalance_size)
+    # Sell at r% above anchor price
+    next_sell_price: float = anchor_price * (1 + rebalance_size)
     # Sell quantity: symmetric formula ensures roundtrip balance
     next_sell_qty: int = int(
         rebalance_size * holdings * profit_sharing / (1 + rebalance_size) + 0.5

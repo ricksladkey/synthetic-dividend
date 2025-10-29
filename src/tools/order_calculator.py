@@ -15,7 +15,7 @@ Output:
 
 import argparse
 import math
-from typing import Tuple
+from typing import Optional, Tuple
 
 from src.models.backtest import calculate_synthetic_dividend_orders
 
@@ -27,6 +27,7 @@ def calculate_orders_for_manual_entry(
     current_price: float,
     sdn: int,
     profit_sharing_pct: float,
+    bracket_seed: Optional[float] = None,
 ) -> Tuple[float, int, float, int]:
     """Calculate buy/sell orders for manual placement.
 
@@ -37,6 +38,7 @@ def calculate_orders_for_manual_entry(
         current_price: Current market price
         sdn: Rebalancing frequency (sd4, sd6, sd8, etc.)
         profit_sharing_pct: Profit sharing percentage (0-100)
+        bracket_seed: Optional seed price to align bracket positions (e.g., 100.0)
 
     Returns:
         Tuple of (buy_price, buy_qty, sell_price, sell_qty)
@@ -52,6 +54,7 @@ def calculate_orders_for_manual_entry(
         last_transaction_price=last_transaction_price,
         rebalance_size=rebalance_size,
         profit_sharing=profit_sharing,
+        bracket_seed=bracket_seed,
     )
 
     return (
@@ -73,6 +76,7 @@ def format_order_display(
     sell_qty: int,
     sdn: int,
     profit_pct: float,
+    bracket_seed: Optional[float] = None,
 ) -> str:
     """Format order information for easy copy/paste.
 
@@ -110,6 +114,12 @@ def format_order_display(
     sell_bracket_n = math.log(sell_price) / math.log(1 + trigger_decimal)
     _sell_bracket_normalized = math.pow(1 + trigger_decimal, round(sell_bracket_n))  # noqa: F841
 
+    # Build seed information text if seed is provided
+    seed_info = ""
+    if bracket_seed is not None and bracket_seed > 0:
+        seed_bracket_n = math.log(bracket_seed) / math.log(1 + trigger_decimal)
+        seed_info = f"\n  Bracket Seed:          ${bracket_seed:.2f}  (bracket n={round(seed_bracket_n)}, aligns all positions)"
+
     output = """
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║                       SYNTHETIC DIVIDEND ORDER CALCULATOR                 ║
@@ -118,7 +128,7 @@ def format_order_display(
 📊 CURRENT POSITION - {ticker}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Holdings:              {holdings:,} shares
-  Last Transaction:      ${last_price:.2f}  (bracket n={round(current_bracket_n)}, normalized=${current_bracket_normalized:.2f})
+  Last Transaction:      ${last_price:.2f}  (bracket n={round(current_bracket_n)}, normalized=${current_bracket_normalized:.2f}){seed_info}
   Current Price:         ${current_price:.2f}
   Price Change:          ${price_change:+.2f} ({price_change_pct:+.2f}%)
 
@@ -185,6 +195,9 @@ Examples:
   # Basic calculation
   python -m src.tools.order_calculator --ticker NVDA --holdings 1000 --last-price 120.50 --current-price 125.30 --sdn 8 --profit 50
 
+  # With bracket seed for aligned positions
+  python -m src.tools.order_calculator --ticker NVDA --holdings 1000 --last-price 120.50 --current-price 125.30 --sdn 8 --profit 50 --bracket-seed 100.0
+
   # Different strategy
   python -m src.tools.order_calculator --ticker BTC-USD --holdings 0.5 --last-price 45000 --current-price 46500 --sdn 4 --profit 75
 
@@ -209,6 +222,13 @@ Examples:
     parser.add_argument(
         "--profit", type=float, required=True, help="Profit sharing percentage (0-100)"
     )
+    parser.add_argument(
+        "--bracket-seed",
+        type=float,
+        default=None,
+        help="Optional seed price to align bracket positions (e.g., 100.0). "
+        "When provided, all bracket calculations align to a common ladder based on this seed.",
+    )
 
     args = parser.parse_args()
 
@@ -232,6 +252,7 @@ Examples:
         current_price=args.current_price,
         sdn=args.sdn,
         profit_sharing_pct=args.profit,
+        bracket_seed=args.bracket_seed,
     )
 
     # Display formatted output
@@ -246,6 +267,7 @@ Examples:
         sell_qty=sell_qty,
         sdn=args.sdn,
         profit_pct=args.profit,
+        bracket_seed=args.bracket_seed,
     )
 
     print(output)
