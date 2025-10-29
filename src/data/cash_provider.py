@@ -5,6 +5,7 @@ as just another asset in the portfolio without special casing.
 """
 
 from datetime import date
+
 import pandas as pd
 
 from src.data.asset_provider import AssetProvider

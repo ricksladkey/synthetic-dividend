@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import os
 from datetime import date
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
 
@@ -96,15 +96,21 @@ class Asset:
                 # Cache the result
                 self._save_price_cache(result)
                 return result
-            
+
             # Try fallback providers in priority order (excluding the primary)
-            # Skip fallback for mock assets, cash assets, and static assets - they should remain isolated
+            # Skip fallback for mock assets, cash assets, and static assets in test environments
             from src.data.static_provider import StaticAssetProvider
-            if not (self.ticker.startswith("MOCK-") or self.ticker == "USD" or isinstance(self._provider, StaticAssetProvider)):
+
+            if not (
+                self.ticker.startswith("MOCK-")
+                or self.ticker == "USD"
+                or isinstance(self._provider, StaticAssetProvider)
+            ):
                 try:
                     from src.data.asset_provider import AssetRegistry
+
                     for pattern, provider_class, priority in AssetRegistry._providers:
-                        if provider_class == type(self._provider):
+                        if provider_class == self._provider.__class__:
                             continue  # Skip the primary provider that failed
                         if AssetRegistry._pattern_matches(pattern, self.ticker):
                             fallback_provider = provider_class(self.ticker, self.cache_dir)
@@ -115,7 +121,7 @@ class Asset:
                                 return fallback_result
                 except Exception:
                     pass
-            
+
             # Return empty result if no provider worked
             return result
 
@@ -140,15 +146,21 @@ class Asset:
                 # Cache the result
                 self._save_dividend_cache(result)
                 return result
-            
+
             # Try fallback providers in priority order (excluding the primary)
-            # Skip fallback for mock assets, cash assets, and static assets - they should remain isolated
+            # Skip fallback for mock assets, cash assets, and static assets in test environments
             from src.data.static_provider import StaticAssetProvider
-            if not (self.ticker.startswith("MOCK-") or self.ticker == "USD" or isinstance(self._provider, StaticAssetProvider)):
+
+            if not (
+                self.ticker.startswith("MOCK-")
+                or self.ticker == "USD"
+                or isinstance(self._provider, StaticAssetProvider)
+            ):
                 try:
                     from src.data.asset_provider import AssetRegistry
+
                     for pattern, provider_class, priority in AssetRegistry._providers:
-                        if provider_class == type(self._provider):
+                        if provider_class == self._provider.__class__:
                             continue  # Skip the primary provider that failed
                         if AssetRegistry._pattern_matches(pattern, self.ticker):
                             fallback_provider = provider_class(self.ticker, self.cache_dir)
@@ -159,7 +171,7 @@ class Asset:
                                 return fallback_result
                 except Exception:
                     pass
-            
+
             # Return empty result if no provider worked
             return result
 
@@ -281,8 +293,8 @@ class Asset:
 try:
     from src.data.asset_provider import AssetRegistry
     from src.data.cash_provider import CashAssetProvider
-    from src.data.yahoo_provider import YahooAssetProvider
     from src.data.mock_provider import MockAssetProvider
+    from src.data.yahoo_provider import YahooAssetProvider
 
     try:
         AssetRegistry.register("USD", CashAssetProvider, priority=1)

@@ -3,7 +3,8 @@ Tests for SyntheticPortfolio - the multi-asset synthetic dividend portfolio.
 """
 
 import pytest
-from src.models.synthetic_portfolio import SyntheticPortfolio, SyntheticAsset
+
+from src.models.synthetic_portfolio import SyntheticAsset, SyntheticPortfolio
 
 
 class TestSyntheticPortfolio:

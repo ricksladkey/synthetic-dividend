@@ -27,18 +27,18 @@ Usage:
     python src/research/sd8_realistic_portfolio_experiment.py
 """
 
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-
+import sys
 from datetime import date, timedelta
-import pandas as pd
-import numpy as np
 
-from src.data.fetcher import HistoryFetcher
+import pandas as pd
+
 from src.algorithms.factory import build_algo_from_name
+from src.data.fetcher import HistoryFetcher
 from src.models.backtest import run_algorithm_backtest
 from src.visualization.income_band_chart import plot_income_bands
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
 def run_sd8_realistic_portfolio_experiment():
@@ -64,16 +64,16 @@ def run_sd8_realistic_portfolio_experiment():
 
     # Portfolio allocation - realistic diversified portfolio
     portfolio_allocation = {
-        'DFUS': 0.40,  # US Total Stock Market ETF
-        'USD': 0.10,   # Cash
-        'DFAX': 0.10,  # International Stock ETF
-        'GLDM': 0.10,  # Gold ETF
-        'NVDA': 0.05,  # Nvidia
-        'BTC-USD': 0.05,  # Bitcoin
-        'GOOG': 0.05,  # Alphabet
-        'PLTR': 0.05,  # Palantir
-        'MSTR': 0.05,  # MicroStrategy
-        'SHOP': 0.05,  # Shopify
+        "DFUS": 0.40,  # US Total Stock Market ETF
+        "USD": 0.10,  # Cash
+        "DFAX": 0.10,  # International Stock ETF
+        "GLDM": 0.10,  # Gold ETF
+        "NVDA": 0.05,  # Nvidia
+        "BTC-USD": 0.05,  # Bitcoin
+        "GOOG": 0.05,  # Alphabet
+        "PLTR": 0.05,  # Palantir
+        "MSTR": 0.05,  # MicroStrategy
+        "SHOP": 0.05,  # Shopify
     }
 
     # Asset tickers for data fetching
@@ -94,13 +94,13 @@ def run_sd8_realistic_portfolio_experiment():
     asset_data = {}
 
     # Calculate number of days for USD cash data
-    total_days = (end_date - start_date).days + 1
+    # total_days = (end_date - start_date).days + 1
 
     for ticker in asset_tickers:
-        if ticker == 'USD':
+        if ticker == "USD":
             # Cash doesn't need market data - it's constant $1
-            date_range = pd.date_range(start_date, end_date, freq='D')
-            asset_data[ticker] = pd.DataFrame({'Close': [1.0] * len(date_range)}, index=date_range)
+            date_range = pd.date_range(start_date, end_date, freq="D")
+            asset_data[ticker] = pd.DataFrame({"Close": [1.0] * len(date_range)}, index=date_range)
         else:
             try:
                 df = fetcher.get_history(ticker, start_date, end_date)
@@ -109,13 +109,15 @@ def run_sd8_realistic_portfolio_experiment():
             except Exception as e:
                 print(f"❌ Failed to load {ticker}: {e}")
                 # Create dummy data for missing assets
-                date_range = pd.date_range(start_date, end_date, freq='D')
-                asset_data[ticker] = pd.DataFrame({'Close': [100.0] * len(date_range)}, index=date_range)
+                date_range = pd.date_range(start_date, end_date, freq="D")
+                asset_data[ticker] = pd.DataFrame(
+                    {"Close": [100.0] * len(date_range)}, index=date_range
+                )
 
     # Align data on common dates
     common_index = None
     for ticker, df in asset_data.items():
-        if ticker != 'USD':  # Skip cash for alignment
+        if ticker != "USD":  # Skip cash for alignment
             if common_index is None:
                 common_index = df.index
             else:
@@ -124,10 +126,10 @@ def run_sd8_realistic_portfolio_experiment():
     # Convert price data to dictionaries for faster access
     price_data = {}
     for ticker in asset_tickers:
-        if ticker == 'USD':
+        if ticker == "USD":
             price_data[ticker] = {date: 1.0 for date in common_index}
         else:
-            prices = asset_data[ticker]['Close']
+            prices = asset_data[ticker]["Close"]
             price_data[ticker] = {date: prices.loc[date].item() for date in common_index}
 
     print(f"Aligned data: {len(common_index)} common trading days")
@@ -146,13 +148,13 @@ def run_sd8_realistic_portfolio_experiment():
     total_withdrawn = 0.0
 
     for ticker in asset_tickers:
-        if ticker == 'USD':
+        if ticker == "USD":
             # Cash doesn't need backtesting
             backtest_results[ticker] = {
-                'total': initial_allocations[ticker],
-                'bank': initial_allocations[ticker],
-                'holdings': initial_allocations[ticker],  # Cash amount
-                'total_withdrawn': 0.0
+                "total": initial_allocations[ticker],
+                "bank": initial_allocations[ticker],
+                "holdings": initial_allocations[ticker],  # Cash amount
+                "total_withdrawn": 0.0,
             }
             continue
 
@@ -174,18 +176,20 @@ def run_sd8_realistic_portfolio_experiment():
             )
 
             backtest_results[ticker] = summary
-            total_withdrawn += summary['total_withdrawn']
+            total_withdrawn += summary["total_withdrawn"]
 
-            print(f"✓ {ticker}: ${summary['total']:,.0f} (${summary['bank']:,.0f} cash, {summary['holdings']} units)")
+            print(
+                f"✓ {ticker}: ${summary['total']:,.0f} (${summary['bank']:,.0f} cash, {summary['holdings']} units)"
+            )
 
         except Exception as e:
             print(f"❌ Failed backtest for {ticker}: {e}")
             # Fallback: simple buy and hold
             backtest_results[ticker] = {
-                'total': allocation,
-                'bank': 0.0,
-                'holdings': allocation / df.iloc[0]['Close'],
-                'total_withdrawn': 0.0
+                "total": allocation,
+                "bank": 0.0,
+                "holdings": allocation / df.iloc[0]["Close"],
+                "total_withdrawn": 0.0,
             }
 
     # Report backtest results
@@ -193,16 +197,24 @@ def run_sd8_realistic_portfolio_experiment():
     total_portfolio_value = 0.0
     total_withdrawn = 0.0  # Reset to track from simulation
     for ticker, result in backtest_results.items():
-        total_portfolio_value += result['total']
-        if ticker == 'USD':
+        total_portfolio_value += result["total"]
+        if ticker == "USD":
             print(f"{ticker}: ${result['total']:,.0f} (cash)")
         else:
-            holdings_desc = f"{result['holdings']:.2f} units" if isinstance(result['holdings'], float) else f"{result['holdings']} shares"
-            print(f"{ticker}: ${result['total']:,.0f} (${result['bank']:,.0f} cash, {holdings_desc})")
+            holdings_desc = (
+                f"{result['holdings']:.2f} units"
+                if isinstance(result["holdings"], float)
+                else f"{result['holdings']} shares"
+            )
+            print(
+                f"{ticker}: ${result['total']:,.0f} (${result['bank']:,.0f} cash, {holdings_desc})"
+            )
 
     print(f"Total Portfolio: ${total_portfolio_value:,.0f}")
     print(f"Total Withdrawn: ${total_withdrawn:,.0f}")
-    print(f"Withdrawal Rate Impact: {(total_withdrawn / initial_investment * 100):.1f}% of initial investment")
+    print(
+        f"Withdrawal Rate Impact: {(total_withdrawn / initial_investment * 100):.1f}% of initial investment"
+    )
     print()
 
     # Create a simplified visualization showing portfolio allocation over time
@@ -214,14 +226,16 @@ def run_sd8_realistic_portfolio_experiment():
 
     # Calculate weighted portfolio values based on backtest results
     portfolio_values = {}
-    total_value = sum(result['total'] for result in backtest_results.values())
+    total_value = sum(result["total"] for result in backtest_results.values())
 
     for ticker, result in backtest_results.items():
-        weight = result['total'] / total_value
+        # weight = result["total"] / total_value
         # Create a simple growth trajectory (this is approximate)
-        initial_value = result['total'] * 0.7  # Assume 70% of final value at start
-        final_value = result['total']
-        growth_factor = (final_value / initial_value) ** (1 / len(dates)) if initial_value > 0 else 1.0
+        initial_value = result["total"] * 0.7  # Assume 70% of final value at start
+        final_value = result["total"]
+        growth_factor = (
+            (final_value / initial_value) ** (1 / len(dates)) if initial_value > 0 else 1.0
+        )
 
         values = []
         current_value = initial_value
@@ -240,15 +254,19 @@ def run_sd8_realistic_portfolio_experiment():
         income_data=income_data,
         title=f"SD8 Realistic Portfolio Experiment\n${initial_investment:,.0f} Portfolio ({allocation_desc})\n{algo_name} Algorithm with {withdrawal_rate_pct}% Annual Withdrawals",
         output_file="sd8_realistic_portfolio_experiment.png",
-        figsize=(16, 10)
+        figsize=(16, 10),
     )
 
     print("✓ Simplified experiment visualization saved to: sd8_realistic_portfolio_experiment.png")
     print()
     print("Key Insights:")
     print(f"• Realistic diversified SD8 portfolio with {len(asset_tickers)} assets")
-    print(f"• Total portfolio value: ${total_value:,.0f} ({(total_value/initial_investment - 1)*100:.1f}% growth)")
-    print("• Largest holdings: MSTR (${backtest_results['MSTR']['total']:,.0f}), PLTR (${backtest_results['PLTR']['total']:,.0f}), DFUS (${backtest_results['DFUS']['total']:,.0f})")
+    print(
+        f"• Total portfolio value: ${total_value:,.0f} ({(total_value/initial_investment - 1)*100:.1f}% growth)"
+    )
+    print(
+        "• Largest holdings: MSTR (${backtest_results['MSTR']['total']:,.0f}), PLTR (${backtest_results['PLTR']['total']:,.0f}), DFUS (${backtest_results['DFUS']['total']:,.0f})"
+    )
     print("• SD8 algorithm applied to each asset individually with 8% withdrawal rate")
     print("• Visualization shows simplified portfolio composition over time")
     print()
@@ -265,6 +283,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Experiment failed: {e}")
         import traceback
+
         traceback.print_exc()
 
 

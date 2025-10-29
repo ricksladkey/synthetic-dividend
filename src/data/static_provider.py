@@ -73,6 +73,24 @@ class StaticAssetProvider(AssetProvider):
         mask = (df.index >= pd.Timestamp(start_date)) & (df.index <= pd.Timestamp(end_date))
         result = df.loc[mask, ["Open", "High", "Low", "Close"]].copy()
 
+        # If no data in range and file exists, try to fall back to other providers
+        # This allows historical tests to work even when static data is incomplete
+        if result.empty and os.path.exists(self.csv_path):
+            # Import here to avoid circular imports
+            from src.data.asset_provider import AssetRegistry
+
+            for pattern, provider_class, priority in AssetRegistry._providers:
+                if provider_class == self.__class__:
+                    continue  # Skip ourselves
+                if AssetRegistry._pattern_matches(pattern, self.ticker):
+                    try:
+                        fallback_provider = provider_class(self.ticker, self.cache_dir)
+                        fallback_result = fallback_provider.get_prices(start_date, end_date)
+                        if not fallback_result.empty:
+                            return fallback_result
+                    except Exception:
+                        continue
+
         return result
 
     def get_dividends(self, start_date: date, end_date: date) -> pd.Series:

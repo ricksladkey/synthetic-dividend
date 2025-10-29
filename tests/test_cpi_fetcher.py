@@ -1,9 +1,10 @@
 """Tests for the CPI fetcher and its data providers."""
 
-import pandas as pd
-import pytest
 from datetime import date
 from pathlib import Path
+
+import pandas as pd
+import pytest
 
 from src.data.cpi_fetcher import (
     CPIFetcher,

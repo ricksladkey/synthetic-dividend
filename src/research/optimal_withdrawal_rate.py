@@ -35,11 +35,10 @@ Metrics:
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, TypedDict
 
 import numpy as np
 import pandas as pd
-from typing import TypedDict
 
 from src.algorithms.factory import build_algo_from_name
 from src.data.fetcher import HistoryFetcher

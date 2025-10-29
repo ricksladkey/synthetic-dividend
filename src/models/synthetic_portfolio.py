@@ -8,10 +8,10 @@ This provides the "killer app" - multi-asset retirement portfolios that can
 sustain 8-10% withdrawal rates through volatility harvesting.
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Dict, List, Optional, Tuple, Any
-import logging
+from typing import Any, Dict, List, Optional, Tuple
 
 from .model_types import Transaction
 

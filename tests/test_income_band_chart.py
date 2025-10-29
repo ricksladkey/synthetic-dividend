@@ -5,21 +5,22 @@ Tests the income band chart functionality to ensure it works correctly
 with synthetic portfolio data.
 """
 
-import pytest
-import pandas as pd
 import os
-from pathlib import Path
-import tempfile
 
 # Add src to path for imports
 import sys
+import tempfile
+from pathlib import Path
+
+import pandas as pd
+import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from visualization.income_band_chart import (  # noqa: E402
-    plot_income_bands,
     create_sample_income_data,
     get_asset_color,
+    plot_income_bands,
 )
 
 

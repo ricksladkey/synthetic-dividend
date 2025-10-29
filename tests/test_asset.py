@@ -34,7 +34,7 @@ class TestAssetBasics:
 
             # If a provider is registered for this ticker, it may override cache paths
             # In that case, check that paths are set appropriately for the provider
-            if hasattr(asset, '_provider') and asset._provider is not None:
+            if hasattr(asset, "_provider") and asset._provider is not None:
                 # Provider is registered - paths may be overridden
                 # Just check that paths are strings and exist
                 assert isinstance(asset.pkl_path, str)

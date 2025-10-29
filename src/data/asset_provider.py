@@ -10,7 +10,8 @@ Registry pattern allows priority-based provider selection.
 
 from abc import ABC, abstractmethod
 from datetime import date
-from typing import Type, List, Tuple
+from typing import List, Tuple, Type
+
 import pandas as pd
 
 

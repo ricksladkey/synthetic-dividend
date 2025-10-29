@@ -4,6 +4,7 @@ This file is automatically loaded by pytest and sets up global test fixtures.
 """
 
 import os
+
 import pytest
 
 
@@ -35,12 +36,14 @@ def setup_static_provider_for_ci():
             if os.path.exists(testdata_dir):
                 registered_count = 0
                 for filename in os.listdir(testdata_dir):
-                    if filename.endswith('.csv') and not filename.endswith('_dividends.csv'):
+                    if filename.endswith(".csv") and not filename.endswith("_dividends.csv"):
                         ticker = filename[:-4]  # Remove .csv extension
                         AssetRegistry.register(ticker, StaticAssetProvider, priority=0)
                         registered_count += 1
 
-                print(f"\n✅ CI mode: StaticAssetProvider registered for {registered_count} tickers with offline data")
+                print(
+                    f"\n✅ CI mode: StaticAssetProvider registered for {registered_count} tickers with offline data"
+                )
             else:
                 print(f"\n⚠️  Warning: testdata directory not found at {testdata_dir}")
         except ImportError as e:

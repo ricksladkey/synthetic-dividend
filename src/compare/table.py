@@ -10,8 +10,8 @@ from datetime import date, datetime
 
 import pandas as pd
 
-from src.data.asset import Asset
 from src.algorithms.factory import build_algo_from_name
+from src.data.asset import Asset
 from src.models.backtest import run_algorithm_backtest  # noqa: E402
 
 

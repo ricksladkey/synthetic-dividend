@@ -17,9 +17,8 @@ import sys
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-
-from src.data.fetcher import HistoryFetcher
 from src.algorithms.factory import build_algo_from_name
+from src.data.fetcher import HistoryFetcher
 from src.models.backtest import Data, run_algorithm_backtest  # noqa: E402
 
 

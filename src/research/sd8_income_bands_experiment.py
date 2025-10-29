@@ -16,18 +16,18 @@ Usage:
     python src/research/sd8_income_bands_experiment.py
 """
 
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-
+import sys
 from datetime import date, timedelta
-import pandas as pd
-import numpy as np
 
-from src.data.fetcher import HistoryFetcher
+import pandas as pd
+
 from src.algorithms.factory import build_algo_from_name
+from src.data.fetcher import HistoryFetcher
 from src.models.backtest import run_algorithm_backtest
 from src.visualization.income_band_chart import plot_income_bands
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
 def run_sd8_income_bands_experiment():
@@ -61,9 +61,11 @@ def run_sd8_income_bands_experiment():
     df_nvda = df_nvda.loc[common_index]
     df_btc = df_btc.loc[common_index]
 
-    print(f"Market Data: NVDA + BTC from {start_date} to {end_date} ({len(common_index)} trading days)")
+    print(
+        f"Market Data: NVDA + BTC from {start_date} to {end_date} ({len(common_index)} trading days)"
+    )
     print(f"Initial Investment: ${initial_investment:,.0f} total portfolio")
-    print(f"Allocation: $500K NVDA + $500K BTC")
+    print("Allocation: $500K NVDA + $500K BTC")
     print(f"Algorithm: {algo_name}")
     print(f"Withdrawal Rate: {withdrawal_rate_pct}% annual")
     print()
@@ -106,11 +108,19 @@ def run_sd8_income_bands_experiment():
 
     # Report backtest results
     print("\nBacktest Results:")
-    print(f"NVDA: ${nvda_summary['total']:,.0f} (${nvda_summary['bank']:,.0f} cash, {nvda_summary['holdings']} shares)")
-    print(f"BTC: ${btc_summary['total']:,.0f} (${btc_summary['bank']:,.0f} cash, {btc_summary['holdings']:.2f} units)")
+    print(
+        f"NVDA: ${nvda_summary['total']:,.0f} (${nvda_summary['bank']:,.0f} cash, {nvda_summary['holdings']} shares)"
+    )
+    print(
+        f"BTC: ${btc_summary['total']:,.0f} (${btc_summary['bank']:,.0f} cash, {btc_summary['holdings']:.2f} units)"
+    )
     print(f"Total Portfolio: ${nvda_summary['total'] + btc_summary['total']:,.0f}")
-    print(f"Total Withdrawn: ${nvda_summary['total_withdrawn'] + btc_summary['total_withdrawn']:,.0f}")
-    print(f"Withdrawal Rate Impact: {((nvda_summary['total_withdrawn'] + btc_summary['total_withdrawn']) / initial_investment * 100):.1f}% of initial investment")
+    print(
+        f"Total Withdrawn: ${nvda_summary['total_withdrawn'] + btc_summary['total_withdrawn']:,.0f}"
+    )
+    print(
+        f"Withdrawal Rate Impact: {((nvda_summary['total_withdrawn'] + btc_summary['total_withdrawn']) / initial_investment * 100):.1f}% of initial investment"
+    )
     print()
 
     # Create income band visualization
@@ -126,19 +136,19 @@ def run_sd8_income_bands_experiment():
     cumulative_withdrawals = []
 
     # Initialize portfolio state
-    nvda_shares = nvda_allocation / df_nvda.iloc[0]['Close']
-    btc_units = btc_allocation / df_btc.iloc[0]['Close']
+    nvda_shares = nvda_allocation / df_nvda.iloc[0]["Close"]
+    btc_units = btc_allocation / df_btc.iloc[0]["Close"]
     combined_cash = 0.0
     total_withdrawn = 0.0
 
     for i, current_date in enumerate(dates):
-        nvda_price = df_nvda.loc[current_date, 'Close']
-        btc_price = df_btc.loc[current_date, 'Close']
+        nvda_price = df_nvda.loc[current_date, "Close"]
+        btc_price = df_btc.loc[current_date, "Close"]
 
         if i > 0:
             # Combined portfolio volatility for cash management decisions
-            nvda_returns = df_nvda['Close'].pct_change().rolling(min(20, i+1)).std().iloc[-1]
-            btc_returns = df_btc['Close'].pct_change().rolling(min(20, i+1)).std().iloc[-1]
+            nvda_returns = df_nvda["Close"].pct_change().rolling(min(20, i + 1)).std().iloc[-1]
+            btc_returns = df_btc["Close"].pct_change().rolling(min(20, i + 1)).std().iloc[-1]
             portfolio_volatility = (nvda_returns + btc_returns) / 2
 
             # SD8 algorithm: target cash position based on portfolio volatility
@@ -213,30 +223,37 @@ def run_sd8_income_bands_experiment():
         cumulative_withdrawals.append(total_withdrawn)
 
     # Create income data DataFrame
-    income_data = pd.DataFrame({
-        'NVDA': nvda_values,
-        'BTC-USD': btc_values,
-        'USD': usd_cash_values,
-        'cumulative_withdrawals': cumulative_withdrawals,
-    }, index=dates)
+    income_data = pd.DataFrame(
+        {
+            "NVDA": nvda_values,
+            "BTC-USD": btc_values,
+            "USD": usd_cash_values,
+            "cumulative_withdrawals": cumulative_withdrawals,
+        },
+        index=dates,
+    )
 
     # Generate visualization
     plot_income_bands(
         income_data=income_data,
         title=f"SD8 Multi-Asset Income Bands Experiment\n${initial_investment:,.0f} Portfolio (50% NVDA + 50% BTC)\n{algo_name} Algorithm with {withdrawal_rate_pct}% Annual Withdrawals",
         output_file="sd8_multi_asset_income_bands_experiment.png",
-        figsize=(16, 10)
+        figsize=(16, 10),
     )
 
     print("✓ Experiment visualization saved to: sd8_multi_asset_income_bands_experiment.png")
     print()
     print("Key Insights:")
-    print(f"• Multi-asset SD8 portfolio with significant withdrawals ({withdrawal_rate_pct}% annual)")
+    print(
+        f"• Multi-asset SD8 portfolio with significant withdrawals ({withdrawal_rate_pct}% annual)"
+    )
     print("• Cash position adapts to portfolio volatility across assets")
     print("• Algorithm manages withdrawals from cash reserves when possible")
     print("• Assets sold proportionally when cash reserves insufficient")
     print("• Income bands show: withdrawals (red) → cash (green) → NVDA (blue) → BTC (purple)")
-    print(f"• Final withdrawal accumulation: {((total_withdrawn) / initial_investment * 100):.1f}% of initial investment")
+    print(
+        f"• Final withdrawal accumulation: {((total_withdrawn) / initial_investment * 100):.1f}% of initial investment"
+    )
     print()
     print("Experiment completed successfully!")
 
@@ -251,6 +268,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Experiment failed: {e}")
         import traceback
+
         traceback.print_exc()
 
 

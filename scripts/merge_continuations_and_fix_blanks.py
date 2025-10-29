@@ -4,8 +4,8 @@ and reduce excessive blank lines inside functions/classes.
 
 This targets tests/test_volatility_alpha_synthetic.py and tests/test_cpi_fetcher.py.
 """
-from pathlib import Path
 import re
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 

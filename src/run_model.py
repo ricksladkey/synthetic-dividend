@@ -110,8 +110,8 @@ Examples:
 
     # Import runtime dependencies
     try:
-        from src.data.fetcher import HistoryFetcher
         from src.algorithms.factory import build_algo_from_name
+        from src.data.fetcher import HistoryFetcher
         from src.models.backtest import run_algorithm_backtest
     except Exception as e:
         print("Failed to import runtime modules:", e)

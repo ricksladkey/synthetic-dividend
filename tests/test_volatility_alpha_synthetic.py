@@ -10,11 +10,12 @@ These tests use carefully constructed price sequences to validate:
 No external data dependencies - all prices are synthetic and deterministic.
 """
 
+import sys
 import unittest
 from datetime import date, timedelta
-import pandas as pd
-import sys
 from pathlib import Path
+
+import pandas as pd
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))

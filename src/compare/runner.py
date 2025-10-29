@@ -9,9 +9,9 @@ import sys
 from datetime import datetime
 from typing import List
 
+from src.algorithms.factory import build_algo_from_name
 from src.compare.plotter import plot_price_with_trades
 from src.data.asset import Asset
-from src.algorithms.factory import build_algo_from_name
 from src.models.backtest import run_algorithm_backtest
 
 

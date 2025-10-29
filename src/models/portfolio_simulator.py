@@ -32,8 +32,6 @@ from typing import Dict, List, Tuple
 
 import pandas as pd
 
-from src.data.fetcher import HistoryFetcher
-
 
 def simulate_portfolio(
     allocations: Dict[str, float],
@@ -72,7 +70,9 @@ def simulate_portfolio(
         ValueError: If allocations don't sum to ~1.0 or dates are invalid
     """
     if rebalance != "none":
-        raise NotImplementedError("Rebalancing not yet implemented in unified backtest. Use rebalance='none' for now.")
+        raise NotImplementedError(
+            "Rebalancing not yet implemented in unified backtest. Use rebalance='none' for now."
+        )
 
     # Use the unified portfolio backtest infrastructure
     from src.models.backtest import run_portfolio_backtest
@@ -82,16 +82,18 @@ def simulate_portfolio(
         start_date=start_date,
         end_date=end_date,
         initial_investment=initial_value,
-        algo='buy-and-hold',
+        algo="buy-and-hold",
         simple_mode=True,  # Keep it simple like the original
     )
 
     # Convert to the expected format for backward compatibility
     # Reconstruct daily_values DataFrame in the original format
-    daily_values_df = pd.DataFrame({
-        'date': list(portfolio_summary["daily_values"].keys()),
-        'total': list(portfolio_summary["daily_values"].values())
-    }).set_index('date')
+    daily_values_df = pd.DataFrame(
+        {
+            "date": list(portfolio_summary["daily_values"].keys()),
+            "total": list(portfolio_summary["daily_values"].values()),
+        }
+    ).set_index("date")
 
     result = {
         "final_value": portfolio_summary["total_final_value"],

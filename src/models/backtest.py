@@ -16,14 +16,15 @@ from src.algorithms import (
     BuyAndHoldAlgorithm,
     SyntheticDividendAlgorithm,
 )
-
-# Import utility functions
+from src.models.backtest_utils import (  # noqa: F401; (re-exported for backwards compatibility)
+    calculate_synthetic_dividend_orders,
+)
 
 # Import common types
 from src.models.model_types import Transaction
-from src.models.backtest_utils import (  # noqa: F401
-    calculate_synthetic_dividend_orders,
-)  # (re-exported for backwards compatibility)
+
+# Import utility functions
+
 
 # Type aliases for clean abstraction
 Data = pd.DataFrame  # Pure data concept with no implementation baggage
@@ -1032,6 +1033,7 @@ def run_portfolio_backtest(
 
     # Fetch data for all assets
     from src.data.fetcher import HistoryFetcher
+
     fetcher = HistoryFetcher()
     price_data = {}
     dividend_data = dividend_series or {}
@@ -1074,10 +1076,11 @@ def run_portfolio_backtest(
         initial_qty = int(asset_investment / first_price)
 
         # Determine algorithm
-        if algo is None or algo == 'buy-and-hold':
+        if algo is None or algo == "buy-and-hold":
             asset_algo = BuyAndHoldAlgorithm()
         elif isinstance(algo, str):
             from src.algorithms.factory import build_algo_from_name
+
             asset_algo = build_algo_from_name(algo)
         else:
             asset_algo = algo
@@ -1112,12 +1115,12 @@ def run_portfolio_backtest(
 
         # Store results
         asset_results[ticker] = {
-            'allocation': allocation,
-            'initial_investment': asset_investment,
-            'final_value': summary['total'],
-            'total_return': summary['total_return'] * 100,  # Convert to percentage
-            'summary': summary,
-            'transactions': transactions,
+            "allocation": allocation,
+            "initial_investment": asset_investment,
+            "final_value": summary["total"],
+            "total_return": summary["total_return"] * 100,  # Convert to percentage
+            "summary": summary,
+            "transactions": transactions,
         }
 
         # Add transactions to global list
@@ -1127,31 +1130,33 @@ def run_portfolio_backtest(
         # Note: This is simplified - in reality we'd need to align dates properly
         for d in common_dates:
             if pd.Timestamp(d) in df_common.index:
-                price = df_common.loc[pd.Timestamp(d), 'Close']
-                holdings = summary.get('holdings', initial_qty)  # Simplified
+                price = df_common.loc[pd.Timestamp(d), "Close"]
+                holdings = summary.get("holdings", initial_qty)  # Simplified
                 portfolio_daily_values[d] += holdings * price
 
     # Calculate portfolio-level metrics
-    total_final_value = sum(result['final_value'] for result in asset_results.values())
+    total_final_value = sum(result["final_value"] for result in asset_results.values())
     total_return = ((total_final_value - initial_investment) / initial_investment) * 100
 
     # Annualized return
     days = (common_dates[-1] - common_dates[0]).days
     years = days / 365.25
-    annualized_return = (((total_final_value / initial_investment) ** (1 / years)) - 1) * 100 if years > 0 else 0
+    annualized_return = (
+        (((total_final_value / initial_investment) ** (1 / years)) - 1) * 100 if years > 0 else 0
+    )
 
     # Build portfolio summary
     portfolio_summary = {
-        'total_final_value': total_final_value,
-        'total_return': total_return,
-        'annualized_return': annualized_return,
-        'initial_investment': initial_investment,
-        'start_date': common_dates[0],
-        'end_date': common_dates[-1],
-        'trading_days': len(common_dates),
-        'assets': asset_results,
-        'allocations': allocations,
-        'daily_values': portfolio_daily_values,
+        "total_final_value": total_final_value,
+        "total_return": total_return,
+        "annualized_return": annualized_return,
+        "initial_investment": initial_investment,
+        "start_date": common_dates[0],
+        "end_date": common_dates[-1],
+        "trading_days": len(common_dates),
+        "assets": asset_results,
+        "allocations": allocations,
+        "daily_values": portfolio_daily_values,
     }
 
     return all_transactions, portfolio_summary
