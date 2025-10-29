@@ -8,7 +8,6 @@ and that simple_mode provides clean behavior for unit testing.
 from datetime import date, timedelta
 
 import pandas as pd
-import pytest
 
 from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
 
@@ -206,7 +205,6 @@ def test_simple_mode_no_opportunity_cost():
     )
 
     # Test 2: WITHOUT simple_mode (normal mode with 10% opportunity cost)
-    from copy import deepcopy
 
     algo2 = SyntheticDividendAlgorithm(
         rebalance_size=9.05 / 100.0,

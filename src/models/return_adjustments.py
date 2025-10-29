@@ -8,10 +8,9 @@ This module provides utilities for calculating and displaying returns in three p
 The framework reuses the existing Asset provider system to fetch CPI and benchmark data.
 """
 
-from datetime import date, datetime
-from typing import Any, Dict, Optional
+from datetime import date
+from typing import Any, Dict
 
-import pandas as pd
 
 
 def calculate_adjusted_returns(

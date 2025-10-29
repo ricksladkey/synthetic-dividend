@@ -34,37 +34,37 @@ def create_parser() -> argparse.ArgumentParser:
 Examples:
     # Run backtest on NVDA
     synthetic-dividend-tool backtest --ticker NVDA --start 2023-01-01 --end 2024-01-01
-    
+
     # Backtest with inflation adjustment
     synthetic-dividend-tool backtest --ticker NVDA --start 2024-01-01 --end 2024-12-31 --adjust-inflation --verbose
-    
+
     # Backtest with market adjustment (vs VOO)
     synthetic-dividend-tool backtest --ticker GLD --start 2024-01-01 --end 2024-12-31 --adjust-market --verbose
-    
+
     # Complete return analysis (nominal + real + alpha)
     synthetic-dividend-tool backtest --ticker AAPL --start 2024-01-01 --end 2024-12-31 --adjust-both --verbose
-    
+
     # Auto-analyze volatility and suggest optimal SD
     synthetic-dividend-tool analyze volatility-alpha --ticker GLD --start 2024-01-01 --end 2025-01-01
-    
+
     # Run optimal rebalancing research
     synthetic-dividend-tool research optimal-rebalancing --output results.csv
-    
+
     # Compare algorithms
     synthetic-dividend-tool compare algorithms --ticker SPY --start 2023-01-01 --end 2024-01-01
-    
+
     # Batch comparison across assets
     synthetic-dividend-tool compare batch --tickers NVDA AAPL GLD --strategies sd8 sd16 --start 2024-01-01 --end 2025-01-01
-    
+
     # Analyze gap bonus
     synthetic-dividend-tool analyze gap-bonus --input research_phase1_1year_core.csv
-    
+
     # Run tests
     synthetic-dividend-tool test
-    
+
     # Calculate orders
     synthetic-dividend-tool order --ticker NVDA --holdings 1000
-    
+
 For detailed help on any command:
     synthetic-dividend-tool <command> --help
         """,
@@ -357,7 +357,6 @@ For detailed help on any command:
 
 def run_backtest(args) -> int:
     """Execute backtest command."""
-    from src.run_model import main as run_model_main
 
     # Convert args to run_model format
     sys.argv = ["run_model.py", args.ticker]
@@ -426,28 +425,28 @@ def run_compare(args) -> int:
     """Execute compare command."""
 
     if args.compare_type == "algorithms":
-        from src.compare import runner
+        pass
 
         print("Running algorithm comparison...")
         # Would integrate with src.compare.runner
         return 0
 
     elif args.compare_type == "strategies":
-        from src.compare import runner
+        pass
 
         print(f"Comparing strategies for {args.ticker}...")
         # Would integrate with strategy comparison
         return 0
 
     elif args.compare_type == "batch":
-        from src.compare import batch_comparison
+        pass
 
         print(f"Running batch comparison: {args.tickers} with {args.strategies}...")
         # Would integrate with batch_comparison
         return 0
 
     elif args.compare_type == "table":
-        from src.compare import table
+        pass
 
         print(f"Generating comparison table from {args.input}...")
         # Would integrate with src.compare.table
@@ -511,7 +510,6 @@ def run_analyze(args) -> int:
 
 def run_order(args) -> int:
     """Execute order calculation command."""
-    from src.tools import order_calculator
 
     print(f"Calculating orders for {args.ticker}...")
     print(f"Holdings: {args.holdings}")

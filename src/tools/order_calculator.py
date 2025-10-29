@@ -15,7 +15,6 @@ Output:
 
 import argparse
 import math
-from datetime import date
 from typing import Tuple
 
 from src.models.backtest import calculate_synthetic_dividend_orders
@@ -120,24 +119,24 @@ def format_order_display(
   Last Transaction:      ${last_price:.2f}  (bracket n={round(current_bracket_n)}, normalized=${current_bracket_normalized:.2f})
   Current Price:         ${current_price:.2f}
   Price Change:          ${price_change:+.2f} ({price_change_pct:+.2f}%)
-  
+
   Strategy:              sd{sdn} ({rebalance_pct:.2f}% rebalance, {profit_pct:.0f}% profit sharing)
 
 📍 BRACKET POSITIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Your position is on bracket n={round(current_bracket_n)}
-  
+
   Standard bracket ladder for sd{sdn} (normalized to 1.0):
     Bracket n={round(buy_bracket_n):4}  →  ${buy_bracket_normalized:8.2f}  [BUY TARGET]
     Bracket n={round(current_bracket_n):4}  →  ${current_bracket_normalized:8.2f}  [YOUR POSITION]
     Bracket n={round(sell_bracket_n):4}  →  ${sell_bracket_normalized:8.2f}  [SELL TARGET]
-  
+
   💡 All backtests using sd{sdn} will hit these same bracket positions,
      making your strategy deterministic and comparable.
 
 🎯 LIMIT ORDERS TO PLACE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  
+
   ╭─ BUY LIMIT ORDER ──────────────────────────────────────╮
   │                                                         │
   │  Price:     ${buy_price:.2f}                                  │
@@ -148,7 +147,7 @@ def format_order_display(
   │  Distance:  {to_buy_pct:.2f}% below current price                │
   │                                                         │
   ╰─────────────────────────────────────────────────────────╯
-  
+
   ╭─ SELL LIMIT ORDER ─────────────────────────────────────╮
   │                                                         │
   │  Price:     ${sell_price:.2f}                                 │
@@ -162,7 +161,7 @@ def format_order_display(
 
 📋 BROKER ENTRY (Copy/Paste)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  
+
   BUY  {ticker:5} {buy_qty:5} @ ${buy_price:.2f}  (LIMIT GTC)
   SELL {ticker:5} {sell_qty:5} @ ${sell_price:.2f}  (LIMIT GTC)
 
@@ -183,10 +182,10 @@ def main():
 Examples:
   # Basic calculation
   python -m src.tools.order_calculator --ticker NVDA --holdings 1000 --last-price 120.50 --current-price 125.30 --sdn 8 --profit 50
-  
+
   # Different strategy
   python -m src.tools.order_calculator --ticker BTC-USD --holdings 0.5 --last-price 45000 --current-price 46500 --sdn 4 --profit 75
-  
+
   # Quick recalculation after a trade
   python -m src.tools.order_calculator --ticker MSTR --holdings 250 --last-price 380.50 --current-price 385.20 --sdn 6 --profit 50
         """,

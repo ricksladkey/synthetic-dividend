@@ -23,7 +23,6 @@ class BuyAndHoldAlgorithm(AlgorithmBase):
 
     def on_new_holdings(self, holdings: int, current_price: float) -> None:
         """No-op: no initialization needed."""
-        pass
 
     def on_day(
         self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame
@@ -33,4 +32,3 @@ class BuyAndHoldAlgorithm(AlgorithmBase):
 
     def on_end_holding(self) -> None:
         """No-op: no cleanup needed."""
-        pass

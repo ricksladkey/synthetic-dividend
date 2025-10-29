@@ -26,17 +26,16 @@ Special case: MSTR "unrealized volatility alpha"
     - Test: Backtest from peak, measure vs buy-and-hold drawdown
 """
 
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict
 
 import pandas as pd
 
 from src.algorithms.factory import build_algo_from_name
-from src.data.cpi_fetcher import CPIFetcher
 from src.data.fetcher import HistoryFetcher
 from src.models.backtest import run_algorithm_backtest
-from src.models.retirement_backtest import compare_withdrawal_strategies, run_retirement_backtest
+from src.models.retirement_backtest import run_retirement_backtest
 
 # Experiment parameters
 INITIAL_INVESTMENT = 1_000_000  # $1M portfolio

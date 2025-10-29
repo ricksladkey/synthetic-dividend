@@ -13,8 +13,7 @@ Design Philosophy:
 
 from dataclasses import dataclass, field
 from datetime import date
-from decimal import Decimal
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 
 @dataclass

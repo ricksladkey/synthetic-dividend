@@ -2,7 +2,6 @@
 
 from datetime import date
 
-import numpy as np
 import pytest
 
 from src.data.asset import Asset

@@ -13,7 +13,7 @@ Design Philosophy:
 
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from src.models.holding import Holding, Transaction
 

@@ -30,12 +30,10 @@ class LotSelector(ABC):
         Yields:
             Open BUY transactions in the order they should be sold
         """
-        pass
 
     @abstractmethod
     def name(self) -> str:
         """Return the name of this strategy (e.g., 'FIFO', 'LIFO')."""
-        pass
 
 
 class FIFOSelector(LotSelector):
