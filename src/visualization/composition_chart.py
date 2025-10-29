@@ -29,7 +29,6 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.patches import Patch
 
 # Asset type color schemes
 ASSET_COLORS = {

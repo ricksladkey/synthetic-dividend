@@ -10,7 +10,6 @@ Example: With 9.05% brackets (sd8):
 """
 
 from datetime import date, timedelta
-from typing import List
 
 import pandas as pd
 

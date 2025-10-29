@@ -5,7 +5,6 @@ Test allow_margin parameter: simple bank vs strict whole account modes.
 from datetime import date
 
 import pandas as pd
-import pytest
 
 from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
 

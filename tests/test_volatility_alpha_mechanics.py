@@ -8,7 +8,6 @@ buying back shares during dips and re-selling on recovery.
 from datetime import date, timedelta
 
 import pandas as pd
-import pytest
 
 from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
 

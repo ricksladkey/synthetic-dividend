@@ -12,7 +12,7 @@ Output: CSV table with all metrics
 import csv
 import math
 from datetime import date, timedelta
-from typing import Dict, List
+from typing import Dict
 
 from src.data.fetcher import HistoryFetcher
 from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest

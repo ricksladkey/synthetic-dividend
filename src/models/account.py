@@ -14,9 +14,8 @@ Design Philosophy:
 
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-from src.models.holding import Transaction
 from src.models.portfolio import Portfolio
 
 

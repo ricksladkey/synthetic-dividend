@@ -31,7 +31,6 @@ class AlgorithmBase(ABC):
             holdings: Initial share count
             current_price: Price at initial purchase
         """
-        pass
 
     @abstractmethod
     def on_day(
@@ -52,12 +51,10 @@ class AlgorithmBase(ABC):
         Returns:
             List of transactions executed on this day (may be empty if no triggers)
         """
-        pass
 
     @abstractmethod
     def on_end_holding(self) -> None:
         """Cleanup/reporting after backtest completes."""
-        pass
 
     def on_withdrawal(
         self,
