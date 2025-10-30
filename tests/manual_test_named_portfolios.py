@@ -150,8 +150,10 @@ def test_all_available_portfolios():
 if __name__ == "__main__":
     import os
     
-    # Change to repo root if needed
-    os.chdir('/home/runner/work/synthetic-dividend/synthetic-dividend')
+    # Change to repo root (script should be run from tests/ or repo root)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(script_dir)  # Go up one level from tests/
+    os.chdir(repo_root)
     
     print("\n")
     print("╔" + "=" * 68 + "╗")
