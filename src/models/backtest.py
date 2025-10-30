@@ -16,6 +16,7 @@ from src.algorithms import (
     BuyAndHoldAlgorithm,
     SyntheticDividendAlgorithm,
 )
+# PortfolioAlgorithmBase imported locally in run_portfolio_backtest_v2
 from src.models.backtest_utils import (  # noqa: F401; (re-exported for backwards compatibility)
     calculate_synthetic_dividend_orders,
 )
@@ -1045,7 +1046,7 @@ def run_portfolio_backtest(
         if df is None or df.empty:
             raise ValueError(f"No data available for {ticker}")
         price_data[ticker] = df
-        print(f"✓ ({len(df)} days)")
+        print(f"OK ({len(df)} days)")
 
     # Find common date range
     all_dates = set()
@@ -1157,6 +1158,254 @@ def run_portfolio_backtest(
         "assets": asset_results,
         "allocations": allocations,
         "daily_values": portfolio_daily_values,
+    }
+
+    return all_transactions, portfolio_summary
+
+
+def run_portfolio_backtest_v2(
+    allocations: Dict[str, float],
+    start_date: date,
+    end_date: date,
+    portfolio_algo: "PortfolioAlgorithmBase",  # type: ignore  # Forward reference
+    initial_investment: float = 1_000_000.0,
+    allow_margin: bool = True,
+) -> Tuple[List[Transaction], Dict[str, Any]]:
+    """Execute portfolio backtest with shared cash pool and portfolio-level algorithm.
+
+    This is the new unified backtest runner that implements shared bank architecture.
+    Unlike run_portfolio_backtest() which runs each asset independently,
+    this function:
+    - Uses a single shared cash pool across all assets
+    - Calls portfolio algorithm once per day with full portfolio state
+    - Executes transactions sequentially against shared bank
+
+    Args:
+        allocations: Dict mapping ticker → target allocation (must sum to 1.0)
+        start_date: Backtest start date
+        end_date: Backtest end date
+        portfolio_algo: Portfolio algorithm implementing PortfolioAlgorithmBase
+        initial_investment: Total starting capital
+        allow_margin: Whether to allow negative bank balance
+
+    Returns:
+        Tuple of (all_transactions, portfolio_summary)
+    """
+    from src.algorithms import PortfolioAlgorithmBase
+    from src.data.fetcher import HistoryFetcher
+    from src.models.model_types import AssetState
+
+    # Validate allocations
+    total_allocation = sum(allocations.values())
+    if abs(total_allocation - 1.0) > 0.01:
+        raise ValueError(f"Allocations must sum to 1.0, got {total_allocation:.3f}")
+
+    # Validate portfolio_algo type
+    if not isinstance(portfolio_algo, PortfolioAlgorithmBase):
+        raise TypeError(
+            f"portfolio_algo must be PortfolioAlgorithmBase, got {type(portfolio_algo).__name__}"
+        )
+
+    # Fetch price data for all assets
+    fetcher = HistoryFetcher()
+    price_data: Dict[str, pd.DataFrame] = {}
+
+    print(f"Fetching data for {len(allocations)} assets...")
+    for ticker in allocations.keys():
+        print(f"  - {ticker}...", end=" ")
+        df = fetcher.get_history(ticker, start_date, end_date)
+        if df is None or df.empty:
+            raise ValueError(f"No data available for {ticker}")
+        price_data[ticker] = df
+        print(f"OK ({len(df)} days)")
+
+    # Find common trading dates
+    all_dates = set()
+    for df in price_data.values():
+        dates = set(pd.to_datetime(df.index).date)
+        all_dates = all_dates.intersection(dates) if all_dates else dates
+
+    common_dates = sorted([d for d in all_dates if start_date <= d <= end_date])
+    if not common_dates:
+        raise ValueError("No common trading dates across all assets")
+
+    print(
+        f"Common trading days: {len(common_dates)} ({common_dates[0]} to {common_dates[-1]})"
+    )
+
+    # Index price data by date for fast lookup
+    price_data_indexed: Dict[str, pd.DataFrame] = {}
+    for ticker, df in price_data.items():
+        df_copy = df.copy()
+        df_copy.index = pd.to_datetime(df_copy.index).date
+        price_data_indexed[ticker] = df_copy
+
+    # Initialize portfolio state
+    shared_bank = initial_investment
+    holdings: Dict[str, int] = {}
+    all_transactions: List[Transaction] = []
+
+    # Initial purchase
+    print("\nInitial purchase:")
+    for ticker, alloc_pct in allocations.items():
+        first_price = price_data_indexed[ticker].loc[common_dates[0], "Close"].item()
+        qty = int((initial_investment * alloc_pct) / first_price)
+        cost = qty * first_price
+        holdings[ticker] = qty
+        shared_bank -= cost
+        print(f"  {ticker}: {qty} shares × ${first_price:.2f} = ${cost:,.2f}")
+
+        all_transactions.append(
+            Transaction(
+                transaction_date=common_dates[0],
+                action="BUY",
+                qty=qty,
+                price=first_price,
+                ticker=ticker,
+                notes="Initial purchase",
+            )
+        )
+
+    print(f"Initial bank balance: ${shared_bank:,.2f}\n")
+
+    # Track daily portfolio values
+    daily_portfolio_values: Dict[date, float] = {}
+    daily_bank_values: Dict[date, float] = {}
+
+    # Main backtest loop
+    for current_date in common_dates:
+        # Build current asset states
+        assets: Dict[str, AssetState] = {}
+        for ticker in allocations.keys():
+            current_price = price_data_indexed[ticker].loc[current_date, "Close"].item()
+            assets[ticker] = AssetState(
+                ticker=ticker, holdings=holdings[ticker], price=current_price
+            )
+
+        # Build today's price data (OHLC)
+        prices: Dict[str, pd.Series] = {}
+        for ticker in allocations.keys():
+            prices[ticker] = price_data_indexed[ticker].loc[current_date]
+
+        # Build history (all data up to yesterday)
+        history: Dict[str, pd.DataFrame] = {}
+        for ticker in allocations.keys():
+            history[ticker] = price_data_indexed[ticker][
+                price_data_indexed[ticker].index < current_date
+            ]
+
+        # Ask portfolio algorithm for transactions
+        transactions_by_ticker = portfolio_algo.on_portfolio_day(
+            date_=current_date,
+            assets=assets,
+            bank=shared_bank,
+            prices=prices,
+            history=history,
+        )
+
+        # Execute all transactions (update holdings and shared bank)
+        for ticker, txns in transactions_by_ticker.items():
+            for tx in txns:
+                # Fill in execution details
+                tx.transaction_date = current_date
+                tx.ticker = ticker
+                if tx.price == 0.0:
+                    tx.price = assets[ticker].price
+
+                if tx.action.upper() == "BUY":
+                    cost = tx.qty * tx.price
+                    if shared_bank >= cost or allow_margin:
+                        holdings[ticker] += tx.qty
+                        shared_bank -= cost
+                        all_transactions.append(tx)
+                    else:
+                        # Insufficient cash - skip transaction
+                        skipped_tx = Transaction(
+                            transaction_date=current_date,
+                            action="SKIP BUY",
+                            qty=tx.qty,
+                            price=tx.price,
+                            ticker=ticker,
+                            notes=f"{tx.notes}, insufficient cash: ${shared_bank:.2f} < ${cost:.2f}",
+                        )
+                        all_transactions.append(skipped_tx)
+
+                elif tx.action.upper() == "SELL":
+                    if holdings[ticker] >= tx.qty:
+                        proceeds = tx.qty * tx.price
+                        holdings[ticker] -= tx.qty
+                        shared_bank += proceeds
+                        all_transactions.append(tx)
+                    else:
+                        # Insufficient holdings - skip transaction
+                        skipped_tx = Transaction(
+                            transaction_date=current_date,
+                            action="SKIP SELL",
+                            qty=tx.qty,
+                            price=tx.price,
+                            ticker=ticker,
+                            notes=f"{tx.notes}, insufficient holdings: {holdings[ticker]} < {tx.qty}",
+                        )
+                        all_transactions.append(skipped_tx)
+
+        # Record daily portfolio value
+        total_asset_value = sum(holdings[t] * assets[t].price for t in allocations.keys())
+        daily_portfolio_values[current_date] = shared_bank + total_asset_value
+        daily_bank_values[current_date] = shared_bank
+
+    # Calculate final portfolio metrics
+    final_date = common_dates[-1]
+    final_asset_value = sum(
+        holdings[ticker] * price_data_indexed[ticker].loc[final_date, "Close"].item()
+        for ticker in allocations.keys()
+    )
+    final_total_value = shared_bank + final_asset_value
+
+    # Returns
+    total_return_pct = ((final_total_value - initial_investment) / initial_investment) * 100
+    days = (final_date - common_dates[0]).days
+    years = days / 365.25
+    annualized_return_pct = (
+        (((final_total_value / initial_investment) ** (1 / years)) - 1) * 100
+        if years > 0
+        else 0
+    )
+
+    # Build per-asset summaries
+    asset_results = {}
+    for ticker, alloc_pct in allocations.items():
+        final_price = price_data_indexed[ticker].loc[final_date, "Close"].item()
+        final_value = holdings[ticker] * final_price
+        initial_value = initial_investment * alloc_pct
+
+        asset_results[ticker] = {
+            "allocation": alloc_pct,
+            "initial_investment": initial_value,
+            "final_holdings": holdings[ticker],
+            "final_price": final_price,
+            "final_value": final_value,
+            "total_return": ((final_value - initial_value) / initial_value) * 100
+            if initial_value > 0
+            else 0,
+        }
+
+    # Build portfolio summary
+    portfolio_summary = {
+        "total_final_value": final_total_value,
+        "final_bank": shared_bank,
+        "final_asset_value": final_asset_value,
+        "total_return": total_return_pct,
+        "annualized_return": annualized_return_pct,
+        "initial_investment": initial_investment,
+        "start_date": common_dates[0],
+        "end_date": final_date,
+        "trading_days": len(common_dates),
+        "assets": asset_results,
+        "allocations": allocations,
+        "daily_values": daily_portfolio_values,
+        "daily_bank_values": daily_bank_values,
+        "transaction_count": len([tx for tx in all_transactions if "SKIP" not in tx.action]),
+        "skipped_count": len([tx for tx in all_transactions if "SKIP" in tx.action]),
     }
 
     return all_transactions, portfolio_summary
