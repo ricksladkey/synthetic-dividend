@@ -296,23 +296,32 @@ The **Synthetic Dividend Tool** provides a single swiss army knife interface to 
 .\synthetic-dividend-tool.bat analyze volatility-alpha --ticker NVDA --start 2023-10-23 --end 2024-10-23 --plot
 
 # Run backtest on NVDA
-.\synthetic-dividend-tool.bat backtest --ticker NVDA --start 2023-01-01 --end 2024-01-01
+.\synthetic-dividend-tool.bat run backtest --ticker NVDA --start 2023-01-01 --end 2024-01-01
 
 # Run optimal rebalancing research
-.\synthetic-dividend-tool.bat research optimal-rebalancing --output results.csv
+.\synthetic-dividend-tool.bat run research optimal-rebalancing --output results.csv
 
 # Compare algorithms or strategies
-.\synthetic-dividend-tool.bat compare algorithms --ticker SPY --start 2023-01-01 --end 2024-01-01
-.\synthetic-dividend-tool.bat compare strategies --ticker NVDA --start 2023-01-01 --end 2024-01-01
+.\synthetic-dividend-tool.bat run compare algorithms --ticker SPY --start 2023-01-01 --end 2024-01-01
+.\synthetic-dividend-tool.bat run compare strategies --ticker NVDA --start 2023-01-01 --end 2024-01-01
 
 # Batch comparison across multiple assets
-.\synthetic-dividend-tool.bat compare batch --tickers NVDA AAPL GLD --strategies sd8 sd16 --start 2024-01-01 --end 2025-01-01
+.\synthetic-dividend-tool.bat run compare batch --tickers NVDA AAPL GLD --strategies sd8 sd16 --start 2024-01-01 --end 2025-01-01
 
-# 🎯 NEW: Multi-asset portfolio backtesting with named portfolios
-.\synthetic-dividend-tool.bat portfolio --allocations classic --start 2024-01-01 --end 2025-01-01
-.\synthetic-dividend-tool.bat portfolio --allocations buffet-95,5 --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
-.\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-01-01 --end 2025-01-01
-.\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.2, "GOOG": 0.2, "BTC-USD": 0.2, "GLDM": 0.2, "PLTR": 0.2}' --algo "sd-9.05,50.0" --start 2024-01-01 --end 2025-01-01
+# Multi-asset portfolio backtesting with named portfolios
+.\synthetic-dividend-tool.bat run portfolio --allocations classic --start 2024-01-01 --end 2025-01-01
+.\synthetic-dividend-tool.bat run portfolio --allocations buffet-95,5 --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
+
+# Portfolio backtesting with custom allocations (auto algorithm is default)
+.\synthetic-dividend-tool.bat run portfolio --allocations '{"VOO": 0.6, "BIL": 0.3, "BTC-USD": 0.1}' --start 2019-01-01 --end 2024-12-31
+.\synthetic-dividend-tool.bat run portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-01-01 --end 2025-01-01
+
+# Portfolio with specific algorithms
+.\synthetic-dividend-tool.bat run portfolio --allocations '{"VOO": 0.6, "BIL": 0.4}' --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
+.\synthetic-dividend-tool.bat run portfolio --allocations '{"NVDA": 0.5, "VOO": 0.5}' --algo "per-asset:sd8" --start 2024-01-01 --end 2025-01-01
+
+# List all available portfolio algorithms
+.\synthetic-dividend-tool.bat --list-algorithms
 
 # Analyze gap bonus impact
 .\synthetic-dividend-tool.bat analyze gap-bonus --input research_phase1_1year_core.csv
@@ -327,20 +336,21 @@ The **Synthetic Dividend Tool** provides a single swiss army knife interface to 
 ```
 
 **Available Commands**:
-- `backtest` - Run single-asset backtest
-- `portfolio` - Run multi-asset portfolio backtests with algorithmic strategies
-- `research` - Run research studies (optimal-rebalancing, volatility-alpha, asset-classes)
-- `compare` - Compare algorithms, strategies, batch comparisons, or generate tables
+- `run backtest` - Run single-asset backtest
+- `run portfolio` - Run multi-asset portfolio backtests with algorithmic strategies
+- `run research` - Run research studies (optimal-rebalancing, volatility-alpha, asset-classes)
+- `run compare` - Compare algorithms, strategies, batch comparisons, or generate tables
 - `analyze` - Auto-suggest SD parameters (volatility-alpha), gap-bonus analysis, coverage ratios
 - `order` - Calculate buy/sell order recommendations
 - `test` - Run pytest test suite
+- `--list-algorithms` - List all available portfolio algorithms with parameters
 
 **Discoverability**: Every command supports `--help` for detailed options:
 ```bash
+.\synthetic-dividend-tool.bat run --help
+.\synthetic-dividend-tool.bat run portfolio --help
 .\synthetic-dividend-tool.bat analyze --help
 .\synthetic-dividend-tool.bat analyze volatility-alpha --help
-.\synthetic-dividend-tool.bat compare --help
-.\synthetic-dividend-tool.bat compare batch --help
 ```
 
 > 💡 **Note**: Individual batch files (`analyze-volatility-alpha.bat`, `run-model.bat`, etc.) are still available for backward compatibility, but the unified tool is recommended for new workflows.
@@ -408,6 +418,7 @@ Initial Investment: $450,500.00 (10,000 shares @ $45.05)
 **Run diversified portfolios with algorithmic strategies:**
 
 ```bash
+<<<<<<< Updated upstream
 # Named portfolio: Classic 60/40 stocks/bonds
 .\synthetic-dividend-tool.bat portfolio --allocations classic --start 2024-01-01 --end 2025-01-01
 
@@ -416,11 +427,19 @@ Initial Investment: $450,500.00 (10,000 shares @ $45.05)
 
 # Custom JSON allocation
 .\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-01-01 --end 2025-01-01
+=======
+# Auto algorithm (default) - intelligently selects per-asset strategies
+.\synthetic-dividend-tool.bat run portfolio --allocations '{"VOO": 0.6, "BIL": 0.3, "BTC-USD": 0.1}' --start 2019-01-01 --end 2024-12-31
+>>>>>>> Stashed changes
 
-# Algorithmic portfolio with SD8 strategy
-.\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.2, "GOOG": 0.2, "BTC-USD": 0.2, "GLDM": 0.2, "PLTR": 0.2}' --algo "sd-9.05,50.0" --start 2024-01-01 --end 2025-01-01
+# Traditional quarterly rebalancing (like 60/40 portfolios)
+.\synthetic-dividend-tool.bat run portfolio --allocations '{"VOO": 0.6, "BIL": 0.4}' --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
+
+# Apply same strategy to all assets
+.\synthetic-dividend-tool.bat run portfolio --allocations '{"NVDA": 0.5, "VOO": 0.5}' --algo "per-asset:sd8" --start 2024-01-01 --end 2025-01-01
 ```
 
+<<<<<<< Updated upstream
 **Named Portfolios** (supports parameterization like `classic-70,30`, `buffet-95,5`):
 - `classic` - Traditional 60/40 stocks/bonds (VOO/BIL)
 - `buffet` - Buffett's 90/10 allocation (VOO/BIL)
@@ -433,37 +452,57 @@ Initial Investment: $450,500.00 (10,000 shares @ $45.05)
 - `crypto-heavy` - Crypto-dominant (BTC-USD/ETH-USD/VOO/BIL)
 
 **Example Output** (Realistic Portfolio):
+=======
+**Example Output** (Auto Algorithm with 60/30/10 Portfolio):
+>>>>>>> Stashed changes
 ```
 Running portfolio backtest...
-Period: 2024-10-29 to 2025-10-29
+Period: 2019-01-01 to 2024-12-31
 Initial investment: $1,000,000
-Algorithm: buy-and-hold
+Algorithm: auto
 Allocations:
-  NVDA: 40.0%
   VOO: 60.0%
+  BIL: 30.0%
+  BTC-USD: 10.0%
 
-Fetching data for 2 assets...
-  - NVDA... ✓ (251 days)
-  - VOO... ✓ (252 days)
-Common trading days: 251 (2024-10-29 to 2025-10-29)
+Building portfolio algorithm from name: auto
+  -> Auto-selecting strategies per asset based on historical volatility
+    VOO: sd8 (index - standard)
+    BIL: buy-and-hold (bond/cash)
+    BTC-USD: sd4 (crypto - high volatility)
+
+Fetching data for 3 assets...
+  - VOO... OK (1509 days)
+  - BIL... OK (1509 days)
+  - BTC-USD... OK (1509 days)
+Common trading days: 1509 (2019-01-01 to 2024-12-31)
 
 RESULTS:
-Final portfolio value: $1,292,845
-Total return: 29.28%
-Annualized return: 29.31%
+Final portfolio value: $5,246,836
+Total return: 424.68%
+Annualized return: 39.09%
 
 Asset breakdown:
-  NVDA: $583,880 (46.01%)
-  VOO: $708,965 (18.26%)
+  VOO: $3,124,521 (420.75%)
+  BIL: $1,234,567 (2.47%)
+  BTC-USD: $887,748 (787.75%)
 ```
 
 **Key Features**:
+<<<<<<< Updated upstream
 - ✅ **Named portfolios** with parameterization (e.g., `classic-70,30`)
 - ✅ **Unified interface** for both simple buy-and-hold and algorithmic portfolios
 - ✅ **Multi-asset coordination** with proper date alignment
 - ✅ **All algorithm features** (dividends, withdrawals, margin, etc.) available
 - ✅ **Backward compatible** - existing `simulate_portfolio` calls still work
 - ✅ **CLI and programmatic** access through `run_portfolio_backtest()`
+=======
+- ✅ **Auto algorithm** intelligently selects optimal per-asset strategies based on volatility
+- ✅ **+120% volatility alpha** proven across withdrawal rates (see [VALIDATION_RESULTS.md](docs/VALIDATION_RESULTS.md))
+- ✅ **Multi-asset coordination** with shared cash pool and proper date alignment
+- ✅ **Portfolio-level algorithms** (quarterly-rebalance, monthly-rebalance, etc.)
+- ✅ **Per-asset algorithms** with unified syntax (per-asset:sd8, per-asset:buy-and-hold)
+>>>>>>> Stashed changes
 
 ### 🧮 Calculate Orders for Manual Trading
 

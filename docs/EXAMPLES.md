@@ -206,23 +206,46 @@ The **unified portfolio backtesting** system provides a single interface for bot
 - ✅ **Backward compatible** with existing `simulate_portfolio` calls
 - ✅ **CLI and programmatic** access
 
+### Available Portfolio Algorithms
+
+To see all available portfolio algorithms:
+```bash
+.\synthetic-dividend-tool.bat --list-algorithms
+```
+
+**Portfolio-level algorithms** (manage entire portfolio as a unit):
+- `quarterly-rebalance` - Rebalance to target allocations quarterly (Mar/Jun/Sep/Dec)
+- `monthly-rebalance` - Rebalance monthly
+- `annual-rebalance` - Rebalance annually
+
+**Per-asset algorithms** (apply to each asset with shared cash pool):
+- `per-asset:sd4` - Apply SD4 to all assets (18.92% trigger, high volatility)
+- `per-asset:sd8` - Apply SD8 to all assets (9.05% trigger, balanced)
+- `per-asset:buy-and-hold` - Buy and hold all assets
+- `auto` - **Auto-select** optimal strategy per asset (default, recommended)
+
 ### Command Format
 
 **Unified CLI Tool** (Recommended):
 ```bash
-.\synthetic-dividend-tool.bat portfolio --allocations '{"TICKER1": WEIGHT1, "TICKER2": WEIGHT2}' --start START_DATE --end END_DATE [OPTIONS]
+.\synthetic-dividend-tool.bat run portfolio --allocations '{"TICKER1": WEIGHT1, "TICKER2": WEIGHT2}' --start START_DATE --end END_DATE [OPTIONS]
 ```
 
 **Python API**:
 ```python
-from src.models.backtest import run_portfolio_backtest
+from src.models.backtest import run_portfolio_backtest_v2
+from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
 
-transactions, summary = run_portfolio_backtest(
+# Create portfolio algorithm
+algo = build_portfolio_algo_from_name('auto', allocations={'NVDA': 0.4, 'VOO': 0.6})
+
+# Run backtest
+transactions, summary = run_portfolio_backtest_v2(
     allocations={'NVDA': 0.4, 'VOO': 0.6},
     start_date=date(2024, 1, 1),
     end_date=date(2025, 1, 1),
-    initial_investment=1_000_000,
-    algo='buy-and-hold'  # or 'sd-9.05,50.0' for algorithmic
+    portfolio_algo=algo,
+    initial_investment=1_000_000
 )
 ```
 
@@ -232,7 +255,7 @@ transactions, summary = run_portfolio_backtest(
 
 **Command**:
 ```bash
-.\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-10-29 --end 2025-10-29 --initial-investment 1000000
+.\synthetic-dividend-tool.bat run portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --algo "per-asset:buy-and-hold" --start 2024-10-29 --end 2025-10-29 --initial-investment 1000000
 ```
 
 **Output**:
@@ -269,7 +292,7 @@ This demonstrates the unified portfolio backtesting system working with a simple
 
 **Command**:
 ```bash
-.\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.2, "GOOG": 0.2, "BTC-USD": 0.2, "GLDM": 0.2, "PLTR": 0.2}' --algo "sd-9.05,50.0" --start 2024-01-01 --end 2025-01-01 --initial-investment 1000000
+.\synthetic-dividend-tool.bat run portfolio --allocations '{"NVDA": 0.2, "GOOG": 0.2, "BTC-USD": 0.2, "GLDM": 0.2, "PLTR": 0.2}' --algo "per-asset:sd8" --start 2024-01-01 --end 2025-01-01 --initial-investment 1000000
 ```
 
 **Output**:
@@ -456,7 +479,7 @@ Run individual backtests with specific parameters.
 
 **Unified CLI Tool** (Recommended):
 ```bash
-.\synthetic-dividend-tool.bat backtest --ticker TICKER --start START_DATE --end END_DATE [OPTIONS]
+.\synthetic-dividend-tool.bat run backtest --ticker TICKER --start START_DATE --end END_DATE [OPTIONS]
 ```
 
 **Legacy Python Module**:
@@ -608,7 +631,7 @@ Compare multiple strategies or assets simultaneously.
 **Unified CLI Tool**:
 ```bash
 # Run comprehensive analysis (12 assets × 4 SD parameters)
-.\synthetic-dividend-tool.bat research optimal-rebalancing --output results.csv
+.\synthetic-dividend-tool.bat run research optimal-rebalancing --output results.csv
 ```
 
 **Legacy**:
@@ -633,7 +656,7 @@ SD parameters tested: SD4, SD6, SD8, SD10
 **Unified CLI Tool**:
 ```bash
 # Compare 3 assets with 2 strategies each
-.\synthetic-dividend-tool.bat compare batch --tickers NVDA AAPL GLD --strategies sd8 sd16 --start 01/01/2024 --end 12/31/2024
+.\synthetic-dividend-tool.bat run compare batch --tickers NVDA AAPL GLD --strategies sd8 sd16 --start 01/01/2024 --end 12/31/2024
 ```
 
 **Legacy**:
@@ -1150,17 +1173,23 @@ Benefits:
 
 **Unified CLI Tool** (Recommended):
 ```bash
+# List all available algorithms
+.\synthetic-dividend-tool.bat --list-algorithms
+
 # Auto-analyze any asset (auto-suggest SD parameter)
 .\synthetic-dividend-tool.bat analyze volatility-alpha --ticker TICKER --start START --end END
 
 # Basic backtest
-.\synthetic-dividend-tool.bat backtest --ticker TICKER --start START --end END --sd-n 8 --initial-qty 100
+.\synthetic-dividend-tool.bat run backtest --ticker TICKER --start START --end END --sd-n 8 --initial-qty 100
+
+# Portfolio backtest
+.\synthetic-dividend-tool.bat run portfolio --allocations '{"VOO": 0.6, "BIL": 0.4}' --algo auto --start START --end END
 
 # Batch research
-.\synthetic-dividend-tool.bat research optimal-rebalancing --output results.csv
+.\synthetic-dividend-tool.bat run research optimal-rebalancing --output results.csv
 
 # Batch comparison
-.\synthetic-dividend-tool.bat compare batch --tickers NVDA AAPL --strategies sd8 sd16 --start START --end END
+.\synthetic-dividend-tool.bat run compare batch --tickers NVDA AAPL --strategies sd8 sd16 --start START --end END
 
 # Run tests
 .\synthetic-dividend-tool.bat test
