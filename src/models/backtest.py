@@ -1268,6 +1268,18 @@ def run_portfolio_backtest_v2(
 
     print(f"Initial bank balance: ${shared_bank:,.2f}\n")
 
+    # Initialize per-asset algorithms (if using PerAssetPortfolioAlgorithm)
+    from src.algorithms import PerAssetPortfolioAlgorithm
+
+    if isinstance(portfolio_algo, PerAssetPortfolioAlgorithm):
+        print("Initializing per-asset algorithms...")
+        for ticker, algo in portfolio_algo.strategies.items():
+            if hasattr(algo, "on_new_holdings"):
+                first_price = price_data_indexed[ticker].loc[common_dates[0], "Close"].item()
+                algo.on_new_holdings(holdings[ticker], first_price)
+                print(f"  {ticker}: initialized with {holdings[ticker]} shares @ ${first_price:.2f}")
+        print()
+
     # Track daily portfolio values
     daily_portfolio_values: Dict[date, float] = {}
     daily_bank_values: Dict[date, float] = {}
