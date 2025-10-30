@@ -12,6 +12,10 @@ Available portfolio algorithms:
 - PortfolioAlgorithmBase: Abstract base class for portfolio-level algorithms
 - PerAssetPortfolioAlgorithm: Adapter for running per-asset algorithms in portfolio
 - QuarterlyRebalanceAlgorithm: Traditional quarterly rebalancing
+
+Portfolio utilities:
+- parse_portfolio_name: Parse named portfolio strings into allocations
+  (e.g., 'classic', 'buffet-90,10', 'classic-plus-crypto-60,30,10')
 """
 
 from .base import AlgorithmBase
@@ -19,6 +23,7 @@ from .buy_and_hold import BuyAndHoldAlgorithm
 from .factory import build_algo_from_name
 from .per_asset_portfolio import PerAssetPortfolioAlgorithm
 from .portfolio_base import PortfolioAlgorithmBase
+from .portfolio_definitions import parse_portfolio_name
 from .portfolio_factory import build_portfolio_algo_from_name
 from .quarterly_rebalance import QuarterlyRebalanceAlgorithm
 from .synthetic_dividend import SyntheticDividendAlgorithm
@@ -32,4 +37,5 @@ __all__ = [
     "QuarterlyRebalanceAlgorithm",
     "build_algo_from_name",
     "build_portfolio_algo_from_name",
+    "parse_portfolio_name",
 ]

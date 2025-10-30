@@ -400,8 +400,29 @@ def run_portfolio(args) -> int:
     from src.models.backtest import run_portfolio_backtest
 
     try:
-        # Parse allocations JSON
-        allocations = json.loads(args.allocations)
+        # Parse allocations: try as named portfolio first, then JSON
+        allocations_str = args.allocations.strip()
+        
+        # Try to parse as JSON first (starts with '{')
+        if allocations_str.startswith('{'):
+            try:
+                allocations = json.loads(allocations_str)
+                print(f"Parsed allocations from JSON")
+            except json.JSONDecodeError:
+                print(f"Error: Invalid JSON format for allocations")
+                return 1
+        else:
+            # Try as named portfolio
+            try:
+                allocations = parse_portfolio_name(allocations_str)
+            except ValueError as e:
+                # If not a valid portfolio name, try JSON as fallback
+                try:
+                    allocations = json.loads(allocations_str)
+                    print(f"Parsed allocations from JSON")
+                except json.JSONDecodeError:
+                    print(f"Error: {e}")
+                    return 1
 
         # Validate allocations sum to ~1.0
         total_alloc = sum(allocations.values())
