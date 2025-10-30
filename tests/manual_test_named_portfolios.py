@@ -3,7 +3,15 @@
 Manual test script to demonstrate named portfolio CLI integration.
 
 This script shows how the named portfolio feature integrates with the CLI tool.
-It doesn't require external dependencies and can be run to verify the integration.
+It doesn't require external dependencies (pandas, etc.) and can be run to verify
+the integration works correctly.
+
+NOTE: This is a manual test/demonstration script, not part of the automated test suite.
+It uses exec() to load modules without requiring dependency installation. This is
+acceptable for test-only code that won't be run in production.
+
+Usage:
+    python tests/manual_test_named_portfolios.py
 """
 
 import sys
@@ -151,6 +159,7 @@ if __name__ == "__main__":
     import os
     
     # Change to repo root (script should be run from tests/ or repo root)
+    # This script is located in tests/ directory, so go up one level
     script_dir = os.path.dirname(os.path.abspath(__file__))
     repo_root = os.path.dirname(script_dir)  # Go up one level from tests/
     os.chdir(repo_root)
