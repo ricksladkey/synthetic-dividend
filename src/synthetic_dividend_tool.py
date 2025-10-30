@@ -95,8 +95,8 @@ For detailed help on any command:
     )
     portfolio_parser.add_argument(
         "--algo",
-        default="buy-and-hold",
-        help='Algorithm to use: "buy-and-hold", "sd-9.05,50.0", etc. (default: buy-and-hold)',
+        default="auto",
+        help='Algorithm: "auto" (default), "quarterly-rebalance", "per-asset:sd8", etc.',
     )
     portfolio_parser.add_argument("--output", help="Output file for detailed results (JSON)")
     portfolio_parser.add_argument("--verbose", action="store_true", help="Verbose output")
@@ -388,7 +388,8 @@ def run_portfolio(args) -> int:
     import json
     from datetime import datetime
 
-    from src.models.backtest import run_portfolio_backtest
+    from src.algorithms import build_portfolio_algo_from_name
+    from src.models.backtest import run_portfolio_backtest_v2
 
     try:
         # Parse allocations JSON
@@ -413,25 +414,32 @@ def run_portfolio(args) -> int:
             print(f"  {ticker}: {alloc*100:.1f}%")
         print()
 
+        # Build portfolio algorithm from notation
+        portfolio_algo = build_portfolio_algo_from_name(args.algo, allocations)
+
         # Run the backtest
-        transactions, summary = run_portfolio_backtest(
+        transactions, summary = run_portfolio_backtest_v2(
             allocations=allocations,
             start_date=start_date,
             end_date=end_date,
+            portfolio_algo=portfolio_algo,
             initial_investment=args.initial_investment,
-            algo=args.algo,
-            simple_mode=True,  # Keep it simple for CLI
         )
 
         # Print results
         print("RESULTS:")
         print(f"Final portfolio value: ${summary['total_final_value']:,.0f}")
+        print(f"Final bank balance: ${summary['final_bank']:,.0f}")
         print(f"Total return: {summary['total_return']:.2f}%")
         print(f"Annualized return: {summary['annualized_return']:.2f}%")
+        print(f"Transactions: {summary['transaction_count']}")
         print()
         print("Asset breakdown:")
         for ticker, data in summary["assets"].items():
-            print(f"  {ticker}: ${data['final_value']:,.0f} ({data['total_return']:.2f}%)")
+            print(
+                f"  {ticker}: {data['final_holdings']} shares @ ${data['final_price']:.2f} "
+                f"= ${data['final_value']:,.0f} ({data['total_return']:.2f}%)"
+            )
 
         # Save detailed results if requested
         if args.output:

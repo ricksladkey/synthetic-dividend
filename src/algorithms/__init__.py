@@ -19,6 +19,7 @@ from .buy_and_hold import BuyAndHoldAlgorithm
 from .factory import build_algo_from_name
 from .per_asset_portfolio import PerAssetPortfolioAlgorithm
 from .portfolio_base import PortfolioAlgorithmBase
+from .portfolio_factory import build_portfolio_algo_from_name
 from .quarterly_rebalance import QuarterlyRebalanceAlgorithm
 from .synthetic_dividend import SyntheticDividendAlgorithm
 
@@ -30,4 +31,5 @@ __all__ = [
     "PerAssetPortfolioAlgorithm",
     "QuarterlyRebalanceAlgorithm",
     "build_algo_from_name",
+    "build_portfolio_algo_from_name",
 ]
