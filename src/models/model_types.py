@@ -47,3 +47,12 @@ class WithdrawalResult:
     shares_to_sell: int = 0  # Number of shares to liquidate
     cash_from_bank: float = 0.0  # Amount to withdraw from cash balance
     notes: str = ""  # Optional explanation
+
+
+@dataclass
+class AssetState:
+    """Snapshot of single asset position. Pure data, no behavior."""
+
+    ticker: str
+    holdings: int  # Share count
+    price: float  # Current price
