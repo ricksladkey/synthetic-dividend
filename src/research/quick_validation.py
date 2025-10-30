@@ -60,6 +60,7 @@ def main():
             end_date=end_date,
             portfolio_algo=buy_hold_algo,
             initial_investment=initial_investment,
+            withdrawal_rate_pct=withdrawal_rate,
         )
 
         results[withdrawal_rate]["buy-and-hold"] = {
@@ -67,6 +68,8 @@ def main():
             "final_bank": summary["final_bank"],
             "return_pct": summary["total_return"],
             "transactions": summary["transaction_count"],
+            "total_withdrawn": summary.get("total_withdrawn", 0),
+            "withdrawal_count": summary.get("withdrawal_count", 0),
         }
 
         print(
@@ -86,6 +89,7 @@ def main():
             end_date=end_date,
             portfolio_algo=quarterly_algo,
             initial_investment=initial_investment,
+            withdrawal_rate_pct=withdrawal_rate,
         )
 
         results[withdrawal_rate]["quarterly-rebalance"] = {
@@ -93,6 +97,8 @@ def main():
             "final_bank": summary["final_bank"],
             "return_pct": summary["total_return"],
             "transactions": summary["transaction_count"],
+            "total_withdrawn": summary.get("total_withdrawn", 0),
+            "withdrawal_count": summary.get("withdrawal_count", 0),
         }
 
         print(
@@ -110,6 +116,7 @@ def main():
             end_date=end_date,
             portfolio_algo=auto_algo,
             initial_investment=initial_investment,
+            withdrawal_rate_pct=withdrawal_rate,
         )
 
         results[withdrawal_rate]["synthetic-dividend-auto"] = {
@@ -117,6 +124,8 @@ def main():
             "final_bank": summary["final_bank"],
             "return_pct": summary["total_return"],
             "transactions": summary["transaction_count"],
+            "total_withdrawn": summary.get("total_withdrawn", 0),
+            "withdrawal_count": summary.get("withdrawal_count", 0),
         }
 
         print(
@@ -138,13 +147,14 @@ def main():
         quarterly = results[withdrawal_rate]["quarterly-rebalance"]
         synth_div = results[withdrawal_rate]["synthetic-dividend-auto"]
 
-        print(f"\n{'Strategy':<30} {'Final Value':>15} {'Return':>10} {'Txns':>8}")
-        print("-" * 80)
+        print(f"\n{'Strategy':<30} {'Final Value':>15} {'Return':>10} {'Withdrawn':>12} {'Txns':>8}")
+        print("-" * 90)
 
         print(
             f"{'Buy-and-hold':<30} "
             f"${buy_hold['final_value']:>14,.0f} "
             f"{buy_hold['return_pct']:>9.2f}% "
+            f"${buy_hold['total_withdrawn']:>11,.0f} "
             f"{buy_hold['transactions']:>8}"
         )
 
@@ -153,6 +163,7 @@ def main():
             f"{'Quarterly rebalance':<30} "
             f"${quarterly['final_value']:>14,.0f} "
             f"{quarterly['return_pct']:>9.2f}% "
+            f"${quarterly['total_withdrawn']:>11,.0f} "
             f"{quarterly['transactions']:>8} "
             f"(α: {quarterly_alpha:+.2f}%)"
         )
@@ -162,6 +173,7 @@ def main():
             f"{'Synthetic dividend auto':<30} "
             f"${synth_div['final_value']:>14,.0f} "
             f"{synth_div['return_pct']:>9.2f}% "
+            f"${synth_div['total_withdrawn']:>11,.0f} "
             f"{synth_div['transactions']:>8} "
             f"(α: {synth_alpha:+.2f}%)"
         )

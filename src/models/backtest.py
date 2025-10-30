@@ -1170,6 +1170,8 @@ def run_portfolio_backtest_v2(
     portfolio_algo: "PortfolioAlgorithmBase",  # type: ignore  # Forward reference
     initial_investment: float = 1_000_000.0,
     allow_margin: bool = True,
+    withdrawal_rate_pct: float = 0.0,
+    withdrawal_frequency_days: int = 30,
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Execute portfolio backtest with shared cash pool and portfolio-level algorithm.
 
@@ -1284,6 +1286,18 @@ def run_portfolio_backtest_v2(
     daily_portfolio_values: Dict[date, float] = {}
     daily_bank_values: Dict[date, float] = {}
 
+    # Withdrawal tracking
+    total_withdrawn: float = 0.0
+    withdrawal_count: int = 0
+    last_withdrawal_date: Optional[date] = None
+
+    # Calculate withdrawal amounts if enabled
+    if withdrawal_rate_pct > 0:
+        annual_withdrawal = initial_investment * (withdrawal_rate_pct / 100.0)
+        base_withdrawal_amount = annual_withdrawal * (withdrawal_frequency_days / 365.25)
+    else:
+        base_withdrawal_amount = 0.0
+
     # Main backtest loop
     for current_date in common_dates:
         # Build current asset states
@@ -1360,6 +1374,38 @@ def run_portfolio_backtest_v2(
                         )
                         all_transactions.append(skipped_tx)
 
+        # Process withdrawals (if enabled and due)
+        if base_withdrawal_amount > 0:
+            # Check if withdrawal is due
+            days_since_last = None
+            if last_withdrawal_date is None:
+                # First withdrawal happens on first day
+                days_since_last = withdrawal_frequency_days
+            else:
+                days_since_last = (current_date - last_withdrawal_date).days
+
+            if days_since_last >= withdrawal_frequency_days:
+                # Withdraw from shared bank (portfolio-level, not per-asset)
+                withdrawal_amount = base_withdrawal_amount
+                actual_withdrawal = min(withdrawal_amount, shared_bank) if not allow_margin else withdrawal_amount
+
+                shared_bank -= actual_withdrawal
+                total_withdrawn += actual_withdrawal
+                withdrawal_count += 1
+                last_withdrawal_date = current_date
+
+                # Record withdrawal transaction
+                all_transactions.append(
+                    Transaction(
+                        transaction_date=current_date,
+                        action="WITHDRAWAL",
+                        qty=0,
+                        price=0.0,
+                        ticker="CASH",
+                        notes=f"${actual_withdrawal:.2f} withdrawn, bank=${shared_bank:.2f}",
+                    )
+                )
+
         # Record daily portfolio value
         total_asset_value = sum(holdings[t] * assets[t].price for t in allocations.keys())
         daily_portfolio_values[current_date] = shared_bank + total_asset_value
@@ -1416,8 +1462,11 @@ def run_portfolio_backtest_v2(
         "allocations": allocations,
         "daily_values": daily_portfolio_values,
         "daily_bank_values": daily_bank_values,
-        "transaction_count": len([tx for tx in all_transactions if "SKIP" not in tx.action]),
+        "transaction_count": len([tx for tx in all_transactions if "SKIP" not in tx.action and tx.action != "WITHDRAWAL"]),
         "skipped_count": len([tx for tx in all_transactions if "SKIP" in tx.action]),
+        "total_withdrawn": total_withdrawn,
+        "withdrawal_count": withdrawal_count,
+        "withdrawal_rate_pct": withdrawal_rate_pct,
     }
 
     return all_transactions, portfolio_summary
