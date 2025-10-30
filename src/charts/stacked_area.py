@@ -262,24 +262,35 @@ def demo_horn_chart():
 
     print("Creating demo horn chart...")
 
-    # Create sample data simulating a portfolio with withdrawals
+    # Create sample data simulating a 60/30/10 portfolio with withdrawals
+    # Classic-plus-crypto: 60% VOO, 30% BIL, 10% BTC-USD
     start_date = date(2024, 1, 1)
     dates = [start_date + timedelta(days=30 * i) for i in range(12)]
 
-    # Simulate growing portfolio with monthly withdrawals
-    cash_values = [50000, 48000, 52000, 45000, 49000, 43000, 47000, 41000, 46000, 40000, 45000, 38000]
+    # Simulate portfolio with monthly withdrawals
+    # Cash (sweeps account) starts at ~3% and fluctuates based on trading/withdrawals
+    cash_values = [30000, 28000, 32000, 25000, 29000, 23000, 27000, 21000, 26000, 20000, 25000, 18000]
+
+    # BIL position (~30% of portfolio) - bonds, relatively stable
+    bil_values = [300000, 302000, 301000, 305000, 307000, 306000, 310000, 312000, 311000, 315000, 314000, 316000]
+
+    # VOO position (~60% of portfolio) - equities, moderate growth
     voo_values = [600000, 620000, 610000, 640000, 650000, 645000, 670000, 680000, 690000, 700000, 710000, 720000]
+
+    # BTC position (~10% of portfolio) - crypto, high volatility
     btc_values = [100000, 110000, 95000, 120000, 115000, 125000, 130000, 120000, 140000, 145000, 150000, 155000]
 
-    # Cumulative withdrawals (growing wedge)
+    # Cumulative withdrawals (growing wedge below zero)
     withdrawals = [3333 * (i + 1) for i in range(12)]  # 4% annual = $3,333/month
 
     data = StackedAreaData(
         dates=dates,
         positive_series=[
-            SeriesData("Cash (BIL)", cash_values, "#2ca02c"),  # Green for cash
-            SeriesData("VOO", voo_values, "#ff7f0e"),  # Orange for stocks
-            SeriesData("BTC-USD", btc_values, "#1f77b4"),  # Blue for crypto
+            # Bottom to top: least volatile to most volatile
+            SeriesData("USD (Cash)", cash_values, "#2ca02c"),  # Green for cash/sweeps
+            SeriesData("BIL (Bonds)", bil_values, "#8c564b"),  # Brown for bonds
+            SeriesData("VOO (Equities)", voo_values, "#ff7f0e"),  # Orange for stocks
+            SeriesData("BTC-USD (Crypto)", btc_values, "#1f77b4"),  # Blue for crypto
         ],
         negative_series=[
             SeriesData("Withdrawals (Spending Power)", withdrawals, "#d62728"),  # Red
@@ -297,9 +308,17 @@ def demo_horn_chart():
     print()
     print("Key observations:")
     print("- Total horn height = Portfolio value + Cumulative withdrawals")
-    print("- Narrow neck visible around month 8 where cash dips to $40K")
+    print("- Narrow neck visible around month 8 where USD cash dips to $20K")
     print("- Withdrawals (red wedge) represent accumulated spending power")
     print("- Both sides of zero line represent positive wealth")
+    print()
+    print("Portfolio structure (60/30/10):")
+    print("- BTC-USD (Crypto) - Top band, most volatile")
+    print("- VOO (Equities) - Orange band, moderate volatility")
+    print("- BIL (Bonds) - Brown band, low volatility")
+    print("- USD (Cash/Sweeps) - Green band, buying power for trading")
+    print()
+    print("Note: Cash is the SWEEPS ACCOUNT (buying power), distinct from BIL position")
 
 
 if __name__ == "__main__":

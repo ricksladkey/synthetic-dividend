@@ -79,15 +79,19 @@ class SeriesData:
 **Visual Layout**:
 ```
 ┌─────────────────────────────────┐
-│  Asset 3 (e.g., BTC)            │  ← Top band
-│  Asset 2 (e.g., VOO)            │
-│  Asset 1 / Cash (e.g., BIL)     │  ← Bottom of positive
+│  BTC-USD (Crypto)               │  ← Top band (most volatile)
+│  VOO (Equities)                 │
+│  BIL (Bonds)                    │
+│  USD (Cash/Sweeps)              │  ← Bottom of positive (least volatile)
 ├─────────────────────────────────┤  ← Zero line
 │  Withdrawals (spending power)   │  ← Negative band (below zero)
 └─────────────────────────────────┘
 
 Total Horn Height = Sum(positive_series) + Sum(negative_series)
-Narrow Neck = Point where positive_series[0] (cash) is smallest
+Narrow Neck = Point where USD cash (sweeps account) is smallest
+
+Note: USD cash is the SWEEPS ACCOUNT (buying power for trading),
+distinct from BIL position (Treasury bill holdings).
 ```
 
 **Key Insight**: Withdrawals appear as a **growing wedge below zero**, representing accumulated spending power. The zero line is just a visual separator - both sides represent positive wealth (what you have + what you spent).
