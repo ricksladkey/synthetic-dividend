@@ -308,7 +308,9 @@ The **Synthetic Dividend Tool** provides a single swiss army knife interface to 
 # Batch comparison across multiple assets
 .\synthetic-dividend-tool.bat compare batch --tickers NVDA AAPL GLD --strategies sd8 sd16 --start 2024-01-01 --end 2025-01-01
 
-# 🎯 NEW: Multi-asset portfolio backtesting (unified interface)
+# 🎯 NEW: Multi-asset portfolio backtesting with named portfolios
+.\synthetic-dividend-tool.bat portfolio --allocations classic --start 2024-01-01 --end 2025-01-01
+.\synthetic-dividend-tool.bat portfolio --allocations buffet-95,5 --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
 .\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-01-01 --end 2025-01-01
 .\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.2, "GOOG": 0.2, "BTC-USD": 0.2, "GLDM": 0.2, "PLTR": 0.2}' --algo "sd-9.05,50.0" --start 2024-01-01 --end 2025-01-01
 
@@ -406,12 +408,29 @@ Initial Investment: $450,500.00 (10,000 shares @ $45.05)
 **Run diversified portfolios with algorithmic strategies:**
 
 ```bash
-# Simple buy-and-hold portfolio (NVDA 40%, VOO 60%)
+# Named portfolio: Classic 60/40 stocks/bonds
+.\synthetic-dividend-tool.bat portfolio --allocations classic --start 2024-01-01 --end 2025-01-01
+
+# Named portfolio with parameters: Buffett 95/5
+.\synthetic-dividend-tool.bat portfolio --allocations buffet-95,5 --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
+
+# Custom JSON allocation
 .\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-01-01 --end 2025-01-01
 
 # Algorithmic portfolio with SD8 strategy
 .\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.2, "GOOG": 0.2, "BTC-USD": 0.2, "GLDM": 0.2, "PLTR": 0.2}' --algo "sd-9.05,50.0" --start 2024-01-01 --end 2025-01-01
 ```
+
+**Named Portfolios** (supports parameterization like `classic-70,30`, `buffet-95,5`):
+- `classic` - Traditional 60/40 stocks/bonds (VOO/BIL)
+- `buffet` - Buffett's 90/10 allocation (VOO/BIL)
+- `classic-plus-crypto` - Classic with crypto exposure (VOO/BIL/BTC-USD)
+- `three-fund` - Bogleheads three-fund (VTI/VXUS/BND)
+- `all-weather` - Ray Dalio's All-Weather
+- `golden-butterfly` - Tyler's Golden Butterfly
+- `tech-growth` - Tech-heavy growth (QQQ/VOO)
+- `high-growth` - High-growth tech (NVDA/QQQ/VOO)
+- `crypto-heavy` - Crypto-dominant (BTC-USD/ETH-USD/VOO/BIL)
 
 **Example Output** (Realistic Portfolio):
 ```
@@ -439,6 +458,7 @@ Asset breakdown:
 ```
 
 **Key Features**:
+- ✅ **Named portfolios** with parameterization (e.g., `classic-70,30`)
 - ✅ **Unified interface** for both simple buy-and-hold and algorithmic portfolios
 - ✅ **Multi-asset coordination** with proper date alignment
 - ✅ **All algorithm features** (dividends, withdrawals, margin, etc.) available

@@ -372,6 +372,64 @@ This demonstrates advanced portfolio features including CPI-adjusted withdrawals
 .\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-01-01 --end 2025-01-01 --output portfolio_results.json
 ```
 
+### Named Portfolios
+
+For convenience, you can use **named portfolios** instead of specifying asset allocations as JSON. Named portfolios support parameterization similar to algorithm names.
+
+**Default Named Portfolios**:
+```bash
+# Classic 60/40 stocks/bonds
+.\synthetic-dividend-tool.bat portfolio --allocations classic --start 2024-01-01 --end 2025-01-01
+
+# Buffett 90/10 stocks/bonds  
+.\synthetic-dividend-tool.bat portfolio --allocations buffet --start 2024-01-01 --end 2025-01-01
+
+# Classic plus 10% crypto
+.\synthetic-dividend-tool.bat portfolio --allocations classic-plus-crypto --start 2024-01-01 --end 2025-01-01
+```
+
+**Parameterized Named Portfolios**:
+```bash
+# Custom 70/30 allocation
+.\synthetic-dividend-tool.bat portfolio --allocations classic-70,30 --start 2024-01-01 --end 2025-01-01
+
+# Buffett with 95/5 allocation
+.\synthetic-dividend-tool.bat portfolio --allocations buffet-95,5 --start 2024-01-01 --end 2025-01-01
+
+# Classic plus crypto with custom allocations (50% stocks, 30% bonds, 20% crypto)
+.\synthetic-dividend-tool.bat portfolio --allocations classic-plus-crypto-50,30,20 --start 2024-01-01 --end 2025-01-01
+
+# Tech-heavy allocation
+.\synthetic-dividend-tool.bat portfolio --allocations tech-growth-70,30 --start 2024-01-01 --end 2025-01-01
+```
+
+**Available Named Portfolios**:
+
+| Name | Default Allocation | Description |
+|------|-------------------|-------------|
+| `classic` | VOO 60%, BIL 40% | Traditional 60/40 stocks/bonds |
+| `classic-X,Y` | VOO X%, BIL Y% | Custom stocks/bonds split |
+| `buffet` / `buffett` | VOO 90%, BIL 10% | Buffett's recommended allocation |
+| `buffet-X,Y` | VOO X%, BIL Y% | Custom Buffett-style allocation |
+| `classic-plus-crypto` | VOO 60%, BIL 30%, BTC-USD 10% | Classic with crypto exposure |
+| `classic-plus-crypto-X,Y,Z` | VOO X%, BIL Y%, BTC-USD Z% | Custom crypto allocation |
+| `three-fund` | VTI 40%, VXUS 30%, BND 30% | Bogleheads three-fund portfolio |
+| `all-weather` | VOO 40%, TLT 15%, IEF 15%, GLD 7.5%, DBC 7.5%, BIL 15% | Ray Dalio's All-Weather |
+| `golden-butterfly` | VOO/SHY/TLT/GLD/BIL 20% each | Tyler's Golden Butterfly |
+| `tech-growth` | QQQ 60%, VOO 40% | Tech-heavy growth portfolio |
+| `tech-growth-X,Y` | QQQ X%, VOO Y% | Custom tech/market split |
+| `high-growth` | NVDA 30%, QQQ 40%, VOO 30% | High-growth tech focus |
+| `crypto-heavy` | BTC-USD 40%, ETH-USD 20%, VOO 30%, BIL 10% | Crypto-dominant portfolio |
+
+**Example with Algorithm**:
+```bash
+# Classic 60/40 with synthetic dividend algorithm
+.\synthetic-dividend-tool.bat portfolio --allocations classic --algo per-asset:sd8 --start 2024-01-01 --end 2025-01-01
+
+# Buffett 90/10 with quarterly rebalancing
+.\synthetic-dividend-tool.bat portfolio --allocations buffet --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
+```
+
 ### Portfolio Strategy Guidelines
 
 | Portfolio Type | Recommended Algorithm | Rationale |
@@ -386,6 +444,7 @@ This demonstrates advanced portfolio features including CPI-adjusted withdrawals
 - Diversification + algorithms = better risk-adjusted returns
 - Withdrawal rates up to 8-10% may be sustainable with volatility harvesting
 - The unified system makes portfolio strategy testing as easy as single-asset testing
+- Named portfolios simplify common allocation patterns
 
 ---
 
