@@ -96,3 +96,6 @@ optimal_rebalancing_*.csv
 # local env files
 .env
 .env.*
+
+# Claude Code local settings
+.claude/settings.local.json
