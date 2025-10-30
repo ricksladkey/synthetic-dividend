@@ -83,7 +83,8 @@ For detailed help on any command:
     portfolio_parser.add_argument(
         "--allocations",
         required=True,
-        help='Asset allocations as JSON string, e.g., \'{"NVDA": 0.4, "VOO": 0.6}\'',
+        help='Asset allocations as named portfolio (e.g., "classic", "buffet-90,10") '
+        'or JSON string (e.g., \'{"NVDA": 0.4, "VOO": 0.6}\')',
     )
     portfolio_parser.add_argument("--start", required=True, help="Start date (YYYY-MM-DD)")
     portfolio_parser.add_argument("--end", required=True, help="End date (YYYY-MM-DD)")
@@ -388,12 +389,33 @@ def run_portfolio(args) -> int:
     import json
     from datetime import datetime
 
-    from src.algorithms import build_portfolio_algo_from_name
+    from src.algorithms import build_portfolio_algo_from_name, parse_portfolio_name
     from src.models.backtest import run_portfolio_backtest_v2
 
     try:
-        # Parse allocations JSON
-        allocations = json.loads(args.allocations)
+        # Parse allocations: try as named portfolio first, then JSON
+        allocations_str = args.allocations.strip()
+        
+        # Try to parse as JSON first (starts with '{')
+        if allocations_str.startswith('{'):
+            try:
+                allocations = json.loads(allocations_str)
+                print(f"Parsed allocations from JSON")
+            except json.JSONDecodeError:
+                print(f"Error: Invalid JSON format for allocations")
+                return 1
+        else:
+            # Try as named portfolio
+            try:
+                allocations = parse_portfolio_name(allocations_str)
+            except ValueError as e:
+                # If not a valid portfolio name, try JSON as fallback
+                try:
+                    allocations = json.loads(allocations_str)
+                    print(f"Parsed allocations from JSON")
+                except json.JSONDecodeError:
+                    print(f"Error: {e}")
+                    return 1
 
         # Validate allocations sum to ~1.0
         total_alloc = sum(allocations.values())
