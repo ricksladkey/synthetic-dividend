@@ -9,6 +9,11 @@ Example scripts and demonstrations for the Synthetic Dividend project.
   - Demonstrates integration of real + synthetic income
   - Example output and metrics
 
+- **`demo_ticker.py`** - Ticker data retrieval and aggregation demo
+  - Shows how to get OHLC candle data with daily/weekly/monthly aggregation
+  - Demonstrates CSV output and file saving capabilities
+  - Examples for technical analysis and data export
+
 ## Running Examples
 
 ### Dividend Integration Demo
@@ -17,6 +22,13 @@ python examples/demo_dividends.py
 ```
 
 This demo fetches real AAPL price and dividend data for 2024, runs a backtest with the synthetic dividend algorithm, and shows how real dividends improve coverage ratios.
+
+### Ticker Data Demo
+```bash
+python examples/demo_ticker.py
+```
+
+This demo shows how to retrieve OHLC candle data for any ticker with different time aggregations (daily, weekly, monthly) and save results to CSV files.
 
 ## Quick Links
 

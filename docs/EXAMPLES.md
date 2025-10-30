@@ -6,13 +6,99 @@ This document provides practical examples for using the Synthetic Dividend Algor
 
 ## Table of Contents
 
-1. [Volatility Alpha Analysis](#volatility-alpha-analysis)
-2. [Portfolio Backtesting](#portfolio-backtesting)
-3. [Basic Backtesting](#basic-backtesting)
-4. [Batch Comparisons](#batch-comparisons)
-5. [Dividend Tracking](#dividend-tracking)
-6. [Withdrawal Policies](#withdrawal-policies)
-7. [Advanced Scenarios](#advanced-scenarios)
+1. [Ticker Data Retrieval](#ticker-data-retrieval)
+2. [Volatility Alpha Analysis](#volatility-alpha-analysis)
+3. [Portfolio Backtesting](#portfolio-backtesting)
+4. [Basic Backtesting](#basic-backtesting)
+5. [Batch Comparisons](#batch-comparisons)
+6. [Dividend Tracking](#dividend-tracking)
+7. [Withdrawal Policies](#withdrawal-policies)
+8. [Advanced Scenarios](#advanced-scenarios)
+
+---
+
+## Ticker Data Retrieval
+
+The **ticker** command retrieves OHLC (Open, High, Low, Close) candle data for any asset with support for time-based aggregation.
+
+### Basic Daily Data
+
+**Objective**: Get daily OHLC data for NVDA over the last month.
+
+**Command**:
+```bash
+synthetic-dividend-tool run ticker --ticker NVDA --start 2024-01-01 --end 2024-01-31
+```
+
+**Output**:
+```
+Date,Ticker,O,C,L,H
+2024-01-02,NVDA,49.24,48.17,47.6,49.29
+2024-01-03,NVDA,47.49,47.57,47.32,48.18
+2024-01-04,NVDA,47.77,48.0,47.51,48.5
+...
+```
+
+### Weekly Aggregation
+
+**Objective**: Get weekly aggregated OHLC data for technical analysis.
+
+**Command**:
+```bash
+synthetic-dividend-tool run ticker --ticker SPY --start 2023-01-01 --end 2024-12-31 --interval weekly
+```
+
+**Output**:
+```
+Date,Ticker,O,C,L,H
+2023-01-08,SPY,366.08,367.95,363.18,368.77
+2023-01-15,SPY,368.48,390.38,368.48,390.9
+2023-01-22,SPY,390.48,401.35,390.48,402.1
+...
+```
+
+### Monthly Aggregation
+
+**Objective**: Get monthly aggregated data for long-term trend analysis.
+
+**Command**:
+```bash
+synthetic-dividend-tool run ticker --ticker AAPL --start 2020-01-01 --end 2024-12-31 --interval monthly
+```
+
+**Output**:
+```
+Date,Ticker,O,C,L,H
+2020-01-31,AAPL,77.38,77.38,72.31,81.81
+2020-02-29,AAPL,70.57,68.34,56.09,81.81
+2020-03-31,AAPL,70.57,63.57,53.15,81.81
+...
+```
+
+### Saving to CSV File
+
+**Objective**: Export data for use in other analysis tools.
+
+**Command**:
+```bash
+synthetic-dividend-tool run ticker --ticker NVDA --start 2024-01-01 --end 2024-12-31 --interval monthly --output nvda_2024_monthly.csv
+```
+
+**Output**:
+```
+Results saved to nvda_2024_monthly.csv
+```
+
+### Interactive Demo
+
+**Objective**: Run the comprehensive ticker demo to see all features.
+
+**Command**:
+```bash
+python examples/demo_ticker.py
+```
+
+This demo shows daily, weekly, and monthly aggregation with file output examples.
 
 ---
 

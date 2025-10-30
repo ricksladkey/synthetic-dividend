@@ -218,6 +218,15 @@ Examples:
     # Analyze gap bonus
     synthetic-dividend-tool analyze gap-bonus --input research_phase1_1year_core.csv
 
+    # Get daily candle data for NVDA
+    synthetic-dividend-tool run ticker --ticker NVDA --start 2024-01-01 --end 2024-12-31
+
+    # Get weekly aggregated candle data for SPY
+    synthetic-dividend-tool run ticker --ticker SPY --start 2023-01-01 --end 2024-12-31 --interval weekly
+
+    # Get monthly candle data and save to file
+    synthetic-dividend-tool run ticker --ticker AAPL --start 2020-01-01 --end 2024-12-31 --interval monthly --output apple_monthly.csv
+
     # Run tests
     synthetic-dividend-tool test
 
@@ -478,6 +487,35 @@ For detailed help on any command:
     run_table_parser.add_argument("--input", required=True, help="Input CSV file")
 
     # ========================================================================
+    # run ticker
+    # ========================================================================
+    run_ticker_parser = run_subparsers.add_parser(
+        "ticker", help="Get aggregated candle data for a ticker", description="Retrieve OHLC candle data aggregated by time interval",
+        epilog="""
+Examples:
+    # Get daily candle data for NVDA
+    synthetic-dividend-tool run ticker --ticker NVDA --start 2024-01-01 --end 2024-01-31
+
+    # Get weekly aggregated data for SPY
+    synthetic-dividend-tool run ticker --ticker SPY --start 2023-01-01 --end 2024-12-31 --interval weekly
+
+    # Get monthly data and save to CSV file
+    synthetic-dividend-tool run ticker --ticker AAPL --start 2020-01-01 --end 2024-12-31 --interval monthly --output apple_monthly.csv
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    run_ticker_parser.add_argument("--ticker", required=True, help="Asset ticker symbol")
+    run_ticker_parser.add_argument("--start", required=True, help="Start date (YYYY-MM-DD)")
+    run_ticker_parser.add_argument("--end", required=True, help="End date (YYYY-MM-DD)")
+    run_ticker_parser.add_argument(
+        "--interval",
+        choices=["daily", "weekly", "monthly"],
+        default="daily",
+        help="Aggregation interval (default: daily)"
+    )
+    run_ticker_parser.add_argument("--output", help="Output file for results (CSV). If not specified, prints to stdout")
+
+    # ========================================================================
     # ANALYZE command
     # ========================================================================
     analyze_parser = subparsers.add_parser(
@@ -683,7 +721,7 @@ def run_portfolio(args) -> int:
 
 
 def run_unified(args) -> int:
-    """Execute unified run command (backtest, portfolio, research, compare)."""
+    """Execute unified run command (backtest, portfolio, research, compare, ticker)."""
 
     if args.run_type == "backtest":
         return run_backtest(args)
@@ -709,6 +747,8 @@ def run_unified(args) -> int:
             run_compare_parser.parse_args(["compare", "--help"])
             return 1
         return run_compare(args)
+    elif args.run_type == "ticker":
+        return run_ticker(args)
     else:
         print(f"Unknown run type: {args.run_type}")
         return 1
@@ -813,6 +853,80 @@ def run_compare(args) -> int:
 
     else:
         print(f"Unknown comparison type: {args.compare_type}")
+        return 1
+
+
+def run_ticker(args) -> int:
+    """Execute ticker command to get aggregated candle data."""
+    from datetime import datetime
+    import pandas as pd
+    from src.data.asset import Asset
+
+    try:
+        # Parse dates
+        start_date = datetime.strptime(args.start, "%Y-%m-%d").date()
+        end_date = datetime.strptime(args.end, "%Y-%m-%d").date()
+
+        # Fetch price data
+        asset = Asset(args.ticker)
+        df = asset.get_prices(start_date, end_date)
+
+        if df.empty:
+            print(f"No data found for ticker {args.ticker} in date range {args.start} to {args.end}")
+            return 1
+
+        # Aggregate data based on interval
+        if args.interval == "daily":
+            # Daily data is already in the right format
+            result_df = df.copy()
+        elif args.interval == "weekly":
+            # Resample to weekly (end of week)
+            agg_dict = {
+                'Open': 'first',
+                'High': 'max',
+                'Low': 'min',
+                'Close': 'last'
+            }
+            if 'Volume' in df.columns:
+                agg_dict['Volume'] = 'sum'
+            result_df = df.resample('W').agg(agg_dict)
+        elif args.interval == "monthly":
+            # Resample to monthly (end of month)
+            agg_dict = {
+                'Open': 'first',
+                'High': 'max',
+                'Low': 'min',
+                'Close': 'last'
+            }
+            if 'Volume' in df.columns:
+                agg_dict['Volume'] = 'sum'
+            result_df = df.resample('ME').agg(agg_dict)
+        else:
+            print(f"Invalid interval: {args.interval}. Must be 'daily', 'weekly', or 'monthly'")
+            return 1
+
+        # Format output with required columns: Date, Ticker, O, C, L, H
+        output_df = pd.DataFrame({
+            'Date': result_df.index.strftime('%Y-%m-%d'),
+            'Ticker': args.ticker,
+            'O': result_df['Open'].round(2),
+            'C': result_df['Close'].round(2),
+            'L': result_df['Low'].round(2),
+            'H': result_df['High'].round(2)
+        })
+
+        # Output results
+        if args.output:
+            output_df.to_csv(args.output, index=False)
+            print(f"Results saved to {args.output}")
+        else:
+            # Print to stdout
+            print(output_df.to_csv(index=False))
+
+        return 0
+
+    except Exception as e:
+        print(f"Error retrieving ticker data: {e}")
         return 1
 
 
