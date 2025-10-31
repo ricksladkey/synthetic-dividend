@@ -10,7 +10,7 @@
 
 **A rules-based investment strategy that systematically generates cash flow from growth stocks while preserving compound growth potential.**
 
-[🚀 Quick Start](#-quick-start-guide) • [📊 Research Findings](#-research-findings) • [📖 Examples](docs/EXAMPLES.md) • [📖 Documentation](#-documentation) • [🤝 Contributing](#-contributing)
+[🌐 Website](https://rick.sladkey.net/synthetic-dividend/) • [🚀 Quick Start](#-quick-start-guide) • [📊 Research Findings](#-research-findings) • [📖 Examples](docs/EXAMPLES.md) • [📖 Documentation](#-documentation) • [🤝 Contributing](#-contributing)
 
 ---
 

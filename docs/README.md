@@ -4,7 +4,7 @@ User-facing documentation and guides for the Synthetic Dividend project.
 
 ## 🌐 Live Website
 
-Visit our GitHub Pages site: **[ricksladkey.github.io/synthetic-dividend](https://ricksladkey.github.io/synthetic-dividend/)**
+Visit our website: **[rick.sladkey.net/synthetic-dividend](https://rick.sladkey.net/synthetic-dividend/)**
 
 ## Contents
 
