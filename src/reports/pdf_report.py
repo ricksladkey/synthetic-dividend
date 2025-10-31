@@ -45,6 +45,7 @@ def create_backtest_pdf_report(
     summary: Dict[str, Any],
     price_data: pd.DataFrame,
     output_path: str,
+    comparative_results: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Create comprehensive PDF report for backtest results.
 
@@ -54,6 +55,7 @@ def create_backtest_pdf_report(
         summary: Summary dict from backtest
         price_data: DataFrame with OHLC price data
         output_path: Output PDF file path
+        comparative_results: Optional dict with comparative backtest results
 
     Returns:
         Path to generated PDF file
@@ -67,6 +69,10 @@ def create_backtest_pdf_report(
 
         # Page 3+: Transaction Log
         _create_transaction_log_pages(pdf, ticker, transactions, summary)
+
+        # Comparison page if comparative results provided
+        if comparative_results:
+            _create_comparison_page(pdf, ticker, summary, comparative_results)
 
         # Final Page: Analysis and Recommendations
         _create_analysis_page(pdf, ticker, summary, transactions)
@@ -94,31 +100,109 @@ def _create_summary_page(pdf: PdfPages, ticker: str, summary: Dict[str, Any]):
     ax.text(0.5, summary_y, "BACKTEST SUMMARY", ha='center', va='top',
             fontsize=16, fontweight='bold', transform=ax.transAxes)
 
-    # Key metrics
-    metrics = [
+    y_pos = summary_y - 0.05
+
+    # Basic info
+    basic_metrics = [
         ("Period", f"{summary.get('start_date', 'N/A')} to {summary.get('end_date', 'N/A')}"),
         ("Algorithm", summary.get('algorithm_name', 'N/A')),
-        ("Initial Investment", f"${summary.get('initial_investment', 0):,.2f}"),
-        ("Final Portfolio Value", f"${summary.get('final_portfolio_value', 0):,.2f}"),
-        ("Total Return", f"{summary.get('total_return_pct', 0):.2f}%"),
-        ("Annualized Return", f"{summary.get('annualized_return_pct', 0):.2f}%"),
         ("", ""),
-        ("Final Holdings", f"{summary.get('final_holdings', 0):,} shares"),
-        ("Final Share Price", f"${summary.get('final_price', 0):.2f}"),
-        ("Final Bank Balance", f"${summary.get('final_bank', 0):,.2f}"),
-        ("", ""),
-        ("Total Transactions", f"{summary.get('transaction_count', 0)}"),
-        ("Buy Transactions", f"{summary.get('buy_count', 0)}"),
-        ("Sell Transactions", f"{summary.get('sell_count', 0)}"),
     ]
 
-    y_pos = summary_y - 0.05
-    for label, value in metrics:
-        if label:  # Skip empty lines for spacing
+    for label, value in basic_metrics:
+        if label:
             ax.text(0.25, y_pos, label + ":", ha='left', va='top',
                    fontsize=11, transform=ax.transAxes)
             ax.text(0.75, y_pos, str(value), ha='right', va='top',
                    fontsize=11, fontweight='bold', transform=ax.transAxes)
+        y_pos -= 0.04
+
+    # Initial Portfolio breakdown
+    initial_investment = summary.get('initial_investment', 0)
+    start_price = summary.get('start_price', 0)
+    initial_qty = int(initial_investment / start_price) if start_price > 0 else 0
+    initial_asset_value = initial_qty * start_price
+    initial_cash = 0.0  # Start with no cash
+
+    ax.text(0.5, y_pos, "INITIAL PORTFOLIO", ha='center', va='top',
+            fontsize=12, fontweight='bold', transform=ax.transAxes, color='#0066CC')
+    y_pos -= 0.04
+
+    # Use simpler format to avoid text overlap
+    initial_portfolio_metrics = [
+        (f"  {ticker}", f"{initial_qty:,} shares"),
+        ("", f"${initial_asset_value:,.2f}"),
+        ("  USD (cash sweeps)", f"${initial_cash:,.2f}"),
+        ("  Portfolio Value", f"${initial_investment:,.2f}"),
+        ("", ""),
+    ]
+
+    for label, value in initial_portfolio_metrics:
+        if label or value:  # Allow lines with just value (for continuation)
+            ax.text(0.25, y_pos, label, ha='left', va='top',
+                   fontsize=10, transform=ax.transAxes)
+            ax.text(0.75, y_pos, str(value), ha='right', va='top',
+                   fontsize=10, fontweight='bold', transform=ax.transAxes)
+        y_pos -= 0.035
+
+    # Final Portfolio breakdown
+    final_holdings = summary.get('final_holdings', 0)
+    final_price = summary.get('final_price', 0)
+    final_asset_value = final_holdings * final_price
+    final_cash = summary.get('final_bank', 0)
+    final_portfolio_value = summary.get('final_portfolio_value', 0)
+
+    ax.text(0.5, y_pos, "FINAL PORTFOLIO", ha='center', va='top',
+            fontsize=12, fontweight='bold', transform=ax.transAxes, color='#00AA00')
+    y_pos -= 0.04
+
+    final_portfolio_metrics = [
+        (f"  {ticker}", f"{final_holdings:,} shares"),
+        ("", f"${final_asset_value:,.2f}"),
+        ("  USD (cash sweeps)", f"${final_cash:,.2f}"),
+        ("  Portfolio Value", f"${final_portfolio_value:,.2f}"),
+        ("", ""),
+    ]
+
+    for label, value in final_portfolio_metrics:
+        if label or value:
+            ax.text(0.25, y_pos, label, ha='left', va='top',
+                   fontsize=10, transform=ax.transAxes)
+            ax.text(0.75, y_pos, str(value), ha='right', va='top',
+                   fontsize=10, fontweight='bold', transform=ax.transAxes)
+        y_pos -= 0.035
+
+    # Performance metrics
+    ax.text(0.5, y_pos, "PERFORMANCE", ha='center', va='top',
+            fontsize=12, fontweight='bold', transform=ax.transAxes, color='#AA00AA')
+    y_pos -= 0.04
+
+    performance_metrics = [
+        ("  Total Return", f"{summary.get('total_return_pct', 0):.2f}%"),
+        ("  Annualized Return", f"{summary.get('annualized_return_pct', 0):.2f}%"),
+        ("", ""),
+    ]
+
+    for label, value in performance_metrics:
+        if label:
+            ax.text(0.25, y_pos, label, ha='left', va='top',
+                   fontsize=10, transform=ax.transAxes)
+            ax.text(0.75, y_pos, str(value), ha='right', va='top',
+                   fontsize=10, fontweight='bold', transform=ax.transAxes)
+        y_pos -= 0.04
+
+    # Transaction summary
+    transaction_metrics = [
+        ("Total Transactions", f"{summary.get('transaction_count', 0)}"),
+        ("  Buy Transactions", f"{summary.get('buy_count', 0)}"),
+        ("  Sell Transactions", f"{summary.get('sell_count', 0)}"),
+    ]
+
+    for label, value in transaction_metrics:
+        ax.text(0.25, y_pos, label + ":", ha='left', va='top',
+               fontsize=10, transform=ax.transAxes)
+        ax.text(0.75, y_pos, str(value), ha='right', va='top',
+               fontsize=10, fontweight='bold', transform=ax.transAxes)
         y_pos -= 0.04
 
     # Additional metrics if available
@@ -271,9 +355,14 @@ def _create_transaction_log_pages(
         col_labels = ['Date', 'Action', 'Qty', 'Limit', 'Fill', 'Amount', 'Holdings', 'Bank', 'Portfolio']
         cell_text = [[row[col] for col in col_labels] for row in page_data]
 
+        # Calculate appropriate table height based on number of rows
+        # Each row needs about 0.025 height units, plus header
+        num_rows = len(page_data) + 1  # +1 for header
+        table_height = min(0.88, num_rows * 0.025 + 0.05)  # Cap at 0.88 max
+
         table = ax.table(cellText=cell_text, colLabels=col_labels,
-                        cellLoc='center', loc='center',
-                        bbox=[0.05, 0.05, 0.9, 0.88])
+                        cellLoc='center', loc='upper center',
+                        bbox=[0.05, 0.92 - table_height, 0.9, table_height])
 
         table.auto_set_font_size(False)
         table.set_fontsize(7)  # Smaller font to fit extra column
@@ -433,6 +522,163 @@ def _generate_recommendations(summary: Dict[str, Any], transactions: List[Any]) 
         )
 
     return recommendations
+
+
+def _create_comparison_page(
+    pdf: PdfPages,
+    ticker: str,
+    primary_summary: Dict[str, Any],
+    comparative_results: Dict[str, Any],
+):
+    """Create comparison page showing SD8 vs other strategies."""
+    fig = plt.figure(figsize=(8.5, 11))
+    ax = fig.add_subplot(111)
+    ax.axis('off')
+
+    # Title
+    ax.text(0.5, 0.95, "Strategy Comparison", ha='center', va='top',
+           fontsize=18, fontweight='bold', transform=ax.transAxes)
+
+    y_pos = 0.88
+
+    # Create comparison table
+    strategies = []
+    final_values = []
+    total_returns = []
+    annualized_returns = []
+    transaction_counts = []
+
+    # Primary strategy (SD8)
+    algo_name = primary_summary.get('algorithm_name', 'SD8')
+    strategies.append(algo_name)
+    final_values.append(f"${primary_summary.get('final_portfolio_value', 0):,.2f}")
+    total_returns.append(f"{primary_summary.get('total_return_pct', 0):.2f}%")
+    annualized_returns.append(f"{primary_summary.get('annualized_return_pct', 0):.2f}%")
+    transaction_counts.append(str(primary_summary.get('transaction_count', 0)))
+
+    # Comparative strategies
+    for strategy_name in ['buy_and_hold', 'sd8_ath_only']:
+        if strategy_name in comparative_results:
+            result = comparative_results[strategy_name]
+            display_name = {
+                'buy_and_hold': 'Buy & Hold',
+                'sd8_ath_only': 'SD8 ATH-Only'
+            }.get(strategy_name, strategy_name)
+
+            strategies.append(display_name)
+            final_values.append(f"${result.get('final_portfolio_value', 0):,.2f}")
+            total_returns.append(f"{result.get('total_return_pct', 0):.2f}%")
+            annualized_returns.append(f"{result.get('annualized_return_pct', 0):.2f}%")
+            transaction_counts.append(str(result.get('transaction_count', 0)))
+
+    # Create table data
+    col_labels = ['Strategy', 'Final Value', 'Total Return', 'Annualized', 'Transactions']
+    cell_text = list(zip(strategies, final_values, total_returns, annualized_returns, transaction_counts))
+
+    # Calculate table height
+    num_rows = len(strategies) + 1  # +1 for header
+    table_height = min(0.6, num_rows * 0.045 + 0.05)
+
+    table = ax.table(cellText=cell_text, colLabels=col_labels,
+                    cellLoc='center', loc='upper center',
+                    bbox=[0.05, 0.82 - table_height, 0.9, table_height])
+
+    table.auto_set_font_size(False)
+    table.set_fontsize(9)
+    table.scale(1, 1.8)
+
+    # Style header
+    for i in range(len(col_labels)):
+        cell = table[(0, i)]
+        cell.set_facecolor('#2E86AB')
+        cell.set_text_props(weight='bold', color='white')
+
+    # Alternate row colors and highlight primary strategy
+    for i in range(1, len(strategies) + 1):
+        for j in range(len(col_labels)):
+            cell = table[(i, j)]
+            if i == 1:  # Primary strategy (SD8)
+                cell.set_facecolor('#FFE5B4')  # Peach highlight
+                cell.set_text_props(weight='bold')
+            elif i % 2 == 0:
+                cell.set_facecolor('#f0f0f0')
+
+    # Analysis text
+    y_pos = 0.82 - table_height - 0.08
+
+    ax.text(0.1, y_pos, "COMPARATIVE ANALYSIS", ha='left', va='top',
+           fontsize=14, fontweight='bold', transform=ax.transAxes,
+           bbox=dict(boxstyle='round', facecolor='#2E86AB', alpha=0.3))
+    y_pos -= 0.05
+
+    # Generate insights with alpha decomposition
+    insights = []
+
+    # Alpha Decomposition: Calculate Synthetic Alpha and Volatility Alpha
+    primary_return = primary_summary.get('annualized_return_pct', 0)
+    bh_return = comparative_results.get('buy_and_hold', {}).get('annualized_return_pct', 0)
+    ath_return = comparative_results.get('sd8_ath_only', {}).get('annualized_return_pct', 0)
+
+    # Synthetic Alpha (Primary): return(sd8-ath-only) - return(buy-and-hold)
+    # This measures the value of profit-taking at all-time highs vs pure holding
+    synthetic_alpha = ath_return - bh_return if ath_return and bh_return else None
+
+    # Volatility Alpha (Secondary): return(sd8) - return(sd8-ath-only)
+    # This measures the additional value from buying dips (volatility harvesting)
+    volatility_alpha = primary_return - ath_return if ath_return else None
+
+    # Display Alpha Decomposition
+    if synthetic_alpha is not None or volatility_alpha is not None:
+        insights.append(
+            "ALPHA DECOMPOSITION:"
+        )
+
+        if synthetic_alpha is not None:
+            insights.append(
+                f"  Synthetic Alpha (Primary): {synthetic_alpha:+.2f}% annualized. "
+                f"This is return(SD8-ATH-Only) - return(Buy-and-Hold), measuring the value "
+                f"of systematic profit-taking at all-time highs."
+            )
+
+        if volatility_alpha is not None:
+            insights.append(
+                f"  Volatility Alpha (Secondary): {volatility_alpha:+.2f}% annualized. "
+                f"This is return(SD8) - return(SD8-ATH-Only), measuring the additional value "
+                f"from buying dips and harvesting volatility."
+            )
+
+        # Total alpha
+        if synthetic_alpha is not None and volatility_alpha is not None:
+            total_alpha = synthetic_alpha + volatility_alpha
+            insights.append(
+                f"  Total Alpha: {total_alpha:+.2f}% annualized (Synthetic + Volatility)."
+            )
+
+    # Burn rate information
+    burn_rate = comparative_results.get('buy_and_hold', {}).get('burn_rate_pct', 0)
+    if burn_rate > 0:
+        insights.append(
+            f"All strategies tested with {burn_rate:.2f}% annual burn rate "
+            f"(maximum sustainable rate from SD8 minimum bank balance). "
+            f"This ensures fair comparison with realistic expense/withdrawal scenarios."
+        )
+
+    # Transaction efficiency
+    primary_tx = primary_summary.get('transaction_count', 0)
+    insights.append(
+        f"SD8 generated {primary_tx} transactions. Higher transaction count indicates "
+        f"more frequent rebalancing opportunities from volatility."
+    )
+
+    # Display insights
+    for insight in insights:
+        wrapped_text = _wrap_text(insight, 85)
+        ax.text(0.1, y_pos, f"• {wrapped_text}", ha='left', va='top',
+               fontsize=10, transform=ax.transAxes, wrap=True)
+        y_pos -= 0.04 * (wrapped_text.count('\n') + 1.5)
+
+    pdf.savefig(fig, bbox_inches='tight')
+    plt.close(fig)
 
 
 def _wrap_text(text: str, width: int) -> str:
