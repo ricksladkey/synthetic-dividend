@@ -855,7 +855,7 @@ def run_backtest(args) -> int:
         summary['final_bank'] = summary.get('bank', 0)
         summary['final_portfolio_value'] = summary.get('total', 0)
         summary['total_return_pct'] = summary.get('total_return', 0) * 100  # Convert to percentage
-        summary['annualized_return_pct'] = summary.get('annualized', 0) * 100  # Convert to percentage
+        summary['annualized_return_pct'] = summary.get('annualized', 0)  # Already in percentage
 
         # Print summary
         print("\nBACKTEST SUMMARY:")
@@ -871,9 +871,6 @@ def run_backtest(args) -> int:
         # Generate PDF report if requested
         if args.pdf_report:
             from src.reports import create_backtest_pdf_report
-            from src.algorithms.buy_and_hold import BuyAndHoldAlgorithm
-            from src.algorithms.quarterly_rebalance import QuarterlyRebalanceAlgorithm
-            from src.algorithms.synthetic_dividend import SyntheticDividendAlgorithm
 
             # Prepare summary with additional metadata
             summary['algorithm_name'] = args.algorithm
@@ -881,96 +878,12 @@ def run_backtest(args) -> int:
             summary['sell_count'] = len([tx for tx in transactions if tx.action == "SELL"])
             summary['transaction_count'] = len(transactions)
 
-            # Run comparative backtests for context
-            print("\nRunning comparative backtests for analysis...")
-            comparative_results = {}
-
-            try:
-                from src.models.backtest import run_algorithm_backtest
-
-                # Calculate maximum sustainable burn rate from SD8 results
-                # Use final bank balance as conservative estimate of sustainable withdrawals
-                final_bank = summary.get('bank', 0)
-                years = summary.get('years', 1)
-
-                # Maximum sustainable burn rate = final bank balance / years
-                # This is conservative - assumes we could have withdrawn evenly throughout
-                max_burn_rate_pct = 0.0
-                if final_bank > 0 and years > 0:
-                    max_annual_withdrawal = final_bank / years
-                    max_burn_rate_pct = (max_annual_withdrawal / initial_investment) * 100
-                    print(f"\nMaximum sustainable burn rate: {max_burn_rate_pct:.2f}% annually (${max_annual_withdrawal:,.2f}/year)")
-                    print(f"  Based on final bank balance: ${final_bank:,.2f} over {years:.2f} years")
-                else:
-                    print("\nNo burn rate applied (insufficient cash generated)")
-
-                # Buy and Hold (with burn rate)
-                print("  - Buy & Hold (with burn rate)...")
-                bh_algo = BuyAndHoldAlgorithm()
-                _, bh_summary = run_algorithm_backtest(
-                    df=df,
-                    ticker=args.ticker,
-                    initial_investment=initial_investment,
-                    start_date=start_date,
-                    end_date=end_date,
-                    algo=bh_algo,
-                    withdrawal_rate_pct=max_burn_rate_pct,
-                    withdrawal_frequency_days=365,  # Annual withdrawals
-                )
-                comparative_results['buy_and_hold'] = {
-                    'final_portfolio_value': bh_summary.get('total', 0),
-                    'total_return_pct': bh_summary.get('total_return', 0) * 100,
-                    'annualized_return_pct': bh_summary.get('annualized', 0) * 100,
-                    'transaction_count': 1 + bh_summary.get('withdrawal_count', 0),
-                    'burn_rate_pct': max_burn_rate_pct,
-                }
-
-                # SD8 ATH-Only (with burn rate if primary is SD8)
-                if 'sd' in args.algorithm.lower():
-                    print("  - SD8 ATH-Only (with burn rate)...")
-                    # Manually create ATH-only version with same profit_pct, ath_only=True
-                    # Extract N from algorithm name (e.g., "sd8" -> 8)
-                    import re
-                    match = re.search(r'sd(\d+)', args.algorithm.lower())
-                    if match:
-                        n = int(match.group(1))
-                        # Calculate rebalance_size using same formula as primary (2^(1/n) - 1)
-                        rebalance_size = 2.0 ** (1.0 / n) - 1.0
-                        ath_algo = SyntheticDividendAlgorithm(
-                            rebalance_size=rebalance_size,
-                            profit_sharing=0.5,  # 50%
-                            buyback_enabled=False,  # ATH-only mode
-                            params={'algo_name': f"{args.algorithm}-ath-only"}
-                        )
-                        _, ath_summary = run_algorithm_backtest(
-                            df=df,
-                            ticker=args.ticker,
-                            initial_investment=initial_investment,
-                            start_date=start_date,
-                            end_date=end_date,
-                            algo=ath_algo,
-                            withdrawal_rate_pct=max_burn_rate_pct,
-                            withdrawal_frequency_days=365,  # Annual withdrawals
-                        )
-                        comparative_results['sd8_ath_only'] = {
-                            'final_portfolio_value': ath_summary.get('total', 0),
-                            'total_return_pct': ath_summary.get('total_return', 0) * 100,
-                            'annualized_return_pct': ath_summary.get('annualized', 0) * 100,
-                            'transaction_count': ath_summary.get('num_transactions', 0),
-                            'burn_rate_pct': max_burn_rate_pct,
-                        }
-            except Exception as e:
-                print(f"  Warning: Some comparative backtests failed: {e}")
-                import traceback
-                traceback.print_exc()
-
             pdf_path = create_backtest_pdf_report(
                 ticker=args.ticker,
                 transactions=transactions,
                 summary=summary,
                 price_data=df,
-                output_path=args.pdf_report,
-                comparative_results=comparative_results if comparative_results else None,
+                output_path=args.pdf_report
             )
 
             print(f"\nPDF report generated: {pdf_path}")
