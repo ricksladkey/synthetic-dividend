@@ -1,10 +1,12 @@
 ﻿# Income Generation Through Volatility Harvesting
 ## How Systematic Rebalancing Converts Price Fluctuations into Cash Flow
 
-**Author**: Synthetic Dividend Research Team  
-**Created**: October 25, 2025  
-**Status**: Foundation Document  
-**Related**: VOLATILITY_ALPHA_THESIS.md, INCOME_SMOOTHING.md, WITHDRAWAL_POLICY.md
+> **New to this topic?** For an executive summary, see [04-income-generation.md](04-income-generation.md) first. This document provides comprehensive coverage with full implementation details.
+
+**Author**: Synthetic Dividend Research Team
+**Created**: October 25, 2025
+**Status**: Foundation Document
+**Related**: VOLATILITY_ALPHA_THESIS.md, WITHDRAWAL_POLICY.md, 04-income-generation.md
 
 ---
 

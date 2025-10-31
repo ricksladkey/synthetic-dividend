@@ -1,5 +1,7 @@
 # Volatility Alpha Thesis
 
+> **New to this topic?** For a structured introduction, start with the [Primary Reading Path](README.md#-primary-reading-path-recommended-for-learning) (01-07 guide) instead. This document provides comprehensive coverage with full empirical validation.
+
 **The Central Insight**: Volatility is not risk—it's opportunity. Price volatility can be systematically harvested for additional returns beyond buy-and-hold through strategic rebalancing.
 
 ---
@@ -852,7 +854,7 @@ Potential improvements to validation methodology:
 ---
 
 **See Also**:
+- [01-core-concepts.md](01-core-concepts.md) - Foundational principles
 - [INCOME_GENERATION.md](INCOME_GENERATION.md) - How to convert alpha into cash flow
-- [INVESTING_THEORY.md](INVESTING_THEORY.md) - Foundational principles
 - [PORTFOLIO_VISION.md](PORTFOLIO_VISION.md) - Multi-asset implementation
 - [experiments/volatility-alpha-validation/](../experiments/volatility-alpha-validation/) - Full validation data

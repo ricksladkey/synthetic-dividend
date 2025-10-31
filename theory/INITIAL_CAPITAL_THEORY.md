@@ -167,5 +167,5 @@ relative_performance = final_value - voo_final
 **Status**: Conceptual framework documented, implementation pending
 
 **See Also**:
-- [INVESTING_THEORY.md](INVESTING_THEORY.md) - Asset-based opportunity cost model
-- [RETURN_METRICS_ANALYSIS.md](RETURN_METRICS_ANALYSIS.md) - Deployment-adjusted metrics
+- [01-core-concepts.md](01-core-concepts.md) - Foundational principles
+- [RETURN_ADJUSTMENT_FRAMEWORK.md](RETURN_ADJUSTMENT_FRAMEWORK.md) - Return metrics framework

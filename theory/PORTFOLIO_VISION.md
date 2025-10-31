@@ -102,5 +102,5 @@ Day 15: BTC buys $4,000   → Cash = $9,500
 **Status**: Phase 1 complete (single-asset). Phase 2 planned.
 
 **See Also**:
+- [01-core-concepts.md](01-core-concepts.md) - Foundational principles
 - [INCOME_GENERATION.md](INCOME_GENERATION.md) - Portfolio-level smoothing discussion
-- [INVESTING_THEORY.md](INVESTING_THEORY.md) - Bank balance and opportunity cost
