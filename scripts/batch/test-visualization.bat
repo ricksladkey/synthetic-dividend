@@ -58,5 +58,3 @@ echo.
 REM Alternative: Generate a single chart with your preferred settings
 REM Uncomment the line below and adjust parameters as needed (use new naming convention):
 REM "%VENV_PY%" -m src.compare.runner NVDA 2024-10-22 2025-10-22 sd-9.05,50 out-nvda.png
-
-pause

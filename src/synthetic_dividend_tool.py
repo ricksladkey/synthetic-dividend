@@ -10,6 +10,7 @@ Usage:
 Commands:
     run                   Run backtests, research, and comparisons
     analyze               Analyze results and generate reports
+    dump                  Dump transaction history without visualization
     order                 Calculate order recommendations
     test                  Run test suite
 
@@ -232,6 +233,9 @@ Examples:
 
     # Calculate orders
     synthetic-dividend-tool order --ticker NVDA --holdings 1000
+
+    # Dump transaction history without visualization
+    synthetic-dividend-tool dump --ticker NVDA --start 2024-01-01 --end 2025-01-01 --output nvda_transactions.txt
 
 For detailed help on any command:
     synthetic-dividend-tool <command> --help
@@ -594,6 +598,30 @@ Examples:
     order_parser.add_argument(
         "--current-price", type=float, help="Current price (optional, will fetch if omitted)"
     )
+
+    # ========================================================================
+    # DUMP command
+    # ========================================================================
+    dump_parser = subparsers.add_parser(
+        "dump",
+        help="Dump transaction history without visualization",
+        description="Export detailed transaction history for backtests without creating charts",
+    )
+    dump_parser.add_argument("--ticker", required=True, help="Asset ticker symbol")
+    dump_parser.add_argument("--start", required=True, help="Start date (YYYY-MM-DD)")
+    dump_parser.add_argument("--end", required=True, help="End date (YYYY-MM-DD)")
+    dump_parser.add_argument(
+        "--initial-qty", type=int, default=10000, help="Initial quantity (default: 10000)"
+    )
+    dump_parser.add_argument("--sd-n", type=int, default=8, help="SD-N value (default: 8)")
+    dump_parser.add_argument(
+        "--profit-pct", type=float, default=50.0, help="Profit sharing %% (default: 50)"
+    )
+    dump_parser.add_argument(
+        "--ath-only", action="store_true", help="Use ATH-only mode (no buybacks)"
+    )
+    dump_parser.add_argument("--output", required=True, help="Output file for transaction history")
+    dump_parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     # ========================================================================
     # TEST command
@@ -1002,6 +1030,89 @@ def run_order(args) -> int:
     return 0
 
 
+def run_dump(args) -> int:
+    """Execute dump transaction history command."""
+    from datetime import datetime
+    from typing import List
+
+    from src.algorithms.factory import build_algo_from_name
+    from src.data.asset import Asset
+    from src.models.backtest import run_algorithm_backtest
+
+    try:
+        # Parse dates
+        start_date = datetime.strptime(args.start, "%Y-%m-%d").date()
+        end_date = datetime.strptime(args.end, "%Y-%m-%d").date()
+
+        if args.verbose:
+            print(f"Dumping transactions for {args.ticker} from {args.start} to {args.end}")
+            print(f"Algorithm: sd-{args.sd_n},{args.profit_pct}{' (ATH-only)' if args.ath_only else ''}")
+
+        # Load price history
+        df = Asset(args.ticker).get_prices(start_date, end_date)
+        if df.empty:
+            print(f"Error: No price data found for {args.ticker} in the given date range.")
+            return 1
+
+        # Build algorithm
+        algo_id = f"sd-ath-only-{args.sd_n},{args.profit_pct}" if args.ath_only else f"sd-{args.sd_n},{args.profit_pct}"
+        algo = build_algo_from_name(algo_id)
+
+        # Run backtest
+        txs, summary = run_algorithm_backtest(
+            df, args.ticker, initial_qty=args.initial_qty, start_date=start_date, end_date=end_date, algo=algo
+        )
+
+        # Write transactions to file
+        tx_lines: List[str] = []
+        for t in txs:
+            # If already a string, use it directly
+            if isinstance(t, str):
+                tx_lines.append(t)
+                continue
+            # Prefer a to_string() method if available
+            to_string = getattr(t, "to_string", None)
+            if callable(to_string):
+                tx_lines.append(to_string())
+                continue
+            # Fallback: try common attributes
+            action = getattr(t, "action", getattr(t, "transaction_type", None))
+            date_attr = getattr(t, "transaction_date", getattr(t, "purchase_date", None))
+            qty = getattr(t, "qty", getattr(t, "shares", None))
+            price = getattr(t, "price", getattr(t, "purchase_price", None))
+            ticker_attr = getattr(t, "ticker", None)
+            if date_attr is not None and action is not None and qty is not None and price is not None:
+                try:
+                    date_str = date_attr.isoformat()
+                except Exception:
+                    date_str = str(date_attr)
+                # Standardized format
+                tx_lines.append(
+                    f"{date_str} {action.upper()} {qty} @ {price:.2f} {ticker_attr or ''}".strip()
+                )
+                continue
+            # Last resort: use str()
+            tx_lines.append(str(t))
+
+        with open(args.output, "w") as f:
+            for line in tx_lines:
+                f.write(line + "\n")
+
+        if args.verbose:
+            print(f"Wrote {len(tx_lines)} transactions to {args.output}")
+            print("Summary:")
+            for k, v in summary.items():
+                print(f"  {k}: {v}")
+        else:
+            print(f"Transaction history dumped to {args.output} ({len(tx_lines)} transactions)")
+
+        return 0
+
+    except Exception as e:
+        print(f"Error dumping transactions: {e}")
+        return 1
+
+
 def run_test(args) -> int:
     """Execute test suite."""
     import subprocess
@@ -1064,6 +1175,9 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     elif args.command == "order":
         return run_order(args)
+
+    elif args.command == "dump":
+        return run_dump(args)
 
     elif args.command == "test":
         return run_test(args)

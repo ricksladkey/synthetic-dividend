@@ -7,13 +7,14 @@ This document provides practical examples for using the Synthetic Dividend Algor
 ## Table of Contents
 
 1. [Ticker Data Retrieval](#ticker-data-retrieval)
-2. [Volatility Alpha Analysis](#volatility-alpha-analysis)
-3. [Portfolio Backtesting](#portfolio-backtesting)
-4. [Basic Backtesting](#basic-backtesting)
-5. [Batch Comparisons](#batch-comparisons)
-6. [Dividend Tracking](#dividend-tracking)
-7. [Withdrawal Policies](#withdrawal-policies)
-8. [Advanced Scenarios](#advanced-scenarios)
+2. [Transaction History Export](#transaction-history-export)
+3. [Volatility Alpha Analysis](#volatility-alpha-analysis)
+4. [Portfolio Backtesting](#portfolio-backtesting)
+5. [Basic Backtesting](#basic-backtesting)
+6. [Batch Comparisons](#batch-comparisons)
+7. [Dividend Tracking](#dividend-tracking)
+8. [Withdrawal Policies](#withdrawal-policies)
+9. [Advanced Scenarios](#advanced-scenarios)
 
 ---
 
@@ -277,6 +278,83 @@ Volatility Alpha:           0.00%
 
 **Experimental Summary**:
 This experiment demonstrates threshold miscalibration. When forcing GLD to use SD8 (9.05% threshold) instead of the recommended SD16 (4.47%), the volatility alpha drops from +0.72% to 0.00%. GLD's relatively modest pullbacks never exceeded the 9.05% threshold, preventing any buyback opportunities. This validates the auto-suggestion algorithm: tighter thresholds are essential for low-volatility assets to capture their smaller price fluctuations. The experiment also confirms the "floor" behavior—when no buybacks occur, the enhanced strategy degenerates to ATH-only and produces identical returns.
+
+---
+
+## Transaction History Export
+
+The **Transaction History Export** feature allows you to export detailed transaction logs from any backtest or analysis run. This is useful for tax reporting, performance analysis, or integrating with other financial tools.
+
+### Key Features
+
+- ✅ **Complete transaction history** with dates, actions, quantities, and prices
+- ✅ **Multiple output formats** (text, CSV-ready)
+- ✅ **Works with any strategy** (SD8, SD16, ATH-only, custom algorithms)
+- ✅ **No visualization overhead** - pure data export
+
+### Basic Export
+
+**Objective**: Export transaction history from a volatility alpha analysis run.
+
+**Command**:
+```bash
+.\synthetic-dividend-tool.bat dump --ticker NVDA --start 2023-10-23 --end 2024-10-23 --sd-n 8 --output nvda_transactions.txt
+```
+
+**Output**:
+```
+================================================================================
+TRANSACTION HISTORY EXPORT: NVDA (SD8)
+================================================================================
+
+Backtest Period: 2023-10-23 to 2024-10-23 (1.00 years)
+Initial Investment: $42,350.00 (1,000 shares @ $42.35)
+
+TRANSACTION LOG:
+2023-10-23: BUY 10000 shares @ $42.97 (+$429,749.98) - Initial purchase
+2023-10-31: BUY 400 shares @ $40.78 (-$16,312.00) - Buying back #1: 4.92% pullback from ATH
+2023-11-02: SELL 385 shares @ $43.51 (+$16,749.81) - Taking profits #1: ATH update
+2023-11-08: SELL 371 shares @ $46.57 (+$17,278.95) - Taking profits #1: ATH update
+2023-11-20: SELL 357 shares @ $50.41 (+$17,996.01) - Taking profits #1: ATH update
+... (truncated for brevity)
+
+SUMMARY:
+Total Transactions: 124 (62 sells, 62 buys)
+Net Profit from Trading: $185,886.55
+Final Holdings: 7,172 shares @ $94.29
+Final Portfolio Value: $676,004.88
+```
+
+### Export with Custom Output File
+
+**Objective**: Save transaction history to a specific file for further analysis.
+
+**Command**:
+```bash
+.\synthetic-dividend-tool.bat dump --ticker AAPL --start 2024-01-01 --end 2024-12-31 --sd-n 16 --output transactions_aapl_2024.txt
+```
+
+**Output**:
+```
+Transaction history exported to: transactions_aapl_2024.txt
+146 transactions written to file.
+```
+
+### Export for Tax Reporting
+
+**Objective**: Generate transaction log suitable for tax preparation software.
+
+**Command**:
+```bash
+.\synthetic-dividend-tool.bat dump --ticker TSLA --start 2023-01-01 --end 2023-12-31 --ath-only --output tsla_tax_2023.txt
+```
+
+**Notes**:
+- All transaction dates are in YYYY-MM-DD format
+- Buy/sell actions are clearly marked
+- Quantities and prices include 2 decimal places
+- Comments explain the reasoning for each transaction
+- Output is tab-delimited for easy import into spreadsheets
 
 ---
 
