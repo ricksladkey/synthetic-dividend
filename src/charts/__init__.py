@@ -12,6 +12,7 @@ Key principles:
 
 Available chart types:
 - create_stacked_area_chart: For multi-component totals over time
+- create_portfolio_horn_chart: For portfolio backtest visualization (convenience wrapper)
 - create_line_with_markers_chart: For time series with event annotations
 - create_multi_panel_chart: For side-by-side comparisons
 """
@@ -20,10 +21,12 @@ from src.charts.stacked_area import (
     SeriesData,
     StackedAreaData,
     create_stacked_area_chart,
+    create_portfolio_horn_chart,
 )
 
 __all__ = [
     "SeriesData",
     "StackedAreaData",
     "create_stacked_area_chart",
+    "create_portfolio_horn_chart",
 ]

@@ -329,6 +329,12 @@ For detailed help on any command:
         default="auto",
         help='Algorithm to use: "auto" (default), "quarterly-rebalance", "per-asset:sd8", etc.',
     )
+    run_portfolio_parser.add_argument(
+        "--cash-interest-rate",
+        type=float,
+        default=0.0,
+        help="Annual interest rate on cash reserves (default: 0.0, typical: 5.0 for money market)",
+    )
     run_portfolio_parser.add_argument("--output", help="Output file for detailed results (JSON)")
     run_portfolio_parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
@@ -608,6 +614,7 @@ def run_portfolio(args) -> int:
     import json
     from datetime import datetime
 
+    from src.algorithms.portfolio_definitions import parse_portfolio_name
     from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
     from src.models.backtest import run_portfolio_backtest_v2
 
@@ -665,6 +672,7 @@ def run_portfolio(args) -> int:
             end_date=end_date,
             portfolio_algo=portfolio_algo,
             initial_investment=args.initial_investment,
+            cash_interest_rate_pct=args.cash_interest_rate,
         )
 
         # Print results
@@ -672,6 +680,8 @@ def run_portfolio(args) -> int:
         print(f"Final portfolio value: ${summary['total_final_value']:,.0f}")
         print(f"Total return: {summary['total_return']:.2f}%")
         print(f"Annualized return: {summary['annualized_return']:.2f}%")
+        if summary.get("cash_interest_earned", 0) > 0:
+            print(f"Cash interest earned: ${summary['cash_interest_earned']:,.2f} ({summary['cash_interest_rate_pct']:.2f}% APY)")
         print()
         print("Asset breakdown:")
         for ticker, data in summary["assets"].items():

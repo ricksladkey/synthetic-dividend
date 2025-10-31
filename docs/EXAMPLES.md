@@ -481,6 +481,25 @@ This demonstrates advanced portfolio features including CPI-adjusted withdrawals
 .\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-01-01 --end 2025-01-01 --output portfolio_results.json
 ```
 
+**Cash Interest Tracking**:
+```bash
+# Model money market interest on cash reserves (5% APY is typical for 2024)
+.\synthetic-dividend-tool.bat run portfolio --allocations classic --algo auto --start 2024-01-01 --end 2024-12-31 --cash-interest-rate 5.0
+
+# Example output:
+# Cash interest earned: $1,234.56 (5.00% APY)
+```
+
+The `--cash-interest-rate` parameter allows you to model interest earned on cash reserves held in the portfolio's sweeps account. This is particularly important for:
+- Portfolios with synthetic dividend strategies that maintain cash buffers (typically 10% of portfolio)
+- Retirement portfolios with pending withdrawals
+- Portfolios using quarterly rebalancing that accumulate cash between rebalances
+
+Typical values:
+- **5.0** - Money market fund rates (2024 environment)
+- **4.0** - High-yield savings account
+- **0.0** - Non-interest checking account (default)
+
 ### Named Portfolios
 
 For convenience, you can use **named portfolios** instead of specifying asset allocations as JSON. Named portfolios support parameterization similar to algorithm names.

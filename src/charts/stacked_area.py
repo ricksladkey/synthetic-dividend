@@ -263,22 +263,25 @@ def demo_horn_chart():
     print("Creating demo horn chart...")
 
     # Create sample data simulating a 60/30/10 portfolio with withdrawals
-    # Classic-plus-crypto: 60% VOO, 30% BIL, 10% BTC-USD
+    # User requests: 60% VOO, 30% BIL, 10% BTC-USD
+    # Actual allocation: We reserve 10% cash buffer for synthetic dividends
+    # So we scale down: 54% VOO, 27% BIL, 9% BTC, 10% USD cash
     start_date = date(2024, 1, 1)
     dates = [start_date + timedelta(days=30 * i) for i in range(12)]
 
-    # Simulate portfolio with monthly withdrawals
-    # Cash (sweeps account) starts at ~3% and fluctuates based on trading/withdrawals
-    cash_values = [30000, 28000, 32000, 25000, 29000, 23000, 27000, 21000, 26000, 20000, 25000, 18000]
+    # Initial investment: $1,000,000
+    # Cash (sweeps account) starts at 10% ($100K) and fluctuates with trading/withdrawals
+    # Narrow neck occurs when it approaches zero (month 10-11)
+    cash_values = [100000, 95000, 92000, 88000, 85000, 80000, 75000, 70000, 60000, 45000, 30000, 50000]
 
-    # BIL position (~30% of portfolio) - bonds, relatively stable
-    bil_values = [300000, 302000, 301000, 305000, 307000, 306000, 310000, 312000, 311000, 315000, 314000, 316000]
+    # BIL position (27% = 30% * 0.9) - bonds, relatively stable
+    bil_values = [270000, 272000, 271000, 275000, 277000, 276000, 280000, 282000, 281000, 285000, 284000, 286000]
 
-    # VOO position (~60% of portfolio) - equities, moderate growth
-    voo_values = [600000, 620000, 610000, 640000, 650000, 645000, 670000, 680000, 690000, 700000, 710000, 720000]
+    # VOO position (54% = 60% * 0.9) - equities, moderate growth
+    voo_values = [540000, 558000, 549000, 576000, 585000, 580500, 603000, 612000, 621000, 630000, 639000, 648000]
 
-    # BTC position (~10% of portfolio) - crypto, high volatility
-    btc_values = [100000, 110000, 95000, 120000, 115000, 125000, 130000, 120000, 140000, 145000, 150000, 155000]
+    # BTC position (9% = 10% * 0.9) - crypto, high volatility
+    btc_values = [90000, 99000, 85500, 108000, 103500, 112500, 117000, 108000, 126000, 130500, 135000, 139500]
 
     # Cumulative withdrawals (growing wedge below zero)
     withdrawals = [3333 * (i + 1) for i in range(12)]  # 4% annual = $3,333/month
@@ -308,17 +311,163 @@ def demo_horn_chart():
     print()
     print("Key observations:")
     print("- Total horn height = Portfolio value + Cumulative withdrawals")
-    print("- Narrow neck visible around month 8 where USD cash dips to $20K")
+    print("- Narrow neck visible at month 11 where USD cash dips to $30K")
+    print("- Cash starts at 10% buffer ($100K), gradually depletes under withdrawal pressure")
     print("- Withdrawals (red wedge) represent accumulated spending power")
     print("- Both sides of zero line represent positive wealth")
     print()
-    print("Portfolio structure (60/30/10):")
-    print("- BTC-USD (Crypto) - Top band, most volatile")
-    print("- VOO (Equities) - Orange band, moderate volatility")
-    print("- BIL (Bonds) - Brown band, low volatility")
-    print("- USD (Cash/Sweeps) - Green band, buying power for trading")
+    print("Portfolio allocation strategy:")
+    print("- User requests: 60% VOO, 30% BIL, 10% BTC-USD")
+    print("- We reserve: 10% cash buffer for synthetic dividend strategy")
+    print("- Actual allocation: 54% VOO, 27% BIL, 9% BTC, 10% USD cash")
     print()
-    print("Note: Cash is the SWEEPS ACCOUNT (buying power), distinct from BIL position")
+    print("Visual stacking (bottom to top by volatility):")
+    print("- USD (Cash/Sweeps) - Green band, buying power (~10% initially)")
+    print("- BIL (Bonds) - Brown band, Treasury bills (~27%)")
+    print("- VOO (Equities) - Orange band, S&P 500 (~54%)")
+    print("- BTC-USD (Crypto) - Blue band, Bitcoin (~9%)")
+    print()
+    print("Note: Cash is the SWEEPS ACCOUNT (buying power), distinct from BIL position.")
+    print("      The 10% buffer prevents forced asset sales during buyback opportunities.")
+
+
+def create_portfolio_horn_chart(
+    portfolio_summary: dict,
+    output: Optional[str] = None,
+    resample: Optional[str] = None,
+) -> str:
+    """Create horn chart from actual portfolio backtest results.
+
+    Args:
+        portfolio_summary: Summary dict from run_portfolio_backtest_v2
+        output: Output file path (default: auto-generated)
+        resample: Resampling frequency ('D'=daily, 'W'=weekly, 'M' or 'ME'=monthly, None=daily)
+
+    Returns:
+        Path to saved chart file
+    """
+    from datetime import date
+    import pandas as pd
+
+    # Extract daily data
+    daily_values = portfolio_summary["daily_values"]
+    daily_bank = portfolio_summary["daily_bank_values"]
+    daily_asset_values = portfolio_summary.get("daily_asset_values", {})
+    daily_withdrawals_dict = portfolio_summary.get("daily_withdrawals", {})
+    allocations = portfolio_summary["allocations"]
+
+    # Build dates list
+    dates = sorted(daily_values.keys())
+
+    # Extract per-asset values
+    cash_values = [daily_bank[d] for d in dates]
+
+    # Build per-asset series data
+    asset_series_data = {}
+    for ticker in allocations.keys():
+        if ticker in daily_asset_values:
+            asset_series_data[ticker] = [daily_asset_values[ticker].get(d, 0) for d in dates]
+
+    # Handle resampling if requested
+    if resample and resample != 'D':
+        df_data = {'date': dates, 'cash': cash_values}
+        # Add per-asset columns
+        for ticker, values in asset_series_data.items():
+            df_data[ticker] = values
+
+        df = pd.DataFrame(df_data)
+        df['date'] = pd.to_datetime(df['date'])
+        df = df.set_index('date')
+
+        # Convert deprecated 'M' to 'ME' (month end)
+        resample_freq = 'ME' if resample == 'M' else resample
+
+        # Resample (use mean for values)
+        df_resampled = df.resample(resample_freq).mean()
+
+        dates = [d.date() for d in df_resampled.index]
+        cash_values = df_resampled['cash'].tolist()
+
+        # Update asset series data with resampled values
+        for ticker in asset_series_data.keys():
+            asset_series_data[ticker] = df_resampled[ticker].tolist()
+
+    # Build cumulative withdrawals from daily withdrawal events
+    cumulative_withdrawals = []
+    cumulative = 0.0
+    for d in dates:
+        if d in daily_withdrawals_dict:
+            cumulative += daily_withdrawals_dict[d]
+        cumulative_withdrawals.append(cumulative)
+
+    # Define asset volatility order (least to most volatile for stacking)
+    # Common ordering: Cash < Bonds (BIL/TLT) < Stocks (VOO/SPY) < Crypto (BTC)
+    volatility_order = {
+        'BIL': 1, 'TLT': 1, 'SHY': 1,  # Bonds
+        'VOO': 2, 'SPY': 2, 'QQQ': 2, 'IVV': 2,  # Equity indices
+        'AAPL': 3, 'MSFT': 3, 'GOOG': 3, 'NVDA': 3,  # Tech stocks
+        'GLD': 3, 'GLDM': 3,  # Gold
+        'BTC-USD': 4, 'ETH-USD': 4,  # Crypto
+    }
+
+    # Sort assets by volatility (lowest to highest for bottom-to-top stacking)
+    sorted_tickers = sorted(
+        asset_series_data.keys(),
+        key=lambda t: (volatility_order.get(t, 2.5), t)  # Default to mid-range if unknown
+    )
+
+    # Build positive series (bottom to top: cash, then assets by volatility)
+    positive_series = [SeriesData("USD (Cash)", cash_values, "#2ca02c")]
+
+    # Asset color palette (different from cash green)
+    asset_colors = ["#8c564b", "#ff7f0e", "#1f77b4", "#9467bd", "#e377c2"]
+
+    for i, ticker in enumerate(sorted_tickers):
+        color = asset_colors[i % len(asset_colors)]
+        # Add asset type label
+        if ticker in ['BIL', 'TLT', 'SHY']:
+            label = f"{ticker} (Bonds)"
+        elif ticker in ['VOO', 'SPY', 'QQQ', 'IVV']:
+            label = f"{ticker} (Equities)"
+        elif ticker in ['BTC-USD', 'ETH-USD']:
+            label = f"{ticker} (Crypto)"
+        else:
+            label = ticker
+
+        positive_series.append(SeriesData(label, asset_series_data[ticker], color))
+
+    # Build negative series (withdrawals)
+    negative_series = []
+    if cumulative_withdrawals and cumulative_withdrawals[-1] > 0:
+        negative_series.append(
+            SeriesData("Withdrawals (Spending Power)", cumulative_withdrawals, "#d62728")
+        )
+
+    data = StackedAreaData(
+        dates=dates,
+        positive_series=positive_series,
+        negative_series=negative_series,
+    )
+
+    # Create title with summary stats
+    start_date = portfolio_summary["start_date"]
+    end_date = portfolio_summary["end_date"]
+    total_return = portfolio_summary["total_return"]
+    annualized_return = portfolio_summary["annualized_return"]
+    total_withdrawn = portfolio_summary.get("total_withdrawn", 0)
+
+    title = f"Portfolio Horn Chart: {start_date} to {end_date}\n"
+    title += f"Total Return: {total_return:.2f}% | Annualized: {annualized_return:.2f}%"
+
+    if total_withdrawn > 0:
+        title += f" | Withdrawn: ${total_withdrawn:,.0f}"
+
+    return create_stacked_area_chart(
+        data=data,
+        title=title,
+        y_label="Value ($)",
+        output=output,
+    )
 
 
 if __name__ == "__main__":

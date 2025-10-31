@@ -171,6 +171,7 @@ Cash reserves aren't dead weight - they earn market returns while buffering with
 - 📚 **FIFO buyback stack** for tax-efficient cost basis tracking
 - 💰 **Bank balance tracking** for cash flow analysis
 - 💵 **Real dividend/interest income** (AAPL, BIL, etc.) credited to bank
+- 💸 **Cash interest tracking** (configurable APY for money market sweeps accounts)
 - 🏦 **Dual bank modes** (simple: allow margin, strict: never negative)
 - � **Withdrawal policy** (4% rule with CPI adjustment, orthogonal to strategy)
 - 📊 **Financial adjustments** using real market benchmarks (VOO/BIL)
@@ -319,6 +320,9 @@ The **Synthetic Dividend Tool** provides a single swiss army knife interface to 
 # Portfolio with specific algorithms
 .\synthetic-dividend-tool.bat run portfolio --allocations '{"VOO": 0.6, "BIL": 0.4}' --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
 .\synthetic-dividend-tool.bat run portfolio --allocations '{"NVDA": 0.5, "VOO": 0.5}' --algo "per-asset:sd8" --start 2024-01-01 --end 2025-01-01
+
+# Portfolio with cash interest (5% APY money market rate on cash reserves)
+.\synthetic-dividend-tool.bat run portfolio --allocations classic --algo auto --start 2024-01-01 --end 2024-12-31 --cash-interest-rate 5.0
 
 # List all available portfolio algorithms
 .\synthetic-dividend-tool.bat --list-algorithms

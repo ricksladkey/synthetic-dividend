@@ -1172,6 +1172,7 @@ def run_portfolio_backtest_v2(
     allow_margin: bool = True,
     withdrawal_rate_pct: float = 0.0,
     withdrawal_frequency_days: int = 30,
+    cash_interest_rate_pct: float = 0.0,
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Execute portfolio backtest with shared cash pool and portfolio-level algorithm.
 
@@ -1189,6 +1190,10 @@ def run_portfolio_backtest_v2(
         portfolio_algo: Portfolio algorithm implementing PortfolioAlgorithmBase
         initial_investment: Total starting capital
         allow_margin: Whether to allow negative bank balance
+        withdrawal_rate_pct: Annual withdrawal rate (0-100)
+        withdrawal_frequency_days: Days between withdrawals (default 30)
+        cash_interest_rate_pct: Annual interest rate on cash reserves (default 0.0)
+            Typical values: ~5% for money market, ~0% for non-interest checking
 
     Returns:
         Tuple of (all_transactions, portfolio_summary)
@@ -1285,6 +1290,8 @@ def run_portfolio_backtest_v2(
     # Track daily portfolio values
     daily_portfolio_values: Dict[date, float] = {}
     daily_bank_values: Dict[date, float] = {}
+    daily_asset_values: Dict[str, Dict[date, float]] = {ticker: {} for ticker in allocations.keys()}
+    daily_withdrawals: Dict[date, float] = {}  # Track withdrawals by date
 
     # Withdrawal tracking
     total_withdrawn: float = 0.0
@@ -1297,6 +1304,10 @@ def run_portfolio_backtest_v2(
         base_withdrawal_amount = annual_withdrawal * (withdrawal_frequency_days / 365.25)
     else:
         base_withdrawal_amount = 0.0
+
+    # Cash interest tracking
+    total_interest_earned: float = 0.0
+    daily_interest_rate = (cash_interest_rate_pct / 100.0) / 365.25 if cash_interest_rate_pct > 0 else 0.0
 
     # Main backtest loop
     for current_date in common_dates:
@@ -1387,9 +1398,60 @@ def run_portfolio_backtest_v2(
             if days_since_last >= withdrawal_frequency_days:
                 # Withdraw from shared bank (portfolio-level, not per-asset)
                 withdrawal_amount = base_withdrawal_amount
-                actual_withdrawal = min(withdrawal_amount, shared_bank) if not allow_margin else withdrawal_amount
 
-                shared_bank -= actual_withdrawal
+                # Check if we have enough cash
+                if shared_bank >= withdrawal_amount:
+                    # Simple case: withdraw from cash
+                    actual_withdrawal = withdrawal_amount
+                    shared_bank -= actual_withdrawal
+                    withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn from cash, bank=${shared_bank:.2f}"
+                else:
+                    # Need to sell assets to meet withdrawal
+                    # First, withdraw all available cash
+                    cash_available = max(0, shared_bank)
+                    shortfall = withdrawal_amount - cash_available
+
+                    if not allow_margin and shortfall > 0:
+                        # Sell assets proportionally to raise cash for shortfall
+                        total_asset_value = sum(holdings[t] * assets[t].price for t in allocations.keys())
+
+                        if total_asset_value > 0:
+                            # Sell proportionally from each asset
+                            for ticker in allocations.keys():
+                                if holdings[ticker] > 0:
+                                    asset_value = holdings[ticker] * assets[ticker].price
+                                    proportion = asset_value / total_asset_value
+                                    amount_to_raise = shortfall * proportion
+                                    shares_to_sell = int(amount_to_raise / assets[ticker].price)
+
+                                    if shares_to_sell > 0:
+                                        shares_to_sell = min(shares_to_sell, holdings[ticker])
+                                        proceeds = shares_to_sell * assets[ticker].price
+                                        holdings[ticker] -= shares_to_sell
+                                        shared_bank += proceeds
+
+                                        # Record forced sale
+                                        all_transactions.append(
+                                            Transaction(
+                                                transaction_date=current_date,
+                                                action="SELL",
+                                                qty=shares_to_sell,
+                                                price=assets[ticker].price,
+                                                ticker=ticker,
+                                                notes=f"Forced sale to fund withdrawal (raised ${proceeds:.2f})",
+                                            )
+                                        )
+
+                        # Now withdraw what we can (cash available + proceeds from sales)
+                        actual_withdrawal = min(withdrawal_amount, shared_bank)
+                        shared_bank -= actual_withdrawal
+                        withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn (${cash_available:.2f} cash + ${actual_withdrawal-cash_available:.2f} from asset sales), bank=${shared_bank:.2f}"
+                    else:
+                        # allow_margin=True: allow negative bank balance
+                        actual_withdrawal = withdrawal_amount
+                        shared_bank -= actual_withdrawal
+                        withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn (margin used), bank=${shared_bank:.2f}"
+
                 total_withdrawn += actual_withdrawal
                 withdrawal_count += 1
                 last_withdrawal_date = current_date
@@ -1402,14 +1464,27 @@ def run_portfolio_backtest_v2(
                         qty=0,
                         price=0.0,
                         ticker="CASH",
-                        notes=f"${actual_withdrawal:.2f} withdrawn, bank=${shared_bank:.2f}",
+                        notes=withdrawal_notes,
                     )
                 )
+
+                # Track daily withdrawals for visualization
+                daily_withdrawals[current_date] = actual_withdrawal
+
+        # Accrue daily interest on cash reserves (if positive balance)
+        if daily_interest_rate > 0 and shared_bank > 0:
+            daily_interest = shared_bank * daily_interest_rate
+            shared_bank += daily_interest
+            total_interest_earned += daily_interest
 
         # Record daily portfolio value
         total_asset_value = sum(holdings[t] * assets[t].price for t in allocations.keys())
         daily_portfolio_values[current_date] = shared_bank + total_asset_value
         daily_bank_values[current_date] = shared_bank
+
+        # Record per-asset daily values
+        for ticker in allocations.keys():
+            daily_asset_values[ticker][current_date] = holdings[ticker] * assets[ticker].price
 
     # Calculate final portfolio metrics
     final_date = common_dates[-1]
@@ -1462,11 +1537,15 @@ def run_portfolio_backtest_v2(
         "allocations": allocations,
         "daily_values": daily_portfolio_values,
         "daily_bank_values": daily_bank_values,
+        "daily_asset_values": daily_asset_values,  # Per-asset daily values for visualization
+        "daily_withdrawals": daily_withdrawals,  # Daily withdrawal amounts for horn chart
         "transaction_count": len([tx for tx in all_transactions if "SKIP" not in tx.action and tx.action != "WITHDRAWAL"]),
         "skipped_count": len([tx for tx in all_transactions if "SKIP" in tx.action]),
         "total_withdrawn": total_withdrawn,
         "withdrawal_count": withdrawal_count,
         "withdrawal_rate_pct": withdrawal_rate_pct,
+        "cash_interest_earned": total_interest_earned,
+        "cash_interest_rate_pct": cash_interest_rate_pct,
     }
 
     return all_transactions, portfolio_summary
