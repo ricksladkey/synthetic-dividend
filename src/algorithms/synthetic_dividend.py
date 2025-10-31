@@ -150,7 +150,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         profit = (self.last_transaction_price - fill_price) * quantity
         return (profit / current_value) * 100 if current_value != 0 else 0.0
 
-    def place_orders(self, holdings: int, current_price: float) -> None:
+    def place_orders(self, holdings: int, current_price: float, placed_date: Optional[date] = None) -> None:
         """Calculate and place symmetric buy/sell orders with the market.
 
         This is the core strategy logic: place limit orders at geometrically
@@ -174,6 +174,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         Args:
             holdings: Current share count
             current_price: Price anchor for order calculation
+            placed_date: Date order is placed (for anti-chatter logic)
         """
         # Clear stale orders - all previous orders are invalidated after a fill
         self.market.clear_orders()
@@ -199,6 +200,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     order_type=OrderType.LIMIT,
                     limit_price=orders["next_buy_price"],
                     notes="Buying back",
+                    placed_date=placed_date,
                 )
                 self.market.place_order(buy_order)
 
@@ -213,6 +215,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                             order_type=OrderType.LIMIT,
                             limit_price=orders["next_sell_price"],
                             notes=f"ATH-sell at new ATH ${self.all_time_high:.2f}",
+                            placed_date=placed_date,
                         )
                         self.market.place_order(sell_order)
                 else:
@@ -223,6 +226,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                         order_type=OrderType.LIMIT,
                         limit_price=orders["next_sell_price"],
                         notes="Taking profits",
+                        placed_date=placed_date,
                     )
                     self.market.place_order(sell_order)
         else:
@@ -234,6 +238,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     order_type=OrderType.LIMIT,
                     limit_price=orders["next_sell_price"],
                     notes=f"ATH-only sell, ATH=${self.ath_price:.2f}",
+                    placed_date=placed_date,
                 )
                 self.market.place_order(sell_order)
 
@@ -341,7 +346,8 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     holdings -= txn.qty
 
                 # Place fresh orders based on new position and fill price
-                self.place_orders(holdings, fill_price)
+                # Pass current date so orders don't execute on same day (anti-chatter)
+                self.place_orders(holdings, fill_price, placed_date=date_)
 
             # Accumulate all transactions for this day
             transactions.extend(executed)
