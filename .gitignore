@@ -64,15 +64,15 @@ cache/
 # Subfolders can have their own .gitignore to track specific images
 /*.png
 
-# Root-level PDF and CSV files (transient backtest outputs)
+# Root-level PDF, CSV and image files (transient backtest outputs)
 /*.pdf
 /*.csv
+/*.png
 
 # Backup files from consolidation/refactoring
 *.old
 
 # Sandbox/scratch output (ephemeral, not versioned)
-output/
 test_output/
 
 # Output files from compare/runner
