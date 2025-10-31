@@ -180,6 +180,80 @@
             color: #667eea;
         }
         
+        .visualizations {
+            background: #f8f9fa;
+            padding: 60px 0;
+            margin-top: 40px;
+        }
+        
+        .visualizations h3 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        
+        .visualizations > .container > p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .viz-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .viz-item {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+        
+        .viz-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .viz-item a {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .viz-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .pdf-placeholder {
+            height: 200px;
+            background: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+        }
+        
+        .pdf-placeholder span {
+            margin-bottom: 10px;
+        }
+        
+        .viz-item p {
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0;
+        }
+        
         footer {
             background: #2d3748;
             color: white;
@@ -220,21 +294,20 @@
     
     <div class="container">
         <div class="hero">
-            <h2>What is Volatility Harvesting?</h2>
+            <h2>Research on Volatility Harvesting</h2>
             <p>
-                The Synthetic Dividend algorithm systematically harvests volatility by maintaining 
-                a constant portfolio value through symmetric buy-low/sell-high rebalancing. As the 
-                market oscillates, the strategy generates "synthetic dividend" cash flows while 
-                preserving the initial position.
+                This project investigates systematic approaches to volatility harvesting through 
+                algorithmic rebalancing strategies. The Synthetic Dividend algorithm maintains 
+                constant portfolio value through symmetric rebalancing, potentially generating 
+                cash flows from market oscillations while preserving initial positions.
             </p>
             <p>
-                Unlike traditional buy-and-hold investing, volatility harvesting recognizes that 
-                <strong>volatility itself has value</strong> that can be systematically extracted 
-                through disciplined rebalancing.
+                The research examines whether volatility itself can be systematically harvested 
+                through disciplined rebalancing, independent of directional market predictions.
             </p>
             
             <div class="formula">
-                <strong>Core Principle:</strong><br>
+                <strong>Core Mechanism:</strong><br>
                 Buy at: P / (1 + r) | Sell at: P × (1 + r)<br>
                 <em>Where r = rebalance trigger (e.g., 9.05% for sd8)</em>
             </div>
@@ -242,11 +315,11 @@
         
         <div class="stats">
             <div class="stat-card">
-                <h3>110</h3>
+                <h3>263</h3>
                 <p>Tests Passing</p>
             </div>
             <div class="stat-card">
-                <h3>89%</h3>
+                <h3>33%</h3>
                 <p>Code Coverage</p>
             </div>
             <div class="stat-card">
@@ -263,7 +336,7 @@
             <div class="feature">
                 <h3>🎯 Core Algorithm</h3>
                 <ul>
-                    <li>Symmetric FIFO rebalancing</li>
+                    <li>Symmetric LIFO rebalancing (when STCG == LTCG)</li>
                     <li>Multi-bracket gap handling</li>
                     <li>Profit sharing mechanism</li>
                     <li>ATH-only mode option</li>
@@ -307,7 +380,7 @@
             <div class="feature">
                 <h3>🧪 Testing</h3>
                 <ul>
-                    <li>110 comprehensive tests</li>
+                    <li>263 comprehensive tests</li>
                     <li>Property-based testing</li>
                     <li>Symmetry verification</li>
                     <li>Multi-scenario coverage</li>
@@ -328,12 +401,42 @@
         </div>
     </div>
     
+    <div class="visualizations">
+        <div class="container">
+            <h3>Sample Visualizations</h3>
+            <p>Explore empirical results from the volatility harvesting research:</p>
+            <div class="viz-grid">
+                <div class="viz-item">
+                    <a href="https://github.com/ricksladkey/synthetic-dividend/blob/main/output/horn_chart_daily.png">
+                        <img src="https://raw.githubusercontent.com/ricksladkey/synthetic-dividend/main/output/horn_chart_daily.png" alt="Daily Performance Chart" loading="lazy">
+                        <p>Daily Performance Analysis</p>
+                    </a>
+                </div>
+                <div class="viz-item">
+                    <a href="https://github.com/ricksladkey/synthetic-dividend/blob/main/output/nvda_report_final.pdf">
+                        <div class="pdf-placeholder">
+                            <span>📄</span>
+                            <p>NVDA Backtest Report</p>
+                        </div>
+                        <p>Comprehensive NVDA Analysis (PDF)</p>
+                    </a>
+                </div>
+                <div class="viz-item">
+                    <a href="https://github.com/ricksladkey/synthetic-dividend/blob/main/output/horn_chart_no_withdrawals.png">
+                        <img src="https://raw.githubusercontent.com/ricksladkey/synthetic-dividend/main/output/horn_chart_no_withdrawals.png" alt="No Withdrawals Analysis" loading="lazy">
+                        <p>Accumulation Strategy</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div class="cta">
         <div class="container">
-            <h2>Ready to Explore?</h2>
-            <p>Dive into the code, read the research, or contribute to the project</p>
-            <a href="https://github.com/ricksladkey/synthetic-dividend" class="btn">View on GitHub</a>
-            <a href="https://github.com/ricksladkey/synthetic-dividend/blob/main/theory/VOLATILITY_ALPHA_THESIS.md" class="btn btn-secondary">Read the Thesis</a>
+            <h2>Academic Research</h2>
+            <p>Explore the volatility harvesting hypothesis through code, documentation, and empirical analysis</p>
+            <a href="https://github.com/ricksladkey/synthetic-dividend" class="btn">View Source Code</a>
+            <a href="https://github.com/ricksladkey/synthetic-dividend/blob/main/theory/VOLATILITY_ALPHA_THESIS.md" class="btn btn-secondary">Read Research Thesis</a>
         </div>
     </div>
     
