@@ -278,16 +278,18 @@ For detailed help on any command:
     run_backtest_parser.add_argument("--start", required=True, help="Start date (YYYY-MM-DD)")
     run_backtest_parser.add_argument("--end", required=True, help="End date (YYYY-MM-DD)")
     run_backtest_parser.add_argument(
-        "--initial-qty", type=int, default=1000, help="Initial quantity (default: 1000)"
-    )
-    run_backtest_parser.add_argument("--sd-n", type=int, default=8, help="SD-N value (default: 8)")
-    run_backtest_parser.add_argument(
-        "--profit-pct", type=float, default=50.0, help="Profit sharing %% (default: 50)"
+        "--initial-investment", type=float, default=1_000_000, help="Initial investment amount (default: 1,000,000)"
     )
     run_backtest_parser.add_argument(
-        "--ath-only", action="store_true", help="Use ATH-only mode (no buybacks)"
+        "--initial-qty", type=int, help="Initial quantity in shares (alternative to --initial-investment)"
+    )
+    run_backtest_parser.add_argument(
+        "--algorithm",
+        default="sd8",
+        help='Algorithm name (e.g., "sd8", "sd4-75", "buy-and-hold", default: "sd8")'
     )
     run_backtest_parser.add_argument("--output", help="Output file for results (CSV)")
+    run_backtest_parser.add_argument("--pdf-report", help="Generate PDF report (provide output path)")
     run_backtest_parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     # Return adjustment options
@@ -591,7 +593,11 @@ Examples:
     )
     order_parser.add_argument("--ticker", required=True, help="Asset ticker")
     order_parser.add_argument("--holdings", type=int, required=True, help="Current holdings")
-    order_parser.add_argument("--sd-n", type=int, default=8, help="SD-N value (default: 8)")
+    order_parser.add_argument(
+        "--algorithm",
+        default="sd8",
+        help='Algorithm name (e.g., "sd8", "sd-9.15,50", default: "sd8")'
+    )
     order_parser.add_argument(
         "--ath", type=float, help="Current ATH (optional, will fetch if omitted)"
     )
@@ -613,12 +619,10 @@ Examples:
     dump_parser.add_argument(
         "--initial-qty", type=int, default=10000, help="Initial quantity (default: 10000)"
     )
-    dump_parser.add_argument("--sd-n", type=int, default=8, help="SD-N value (default: 8)")
     dump_parser.add_argument(
-        "--profit-pct", type=float, default=50.0, help="Profit sharing %% (default: 50)"
-    )
-    dump_parser.add_argument(
-        "--ath-only", action="store_true", help="Use ATH-only mode (no buybacks)"
+        "--algorithm",
+        default="sd8",
+        help='Algorithm name (e.g., "sd8", "sd-9.15,50", "sd-ath-only-9.15,50", default: "sd8")'
     )
     dump_parser.add_argument("--output", required=True, help="Output file for transaction history")
     dump_parser.add_argument("--verbose", action="store_true", help="Verbose output")
@@ -794,15 +798,119 @@ def run_unified(args) -> int:
 
 def run_backtest(args) -> int:
     """Execute backtest command."""
+    from datetime import datetime
+    from src.models.backtest import run_algorithm_backtest
+    from src.data.fetcher import HistoryFetcher
 
-    # Convert args to run_model format
-    sys.argv = ["run_model.py", args.ticker]
-    if args.verbose:
-        print(f"Running backtest: {args.ticker} from {args.start} to {args.end}")
+    try:
+        # Parse dates
+        start_date = datetime.strptime(args.start, "%Y-%m-%d").date()
+        end_date = datetime.strptime(args.end, "%Y-%m-%d").date()
 
-    # This is a simplified version - would need to properly integrate with run_model
-    print("Backtest functionality - to be integrated with src.run_model")
-    return 0
+        if args.verbose:
+            print(f"Running backtest: {args.ticker} from {start_date} to {end_date}")
+
+        # Fetch price data
+        fetcher = HistoryFetcher()
+        df = fetcher.get_history(args.ticker, start_date, end_date)
+
+        if df is None or df.empty:
+            print(f"Error: No data available for {args.ticker}")
+            return 1
+
+        # Calculate initial quantity from investment amount
+        first_price = df.iloc[0]['Close']
+
+        if args.initial_qty:
+            # User specified shares
+            initial_qty = args.initial_qty
+            initial_investment = initial_qty * first_price
+        else:
+            # User specified dollars (default)
+            initial_investment = args.initial_investment
+            initial_qty = int(initial_investment / first_price)
+
+        if args.verbose:
+            print(f"Initial purchase: {initial_qty} shares @ ${first_price:.2f} = ${initial_investment:,.2f}")
+
+        # Parse algorithm name (e.g., "sd8", "sd4-75", "buy-and-hold")
+        from src.algorithms.factory import build_algo_from_name
+
+        algo = build_algo_from_name(args.algorithm)
+
+        # Run backtest
+        transactions, summary = run_algorithm_backtest(
+            df=df,
+            ticker=args.ticker,
+            initial_qty=initial_qty,
+            start_date=start_date,
+            end_date=end_date,
+            algo=algo
+        )
+
+        # Enhance summary with additional fields for PDF report
+        summary['initial_investment'] = initial_investment
+        summary['final_price'] = summary.get('end_price', 0)
+        summary['final_holdings'] = summary.get('holdings', 0)
+        summary['final_bank'] = summary.get('bank', 0)
+        summary['final_portfolio_value'] = summary.get('total', 0)
+        summary['total_return_pct'] = summary.get('total_return', 0) * 100  # Convert to percentage
+        summary['annualized_return_pct'] = summary.get('annualized', 0)  # Already in percentage
+
+        # Print summary
+        print("\nBACKTEST SUMMARY:")
+        print(f"Algorithm: {args.algorithm}")
+        print(f"Initial investment: ${initial_investment:,.2f} ({initial_qty} shares)")
+        print(f"Final portfolio value: ${summary.get('final_portfolio_value', 0):,.2f}")
+        print(f"Final holdings: {summary.get('final_holdings', 0)} shares")
+        print(f"Final bank: ${summary.get('final_bank', 0):,.2f}")
+        print(f"Total return: {summary.get('total_return_pct', 0):.2f}%")
+        print(f"Annualized return: {summary.get('annualized_return_pct', 0):.2f}%")
+        print(f"Total transactions: {len(transactions)}")
+
+        # Generate PDF report if requested
+        if args.pdf_report:
+            from src.reports import create_backtest_pdf_report
+
+            # Prepare summary with additional metadata
+            summary['algorithm_name'] = args.algorithm
+            summary['buy_count'] = len([tx for tx in transactions if tx.action == "BUY"])
+            summary['sell_count'] = len([tx for tx in transactions if tx.action == "SELL"])
+            summary['transaction_count'] = len(transactions)
+
+            pdf_path = create_backtest_pdf_report(
+                ticker=args.ticker,
+                transactions=transactions,
+                summary=summary,
+                price_data=df,
+                output_path=args.pdf_report
+            )
+
+            print(f"\nPDF report generated: {pdf_path}")
+
+        # Save CSV if requested
+        if args.output:
+            import csv
+            with open(args.output, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(['Date', 'Action', 'Qty', 'Price', 'Notes'])
+                for tx in transactions:
+                    writer.writerow([
+                        tx.transaction_date,
+                        tx.action,
+                        tx.qty,
+                        f"${tx.price:.2f}",
+                        tx.notes
+                    ])
+            print(f"Transaction log saved: {args.output}")
+
+        return 0
+
+    except Exception as e:
+        print(f"Error running backtest: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
 
 
 def run_research(args) -> int:
@@ -1024,7 +1132,7 @@ def run_order(args) -> int:
 
     print(f"Calculating orders for {args.ticker}...")
     print(f"Holdings: {args.holdings}")
-    print(f"SD-N: {args.sd_n}")
+    print(f"Algorithm: {args.algorithm}")
 
     # Would integrate with order_calculator
     return 0
@@ -1046,7 +1154,7 @@ def run_dump(args) -> int:
 
         if args.verbose:
             print(f"Dumping transactions for {args.ticker} from {args.start} to {args.end}")
-            print(f"Algorithm: sd-{args.sd_n},{args.profit_pct}{' (ATH-only)' if args.ath_only else ''}")
+            print(f"Algorithm: {args.algorithm}")
 
         # Load price history
         df = Asset(args.ticker).get_prices(start_date, end_date)
@@ -1055,8 +1163,7 @@ def run_dump(args) -> int:
             return 1
 
         # Build algorithm
-        algo_id = f"sd-ath-only-{args.sd_n},{args.profit_pct}" if args.ath_only else f"sd-{args.sd_n},{args.profit_pct}"
-        algo = build_algo_from_name(algo_id)
+        algo = build_algo_from_name(args.algorithm)
 
         # Run backtest
         txs, summary = run_algorithm_backtest(

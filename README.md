@@ -331,7 +331,7 @@ The **Synthetic Dividend Tool** provides a single swiss army knife interface to 
 .\synthetic-dividend-tool.bat analyze gap-bonus --input research_phase1_1year_core.csv
 
 # Calculate order recommendations
-.\synthetic-dividend-tool.bat order --ticker NVDA --holdings 1000 --sd-n 8
+.\synthetic-dividend-tool.bat order --ticker NVDA --holdings 1000 --algorithm sd8
 
 # Run test suite
 .\synthetic-dividend-tool.bat test

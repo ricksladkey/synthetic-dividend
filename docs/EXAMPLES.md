@@ -298,7 +298,7 @@ The **Transaction History Export** feature allows you to export detailed transac
 
 **Command**:
 ```bash
-.\synthetic-dividend-tool.bat dump --ticker NVDA --start 2023-10-23 --end 2024-10-23 --sd-n 8 --output nvda_transactions.txt
+.\synthetic-dividend-tool.bat dump --ticker NVDA --start 2023-10-23 --end 2024-10-23 --algorithm sd8 --output nvda_transactions.txt
 ```
 
 **Output**:
@@ -331,7 +331,7 @@ Final Portfolio Value: $676,004.88
 
 **Command**:
 ```bash
-.\synthetic-dividend-tool.bat dump --ticker AAPL --start 2024-01-01 --end 2024-12-31 --sd-n 16 --output transactions_aapl_2024.txt
+.\synthetic-dividend-tool.bat dump --ticker AAPL --start 2024-01-01 --end 2024-12-31 --algorithm sd16 --output transactions_aapl_2024.txt
 ```
 
 **Output**:
@@ -1363,7 +1363,7 @@ Benefits:
 .\synthetic-dividend-tool.bat analyze volatility-alpha --ticker TICKER --start START --end END
 
 # Basic backtest
-.\synthetic-dividend-tool.bat run backtest --ticker TICKER --start START --end END --sd-n 8 --initial-qty 100
+.\synthetic-dividend-tool.bat run backtest --ticker TICKER --start START --end END --algorithm sd8 --initial-investment 1000000
 
 # Portfolio backtest
 .\synthetic-dividend-tool.bat run portfolio --allocations '{"VOO": 0.6, "BIL": 0.4}' --algo auto --start START --end END
