@@ -595,6 +595,7 @@ def run_algorithm_backtest(
                         price=price,
                         ticker=ticker,
                         notes=f"{tx.notes}, holdings = {holdings}, bank = {bank:.2f}",
+                        limit_price=tx.limit_price,
                     )
                 )
                 # Record holdings change for time-weighted calculations
@@ -636,6 +637,7 @@ def run_algorithm_backtest(
                             price=price,
                             ticker=ticker,
                             notes=f"{tx.notes}, holdings = {holdings}, bank = {bank:.2f}",
+                            limit_price=tx.limit_price,
                         )
                     )
                     # Record holdings change for time-weighted calculations

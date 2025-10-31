@@ -20,6 +20,7 @@ class Transaction:
     transaction_date: Optional[date] = None  # Transaction date (filled by backtest engine)
     price: float = 0.0  # Execution price per share (filled by backtest engine)
     ticker: str = ""  # Stock symbol (filled by backtest engine)
+    limit_price: Optional[float] = None  # Algorithmic limit price (if this was a limit order)
 
     def to_string(self) -> str:
         """Format transaction as human-readable string."""
