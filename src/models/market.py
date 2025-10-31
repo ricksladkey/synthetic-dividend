@@ -35,6 +35,9 @@ class Order:
 
     Limit orders trigger when price crosses threshold.
     Market orders execute immediately at current price.
+
+    Orders placed on day D cannot execute until day D+1 to prevent
+    chattering when multiple bracket levels trigger on the same day.
     """
 
     action: OrderAction
@@ -42,6 +45,7 @@ class Order:
     order_type: OrderType = OrderType.LIMIT
     limit_price: Optional[float] = None
     notes: str = ""
+    placed_date: Optional[date] = None  # Date order was placed (for anti-chatter logic)
 
     def __post_init__(self):
         """Validate order parameters."""
@@ -76,21 +80,22 @@ class Order:
             # Sell limit triggers when price rises to or above limit
             return high >= self.limit_price
 
-    def get_execution_price(self, open_price: Optional[float]) -> float:
-        """Determine execution price for triggered order.
+    def get_execution_price(self, open_price: Optional[float], low: float, high: float) -> float:
+        """Determine execution price for triggered order using REALISTIC market logic.
 
-        Market orders use open price.
-        Limit orders ALWAYS fill at limit price to enable exact symmetry.
+        Market orders: fill at open price
+        Limit orders: fill at limit if within day's range, fill at open if gapped through
 
-        Multi-bracket gaps are handled by iteration: each bracket crossing
-        creates a separate transaction at its theoretical price, enabling
-        perfect FIFO unwinding symmetry.
+        This models real market behavior where gaps result in fills at the gap price,
+        which AMPLIFIES volatility alpha by giving better fills than the limit price.
 
         Args:
-            open_price: Day's opening price (used for market orders)
+            open_price: Day's opening price
+            low: Day's low price
+            high: Day's high price
 
         Returns:
-            Actual execution price
+            Realistic execution price
         """
         if self.order_type == OrderType.MARKET:
             if open_price is not None:
@@ -98,11 +103,29 @@ class Order:
             # Fallback if no open price available
             return self.limit_price if self.limit_price else 0.0
 
-        # Limit orders ALWAYS fill at limit price
-        # The iteration logic handles multi-bracket gaps by creating
-        # multiple transactions (one per bracket level)
+        # Limit orders: realistic market execution
         assert self.limit_price is not None, "Limit price should be set for LIMIT orders"
-        return self.limit_price
+
+        if self.action == OrderAction.BUY:
+            # BUY limit: want to buy at limit or BETTER (lower)
+            # Gap scenario: entire day's range is BELOW limit (limit > high)
+            # Example: limit=$50, range=[$45, $48] → we get filled at open ($46)
+            if open_price is not None and self.limit_price > high:
+                # Price gapped down through our limit - fill at open (better price for us!)
+                return open_price
+            else:
+                # Limit was within or above range - fill at limit
+                return self.limit_price
+        else:  # SELL
+            # SELL limit: want to sell at limit or BETTER (higher)
+            # Gap scenario: entire day's range is ABOVE limit (limit < low)
+            # Example: limit=$50, range=[$52, $55] → we get filled at open ($54)
+            if open_price is not None and self.limit_price < low:
+                # Price gapped up through our limit - fill at open (better price for us!)
+                return open_price
+            else:
+                # Limit was within or below range - fill at limit
+                return self.limit_price
 
 
 class Market:
@@ -174,18 +197,24 @@ class Market:
             # Check each pending order
             orders_to_remove = []
             for i, order in enumerate(self.pending_orders):
+                # Anti-chatter: skip orders placed today (they execute tomorrow)
+                if order.placed_date is not None and order.placed_date == date_:
+                    continue
+
                 if order.is_triggered(low, high):
-                    # Execute the order
-                    actual_price = order.get_execution_price(open_price)
+                    # Execute the order with realistic market fills
+                    actual_price = order.get_execution_price(open_price, low, high)
 
                     # Build transaction notes
                     if order.order_type == OrderType.LIMIT:
                         notes = f"{order.notes} #{iteration}: limit=${order.limit_price:.2f}, filled=${actual_price:.2f}"
+                        limit_price = order.limit_price
                     else:
                         notes = f"{order.notes} #{iteration}: market fill=${actual_price:.2f}"
+                        limit_price = None
 
                     transaction = Transaction(
-                        action=order.action.value, qty=order.quantity, notes=notes.strip()
+                        action=order.action.value, qty=order.quantity, notes=notes.strip(), limit_price=limit_price
                     )
                     transactions.append(transaction)
 
