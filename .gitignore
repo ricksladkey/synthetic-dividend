@@ -51,8 +51,8 @@ pip-delete-this-directory.txt
 # macOS
 .DS_Store
 
-# Windows
-Thumbs.db
+# Windows batch files (replaced with cross-platform scripts)
+*.bat
 
 # Data and caches
 cache/

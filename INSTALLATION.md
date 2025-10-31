@@ -17,37 +17,71 @@ pip install -e ".[dev]"
 ```
 
 **After installation**, these commands become available globally:
-- `synthetic-dividend` or `sd-backtest` - Run backtests
+- `synthetic-dividend` - Unified CLI (recommended)
+- `sd-backtest` - Run single backtests
 - `sd-compare` - Compare multiple strategies
 - `sd-research` - Research optimal parameters
+- `sd-volatility-alpha` - Analyze volatility alpha
+- `sd-run-tests` - Run test suite
+
+### Cross-Platform Scripts
+
+For convenience, we've also included shell scripts that work on Windows, macOS, and Linux:
+
+```bash
+# Run backtests
+./scripts/shell/run-model.sh NVDA 2024-10-22 2025-10-22 sd-9.05,50
+
+# Run tests
+./scripts/shell/run-tests.sh
+
+# Quick tests
+./scripts/shell/test-sd.sh
+./scripts/shell/test-buy-and-hold.sh
+./scripts/shell/test-batch-comparison.sh
+```
 
 ### For Development
+
+**Cross-Platform (Recommended)**:
+```bash
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Run tests
+python -m src.cli test
+
+# Or use convenience scripts
+./scripts/shell/run-tests.sh
+
+# Run backtests
+python -m src.cli backtest NVDA 2024-10-22 2025-10-22 sd-9.05,50
+./scripts/shell/run-model.sh NVDA 2024-10-22 2025-10-22 sd-9.05,50
+```
 
 **Windows (PowerShell)**:
 ```powershell
 # Install development dependencies
-.\dev.ps1 install-dev
+pip install -e ".[dev]"
 
 # Run tests
-.\dev.ps1 test
+python -m src.cli test
 
-# Format code
-.\dev.ps1 format
-
-# Run linters
-.\dev.ps1 lint
-
-# See all commands
-.\dev.ps1 help
+# Run backtests
+python -m src.cli backtest NVDA 2024-10-22 2025-10-22 sd-9.05,50
 ```
 
-**Unix/Linux/macOS**:
+**Unix/Linux/macOS (Make)**:
 ```bash
 # Install development dependencies
 make install-dev
 
 # Run tests
 make test
+
+# Run backtests
+python -m src.cli backtest NVDA 2024-10-22 2025-10-22 sd-9.05,50
+```
 
 # Format code
 make format

@@ -310,94 +310,99 @@ synthetic-dividend/
 
 ### 🔧 Unified CLI Tool (Recommended)
 
-The **Synthetic Dividend Tool** provides a single swiss army knife interface to all functionality:
+The **Synthetic Dividend CLI** provides a comprehensive interface to all functionality:
 
 ```bash
-# Show all available commands
-.\synthetic-dividend-tool.bat --help
+# Show all available commands and options
+synthetic-dividend --help
 
-# Auto-analyze asset and suggest optimal SD parameter (replaces analyze-volatility-alpha.bat)
-.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker GLD --start 2024-01-01 --end 2025-01-01
-.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker NVDA --start 2023-10-23 --end 2024-10-23 --plot
+# 📚 List all available portfolio algorithms with detailed descriptions
+synthetic-dividend --list-algorithms
 
-# Run backtest on NVDA
-.\synthetic-dividend-tool.bat run backtest --ticker NVDA --start 2023-01-01 --end 2024-01-01
+# 📋 List all available named portfolios with allocations
+synthetic-dividend --list-portfolios
 
-# Run optimal rebalancing research
-.\synthetic-dividend-tool.bat run research optimal-rebalancing --output results.csv
+# Run single-asset backtest
+synthetic-dividend backtest NVDA 2024-10-22 2025-10-22 sd-9.05,50
 
-# Compare algorithms or strategies
-.\synthetic-dividend-tool.bat run compare algorithms --ticker SPY --start 2023-01-01 --end 2024-01-01
-.\synthetic-dividend-tool.bat run compare strategies --ticker NVDA --start 2023-01-01 --end 2024-01-01
+# Run batch comparison of strategies
+synthetic-dividend compare NVDA 2024-10-22 2025-10-22 buy-and-hold sd-9.05,50
 
-# Batch comparison across multiple assets
-.\synthetic-dividend-tool.bat run compare batch --tickers NVDA AAPL GLD --strategies sd8 sd16 --start 2024-01-01 --end 2025-01-01
+# Run research experiments
+synthetic-dividend research volatility-alpha --ticker NVDA --start 2023-01-01 --end 2023-12-31
 
-# Multi-asset portfolio backtesting with named portfolios
-.\synthetic-dividend-tool.bat run portfolio --allocations classic --start 2024-01-01 --end 2025-01-01
-.\synthetic-dividend-tool.bat run portfolio --allocations buffet-95,5 --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
+# Run the test suite
+synthetic-dividend test
 
-# Portfolio backtesting with custom allocations (auto algorithm is default)
-.\synthetic-dividend-tool.bat run portfolio --allocations '{"VOO": 0.6, "BIL": 0.3, "BTC-USD": 0.1}' --start 2019-01-01 --end 2024-12-31
-.\synthetic-dividend-tool.bat run portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-01-01 --end 2025-01-01
-
-# Portfolio with specific algorithms
-.\synthetic-dividend-tool.bat run portfolio --allocations '{"VOO": 0.6, "BIL": 0.4}' --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
-.\synthetic-dividend-tool.bat run portfolio --allocations '{"NVDA": 0.5, "VOO": 0.5}' --algo "per-asset:sd8" --start 2024-01-01 --end 2025-01-01
-
-# Portfolio with cash interest (5% APY money market rate on cash reserves)
-.\synthetic-dividend-tool.bat run portfolio --allocations classic --algo auto --start 2024-01-01 --end 2024-12-31 --cash-interest-rate 5.0
-
-# List all available portfolio algorithms
-.\synthetic-dividend-tool.bat --list-algorithms
-
-# Analyze gap bonus impact
-.\synthetic-dividend-tool.bat analyze gap-bonus --input research_phase1_1year_core.csv
-
-# Calculate order recommendations
-.\synthetic-dividend-tool.bat order --ticker NVDA --holdings 1000 --algorithm sd8
-
-# Run test suite
-.\synthetic-dividend-tool.bat test
-.\synthetic-dividend-tool.bat test --verbose
-.\synthetic-dividend-tool.bat test --coverage
+# Launch the GUI
+synthetic-dividend gui
 ```
 
 **Available Commands**:
-- `run backtest` - Run single-asset backtest
-- `run portfolio` - Run multi-asset portfolio backtests with algorithmic strategies
-- `run research` - Run research studies (optimal-rebalancing, volatility-alpha, asset-classes)
-- `run compare` - Compare algorithms, strategies, batch comparisons, or generate tables
-- `analyze` - Auto-suggest SD parameters (volatility-alpha), gap-bonus analysis, coverage ratios
-- `order` - Calculate buy/sell order recommendations
-- `test` - Run pytest test suite
-- `--list-algorithms` - List all available portfolio algorithms with parameters
+- `backtest` - Run single-asset backtest simulations
+- `compare` - Run batch comparison of multiple strategies
+- `research` - Run research experiments (volatility-alpha, optimal-rebalancing)
+- `test` - Run the complete test suite with coverage
+- `analyze` - Run analysis tools (volatility-alpha)
+- `gui` - Launch the graphical user interface
+- `--list-algorithms` - **NEW**: Comprehensive algorithm guide with descriptions
+- `--list-portfolios` - **NEW**: Complete portfolio catalog with allocations
 
-**Discoverability**: Every command supports `--help` for detailed options:
+**Cross-Platform Usage**:
 ```bash
-.\synthetic-dividend-tool.bat run --help
-.\synthetic-dividend-tool.bat run portfolio --help
-.\synthetic-dividend-tool.bat analyze --help
-.\synthetic-dividend-tool.bat analyze volatility-alpha --help
+# Install the package (required for CLI)
+pip install -e .
+
+# Use the unified CLI (works on Windows/macOS/Linux)
+synthetic-dividend backtest NVDA 2024-10-22 2025-10-22 sd-9.05,50
+synthetic-dividend --list-algorithms
+synthetic-dividend --list-portfolios
+
+# Or use convenience shell scripts
+./scripts/shell/run-model.sh NVDA 2024-10-22 2025-10-22 sd-9.05,50
+./scripts/shell/run-tests.sh
 ```
 
-> 💡 **Note**: Individual batch files (`analyze-volatility-alpha.bat`, `run-model.bat`, etc.) are still available for backward compatibility, but the unified tool is recommended for new workflows.
+**Legacy Windows Batch Files** (deprecated):
+```batch
+REM Still available for backward compatibility
+run-model.bat NVDA 10/22/2024 10/22/2025 sd-9.05,50
+```
+
+> 💡 **Note**: The new Python-based CLI with `--list-algorithms` and `--list-portfolios` provides comprehensive help that was previously only available in the original `synthetic-dividend-tool`. The cross-platform CLI and shell scripts are recommended for all new workflows.
 
 ### 🎬 Installation
 
+**Cross-Platform Installation**:
 ```bash
 # 1. Clone the repository
 git clone https://github.com/ricksladkey/synthetic-dividend.git
 cd synthetic-dividend
 
-# 2. Create virtual environment (Windows PowerShell)
+# 2. Create virtual environment
 python -m venv .venv
+
+# 3. Activate virtual environment
+# Windows (PowerShell):
 .\.venv\Scripts\Activate.ps1
+# macOS/Linux:
+source .venv/bin/activate
 
-# 3. Install dependencies
-pip install -r requirements.txt
+# 4. Install dependencies
+pip install -e .
 
-# 4. Verify installation (optional)
+# 5. Verify installation
+synthetic-dividend --help
+```
+
+**Quick Test**:
+```bash
+# Run a quick backtest
+synthetic-dividend backtest NVDA 2024-10-22 2025-10-22 buy-and-hold
+
+# Or use shell scripts
+./scripts/shell/test-buy-and-hold.sh
+```
 python -m pytest tests/ -v
 ```
 
