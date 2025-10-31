@@ -855,7 +855,7 @@ def run_backtest(args) -> int:
         summary['final_bank'] = summary.get('bank', 0)
         summary['final_portfolio_value'] = summary.get('total', 0)
         summary['total_return_pct'] = summary.get('total_return', 0) * 100  # Convert to percentage
-        summary['annualized_return_pct'] = summary.get('annualized', 0)  # Already in percentage
+        summary['annualized_return_pct'] = summary.get('annualized', 0) * 100  # Convert to percentage
 
         # Print summary
         print("\nBACKTEST SUMMARY:")

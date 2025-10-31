@@ -79,11 +79,13 @@ def collect_volatility_alpha_data(
     trigger_pct = calculate_trigger_pct(sd_n)
     trigger_decimal = trigger_pct / 100.0
 
-    print(f"    Volatility: {volatility*100:.2f}% → SD{sd_n} ({trigger_pct:.2f}%)")
+    print(f"    Volatility: {volatility*100:.2f}% -> SD{sd_n} ({trigger_pct:.2f}%)")
 
     # Run full strategy
     algo_full = SyntheticDividendAlgorithm(
-        trigger_decimal * 100, 50.0, buyback_enabled=True  # 50% profit sharing
+        rebalance_size=trigger_decimal,  # e.g., 0.0905 for 9.05%
+        profit_sharing=0.5,  # 50% profit sharing
+        buyback_enabled=True
     )
 
     transactions_full, summary_full = run_algorithm_backtest(
@@ -97,7 +99,11 @@ def collect_volatility_alpha_data(
     )
 
     # Run ATH-only strategy
-    algo_ath = SyntheticDividendAlgorithm(trigger_decimal * 100, 50.0, buyback_enabled=False)
+    algo_ath = SyntheticDividendAlgorithm(
+        rebalance_size=trigger_decimal,
+        profit_sharing=0.5,
+        buyback_enabled=False
+    )
 
     transactions_ath, summary_ath = run_algorithm_backtest(
         df=df,
@@ -118,9 +124,9 @@ def collect_volatility_alpha_data(
     )
 
     print(
-        f"    ✓ Full: {summary_full['total_return']*100:.2f}%, ATH-only: {summary_ath['total_return']*100:.2f}%"
+        f"    [OK] Full: {summary_full['total_return']*100:.2f}%, ATH-only: {summary_ath['total_return']*100:.2f}%"
     )
-    print(f"    ✓ Volatility Alpha: {vol_alpha:+.2f}%, Buy rebalances: {buy_count}")
+    print(f"    [OK] Volatility Alpha: {vol_alpha:+.2f}%, Buy rebalances: {buy_count}")
 
     return {
         "ticker": ticker,
@@ -193,7 +199,7 @@ def main():
             writer.writerows(results)
 
         print("\n" + "=" * 80)
-        print(f"✅ Results written to {output_file}")
+        print(f"[OK] Results written to {output_file}")
         print(f"   Total rows: {len(results)}")
         print("=" * 80)
 
