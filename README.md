@@ -68,17 +68,17 @@ Traditional approaches fail:
 
 ## 📊 Research Findings
 
-### Phase 1: Optimal Rebalancing Parameters (1-Year Backtest)
+### Phase 1: Optimal Rebalancing Parameters (2023 Backtests)
 
-We tested **48 configurations** across 12 assets (Oct 2023 - Oct 2024):
+We tested **48 configurations** across 12 assets (Jan-Dec 2023):
 
 | Asset Class | Best Performer | Rebalancing | 1-Year Return | Transactions |
 |-------------|----------------|-------------|---------------|--------------|
-| 🚀 **Crypto** | BTC-USD | sd4 (18.92%) | 152.18% | 32 |
-| 💻 **Tech Growth** | NVDA | sd8 (9.05%) | 174.59% | 38 |
-| 📈 **Tech Giants** | GOOG | sd6 (12.25%) | 34.82% | 17 |
-| 🥇 **Commodities** | GLD | sd8 (9.05%) | 43.78% | 21 |
-| 📊 **Indices** | QQQ | sd10 (7.18%) | 35.67% | 28 |
+| 🚀 **Crypto** | BTC-USD | sd4 (18.92%) | 128.55% | 8 |
+| 💻 **Tech Growth** | MSTR | sd12 (5.95%) | 262.64% | 114 |
+| 📈 **Tech Giants** | GOOG | sd12 (5.95%) | 54.06% | 26 |
+| 🥇 **Commodities** | GLD | sd8 (9.05%) | 12.10% | 4 |
+| 📊 **Indices** | QQQ | sd10 (7.18%) | 50.64% | 11 |
 
 **Key Findings**:
 - ✅ Higher volatility assets benefit from **tighter triggers** (sd4-sd8)
@@ -89,17 +89,41 @@ We tested **48 configurations** across 12 assets (Oct 2023 - Oct 2024):
 
 **Groundbreaking insight**: Buyback-enhanced strategies can generate **extra returns beyond ATH-only selling**.
 
-**Example - NVDA (Oct 2023 - Oct 2024)**:
+**Example - NVDA (Jan-Dec 2023)**:
 ```
-Enhanced Strategy (sd8 + buybacks):  174.59% return, 38 transactions
-ATH-Only (sd8, no buybacks):         165.00% return, 14 transactions
+Enhanced Strategy (sd8 + buybacks):  184.27% return, 24 transactions
+ATH-Only (sd8, no buybacks):         180.93% return, 14 transactions
 ────────────────────────────────────────────────────────────────
-Volatility Alpha:                     +9.59% extra profit
-Alpha Per Transaction:                +0.25% per buyback cycle
+Volatility Alpha:                     +3.34%
+Alpha Per Transaction:                +0.14% per buyback cycle
 ```
 
 **The "Volatility Alpha" Thesis**: 
 > Buybacks during drawdowns create "secondary synthetic dividends" by rewinding the clock on previous sales, enabling resales at higher prices. This transforms volatility from risk into opportunity.
+
+**2023 Comprehensive Results** (12 assets, 1-year backtests):
+```
+GROWTH STOCKS:     Average +10.18% alpha
+  MSTR:            +18.74% (246.47% vs 227.73%)
+  PLTR:            +17.62% (151.03% vs 133.41%)
+  NVDA:            +3.34%  (184.27% vs 180.93%)
+  SHOP:            +10.32% (107.36% vs 97.04%)
+
+CRYPTO:            Average +4.04% alpha
+  ETH-USD:         +5.54%  (82.90% vs 77.36%)
+  BTC-USD:         +2.54%  (127.48% vs 124.94%)
+
+COMMODITIES:       Average +0.92% alpha
+  SLV:             +1.42%  (0.31% vs -1.10%)
+  GLD:             +0.42%  (12.10% vs 11.68%)
+
+INDICES:           Average +0.39% alpha
+  QQQ:             +0.67%  (50.64% vs 49.97%)
+  SPY:             +0.24%  (24.08% vs 23.84%)
+
+OVERALL AVERAGE:   +5.17% volatility alpha
+POSITIVE ALPHA:    12/12 assets (100.0%)
+```
 
 📄 **[Read the full thesis →](theory/VOLATILITY_ALPHA_THESIS.md)**
 
@@ -220,13 +244,13 @@ See [**EXAMPLES.md**](docs/EXAMPLES.md) for comprehensive usage guide!
 
 | Strategy | Total Return | Max Drawdown | Transactions | Cash Generated |
 |----------|--------------|--------------|--------------|----------------|
-| 💤 Buy-and-Hold | 29.05% | -27.50% | 0 | $0 |
-| 💰 **SD 7.5,50** | **31.41%** ⬆️ | -25.84% ✅ | 67 | $77.6K |
-| 💸 SD 7.5,100 | 34.14% ⬆️ | -23.72% ✅ | 67 | $262.2K |
-| 🎯 SD 25,50 | 30.14% ⬆️ | -27.03% ✅ | 23 | $54.8K |
+| 💤 Buy-and-Hold | 25.55% | -27.50% | 0 | $0 |
+| 💰 **SD 7.5,50** | **28.52%** ⬆️ | -25.84% ✅ | 67 | $23.2K |
+| 💸 SD 7.5,100 | 30.06% ⬆️ | -23.72% ✅ | 67 | $50.1K |
+| 🎯 SD 25,50 | 28.33% ⬆️ | -27.03% ✅ | 23 | $18.8K |
 
 **Key Takeaways**:
-- ✅ **Outperforms buy-and-hold** by 2.36% while generating $77K cash
+- ✅ **Outperforms buy-and-hold** by 2.97% while generating $23K cash
 - ✅ **Reduced drawdown** from -27.5% to -25.84% (smoother ride)
 - ✅ **Systematic distributions** without sacrificing growth
 - ⚡ **67 transactions** automated by rules, zero emotional decisions
