@@ -835,9 +835,8 @@ def run_unified(args) -> int:
 
             parser = ArgumentParser()
             subparsers = parser.add_subparsers()
-            run_parser = subparsers.add_parser("research")
-            run_research_parser = run_parser.add_subparsers()
-            run_research_parser.parse_args(["research", "--help"])
+            subparsers.add_parser("research")
+            parser.parse_args(["run", "research", "--help"])
             return 1
         return run_research(args)
     elif args.run_type == "compare":
@@ -846,9 +845,8 @@ def run_unified(args) -> int:
 
             parser = ArgumentParser()
             subparsers = parser.add_subparsers()
-            run_parser = subparsers.add_parser("compare")
-            run_compare_parser = run_parser.add_subparsers()
-            run_compare_parser.parse_args(["compare", "--help"])
+            subparsers.add_parser("compare")
+            parser.parse_args(["run", "compare", "--help"])
             return 1
         return run_compare(args)
     elif args.run_type == "ticker":

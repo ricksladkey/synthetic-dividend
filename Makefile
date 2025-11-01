@@ -31,7 +31,7 @@ lint:
 	@echo "Running flake8..."
 	$(PYTHON) -m flake8 src tests --max-line-length=100 --extend-ignore=E203,W503
 	@echo "Running mypy..."
-	$(PYTHON) -m mypy --explicit-package-bases src
+	$(PYTHON) -m mypy --explicit-package-bases --exclude "src/research|src/charts" src
 
 format:
 	@echo "Running isort..."

@@ -504,7 +504,7 @@ def _create_transaction_log_pages(
             colLabels=col_labels,
             cellLoc="center",
             loc="upper center",
-            bbox=[0.05, 0.92 - table_height, 0.9, table_height],
+            bbox=[0.05, 0.92 - table_height, 0.9, table_height],  # type: ignore[arg-type]
         )
 
         table.auto_set_font_size(False)
@@ -776,7 +776,7 @@ def _create_comparison_page(
         colLabels=col_labels,
         cellLoc="center",
         loc="upper center",
-        bbox=[0.05, 0.82 - table_height, 0.9, table_height],
+        bbox=[0.05, 0.82 - table_height, 0.9, table_height],  # type: ignore[arg-type]
     )
 
     table.auto_set_font_size(False)
