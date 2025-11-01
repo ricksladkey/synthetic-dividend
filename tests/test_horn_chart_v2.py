@@ -1,9 +1,10 @@
 """Test script to generate proper horn charts with per-asset breakdown."""
 
 from datetime import date
-from src.models.backtest import run_portfolio_backtest
+
 from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
 from src.charts import create_portfolio_horn_chart
+from src.models.backtest import run_portfolio_backtest
 
 # Run a backtest with the classic-plus-crypto portfolio with withdrawals
 allocations = {"VOO": 0.6, "BIL": 0.3, "BTC-USD": 0.1}
@@ -38,40 +39,30 @@ print(f"  daily_asset_values keys: {list(summary.get('daily_asset_values', {}).k
 print(f"  daily_withdrawals entries: {len(summary.get('daily_withdrawals', {}))}")
 
 # Generate horn charts at different resolutions
-print("\n" + "="*80)
+print("\n" + "=" * 80)
 print("Generating horn charts with per-asset breakdown...")
-print("="*80)
+print("=" * 80)
 
 # Daily resolution
 print("\n1. Daily resolution...")
-daily_chart = create_portfolio_horn_chart(
-    summary,
-    output="horn_chart_v2_daily.png",
-    resample=None
-)
+daily_chart = create_portfolio_horn_chart(summary, output="horn_chart_v2_daily.png", resample=None)
 print(f"   Saved to: {daily_chart}")
 
 # Weekly resolution
 print("\n2. Weekly resolution...")
-weekly_chart = create_portfolio_horn_chart(
-    summary,
-    output="horn_chart_v2_weekly.png",
-    resample='W'
-)
+weekly_chart = create_portfolio_horn_chart(summary, output="horn_chart_v2_weekly.png", resample="W")
 print(f"   Saved to: {weekly_chart}")
 
 # Monthly resolution
 print("\n3. Monthly resolution...")
 monthly_chart = create_portfolio_horn_chart(
-    summary,
-    output="horn_chart_v2_monthly.png",
-    resample='M'
+    summary, output="horn_chart_v2_monthly.png", resample="M"
 )
 print(f"   Saved to: {monthly_chart}")
 
-print("\n" + "="*80)
+print("\n" + "=" * 80)
 print("All charts generated successfully!")
-print("="*80)
+print("=" * 80)
 print("\nThese charts should now show:")
 print("  - USD (Cash) - green band at bottom")
 print("  - BIL (Bonds) - brown band")

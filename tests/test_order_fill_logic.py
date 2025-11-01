@@ -12,6 +12,7 @@ The tests document the expected behavior for all combinations of:
 """
 
 import pytest
+
 from src.models.market import Order, OrderAction, OrderType
 
 
@@ -28,10 +29,7 @@ class TestBuyLimitOrderTriggering:
         The limit was never reached.
         """
         order = Order(
-            action=OrderAction.BUY,
-            quantity=100,
-            order_type=OrderType.LIMIT,
-            limit_price=50.0
+            action=OrderAction.BUY, quantity=100, order_type=OrderType.LIMIT, limit_price=50.0
         )
 
         # Day's range: High=$55, Low=$52
@@ -39,8 +37,7 @@ class TestBuyLimitOrderTriggering:
         high = 55.0
         low = 52.0
 
-        assert not order.is_triggered(low, high), \
-            "BUY limit above high should not trigger"
+        assert not order.is_triggered(low, high), "BUY limit above high should not trigger"
 
     def test_buy_limit_within_range_triggers(self):
         """BUY limit within day's range SHOULD trigger.
@@ -49,10 +46,7 @@ class TestBuyLimitOrderTriggering:
         The limit was touched during the day.
         """
         order = Order(
-            action=OrderAction.BUY,
-            quantity=100,
-            order_type=OrderType.LIMIT,
-            limit_price=50.0
+            action=OrderAction.BUY, quantity=100, order_type=OrderType.LIMIT, limit_price=50.0
         )
 
         # Day's range: High=$52, Low=$48
@@ -60,8 +54,7 @@ class TestBuyLimitOrderTriggering:
         high = 52.0
         low = 48.0
 
-        assert order.is_triggered(low, high), \
-            "BUY limit within range should trigger"
+        assert order.is_triggered(low, high), "BUY limit within range should trigger"
 
     def test_buy_limit_below_low_triggers(self):
         """BUY limit below day's low SHOULD trigger (gap through).
@@ -70,10 +63,7 @@ class TestBuyLimitOrderTriggering:
         The price blew through our limit, order should fill.
         """
         order = Order(
-            action=OrderAction.BUY,
-            quantity=100,
-            order_type=OrderType.LIMIT,
-            limit_price=50.0
+            action=OrderAction.BUY, quantity=100, order_type=OrderType.LIMIT, limit_price=50.0
         )
 
         # Day's range: High=$48, Low=$45
@@ -81,8 +71,7 @@ class TestBuyLimitOrderTriggering:
         high = 48.0
         low = 45.0
 
-        assert order.is_triggered(low, high), \
-            "BUY limit below low should trigger (gap through)"
+        assert order.is_triggered(low, high), "BUY limit below low should trigger (gap through)"
 
 
 class TestBuyLimitOrderExecutionPrice:
@@ -98,10 +87,7 @@ class TestBuyLimitOrderExecutionPrice:
         If limit=$50 and range is [$48, $52], we got filled at our limit price.
         """
         order = Order(
-            action=OrderAction.BUY,
-            quantity=100,
-            order_type=OrderType.LIMIT,
-            limit_price=50.0
+            action=OrderAction.BUY, quantity=100, order_type=OrderType.LIMIT, limit_price=50.0
         )
 
         open_price = 51.0  # Opened above our limit
@@ -109,8 +95,7 @@ class TestBuyLimitOrderExecutionPrice:
         low = 48.0
         fill_price = order.get_execution_price(open_price, low, high)
 
-        assert fill_price == 50.0, \
-            "BUY limit within range should fill at limit price"
+        assert fill_price == 50.0, "BUY limit within range should fill at limit price"
 
     def test_buy_limit_gapped_through_fills_at_open(self):
         """BUY limit gapped through fills at open price - REALISTIC BEHAVIOR!
@@ -120,10 +105,7 @@ class TestBuyLimitOrderExecutionPrice:
         This AMPLIFIES volatility alpha!
         """
         order = Order(
-            action=OrderAction.BUY,
-            quantity=100,
-            order_type=OrderType.LIMIT,
-            limit_price=50.0
+            action=OrderAction.BUY, quantity=100, order_type=OrderType.LIMIT, limit_price=50.0
         )
 
         open_price = 46.0  # Opened below our limit (gapped through)
@@ -131,8 +113,9 @@ class TestBuyLimitOrderExecutionPrice:
         low = 45.0
         fill_price = order.get_execution_price(open_price, low, high)
 
-        assert fill_price == 46.0, \
-            "BUY limit gapped through should fill at open (realistic market behavior)"
+        assert (
+            fill_price == 46.0
+        ), "BUY limit gapped through should fill at open (realistic market behavior)"
 
 
 class TestSellLimitOrderTriggering:
@@ -148,10 +131,7 @@ class TestSellLimitOrderTriggering:
         The limit was never reached.
         """
         order = Order(
-            action=OrderAction.SELL,
-            quantity=100,
-            order_type=OrderType.LIMIT,
-            limit_price=50.0
+            action=OrderAction.SELL, quantity=100, order_type=OrderType.LIMIT, limit_price=50.0
         )
 
         # Day's range: High=$48, Low=$45
@@ -164,8 +144,7 @@ class TestSellLimitOrderTriggering:
         high = 48.0
         low = 45.0
 
-        assert not order.is_triggered(low, high), \
-            "SELL limit above high should not trigger"
+        assert not order.is_triggered(low, high), "SELL limit above high should not trigger"
 
     def test_sell_limit_within_range_triggers(self):
         """SELL limit within day's range SHOULD trigger.
@@ -174,10 +153,7 @@ class TestSellLimitOrderTriggering:
         The limit was touched during the day.
         """
         order = Order(
-            action=OrderAction.SELL,
-            quantity=100,
-            order_type=OrderType.LIMIT,
-            limit_price=50.0
+            action=OrderAction.SELL, quantity=100, order_type=OrderType.LIMIT, limit_price=50.0
         )
 
         # Day's range: High=$52, Low=$48
@@ -185,8 +161,7 @@ class TestSellLimitOrderTriggering:
         high = 52.0
         low = 48.0
 
-        assert order.is_triggered(low, high), \
-            "SELL limit within range should trigger"
+        assert order.is_triggered(low, high), "SELL limit within range should trigger"
 
     def test_sell_limit_above_high_triggers(self):
         """SELL limit above day's high SHOULD trigger (gap through).
@@ -195,10 +170,7 @@ class TestSellLimitOrderTriggering:
         The price blew through our limit, order should fill.
         """
         order = Order(
-            action=OrderAction.SELL,
-            quantity=100,
-            order_type=OrderType.LIMIT,
-            limit_price=50.0
+            action=OrderAction.SELL, quantity=100, order_type=OrderType.LIMIT, limit_price=50.0
         )
 
         # Day's range: High=$55, Low=$52
@@ -207,8 +179,7 @@ class TestSellLimitOrderTriggering:
         high = 55.0
         low = 52.0
 
-        assert order.is_triggered(low, high), \
-            "SELL limit below low should trigger (gap through)"
+        assert order.is_triggered(low, high), "SELL limit below low should trigger (gap through)"
 
 
 class TestSellLimitOrderExecutionPrice:
@@ -224,10 +195,7 @@ class TestSellLimitOrderExecutionPrice:
         If limit=$50 and range is [$48, $52], we got filled at our limit price.
         """
         order = Order(
-            action=OrderAction.SELL,
-            quantity=100,
-            order_type=OrderType.LIMIT,
-            limit_price=50.0
+            action=OrderAction.SELL, quantity=100, order_type=OrderType.LIMIT, limit_price=50.0
         )
 
         open_price = 49.0  # Opened below our limit
@@ -235,8 +203,7 @@ class TestSellLimitOrderExecutionPrice:
         low = 48.0
         fill_price = order.get_execution_price(open_price, low, high)
 
-        assert fill_price == 50.0, \
-            "SELL limit within range should fill at limit price"
+        assert fill_price == 50.0, "SELL limit within range should fill at limit price"
 
     def test_sell_limit_gapped_through_fills_at_open(self):
         """SELL limit gapped through fills at open price - REALISTIC BEHAVIOR!
@@ -246,10 +213,7 @@ class TestSellLimitOrderExecutionPrice:
         This AMPLIFIES volatility alpha!
         """
         order = Order(
-            action=OrderAction.SELL,
-            quantity=100,
-            order_type=OrderType.LIMIT,
-            limit_price=50.0
+            action=OrderAction.SELL, quantity=100, order_type=OrderType.LIMIT, limit_price=50.0
         )
 
         open_price = 54.0  # Opened above our limit (gapped through)
@@ -257,8 +221,9 @@ class TestSellLimitOrderExecutionPrice:
         low = 52.0
         fill_price = order.get_execution_price(open_price, low, high)
 
-        assert fill_price == 54.0, \
-            "SELL limit gapped through should fill at open (realistic market behavior)"
+        assert (
+            fill_price == 54.0
+        ), "SELL limit gapped through should fill at open (realistic market behavior)"
 
 
 class TestMarketOrderExecutionPrice:
@@ -266,32 +231,22 @@ class TestMarketOrderExecutionPrice:
 
     def test_market_buy_fills_at_open(self):
         """Market BUY order should fill at open price."""
-        order = Order(
-            action=OrderAction.BUY,
-            quantity=100,
-            order_type=OrderType.MARKET
-        )
+        order = Order(action=OrderAction.BUY, quantity=100, order_type=OrderType.MARKET)
 
         open_price = 51.23
         high = 52.0
         low = 50.0
         fill_price = order.get_execution_price(open_price, low, high)
 
-        assert fill_price == 51.23, \
-            "Market order should fill at open price"
+        assert fill_price == 51.23, "Market order should fill at open price"
 
     def test_market_sell_fills_at_open(self):
         """Market SELL order should fill at open price."""
-        order = Order(
-            action=OrderAction.SELL,
-            quantity=100,
-            order_type=OrderType.MARKET
-        )
+        order = Order(action=OrderAction.SELL, quantity=100, order_type=OrderType.MARKET)
 
         open_price = 51.23
         high = 52.0
         low = 50.0
         fill_price = order.get_execution_price(open_price, low, high)
 
-        assert fill_price == 51.23, \
-            "Market order should fill at open price"
+        assert fill_price == 51.23, "Market order should fill at open price"

@@ -147,7 +147,9 @@ def main():
         quarterly = results[withdrawal_rate]["quarterly-rebalance"]
         synth_div = results[withdrawal_rate]["synthetic-dividend-auto"]
 
-        print(f"\n{'Strategy':<30} {'Final Value':>15} {'Return':>10} {'Withdrawn':>12} {'Txns':>8}")
+        print(
+            f"\n{'Strategy':<30} {'Final Value':>15} {'Return':>10} {'Withdrawn':>12} {'Txns':>8}"
+        )
         print("-" * 90)
 
         print(

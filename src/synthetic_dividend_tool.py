@@ -32,28 +32,60 @@ def list_portfolios() -> None:
     print()
 
     portfolios = [
-        ("CLASSIC PORTFOLIOS", [
-            ("classic", "60% VOO, 40% BIL", "Traditional 60/40 stocks/bonds"),
-            ("classic-70,30", "70% VOO, 30% BIL", "More aggressive allocation"),
-            ("classic-80,20", "80% VOO, 20% BIL", "High equity allocation"),
-        ]),
-        ("CRYPTO PORTFOLIOS", [
-            ("classic-plus-crypto", "60% VOO, 30% BIL, 10% BTC-USD", "60/30/10 validation portfolio"),
-            ("classic-plus-crypto-50,30,20", "50% VOO, 30% BIL, 20% BTC-USD", "Higher crypto allocation"),
-            ("crypto-heavy", "40% BTC-USD, 20% ETH-USD, 30% VOO, 10% BIL", "Crypto-focused portfolio"),
-        ]),
-        ("FAMOUS PORTFOLIOS", [
-            ("buffet", "90% VOO, 10% BIL", "Warren Buffett recommendation"),
-            ("buffet-95,5", "95% VOO, 5% BIL", "More aggressive Buffett"),
-            ("all-weather", "40% VOO, 15% TLT, 15% IEF, 7.5% GLD, 7.5% DBC, 15% BIL", "Ray Dalio's All Weather"),
-            ("three-fund", "40% VTI, 30% VXUS, 30% BND", "Bogleheads three-fund"),
-            ("golden-butterfly", "20% VOO, 20% SHY, 20% TLT, 20% GLD, 20% BIL", "Tyler's Golden Butterfly"),
-        ]),
-        ("GROWTH PORTFOLIOS", [
-            ("tech-growth", "60% QQQ, 40% VOO", "Tech-heavy growth"),
-            ("tech-growth-70,30", "70% QQQ, 30% VOO", "More aggressive tech"),
-            ("high-growth", "30% NVDA, 40% QQQ, 30% VOO", "High-growth tech"),
-        ]),
+        (
+            "CLASSIC PORTFOLIOS",
+            [
+                ("classic", "60% VOO, 40% BIL", "Traditional 60/40 stocks/bonds"),
+                ("classic-70,30", "70% VOO, 30% BIL", "More aggressive allocation"),
+                ("classic-80,20", "80% VOO, 20% BIL", "High equity allocation"),
+            ],
+        ),
+        (
+            "CRYPTO PORTFOLIOS",
+            [
+                (
+                    "classic-plus-crypto",
+                    "60% VOO, 30% BIL, 10% BTC-USD",
+                    "60/30/10 validation portfolio",
+                ),
+                (
+                    "classic-plus-crypto-50,30,20",
+                    "50% VOO, 30% BIL, 20% BTC-USD",
+                    "Higher crypto allocation",
+                ),
+                (
+                    "crypto-heavy",
+                    "40% BTC-USD, 20% ETH-USD, 30% VOO, 10% BIL",
+                    "Crypto-focused portfolio",
+                ),
+            ],
+        ),
+        (
+            "FAMOUS PORTFOLIOS",
+            [
+                ("buffet", "90% VOO, 10% BIL", "Warren Buffett recommendation"),
+                ("buffet-95,5", "95% VOO, 5% BIL", "More aggressive Buffett"),
+                (
+                    "all-weather",
+                    "40% VOO, 15% TLT, 15% IEF, 7.5% GLD, 7.5% DBC, 15% BIL",
+                    "Ray Dalio's All Weather",
+                ),
+                ("three-fund", "40% VTI, 30% VXUS, 30% BND", "Bogleheads three-fund"),
+                (
+                    "golden-butterfly",
+                    "20% VOO, 20% SHY, 20% TLT, 20% GLD, 20% BIL",
+                    "Tyler's Golden Butterfly",
+                ),
+            ],
+        ),
+        (
+            "GROWTH PORTFOLIOS",
+            [
+                ("tech-growth", "60% QQQ, 40% VOO", "Tech-heavy growth"),
+                ("tech-growth-70,30", "70% QQQ, 30% VOO", "More aggressive tech"),
+                ("high-growth", "30% NVDA, 40% QQQ, 30% VOO", "High-growth tech"),
+            ],
+        ),
     ]
 
     for category, portfolio_list in portfolios:
@@ -83,7 +115,7 @@ def list_portfolios() -> None:
     print("  --allocations buffet-95,5")
     print()
     print("  # Use custom JSON allocations")
-    print("  --allocations '{\"NVDA\": 0.4, \"VOO\": 0.6}'")
+    print('  --allocations \'{"NVDA": 0.4, "VOO": 0.6}\'')
     print()
     print("=" * 80)
 
@@ -105,10 +137,18 @@ def list_algorithms() -> None:
     print()
 
     algorithms = [
-        ("quarterly-rebalance", "Rebalance quarterly (Mar/Jun/Sep/Dec)", "Traditional 60/40 portfolios"),
+        (
+            "quarterly-rebalance",
+            "Rebalance quarterly (Mar/Jun/Sep/Dec)",
+            "Traditional 60/40 portfolios",
+        ),
         ("quarterly-rebalance:2,5,8,11", "Custom rebalance months", "Rebalance in Feb/May/Aug/Nov"),
         ("monthly-rebalance", "Rebalance every month", "More aggressive rebalancing"),
-        ("annual-rebalance", "Rebalance once per year (December)", "Tax-efficient, minimal trading"),
+        (
+            "annual-rebalance",
+            "Rebalance once per year (December)",
+            "Tax-efficient, minimal trading",
+        ),
     ]
 
     for name, desc, use_case in algorithms:
@@ -172,10 +212,10 @@ def list_algorithms() -> None:
     print("  --algo quarterly-rebalance")
     print()
     print("  # Apply SD8 to all assets")
-    print("  --algo \"per-asset:sd8\"")
+    print('  --algo "per-asset:sd8"')
     print()
     print("  # SD6 with 75% profit sharing (aggressive cash extraction)")
-    print("  --algo \"per-asset:sd6,75\"")
+    print('  --algo "per-asset:sd6,75"')
     print()
     print("=" * 80)
 
@@ -278,18 +318,25 @@ For detailed help on any command:
     run_backtest_parser.add_argument("--start", required=True, help="Start date (YYYY-MM-DD)")
     run_backtest_parser.add_argument("--end", required=True, help="End date (YYYY-MM-DD)")
     run_backtest_parser.add_argument(
-        "--initial-investment", type=float, default=1_000_000, help="Initial investment amount (default: 1,000,000)"
+        "--initial-investment",
+        type=float,
+        default=1_000_000,
+        help="Initial investment amount (default: 1,000,000)",
     )
     run_backtest_parser.add_argument(
-        "--initial-qty", type=int, help="Initial quantity in shares (alternative to --initial-investment)"
+        "--initial-qty",
+        type=int,
+        help="Initial quantity in shares (alternative to --initial-investment)",
     )
     run_backtest_parser.add_argument(
         "--algorithm",
         default="sd8",
-        help='Algorithm name (e.g., "sd8", "sd4-75", "buy-and-hold", default: "sd8")'
+        help='Algorithm name (e.g., "sd8", "sd4-75", "buy-and-hold", default: "sd8")',
     )
     run_backtest_parser.add_argument("--output", help="Output file for results (CSV)")
-    run_backtest_parser.add_argument("--pdf-report", help="Generate PDF report (provide output path)")
+    run_backtest_parser.add_argument(
+        "--pdf-report", help="Generate PDF report (provide output path)"
+    )
     run_backtest_parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     # Return adjustment options
@@ -350,7 +397,9 @@ For detailed help on any command:
     run_research_parser = run_subparsers.add_parser(
         "research", help="Run research studies", description="Execute various research analyses"
     )
-    run_research_subparsers = run_research_parser.add_subparsers(dest="research_type", help="Research type")
+    run_research_subparsers = run_research_parser.add_subparsers(
+        dest="research_type", help="Research type"
+    )
 
     # run research optimal-rebalancing
     run_optimal_parser = run_research_subparsers.add_parser(
@@ -368,7 +417,9 @@ For detailed help on any command:
     run_optimal_parser.add_argument(
         "--initial-qty", type=int, default=10000, help="Initial quantity (default: 10000)"
     )
-    run_optimal_parser.add_argument("--ticker", help="Specific ticker (optional, tests all if omitted)")
+    run_optimal_parser.add_argument(
+        "--ticker", help="Specific ticker (optional, tests all if omitted)"
+    )
     run_optimal_parser.add_argument("--asset-class", help="Specific asset class (optional)")
     run_optimal_parser.add_argument("--output", required=True, help="Output CSV file")
 
@@ -445,7 +496,9 @@ For detailed help on any command:
     run_compare_parser = run_subparsers.add_parser(
         "compare", help="Compare strategies or algorithms", description="Run comparison analyses"
     )
-    run_compare_subparsers = run_compare_parser.add_subparsers(dest="compare_type", help="Comparison type")
+    run_compare_subparsers = run_compare_parser.add_subparsers(
+        dest="compare_type", help="Comparison type"
+    )
 
     # run compare algorithms
     run_algo_compare_parser = run_compare_subparsers.add_parser(
@@ -469,7 +522,9 @@ For detailed help on any command:
     run_batch_compare_parser = run_compare_subparsers.add_parser(
         "batch", help="Run batch comparison across multiple assets/strategies"
     )
-    run_batch_compare_parser.add_argument("--tickers", nargs="+", required=True, help="List of tickers")
+    run_batch_compare_parser.add_argument(
+        "--tickers", nargs="+", required=True, help="List of tickers"
+    )
     run_batch_compare_parser.add_argument(
         "--strategies", nargs="+", required=True, help="List of strategies (e.g., sd8 sd16)"
     )
@@ -502,7 +557,9 @@ For detailed help on any command:
     # run ticker
     # ========================================================================
     run_ticker_parser = run_subparsers.add_parser(
-        "ticker", help="Get aggregated candle data for a ticker", description="Retrieve OHLC candle data aggregated by time interval",
+        "ticker",
+        help="Get aggregated candle data for a ticker",
+        description="Retrieve OHLC candle data aggregated by time interval",
         epilog="""
 Examples:
     # Get daily candle data for NVDA
@@ -523,9 +580,11 @@ Examples:
         "--interval",
         choices=["daily", "weekly", "monthly"],
         default="daily",
-        help="Aggregation interval (default: daily)"
+        help="Aggregation interval (default: daily)",
     )
-    run_ticker_parser.add_argument("--output", help="Output file for results (CSV). If not specified, prints to stdout")
+    run_ticker_parser.add_argument(
+        "--output", help="Output file for results (CSV). If not specified, prints to stdout"
+    )
 
     # ========================================================================
     # ANALYZE command
@@ -596,7 +655,7 @@ Examples:
     order_parser.add_argument(
         "--algorithm",
         default="sd8",
-        help='Algorithm name (e.g., "sd8", "sd-9.15,50", default: "sd8")'
+        help='Algorithm name (e.g., "sd8", "sd-9.15,50", default: "sd8")',
     )
     order_parser.add_argument(
         "--ath", type=float, help="Current ATH (optional, will fetch if omitted)"
@@ -622,7 +681,7 @@ Examples:
     dump_parser.add_argument(
         "--algorithm",
         default="sd8",
-        help='Algorithm name (e.g., "sd8", "sd-9.15,50", "sd-ath-only-9.15,50", default: "sd8")'
+        help='Algorithm name (e.g., "sd8", "sd-9.15,50", "sd-ath-only-9.15,50", default: "sd8")',
     )
     dump_parser.add_argument("--output", required=True, help="Output file for transaction history")
     dump_parser.add_argument("--verbose", action="store_true", help="Verbose output")
@@ -653,9 +712,9 @@ def run_portfolio(args) -> int:
     try:
         # Parse allocations: try as named portfolio first, then JSON
         allocations_str = args.allocations.strip()
-        
+
         # Try to parse as JSON first (starts with '{')
-        if allocations_str.startswith('{'):
+        if allocations_str.startswith("{"):
             try:
                 allocations = json.loads(allocations_str)
                 print(f"Parsed allocations from JSON")
@@ -713,7 +772,9 @@ def run_portfolio(args) -> int:
         print(f"Total return: {summary['total_return']:.2f}%")
         print(f"Annualized return: {summary['annualized_return']:.2f}%")
         if summary.get("cash_interest_earned", 0) > 0:
-            print(f"Cash interest earned: ${summary['cash_interest_earned']:,.2f} ({summary['cash_interest_rate_pct']:.2f}% APY)")
+            print(
+                f"Cash interest earned: ${summary['cash_interest_earned']:,.2f} ({summary['cash_interest_rate_pct']:.2f}% APY)"
+            )
         print()
         print("Asset breakdown:")
         for ticker, data in summary["assets"].items():
@@ -761,7 +822,6 @@ def run_portfolio(args) -> int:
         return 1
 
 
-
 def run_unified(args) -> int:
     """Execute unified run command (backtest, portfolio, research, compare, ticker)."""
 
@@ -772,6 +832,7 @@ def run_unified(args) -> int:
     elif args.run_type == "research":
         if not args.research_type:
             from argparse import ArgumentParser
+
             parser = ArgumentParser()
             subparsers = parser.add_subparsers()
             run_parser = subparsers.add_parser("research")
@@ -782,6 +843,7 @@ def run_unified(args) -> int:
     elif args.run_type == "compare":
         if not args.compare_type:
             from argparse import ArgumentParser
+
             parser = ArgumentParser()
             subparsers = parser.add_subparsers()
             run_parser = subparsers.add_parser("compare")
@@ -799,8 +861,9 @@ def run_unified(args) -> int:
 def run_backtest(args) -> int:
     """Execute backtest command."""
     from datetime import datetime
-    from src.models.backtest import run_algorithm_backtest
+
     from src.data.fetcher import HistoryFetcher
+    from src.models.backtest import run_algorithm_backtest
 
     try:
         # Parse dates
@@ -819,7 +882,7 @@ def run_backtest(args) -> int:
             return 1
 
         # Calculate initial quantity from investment amount
-        first_price = df.iloc[0]['Close']
+        first_price = df.iloc[0]["Close"]
 
         if args.initial_qty:
             # User specified shares
@@ -831,7 +894,9 @@ def run_backtest(args) -> int:
             initial_qty = int(initial_investment / first_price)
 
         if args.verbose:
-            print(f"Initial purchase: {initial_qty} shares @ ${first_price:.2f} = ${initial_investment:,.2f}")
+            print(
+                f"Initial purchase: {initial_qty} shares @ ${first_price:.2f} = ${initial_investment:,.2f}"
+            )
 
         # Parse algorithm name (e.g., "sd8", "sd4-75", "buy-and-hold")
         from src.algorithms.factory import build_algo_from_name
@@ -845,17 +910,19 @@ def run_backtest(args) -> int:
             initial_qty=initial_qty,
             start_date=start_date,
             end_date=end_date,
-            algo=algo
+            algo=algo,
         )
 
         # Enhance summary with additional fields for PDF report
-        summary['initial_investment'] = initial_investment
-        summary['final_price'] = summary.get('end_price', 0)
-        summary['final_holdings'] = summary.get('holdings', 0)
-        summary['final_bank'] = summary.get('bank', 0)
-        summary['final_portfolio_value'] = summary.get('total', 0)
-        summary['total_return_pct'] = summary.get('total_return', 0) * 100  # Convert to percentage
-        summary['annualized_return_pct'] = summary.get('annualized', 0) * 100  # Convert to percentage
+        summary["initial_investment"] = initial_investment
+        summary["final_price"] = summary.get("end_price", 0)
+        summary["final_holdings"] = summary.get("holdings", 0)
+        summary["final_bank"] = summary.get("bank", 0)
+        summary["final_portfolio_value"] = summary.get("total", 0)
+        summary["total_return_pct"] = summary.get("total_return", 0) * 100  # Convert to percentage
+        summary["annualized_return_pct"] = (
+            summary.get("annualized", 0) * 100
+        )  # Convert to percentage
 
         # Print summary
         print("\nBACKTEST SUMMARY:")
@@ -873,17 +940,17 @@ def run_backtest(args) -> int:
             from src.reports import create_backtest_pdf_report
 
             # Prepare summary with additional metadata
-            summary['algorithm_name'] = args.algorithm
-            summary['buy_count'] = len([tx for tx in transactions if tx.action == "BUY"])
-            summary['sell_count'] = len([tx for tx in transactions if tx.action == "SELL"])
-            summary['transaction_count'] = len(transactions)
+            summary["algorithm_name"] = args.algorithm
+            summary["buy_count"] = len([tx for tx in transactions if tx.action == "BUY"])
+            summary["sell_count"] = len([tx for tx in transactions if tx.action == "SELL"])
+            summary["transaction_count"] = len(transactions)
 
             pdf_path = create_backtest_pdf_report(
                 ticker=args.ticker,
                 transactions=transactions,
                 summary=summary,
                 price_data=df,
-                output_path=args.pdf_report
+                output_path=args.pdf_report,
             )
 
             print(f"\nPDF report generated: {pdf_path}")
@@ -891,17 +958,14 @@ def run_backtest(args) -> int:
         # Save CSV if requested
         if args.output:
             import csv
-            with open(args.output, 'w', newline='') as f:
+
+            with open(args.output, "w", newline="") as f:
                 writer = csv.writer(f)
-                writer.writerow(['Date', 'Action', 'Qty', 'Price', 'Notes'])
+                writer.writerow(["Date", "Action", "Qty", "Price", "Notes"])
                 for tx in transactions:
-                    writer.writerow([
-                        tx.transaction_date,
-                        tx.action,
-                        tx.qty,
-                        f"${tx.price:.2f}",
-                        tx.notes
-                    ])
+                    writer.writerow(
+                        [tx.transaction_date, tx.action, tx.qty, f"${tx.price:.2f}", tx.notes]
+                    )
             print(f"Transaction log saved: {args.output}")
 
         return 0
@@ -909,6 +973,7 @@ def run_backtest(args) -> int:
     except Exception as e:
         print(f"Error running backtest: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
@@ -1005,7 +1070,9 @@ def run_compare(args) -> int:
 def run_ticker(args) -> int:
     """Execute ticker command to get aggregated candle data."""
     from datetime import datetime
+
     import pandas as pd
+
     from src.data.asset import Asset
 
     try:
@@ -1018,7 +1085,9 @@ def run_ticker(args) -> int:
         df = asset.get_prices(start_date, end_date)
 
         if df.empty:
-            print(f"No data found for ticker {args.ticker} in date range {args.start} to {args.end}")
+            print(
+                f"No data found for ticker {args.ticker} in date range {args.start} to {args.end}"
+            )
             return 1
 
         # Aggregate data based on interval
@@ -1027,39 +1096,31 @@ def run_ticker(args) -> int:
             result_df = df.copy()
         elif args.interval == "weekly":
             # Resample to weekly (end of week)
-            agg_dict = {
-                'Open': 'first',
-                'High': 'max',
-                'Low': 'min',
-                'Close': 'last'
-            }
-            if 'Volume' in df.columns:
-                agg_dict['Volume'] = 'sum'
-            result_df = df.resample('W').agg(agg_dict)
+            agg_dict = {"Open": "first", "High": "max", "Low": "min", "Close": "last"}
+            if "Volume" in df.columns:
+                agg_dict["Volume"] = "sum"
+            result_df = df.resample("W").agg(agg_dict)
         elif args.interval == "monthly":
             # Resample to monthly (end of month)
-            agg_dict = {
-                'Open': 'first',
-                'High': 'max',
-                'Low': 'min',
-                'Close': 'last'
-            }
-            if 'Volume' in df.columns:
-                agg_dict['Volume'] = 'sum'
-            result_df = df.resample('ME').agg(agg_dict)
+            agg_dict = {"Open": "first", "High": "max", "Low": "min", "Close": "last"}
+            if "Volume" in df.columns:
+                agg_dict["Volume"] = "sum"
+            result_df = df.resample("ME").agg(agg_dict)
         else:
             print(f"Invalid interval: {args.interval}. Must be 'daily', 'weekly', or 'monthly'")
             return 1
 
         # Format output with required columns: Date, Ticker, O, C, L, H
-        output_df = pd.DataFrame({
-            'Date': result_df.index.strftime('%Y-%m-%d'),
-            'Ticker': args.ticker,
-            'O': result_df['Open'].round(2),
-            'C': result_df['Close'].round(2),
-            'L': result_df['Low'].round(2),
-            'H': result_df['High'].round(2)
-        })
+        output_df = pd.DataFrame(
+            {
+                "Date": result_df.index.strftime("%Y-%m-%d"),
+                "Ticker": args.ticker,
+                "O": result_df["Open"].round(2),
+                "C": result_df["Close"].round(2),
+                "L": result_df["Low"].round(2),
+                "H": result_df["High"].round(2),
+            }
+        )
 
         # Output results
         if args.output:
@@ -1167,7 +1228,12 @@ def run_dump(args) -> int:
 
         # Run backtest
         txs, summary = run_algorithm_backtest(
-            df, args.ticker, initial_qty=args.initial_qty, start_date=start_date, end_date=end_date, algo=algo
+            df,
+            args.ticker,
+            initial_qty=args.initial_qty,
+            start_date=start_date,
+            end_date=end_date,
+            algo=algo,
         )
 
         # Write transactions to file
@@ -1188,7 +1254,12 @@ def run_dump(args) -> int:
             qty = getattr(t, "qty", getattr(t, "shares", None))
             price = getattr(t, "price", getattr(t, "purchase_price", None))
             ticker_attr = getattr(t, "ticker", None)
-            if date_attr is not None and action is not None and qty is not None and price is not None:
+            if (
+                date_attr is not None
+                and action is not None
+                and qty is not None
+                and price is not None
+            ):
                 try:
                     date_str = date_attr.isoformat()
                 except Exception:
@@ -1258,12 +1329,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     # Handle --list-algorithms flag
-    if hasattr(args, 'list_algorithms') and args.list_algorithms:
+    if hasattr(args, "list_algorithms") and args.list_algorithms:
         list_algorithms()
         return 0
 
     # Handle --list-portfolios flag
-    if hasattr(args, 'list_portfolios') and args.list_portfolios:
+    if hasattr(args, "list_portfolios") and args.list_portfolios:
         list_portfolios()
         return 0
 

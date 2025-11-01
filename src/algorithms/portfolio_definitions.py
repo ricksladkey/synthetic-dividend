@@ -82,9 +82,7 @@ def parse_portfolio_name(name: str) -> Dict[str, float]:
         return {"VOO": 0.6, "BIL": 0.3, "BTC-USD": 0.1}
 
     # Classic plus crypto with custom allocations
-    m = re.match(
-        r"^classic-plus-crypto-(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?)$", name
-    )
+    m = re.match(r"^classic-plus-crypto-(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?)$", name)
     if m:
         stock_pct = float(m.group(1))
         bond_pct = float(m.group(2))

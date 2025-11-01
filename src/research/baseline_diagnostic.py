@@ -50,7 +50,9 @@ def main():
 
     print(f"\nTransaction list:")
     for tx in txns_bh[:10]:  # First 10
-        print(f"  {tx.transaction_date} {tx.action:4s} {tx.qty:4d} {tx.ticker:8s} @ ${tx.price:8.2f}")
+        print(
+            f"  {tx.transaction_date} {tx.action:4s} {tx.qty:4d} {tx.ticker:8s} @ ${tx.price:8.2f}"
+        )
     if len(txns_bh) > 10:
         print(f"  ... ({len(txns_bh) - 10} more transactions)")
 
@@ -75,7 +77,9 @@ def main():
 
     print(f"\nTransaction list:")
     for tx in txns_sd[:20]:  # First 20
-        print(f"  {tx.transaction_date} {tx.action:4s} {tx.qty:4d} {tx.ticker:8s} @ ${tx.price:8.2f} - {tx.notes}")
+        print(
+            f"  {tx.transaction_date} {tx.action:4s} {tx.qty:4d} {tx.ticker:8s} @ ${tx.price:8.2f} - {tx.notes}"
+        )
     if len(txns_sd) > 20:
         print(f"  ... ({len(txns_sd) - 20} more transactions)")
 
@@ -109,8 +113,8 @@ def main():
             print(f"  {ticker:8s}: {len(buys)} buys, {len(sells)} sells")
 
     # Compare final values
-    diff = summary_sd['total_final_value'] - summary_bh['total_final_value']
-    diff_pct = (diff / summary_bh['total_final_value']) * 100
+    diff = summary_sd["total_final_value"] - summary_bh["total_final_value"]
+    diff_pct = (diff / summary_bh["total_final_value"]) * 100
 
     print(f"\nValue difference:")
     print(f"  SD - BH = ${diff:,.0f} ({diff_pct:+.2f}%)")

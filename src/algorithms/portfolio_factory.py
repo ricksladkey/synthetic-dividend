@@ -65,9 +65,7 @@ def build_portfolio_algo_from_name(
         months_str = m.group(1)
         months = [int(x) for x in months_str.split(",")]
         print(f"  -> QuarterlyRebalanceAlgorithm (months: {months})")
-        return QuarterlyRebalanceAlgorithm(
-            target_allocations=allocations, rebalance_months=months
-        )
+        return QuarterlyRebalanceAlgorithm(target_allocations=allocations, rebalance_months=months)
 
     # Monthly rebalancing
     if name == "monthly-rebalance":

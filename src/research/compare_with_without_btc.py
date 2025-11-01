@@ -111,16 +111,10 @@ def main():
         print(f"{'#'*80}")
 
         results_60_40 = test_portfolio(
-            "60/40 VOO/BIL (Traditional, no BTC)",
-            portfolio_60_40,
-            wd_rate
+            "60/40 VOO/BIL (Traditional, no BTC)", portfolio_60_40, wd_rate
         )
 
-        results_60_30_10 = test_portfolio(
-            "60/30/10 VOO/BIL/BTC",
-            portfolio_60_30_10,
-            wd_rate
-        )
+        results_60_30_10 = test_portfolio("60/30/10 VOO/BIL/BTC", portfolio_60_30_10, wd_rate)
 
         all_results[wd_rate] = {
             "60/40": results_60_40,
@@ -144,16 +138,28 @@ def main():
         print("-" * 90)
 
         # 60/40 results
-        print(f"{'60/40 VOO/BIL':<25} {'Buy-and-hold':<25} ${r_60_40['buy-and-hold']['final']:>14,.0f} {r_60_40['buy-and-hold']['return']:>9.2f}%")
-        print(f"{'(no BTC)':<25} {'Quarterly rebalance':<25} ${r_60_40['quarterly-rebalance']['final']:>14,.0f} {r_60_40['quarterly-rebalance']['return']:>9.2f}%")
-        print(f"{'':<25} {'Synthetic dividend':<25} ${r_60_40['synthetic-dividend']['final']:>14,.0f} {r_60_40['synthetic-dividend']['return']:>9.2f}%")
+        print(
+            f"{'60/40 VOO/BIL':<25} {'Buy-and-hold':<25} ${r_60_40['buy-and-hold']['final']:>14,.0f} {r_60_40['buy-and-hold']['return']:>9.2f}%"
+        )
+        print(
+            f"{'(no BTC)':<25} {'Quarterly rebalance':<25} ${r_60_40['quarterly-rebalance']['final']:>14,.0f} {r_60_40['quarterly-rebalance']['return']:>9.2f}%"
+        )
+        print(
+            f"{'':<25} {'Synthetic dividend':<25} ${r_60_40['synthetic-dividend']['final']:>14,.0f} {r_60_40['synthetic-dividend']['return']:>9.2f}%"
+        )
 
         print()
 
         # 60/30/10 results
-        print(f"{'60/30/10 VOO/BIL/BTC':<25} {'Buy-and-hold':<25} ${r_60_30_10['buy-and-hold']['final']:>14,.0f} {r_60_30_10['buy-and-hold']['return']:>9.2f}%")
-        print(f"{'(with 10% BTC)':<25} {'Quarterly rebalance':<25} ${r_60_30_10['quarterly-rebalance']['final']:>14,.0f} {r_60_30_10['quarterly-rebalance']['return']:>9.2f}%")
-        print(f"{'':<25} {'Synthetic dividend':<25} ${r_60_30_10['synthetic-dividend']['final']:>14,.0f} {r_60_30_10['synthetic-dividend']['return']:>9.2f}%")
+        print(
+            f"{'60/30/10 VOO/BIL/BTC':<25} {'Buy-and-hold':<25} ${r_60_30_10['buy-and-hold']['final']:>14,.0f} {r_60_30_10['buy-and-hold']['return']:>9.2f}%"
+        )
+        print(
+            f"{'(with 10% BTC)':<25} {'Quarterly rebalance':<25} ${r_60_30_10['quarterly-rebalance']['final']:>14,.0f} {r_60_30_10['quarterly-rebalance']['return']:>9.2f}%"
+        )
+        print(
+            f"{'':<25} {'Synthetic dividend':<25} ${r_60_30_10['synthetic-dividend']['final']:>14,.0f} {r_60_30_10['synthetic-dividend']['return']:>9.2f}%"
+        )
 
         print()
 
@@ -169,11 +175,19 @@ def main():
         # Calculate alpha (vs buy-and-hold)
         print("Volatility Alpha (vs buy-and-hold within same portfolio):")
 
-        alpha_60_40_quarterly = r_60_40["quarterly-rebalance"]["return"] - r_60_40["buy-and-hold"]["return"]
-        alpha_60_40_synth = r_60_40["synthetic-dividend"]["return"] - r_60_40["buy-and-hold"]["return"]
+        alpha_60_40_quarterly = (
+            r_60_40["quarterly-rebalance"]["return"] - r_60_40["buy-and-hold"]["return"]
+        )
+        alpha_60_40_synth = (
+            r_60_40["synthetic-dividend"]["return"] - r_60_40["buy-and-hold"]["return"]
+        )
 
-        alpha_60_30_10_quarterly = r_60_30_10["quarterly-rebalance"]["return"] - r_60_30_10["buy-and-hold"]["return"]
-        alpha_60_30_10_synth = r_60_30_10["synthetic-dividend"]["return"] - r_60_30_10["buy-and-hold"]["return"]
+        alpha_60_30_10_quarterly = (
+            r_60_30_10["quarterly-rebalance"]["return"] - r_60_30_10["buy-and-hold"]["return"]
+        )
+        alpha_60_30_10_synth = (
+            r_60_30_10["synthetic-dividend"]["return"] - r_60_30_10["buy-and-hold"]["return"]
+        )
 
         print(f"  60/40 Quarterly rebalance: {alpha_60_40_quarterly:+.2f}%")
         print(f"  60/40 Synthetic dividend:  {alpha_60_40_synth:+.2f}%")

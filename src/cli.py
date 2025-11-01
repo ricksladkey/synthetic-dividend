@@ -38,28 +38,60 @@ def list_portfolios() -> None:
     print()
 
     portfolios = [
-        ("CLASSIC PORTFOLIOS", [
-            ("classic", "60% VOO, 40% BIL", "Traditional 60/40 stocks/bonds"),
-            ("classic-70,30", "70% VOO, 30% BIL", "More aggressive allocation"),
-            ("classic-80,20", "80% VOO, 20% BIL", "High equity allocation"),
-        ]),
-        ("CRYPTO PORTFOLIOS", [
-            ("classic-plus-crypto", "60% VOO, 30% BIL, 10% BTC-USD", "60/30/10 validation portfolio"),
-            ("classic-plus-crypto-50,30,20", "50% VOO, 30% BIL, 20% BTC-USD", "Higher crypto allocation"),
-            ("crypto-heavy", "40% BTC-USD, 20% ETH-USD, 30% VOO, 10% BIL", "Crypto-focused portfolio"),
-        ]),
-        ("FAMOUS PORTFOLIOS", [
-            ("buffet", "90% VOO, 10% BIL", "Warren Buffett recommendation"),
-            ("buffet-95,5", "95% VOO, 5% BIL", "More aggressive Buffett"),
-            ("all-weather", "40% VOO, 15% TLT, 15% IEF, 7.5% GLD, 7.5% DBC, 15% BIL", "Ray Dalio's All Weather"),
-            ("three-fund", "40% VTI, 30% VXUS, 30% BND", "Bogleheads three-fund"),
-            ("golden-butterfly", "20% VOO, 20% SHY, 20% TLT, 20% GLD, 20% BIL", "Tyler's Golden Butterfly"),
-        ]),
-        ("GROWTH PORTFOLIOS", [
-            ("tech-growth", "60% QQQ, 40% VOO", "Tech-heavy growth"),
-            ("tech-growth-70,30", "70% QQQ, 30% VOO", "More aggressive tech"),
-            ("high-growth", "30% NVDA, 40% QQQ, 30% VOO", "High-growth tech"),
-        ]),
+        (
+            "CLASSIC PORTFOLIOS",
+            [
+                ("classic", "60% VOO, 40% BIL", "Traditional 60/40 stocks/bonds"),
+                ("classic-70,30", "70% VOO, 30% BIL", "More aggressive allocation"),
+                ("classic-80,20", "80% VOO, 20% BIL", "High equity allocation"),
+            ],
+        ),
+        (
+            "CRYPTO PORTFOLIOS",
+            [
+                (
+                    "classic-plus-crypto",
+                    "60% VOO, 30% BIL, 10% BTC-USD",
+                    "60/30/10 validation portfolio",
+                ),
+                (
+                    "classic-plus-crypto-50,30,20",
+                    "50% VOO, 30% BIL, 20% BTC-USD",
+                    "Higher crypto allocation",
+                ),
+                (
+                    "crypto-heavy",
+                    "40% BTC-USD, 20% ETH-USD, 30% VOO, 10% BIL",
+                    "Crypto-focused portfolio",
+                ),
+            ],
+        ),
+        (
+            "FAMOUS PORTFOLIOS",
+            [
+                ("buffet", "90% VOO, 10% BIL", "Warren Buffett recommendation"),
+                ("buffet-95,5", "95% VOO, 5% BIL", "More aggressive Buffett"),
+                (
+                    "all-weather",
+                    "40% VOO, 15% TLT, 15% IEF, 7.5% GLD, 7.5% DBC, 15% BIL",
+                    "Ray Dalio's All Weather",
+                ),
+                ("three-fund", "40% VTI, 30% VXUS, 30% BND", "Bogleheads three-fund"),
+                (
+                    "golden-butterfly",
+                    "20% VOO, 20% SHY, 20% TLT, 20% GLD, 20% BIL",
+                    "Tyler's Golden Butterfly",
+                ),
+            ],
+        ),
+        (
+            "GROWTH PORTFOLIOS",
+            [
+                ("tech-growth", "60% QQQ, 40% VOO", "Tech-heavy growth"),
+                ("tech-growth-70,30", "70% QQQ, 30% VOO", "More aggressive tech"),
+                ("high-growth", "30% NVDA, 40% QQQ, 30% VOO", "High-growth tech"),
+            ],
+        ),
     ]
 
     for category, portfolio_list in portfolios:
@@ -89,7 +121,7 @@ def list_portfolios() -> None:
     print("  --allocations buffet-95,5")
     print()
     print("  # Use custom JSON allocations")
-    print("  --allocations '{\"NVDA\": 0.4, \"VOO\": 0.6}'")
+    print('  --allocations \'{"NVDA": 0.4, "VOO": 0.6}\'')
     print()
     print("=" * 80)
 
@@ -111,10 +143,18 @@ def list_algorithms() -> None:
     print()
 
     algorithms = [
-        ("quarterly-rebalance", "Rebalance quarterly (Mar/Jun/Sep/Dec)", "Traditional 60/40 portfolios"),
+        (
+            "quarterly-rebalance",
+            "Rebalance quarterly (Mar/Jun/Sep/Dec)",
+            "Traditional 60/40 portfolios",
+        ),
         ("quarterly-rebalance:2,5,8,11", "Custom rebalance months", "Rebalance in Feb/May/Aug/Nov"),
         ("monthly-rebalance", "Rebalance every month", "More aggressive rebalancing"),
-        ("annual-rebalance", "Rebalance once per year (December)", "Tax-efficient, minimal trading"),
+        (
+            "annual-rebalance",
+            "Rebalance once per year (December)",
+            "Tax-efficient, minimal trading",
+        ),
     ]
 
     for name, desc, use_case in algorithms:
@@ -178,10 +218,10 @@ def list_algorithms() -> None:
     print("  --algo quarterly-rebalance")
     print()
     print("  # Apply SD8 to all assets")
-    print("  --algo \"per-asset:sd8\"")
+    print('  --algo "per-asset:sd8"')
     print()
     print("  # SD6 with 75% profit sharing (aggressive cash extraction)")
-    print("  --algo \"per-asset:sd6,75\"")
+    print('  --algo "per-asset:sd6,75"')
     print()
     print("=" * 80)
 
@@ -189,7 +229,8 @@ def list_algorithms() -> None:
 def test_command(args: List[str]) -> int:
     """Run the test suite."""
     import subprocess
-    cmd = [sys.executable, '-m', 'pytest', '-v', '--cov=src', '--cov-report=term-missing']
+
+    cmd = [sys.executable, "-m", "pytest", "-v", "--cov=src", "--cov-report=term-missing"]
     if args:
         cmd.extend(args)
     return subprocess.call(cmd)
@@ -198,19 +239,22 @@ def test_command(args: List[str]) -> int:
 def test_sd_command(args: List[str]) -> int:
     """Test SD strategy on NVDA."""
     from src.run_model import main as backtest_main
-    return backtest_main(['NVDA', '10/22/2024', '10/22/2025', 'sd-9.05,50'] + args)
+
+    return backtest_main(["NVDA", "10/22/2024", "10/22/2025", "sd-9.05,50"] + args)
 
 
 def test_buy_and_hold_command(args: List[str]) -> int:
     """Test buy-and-hold strategy on NVDA."""
     from src.run_model import main as backtest_main
-    return backtest_main(['NVDA', '10/22/2024', '10/22/2025', 'buy-and-hold'] + args)
+
+    return backtest_main(["NVDA", "10/22/2024", "10/22/2025", "buy-and-hold"] + args)
 
 
 def test_batch_comparison_command(args: List[str]) -> int:
     """Run batch comparison test."""
     from src.compare.batch_comparison import main as compare_main
-    return compare_main(['NVDA', '10/22/2024', '10/22/2025', 'buy-and-hold', 'sd-9.05,50'] + args)
+
+    return compare_main(["NVDA", "10/22/2024", "10/22/2025", "buy-and-hold", "sd-9.05,50"] + args)
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -221,7 +265,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(
         description="Synthetic Dividend Toolkit - Unified CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
+        epilog=__doc__,
     )
 
     # Add top-level list flags
@@ -237,10 +281,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     )
 
     parser.add_argument(
-        'command',
-        nargs='?',
-        choices=['backtest', 'compare', 'research', 'test', 'analyze', 'gui'],
-        help='Command to execute'
+        "command",
+        nargs="?",
+        choices=["backtest", "compare", "research", "test", "analyze", "gui"],
+        help="Command to execute",
     )
 
     # Parse arguments
@@ -262,40 +306,47 @@ def main(argv: Optional[List[str]] = None) -> int:
     command = args.command
 
     # Route to appropriate module based on command
-    if command == 'backtest':
+    if command == "backtest":
         from src.run_model import main as backtest_main
+
         return backtest_main(remaining_args)
-    elif command == 'compare':
+    elif command == "compare":
         from src.compare.batch_comparison import main as compare_main
+
         return compare_main(remaining_args)
-    elif command == 'research':
+    elif command == "research":
         # Handle subcommands for research
-        if remaining_args and remaining_args[0] == 'volatility-alpha':
+        if remaining_args and remaining_args[0] == "volatility-alpha":
             from src.research.volatility_alpha import main as vol_alpha_main
+
             return vol_alpha_main(remaining_args[1:])
-        elif remaining_args and remaining_args[0] == 'optimal-rebalancing':
+        elif remaining_args and remaining_args[0] == "optimal-rebalancing":
             from src.research.optimal_rebalancing import main as opt_rebal_main
+
             return opt_rebal_main(remaining_args[1:])
         else:
             print("Research subcommands: volatility-alpha, optimal-rebalancing")
             return 1
-    elif command == 'analyze':
+    elif command == "analyze":
         # Handle subcommands for analysis
-        if remaining_args and remaining_args[0] == 'volatility-alpha':
+        if remaining_args and remaining_args[0] == "volatility-alpha":
             from src.research.volatility_alpha import main as vol_alpha_main
+
             return vol_alpha_main(remaining_args[1:])
         else:
             print("Analysis subcommands: volatility-alpha")
             return 1
-    elif command == 'test':
+    elif command == "test":
         import subprocess
+
         # Run pytest with coverage
-        cmd = [sys.executable, '-m', 'pytest', '-v', '--cov=src', '--cov-report=term-missing']
+        cmd = [sys.executable, "-m", "pytest", "-v", "--cov=src", "--cov-report=term-missing"]
         if remaining_args:
             cmd.extend(remaining_args)
         return subprocess.call(cmd)
-    elif command == 'gui':
+    elif command == "gui":
         from src.main import main as gui_main
+
         return gui_main(remaining_args)
     else:
         parser.print_help()

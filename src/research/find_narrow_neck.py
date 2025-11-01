@@ -71,7 +71,11 @@ def find_narrow_neck(
             min_bank = min(daily_bank_values) if daily_bank_values else summary.get("final_bank", 0)
 
             # Find when the neck was narrowest
-            min_bank_index = daily_bank_values.index(min_bank) if daily_bank_values and min_bank in daily_bank_values else -1
+            min_bank_index = (
+                daily_bank_values.index(min_bank)
+                if daily_bank_values and min_bank in daily_bank_values
+                else -1
+            )
 
             final_bank = summary.get("final_bank", 0)
             total_withdrawn = summary.get("total_withdrawn", 0)
@@ -119,7 +123,9 @@ def find_narrow_neck(
     print("=" * 80)
     print()
 
-    print(f"{'Rate':<8} {'Min Bank':<15} {'Final Bank':<15} {'Withdrawn':<15} {'Final Value':<15} {'Return':<10} {'Status'}")
+    print(
+        f"{'Rate':<8} {'Min Bank':<15} {'Final Bank':<15} {'Withdrawn':<15} {'Final Value':<15} {'Return':<10} {'Status'}"
+    )
     print("-" * 90)
 
     min_bank_positive = float("inf")
@@ -157,7 +163,9 @@ def find_narrow_neck(
             ret_str = "-"
             status = "FAILED"
 
-        print(f"{rate:.1f}%    {min_bank_str:<15} {bank_str:<15} {withdrawn_str:<15} {value_str:<15} {ret_str:<10} {status}")
+        print(
+            f"{rate:.1f}%    {min_bank_str:<15} {bank_str:<15} {withdrawn_str:<15} {value_str:<15} {ret_str:<10} {status}"
+        )
 
     print()
 
@@ -170,9 +178,7 @@ def find_narrow_neck(
         print(f"  Minimum Bank Balance: ${min_bank_positive:,.0f}")
         print(f"  Occurred on Day: {narrow_neck_day}")
         print()
-        print(
-            f"This is the maximum sustainable withdrawal rate that maintains a positive"
-        )
+        print(f"This is the maximum sustainable withdrawal rate that maintains a positive")
         print(f"cash reserve throughout the period. Going higher would require forced selling.")
         print()
         print("The 'narrow neck' is the point where cash reserves are most constrained,")
@@ -182,9 +188,7 @@ def find_narrow_neck(
         # Suggest stress test rate
         stress_rate = narrow_neck_rate + 2.0
         print(f"SUGGESTED STRESS TEST RATE: {stress_rate:.1f}%")
-        print(
-            f"  This pushes beyond the narrow neck to test strategy resilience under pressure."
-        )
+        print(f"  This pushes beyond the narrow neck to test strategy resilience under pressure.")
         print(f"  At this rate, the strategy may need to sell assets or use margin.")
         print()
         print("Use this stress rate to validate that the strategy gracefully handles")

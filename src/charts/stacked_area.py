@@ -153,6 +153,7 @@ def create_stacked_area_chart(
     # Set non-interactive backend if saving to file
     if output:
         import matplotlib
+
         matplotlib.use("Agg")
 
     # Validate input
@@ -184,15 +185,13 @@ def create_stacked_area_chart(
             labels=positive_labels,
             colors=positive_colors,
             alpha=alpha,
-            baseline='zero',
+            baseline="zero",
         )
 
     # Plot negative series (stacked downward from zero)
     if data.negative_series:
         # Negative values need to be negated for display below zero
-        negative_values = np.array([
-            [-v for v in series.values] for series in data.negative_series
-        ])
+        negative_values = np.array([[-v for v in series.values] for series in data.negative_series])
         negative_labels = [series.label for series in data.negative_series]
         negative_colors = [series.color for series in data.negative_series]
 
@@ -202,11 +201,11 @@ def create_stacked_area_chart(
             labels=negative_labels,
             colors=negative_colors,
             alpha=alpha,
-            baseline='zero',
+            baseline="zero",
         )
 
     # Add zero line
-    ax.axhline(y=0, color='black', linewidth=0.5, linestyle='-', alpha=0.3)
+    ax.axhline(y=0, color="black", linewidth=0.5, linestyle="-", alpha=0.3)
 
     # Formatting
     ax.set_title(title, fontsize=16, fontweight="bold", pad=20)
@@ -248,6 +247,7 @@ def create_stacked_area_chart(
     # Save
     if output is None:
         import tempfile
+
         output = tempfile.mktemp(suffix=".png")
 
     plt.savefig(output, dpi=150, bbox_inches="tight")
@@ -272,16 +272,68 @@ def demo_horn_chart():
     # Initial investment: $1,000,000
     # Cash (sweeps account) starts at 10% ($100K) and fluctuates with trading/withdrawals
     # Narrow neck occurs when it approaches zero (month 10-11)
-    cash_values = [100000, 95000, 92000, 88000, 85000, 80000, 75000, 70000, 60000, 45000, 30000, 50000]
+    cash_values = [
+        100000,
+        95000,
+        92000,
+        88000,
+        85000,
+        80000,
+        75000,
+        70000,
+        60000,
+        45000,
+        30000,
+        50000,
+    ]
 
     # BIL position (27% = 30% * 0.9) - bonds, relatively stable
-    bil_values = [270000, 272000, 271000, 275000, 277000, 276000, 280000, 282000, 281000, 285000, 284000, 286000]
+    bil_values = [
+        270000,
+        272000,
+        271000,
+        275000,
+        277000,
+        276000,
+        280000,
+        282000,
+        281000,
+        285000,
+        284000,
+        286000,
+    ]
 
     # VOO position (54% = 60% * 0.9) - equities, moderate growth
-    voo_values = [540000, 558000, 549000, 576000, 585000, 580500, 603000, 612000, 621000, 630000, 639000, 648000]
+    voo_values = [
+        540000,
+        558000,
+        549000,
+        576000,
+        585000,
+        580500,
+        603000,
+        612000,
+        621000,
+        630000,
+        639000,
+        648000,
+    ]
 
     # BTC position (9% = 10% * 0.9) - crypto, high volatility
-    btc_values = [90000, 99000, 85500, 108000, 103500, 112500, 117000, 108000, 126000, 130500, 135000, 139500]
+    btc_values = [
+        90000,
+        99000,
+        85500,
+        108000,
+        103500,
+        112500,
+        117000,
+        108000,
+        126000,
+        130500,
+        135000,
+        139500,
+    ]
 
     # Cumulative withdrawals (growing wedge below zero)
     withdrawals = [3333 * (i + 1) for i in range(12)]  # 4% annual = $3,333/month
@@ -347,6 +399,7 @@ def create_portfolio_horn_chart(
         Path to saved chart file
     """
     from datetime import date
+
     import pandas as pd
 
     # Extract daily data
@@ -369,24 +422,24 @@ def create_portfolio_horn_chart(
             asset_series_data[ticker] = [daily_asset_values[ticker].get(d, 0) for d in dates]
 
     # Handle resampling if requested
-    if resample and resample != 'D':
-        df_data = {'date': dates, 'cash': cash_values}
+    if resample and resample != "D":
+        df_data = {"date": dates, "cash": cash_values}
         # Add per-asset columns
         for ticker, values in asset_series_data.items():
             df_data[ticker] = values
 
         df = pd.DataFrame(df_data)
-        df['date'] = pd.to_datetime(df['date'])
-        df = df.set_index('date')
+        df["date"] = pd.to_datetime(df["date"])
+        df = df.set_index("date")
 
         # Convert deprecated 'M' to 'ME' (month end)
-        resample_freq = 'ME' if resample == 'M' else resample
+        resample_freq = "ME" if resample == "M" else resample
 
         # Resample (use mean for values)
         df_resampled = df.resample(resample_freq).mean()
 
         dates = [d.date() for d in df_resampled.index]
-        cash_values = df_resampled['cash'].tolist()
+        cash_values = df_resampled["cash"].tolist()
 
         # Update asset series data with resampled values
         for ticker in asset_series_data.keys():
@@ -403,17 +456,27 @@ def create_portfolio_horn_chart(
     # Define asset volatility order (least to most volatile for stacking)
     # Common ordering: Cash < Bonds (BIL/TLT) < Stocks (VOO/SPY) < Crypto (BTC)
     volatility_order = {
-        'BIL': 1, 'TLT': 1, 'SHY': 1,  # Bonds
-        'VOO': 2, 'SPY': 2, 'QQQ': 2, 'IVV': 2,  # Equity indices
-        'AAPL': 3, 'MSFT': 3, 'GOOG': 3, 'NVDA': 3,  # Tech stocks
-        'GLD': 3, 'GLDM': 3,  # Gold
-        'BTC-USD': 4, 'ETH-USD': 4,  # Crypto
+        "BIL": 1,
+        "TLT": 1,
+        "SHY": 1,  # Bonds
+        "VOO": 2,
+        "SPY": 2,
+        "QQQ": 2,
+        "IVV": 2,  # Equity indices
+        "AAPL": 3,
+        "MSFT": 3,
+        "GOOG": 3,
+        "NVDA": 3,  # Tech stocks
+        "GLD": 3,
+        "GLDM": 3,  # Gold
+        "BTC-USD": 4,
+        "ETH-USD": 4,  # Crypto
     }
 
     # Sort assets by volatility (lowest to highest for bottom-to-top stacking)
     sorted_tickers = sorted(
         asset_series_data.keys(),
-        key=lambda t: (volatility_order.get(t, 2.5), t)  # Default to mid-range if unknown
+        key=lambda t: (volatility_order.get(t, 2.5), t),  # Default to mid-range if unknown
     )
 
     # Build positive series (bottom to top: cash, then assets by volatility)
@@ -425,11 +488,11 @@ def create_portfolio_horn_chart(
     for i, ticker in enumerate(sorted_tickers):
         color = asset_colors[i % len(asset_colors)]
         # Add asset type label
-        if ticker in ['BIL', 'TLT', 'SHY']:
+        if ticker in ["BIL", "TLT", "SHY"]:
             label = f"{ticker} (Bonds)"
-        elif ticker in ['VOO', 'SPY', 'QQQ', 'IVV']:
+        elif ticker in ["VOO", "SPY", "QQQ", "IVV"]:
             label = f"{ticker} (Equities)"
-        elif ticker in ['BTC-USD', 'ETH-USD']:
+        elif ticker in ["BTC-USD", "ETH-USD"]:
             label = f"{ticker} (Crypto)"
         else:
             label = ticker

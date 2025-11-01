@@ -84,7 +84,7 @@ def main():
 
     print(f"File saved. First 5 lines of {output_file}:")
     try:
-        with open(output_file, 'r') as f:
+        with open(output_file, "r") as f:
             for i, line in enumerate(f):
                 if i < 5:
                     print(line.rstrip())
@@ -95,6 +95,7 @@ def main():
 
     # Clean up
     import os
+
     if os.path.exists(output_file):
         os.remove(output_file)
         print(f"\nCleaned up {output_file}")

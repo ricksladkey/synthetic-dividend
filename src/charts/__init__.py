@@ -20,8 +20,8 @@ Available chart types:
 from src.charts.stacked_area import (
     SeriesData,
     StackedAreaData,
-    create_stacked_area_chart,
     create_portfolio_horn_chart,
+    create_stacked_area_chart,
 )
 
 __all__ = [

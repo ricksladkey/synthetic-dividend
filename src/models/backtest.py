@@ -16,6 +16,7 @@ from src.algorithms import (
     BuyAndHoldAlgorithm,
     SyntheticDividendAlgorithm,
 )
+
 # PortfolioAlgorithmBase imported locally in run_portfolio_backtest
 from src.models.backtest_utils import (  # noqa: F401; (re-exported for backwards compatibility)
     calculate_synthetic_dividend_orders,
@@ -1038,6 +1039,7 @@ def run_portfolio_backtest(
         Tuple of (all_transactions, portfolio_summary)
     """
     import warnings
+
     from src.algorithms import PortfolioAlgorithmBase
     from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
     from src.data.fetcher import HistoryFetcher
@@ -1057,22 +1059,20 @@ def run_portfolio_backtest(
         warnings.warn(
             "The 'algo' parameter is deprecated. Use 'portfolio_algo' instead.",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
         if isinstance(algo, str):
             if algo == "buy-and-hold":
-                portfolio_algo = build_portfolio_algo_from_name("per-asset:buy-and-hold", allocations)
+                portfolio_algo = build_portfolio_algo_from_name(
+                    "per-asset:buy-and-hold", allocations
+                )
             else:
                 portfolio_algo = build_portfolio_algo_from_name(f"per-asset:{algo}", allocations)
 
     # Warn about ignored legacy kwargs
     if kwargs:
         ignored = ", ".join(kwargs.keys())
-        warnings.warn(
-            f"Ignored deprecated parameters: {ignored}",
-            DeprecationWarning,
-            stacklevel=2
-        )
+        warnings.warn(f"Ignored deprecated parameters: {ignored}", DeprecationWarning, stacklevel=2)
 
     # Validate portfolio_algo type (after string conversion)
     if not isinstance(portfolio_algo, PortfolioAlgorithmBase):
@@ -1103,9 +1103,7 @@ def run_portfolio_backtest(
     if not common_dates:
         raise ValueError("No common trading dates across all assets")
 
-    print(
-        f"Common trading days: {len(common_dates)} ({common_dates[0]} to {common_dates[-1]})"
-    )
+    print(f"Common trading days: {len(common_dates)} ({common_dates[0]} to {common_dates[-1]})")
 
     # Index price data by date for fast lookup
     price_data_indexed: Dict[str, pd.DataFrame] = {}
@@ -1151,7 +1149,9 @@ def run_portfolio_backtest(
             if hasattr(algo, "on_new_holdings"):
                 first_price = price_data_indexed[ticker].loc[common_dates[0], "Close"].item()
                 algo.on_new_holdings(holdings[ticker], first_price)
-                print(f"  {ticker}: initialized with {holdings[ticker]} shares @ ${first_price:.2f}")
+                print(
+                    f"  {ticker}: initialized with {holdings[ticker]} shares @ ${first_price:.2f}"
+                )
         print()
 
     # Track daily portfolio values
@@ -1174,7 +1174,9 @@ def run_portfolio_backtest(
 
     # Cash interest tracking
     total_interest_earned: float = 0.0
-    daily_interest_rate = (cash_interest_rate_pct / 100.0) / 365.25 if cash_interest_rate_pct > 0 else 0.0
+    daily_interest_rate = (
+        (cash_interest_rate_pct / 100.0) / 365.25 if cash_interest_rate_pct > 0 else 0.0
+    )
 
     # Main backtest loop
     for current_date in common_dates:
@@ -1271,7 +1273,9 @@ def run_portfolio_backtest(
                     # Simple case: withdraw from cash
                     actual_withdrawal = withdrawal_amount
                     shared_bank -= actual_withdrawal
-                    withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn from cash, bank=${shared_bank:.2f}"
+                    withdrawal_notes = (
+                        f"${actual_withdrawal:.2f} withdrawn from cash, bank=${shared_bank:.2f}"
+                    )
                 else:
                     # Need to sell assets to meet withdrawal
                     # First, withdraw all available cash
@@ -1280,7 +1284,9 @@ def run_portfolio_backtest(
 
                     if not allow_margin and shortfall > 0:
                         # Sell assets proportionally to raise cash for shortfall
-                        total_asset_value = sum(holdings[t] * assets[t].price for t in allocations.keys())
+                        total_asset_value = sum(
+                            holdings[t] * assets[t].price for t in allocations.keys()
+                        )
 
                         if total_asset_value > 0:
                             # Sell proportionally from each asset
@@ -1366,9 +1372,7 @@ def run_portfolio_backtest(
     days = (final_date - common_dates[0]).days
     years = days / 365.25
     annualized_return_pct = (
-        (((final_total_value / initial_investment) ** (1 / years)) - 1) * 100
-        if years > 0
-        else 0
+        (((final_total_value / initial_investment) ** (1 / years)) - 1) * 100 if years > 0 else 0
     )
 
     # Build per-asset summaries
@@ -1384,9 +1388,9 @@ def run_portfolio_backtest(
             "final_holdings": holdings[ticker],
             "final_price": final_price,
             "final_value": final_value,
-            "total_return": ((final_value - initial_value) / initial_value) * 100
-            if initial_value > 0
-            else 0,
+            "total_return": (
+                ((final_value - initial_value) / initial_value) * 100 if initial_value > 0 else 0
+            ),
         }
 
     # Build portfolio summary
@@ -1406,7 +1410,9 @@ def run_portfolio_backtest(
         "daily_bank_values": daily_bank_values,
         "daily_asset_values": daily_asset_values,  # Per-asset daily values for visualization
         "daily_withdrawals": daily_withdrawals,  # Daily withdrawal amounts for horn chart
-        "transaction_count": len([tx for tx in all_transactions if "SKIP" not in tx.action and tx.action != "WITHDRAWAL"]),
+        "transaction_count": len(
+            [tx for tx in all_transactions if "SKIP" not in tx.action and tx.action != "WITHDRAWAL"]
+        ),
         "skipped_count": len([tx for tx in all_transactions if "SKIP" in tx.action]),
         "total_withdrawn": total_withdrawn,
         "withdrawal_count": withdrawal_count,

@@ -1,9 +1,10 @@
 """Test horn chart with NO withdrawals - cash should accumulate from synthetic dividends."""
 
 from datetime import date
-from src.models.backtest import run_portfolio_backtest
+
 from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
 from src.charts import create_portfolio_horn_chart
+from src.models.backtest import run_portfolio_backtest
 
 # Run backtest with classic-plus-crypto portfolio, NO withdrawals
 allocations = {"VOO": 0.6, "BIL": 0.3, "BTC-USD": 0.1}
@@ -33,10 +34,10 @@ print(f"Final bank: ${summary['final_bank']:,.2f}")
 print(f"Total withdrawn: ${summary['total_withdrawn']:,.2f}")
 
 # Get initial and final cash from daily tracking
-daily_bank = summary['daily_bank_values']
+daily_bank = summary["daily_bank_values"]
 dates = sorted(daily_bank.keys())
 initial_bank = daily_bank[dates[0]]
-final_bank = summary['final_bank']
+final_bank = summary["final_bank"]
 cash_change = final_bank - initial_bank
 
 print(f"\nCash analysis:")
@@ -50,14 +51,12 @@ else:
     print("  [ERROR] Cash SHRUNK - something is consuming cash (buybacks?)")
 
 # Generate horn chart
-print("\n" + "="*80)
+print("\n" + "=" * 80)
 print("Generating horn chart (no withdrawals)...")
-print("="*80)
+print("=" * 80)
 
 chart = create_portfolio_horn_chart(
-    summary,
-    output="horn_chart_no_withdrawals.png",
-    resample='W'  # Weekly for clarity
+    summary, output="horn_chart_no_withdrawals.png", resample="W"  # Weekly for clarity
 )
 print(f"\nChart saved to: {chart}")
 print("\nExpected: Green cash band should GROW over time (synthetic dividends)")

@@ -214,7 +214,10 @@ class Market:
                         limit_price = None
 
                     transaction = Transaction(
-                        action=order.action.value, qty=order.quantity, notes=notes.strip(), limit_price=limit_price
+                        action=order.action.value,
+                        qty=order.quantity,
+                        notes=notes.strip(),
+                        limit_price=limit_price,
                     )
                     transactions.append(transaction)
 

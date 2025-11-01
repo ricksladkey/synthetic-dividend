@@ -5,8 +5,8 @@ help:
 	@echo ""
 	@echo "  make install       Install package in development mode"
 	@echo "  make install-dev   Install with development dependencies"
-	@echo "  make test          Run tests with coverage"
-	@echo "  make lint          Run all linters (flake8, mypy, pylint)"
+	@echo "  make test          Run tests (CI mode - quiet)"
+	@echo "  make lint          Run all linters (black, isort, flake8, mypy)"
 	@echo "  make format        Format code with black and isort"
 	@echo "  make clean         Remove build artifacts and cache"
 	@echo "  make build         Build distribution packages"
@@ -19,21 +19,23 @@ install-dev:
 	pip install -e ".[dev]"
 
 test:
-	pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html
+	.venv/Scripts/python -m pytest -q
 
 lint:
+	@echo "Running black..."
+	.venv/Scripts/python -m black --check .
+	@echo "Running isort..."
+	.venv/Scripts/python -m isort --check-only .
 	@echo "Running flake8..."
-	flake8 src tests --max-line-length=100 --extend-ignore=E203,W503
+	.venv/Scripts/python -m flake8 src tests --max-line-length=100 --extend-ignore=E203,W503
 	@echo "Running mypy..."
-	mypy src --ignore-missing-imports
-	@echo "Running pylint..."
-	pylint src --max-line-length=100 --disable=C0103,C0114,C0115,C0116
+	.venv/Scripts/python -m mypy --explicit-package-bases src
 
 format:
 	@echo "Running isort..."
-	isort src tests
+	.venv/Scripts/python -m isort src tests
 	@echo "Running black..."
-	black src tests
+	.venv/Scripts/python -m black src tests
 
 clean:
 	rm -rf build/ dist/ *.egg-info .pytest_cache .mypy_cache .coverage htmlcov/

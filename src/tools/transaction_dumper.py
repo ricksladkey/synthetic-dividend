@@ -13,7 +13,9 @@ from src.models.backtest import run_algorithm_backtest
 def main() -> int:
     """Main entry point for transaction dumper."""
     if len(sys.argv) < 6:
-        print("Usage: python -m src.tools.transaction_dumper <TICKER> <START> <END> <ALGO_ID> <OUTPUT_FILE>")
+        print(
+            "Usage: python -m src.tools.transaction_dumper <TICKER> <START> <END> <ALGO_ID> <OUTPUT_FILE>"
+        )
         return 2
 
     ticker = sys.argv[1]

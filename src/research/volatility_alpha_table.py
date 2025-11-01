@@ -85,7 +85,7 @@ def collect_volatility_alpha_data(
     algo_full = SyntheticDividendAlgorithm(
         rebalance_size=trigger_decimal,  # e.g., 0.0905 for 9.05%
         profit_sharing=0.5,  # 50% profit sharing
-        buyback_enabled=True
+        buyback_enabled=True,
     )
 
     transactions_full, summary_full = run_algorithm_backtest(
@@ -100,9 +100,7 @@ def collect_volatility_alpha_data(
 
     # Run ATH-only strategy
     algo_ath = SyntheticDividendAlgorithm(
-        rebalance_size=trigger_decimal,
-        profit_sharing=0.5,
-        buyback_enabled=False
+        rebalance_size=trigger_decimal, profit_sharing=0.5, buyback_enabled=False
     )
 
     transactions_ath, summary_ath = run_algorithm_backtest(

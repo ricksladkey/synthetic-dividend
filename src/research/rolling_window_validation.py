@@ -65,7 +65,7 @@ def run_single_window_comparison(
     # Strategy 1: Buy-and-hold (no rebalancing, no withdrawals initially)
     print(f"\n  [1/3] Running buy-and-hold...")
     try:
-        from src.algorithms import PerAssetPortfolioAlgorithm, BuyAndHoldAlgorithm
+        from src.algorithms import BuyAndHoldAlgorithm, PerAssetPortfolioAlgorithm
 
         buy_hold_algo = PerAssetPortfolioAlgorithm(
             {ticker: BuyAndHoldAlgorithm() for ticker in allocations.keys()}
@@ -257,7 +257,9 @@ def print_summary_statistics(df: pd.DataFrame) -> None:
                 print(f"\n  Alpha vs buy-and-hold:")
                 print(f"    Mean: {alpha_data.mean():.2f}%")
                 print(f"    Std: {alpha_data.std():.2f}%")
-                print(f"    Positive windows: {positive_windows}/{total_windows} ({pct_positive:.0f}%)")
+                print(
+                    f"    Positive windows: {positive_windows}/{total_windows} ({pct_positive:.0f}%)"
+                )
 
     print("\n" + "=" * 80)
 
