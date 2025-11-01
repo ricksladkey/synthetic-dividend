@@ -10,13 +10,12 @@ Withdrawal rates: 0%, 4%, 6%, 8%
 The question: Does volatility alpha hold up across ALL periods, not just cherry-picked ones?
 """
 
-from datetime import date, timedelta
+from datetime import date
 from typing import Dict, List, Tuple
 
 import pandas as pd
 
 from src.algorithms import QuarterlyRebalanceAlgorithm, build_portfolio_algo_from_name
-from src.data.fetcher import HistoryFetcher
 from src.models.backtest import run_portfolio_backtest
 
 
@@ -63,7 +62,7 @@ def run_single_window_comparison(
     results = {}
 
     # Strategy 1: Buy-and-hold (no rebalancing, no withdrawals initially)
-    print(f"\n  [1/3] Running buy-and-hold...")
+    print("\n  [1/3] Running buy-and-hold...")
     try:
         from src.algorithms import BuyAndHoldAlgorithm, PerAssetPortfolioAlgorithm
 
@@ -90,7 +89,7 @@ def run_single_window_comparison(
         results["buy-and-hold"] = {"error": str(e)}
 
     # Strategy 2: Quarterly rebalancing
-    print(f"  [2/3] Running quarterly-rebalance...")
+    print("  [2/3] Running quarterly-rebalance...")
     try:
         quarterly_algo = QuarterlyRebalanceAlgorithm(
             target_allocations=allocations, rebalance_months=[3, 6, 9, 12]
@@ -115,7 +114,7 @@ def run_single_window_comparison(
         results["quarterly-rebalance"] = {"error": str(e)}
 
     # Strategy 3: Synthetic dividend auto
-    print(f"  [3/3] Running synthetic-dividend-auto...")
+    print("  [3/3] Running synthetic-dividend-auto...")
     try:
         auto_algo = build_portfolio_algo_from_name("auto", allocations)
 
@@ -168,7 +167,7 @@ def run_rolling_window_validation(
     """
     windows = generate_rolling_windows(start_year, end_year, window_years)
 
-    print(f"=== Rolling Window Validation ===")
+    print("=== Rolling Window Validation ===")
     print(f"Portfolio: {allocations}")
     print(f"Windows: {len(windows)} × {window_years}-year periods")
     print(f"Withdrawal rates: {withdrawal_rates}")
@@ -254,7 +253,7 @@ def print_summary_statistics(df: pd.DataFrame) -> None:
                 total_windows = len(alpha_data)
                 pct_positive = (positive_windows / total_windows) * 100
 
-                print(f"\n  Alpha vs buy-and-hold:")
+                print("\n  Alpha vs buy-and-hold:")
                 print(f"    Mean: {alpha_data.mean():.2f}%")
                 print(f"    Std: {alpha_data.std():.2f}%")
                 print(
@@ -265,8 +264,6 @@ def print_summary_statistics(df: pd.DataFrame) -> None:
 
 
 if __name__ == "__main__":
-    import sys
-
     # Standard portfolio: 60% VOO, 30% BIL, 10% BTC
     allocations = {"VOO": 0.6, "BIL": 0.3, "BTC-USD": 0.1}
 

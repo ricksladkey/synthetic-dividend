@@ -26,7 +26,7 @@ transactions, summary = run_portfolio_backtest(
     allow_margin=False,  # Enforce non-negative cash invariant
 )
 
-print(f"\nBacktest complete!")
+print("\nBacktest complete!")
 print(f"Trading days: {summary['trading_days']}")
 print(f"Total return: {summary['total_return']:.2f}%")
 print(f"Cash interest earned: ${summary['cash_interest_earned']:,.2f}")
@@ -34,7 +34,7 @@ print(f"Total withdrawn: ${summary['total_withdrawn']:,.2f}")
 print(f"Withdrawal count: {summary['withdrawal_count']}")
 
 # Check what data is available
-print(f"\nData available:")
+print("\nData available:")
 print(f"  daily_asset_values keys: {list(summary.get('daily_asset_values', {}).keys())}")
 print(f"  daily_withdrawals entries: {len(summary.get('daily_withdrawals', {}))}")
 

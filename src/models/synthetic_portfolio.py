@@ -593,7 +593,8 @@ class SyntheticPortfolio:
         income_data = []
 
         for i, snapshot in enumerate(self.snapshots):  # noqa: B007
-            row = {"date": snapshot.date}
+            row: Dict[str, Any] = {}
+            row["date"] = snapshot.date
 
             # Asset income streams (simplified: assume dividends are monthly)
             # In a real implementation, this would track actual dividend payments

@@ -402,23 +402,26 @@ def print_summary(results: List[Dict[str, Any]]) -> None:
     print(f"Average: {avg_tx:.1f} transactions")
 
 
-def main() -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     """Main entry point.
 
     Returns:
         Exit code (0 = success)
     """
-    if len(sys.argv) < 4:
+    if argv is None:
+        argv = sys.argv[1:]
+
+    if len(argv) < 3:
         print("Usage: python -m src.compare.batch_comparison TICKER START END [OUTPUT.csv]")
         print(
             "Example: python -m src.compare.batch_comparison NVDA 2024-10-22 2025-10-22 results.csv"
         )
         return 2
 
-    ticker = sys.argv[1].upper()
-    start = parse_date(sys.argv[2])
-    end = parse_date(sys.argv[3])
-    output_path = sys.argv[4] if len(sys.argv) > 4 else f"{ticker}_comparison.csv"
+    ticker = argv[0].upper()
+    start = parse_date(argv[1])
+    end = parse_date(argv[2])
+    output_path = argv[3] if len(argv) > 3 else f"{ticker}_comparison.csv"
 
     print("=" * 80)
     print(f"BATCH COMPARISON: {ticker}")

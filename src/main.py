@@ -5,11 +5,12 @@ backtesting and analysis.
 """
 
 import tkinter as tk
+from typing import List, Optional
 
 from gui.layout import FinancialModelingApp
 
 
-def main():
+def main(argv: Optional[List[str]] = None) -> int:
     """Launch the financial modeling GUI application."""
     root = tk.Tk()
     root.title("Financial Modeling Application")
@@ -18,6 +19,7 @@ def main():
     FinancialModelingApp(root)  # noqa: F841
 
     root.mainloop()
+    return 0
 
 
 if __name__ == "__main__":

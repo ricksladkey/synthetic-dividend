@@ -31,7 +31,7 @@ import argparse
 import csv
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -206,8 +206,11 @@ def run_single_comparison(
     }
 
 
-def main():
+def main(argv: Optional[List[str]] = None) -> int:
     """Command-line interface for volatility alpha analysis."""
+    if argv is None:
+        argv = sys.argv[1:]
+
     parser = argparse.ArgumentParser(
         description="Measure volatility alpha by comparing best sdN vs ATH-only"
     )
@@ -227,16 +230,16 @@ def main():
         help="Output CSV filename (default: volatility_alpha_results.csv)",
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Validate inputs
     if not args.ticker and not args.comprehensive:
         print("ERROR: Must specify either --ticker or --comprehensive")
-        sys.exit(1)
+        return 1
 
     if args.ticker and args.comprehensive:
         print("ERROR: Cannot use both --ticker and --comprehensive")
-        sys.exit(1)
+        return 1
 
     # Determine which tickers to run
     if args.comprehensive:
@@ -305,7 +308,9 @@ def main():
         print(f"\n{'='*70}")
     else:
         print("\nERROR: No results generated")
-        sys.exit(1)
+        return 1
+
+    return 0
 
 
 if __name__ == "__main__":

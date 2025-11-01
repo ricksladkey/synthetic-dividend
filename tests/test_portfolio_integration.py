@@ -5,9 +5,6 @@ with the CLI and backtest infrastructure.
 """
 
 import json
-from datetime import date
-from io import StringIO
-from unittest.mock import MagicMock, patch
 
 import pytest
 

@@ -717,9 +717,9 @@ def run_portfolio(args) -> int:
         if allocations_str.startswith("{"):
             try:
                 allocations = json.loads(allocations_str)
-                print(f"Parsed allocations from JSON")
+                print("Parsed allocations from JSON")
             except json.JSONDecodeError:
-                print(f"Error: Invalid JSON format for allocations")
+                print("Error: Invalid JSON format for allocations")
                 return 1
         else:
             # Try as named portfolio
@@ -729,7 +729,7 @@ def run_portfolio(args) -> int:
                 # If not a valid portfolio name, try JSON as fallback
                 try:
                     allocations = json.loads(allocations_str)
-                    print(f"Parsed allocations from JSON")
+                    print("Parsed allocations from JSON")
                 except json.JSONDecodeError:
                     print(f"Error: {e}")
                     return 1

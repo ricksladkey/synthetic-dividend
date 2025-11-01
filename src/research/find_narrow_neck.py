@@ -10,7 +10,7 @@ This tests the true stress limits of the synthetic dividend strategy.
 """
 
 from datetime import date
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional
 
 from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
 from src.models.backtest import run_portfolio_backtest
@@ -21,7 +21,7 @@ def find_narrow_neck(
     start_date: date,
     end_date: date,
     initial_investment: float = 1_000_000,
-    withdrawal_rates: List[float] = None,
+    withdrawal_rates: Optional[List[float]] = None,
 ) -> None:
     """Find the withdrawal rate that creates the narrowest cash reserve neck.
 
@@ -178,8 +178,8 @@ def find_narrow_neck(
         print(f"  Minimum Bank Balance: ${min_bank_positive:,.0f}")
         print(f"  Occurred on Day: {narrow_neck_day}")
         print()
-        print(f"This is the maximum sustainable withdrawal rate that maintains a positive")
-        print(f"cash reserve throughout the period. Going higher would require forced selling.")
+        print("This is the maximum sustainable withdrawal rate that maintains a positive")
+        print("cash reserve throughout the period. Going higher would require forced selling.")
         print()
         print("The 'narrow neck' is the point where cash reserves are most constrained,")
         print("representing the riskiest moment in the withdrawal strategy.")
@@ -188,8 +188,8 @@ def find_narrow_neck(
         # Suggest stress test rate
         stress_rate = narrow_neck_rate + 2.0
         print(f"SUGGESTED STRESS TEST RATE: {stress_rate:.1f}%")
-        print(f"  This pushes beyond the narrow neck to test strategy resilience under pressure.")
-        print(f"  At this rate, the strategy may need to sell assets or use margin.")
+        print("  This pushes beyond the narrow neck to test strategy resilience under pressure.")
+        print("  At this rate, the strategy may need to sell assets or use margin.")
         print()
         print("Use this stress rate to validate that the strategy gracefully handles")
         print("extreme withdrawal scenarios without catastrophic failure.")

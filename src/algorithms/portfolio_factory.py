@@ -1,7 +1,7 @@
 """Portfolio algorithm factory: parse string identifiers into portfolio algorithm instances."""
 
 import re
-from typing import Dict, List
+from typing import Dict
 
 from src.algorithms.base import AlgorithmBase
 from src.algorithms.buy_and_hold import BuyAndHoldAlgorithm
@@ -84,9 +84,6 @@ def build_portfolio_algo_from_name(
     if m:
         per_asset_algo_name = m.group(1)
         print(f"  -> PerAssetPortfolioAlgorithm applying '{per_asset_algo_name}' to all assets")
-
-        # Build the per-asset algorithm once
-        per_asset_algo = build_algo_from_name(per_asset_algo_name)
 
         # Apply to all tickers
         strategies: Dict[str, AlgorithmBase] = {}

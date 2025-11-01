@@ -1,6 +1,5 @@
 """Tests for ticker data retrieval functionality."""
 
-from datetime import date
 from unittest.mock import Mock, patch
 
 import pandas as pd

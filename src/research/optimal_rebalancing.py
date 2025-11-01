@@ -239,8 +239,11 @@ def print_summary_analysis(results: List[Dict]):
     print("\n" + "=" * 70)
 
 
-def main():
+def main(argv: Optional[List[str]] = None) -> int:
     """Command-line interface for optimal rebalancing research."""
+    if argv is None:
+        argv = sys.argv[1:]
+
     parser = argparse.ArgumentParser(
         description="Research optimal rebalancing frequencies across asset classes",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -288,7 +291,7 @@ def main():
         help="Quick test: 1-year lookback from end date",
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Parse dates
     end_date = parse_date(args.end)

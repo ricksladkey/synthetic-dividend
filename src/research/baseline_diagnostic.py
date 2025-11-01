@@ -42,13 +42,13 @@ def main():
         initial_investment=initial,
     )
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  Transactions: {len(txns_bh)}")
     print(f"  Final value: ${summary_bh['total_final_value']:,.0f}")
     print(f"  Final bank: ${summary_bh['final_bank']:,.2f}")
     print(f"  Return: {summary_bh['total_return']:.2f}%")
 
-    print(f"\nTransaction list:")
+    print("\nTransaction list:")
     for tx in txns_bh[:10]:  # First 10
         print(
             f"  {tx.transaction_date} {tx.action:4s} {tx.qty:4d} {tx.ticker:8s} @ ${tx.price:8.2f}"
@@ -69,13 +69,13 @@ def main():
         initial_investment=initial,
     )
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  Transactions: {len(txns_sd)}")
     print(f"  Final value: ${summary_sd['total_final_value']:,.0f}")
     print(f"  Final bank: ${summary_sd['final_bank']:,.2f}")
     print(f"  Return: {summary_sd['total_return']:.2f}%")
 
-    print(f"\nTransaction list:")
+    print("\nTransaction list:")
     for tx in txns_sd[:20]:  # First 20
         print(
             f"  {tx.transaction_date} {tx.action:4s} {tx.qty:4d} {tx.ticker:8s} @ ${tx.price:8.2f} - {tx.notes}"
@@ -116,7 +116,7 @@ def main():
     diff = summary_sd["total_final_value"] - summary_bh["total_final_value"]
     diff_pct = (diff / summary_bh["total_final_value"]) * 100
 
-    print(f"\nValue difference:")
+    print("\nValue difference:")
     print(f"  SD - BH = ${diff:,.0f} ({diff_pct:+.2f}%)")
 
     if abs(diff) < 100:

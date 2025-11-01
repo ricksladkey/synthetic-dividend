@@ -1,5 +1,7 @@
 .PHONY: help install install-dev test lint format clean build publish
 
+PYTHON = .venv/Scripts/python
+
 help:
 	@echo "Synthetic Dividend - Development Commands"
 	@echo ""
@@ -19,23 +21,23 @@ install-dev:
 	pip install -e ".[dev]"
 
 test:
-	.venv/Scripts/python -m pytest -q
+	$(PYTHON) -m pytest -q
 
 lint:
 	@echo "Running black..."
-	.venv/Scripts/python -m black --check .
+	$(PYTHON) -m black --check .
 	@echo "Running isort..."
-	.venv/Scripts/python -m isort --check-only .
+	$(PYTHON) -m isort --check-only .
 	@echo "Running flake8..."
-	.venv/Scripts/python -m flake8 src tests --max-line-length=100 --extend-ignore=E203,W503
+	$(PYTHON) -m flake8 src tests --max-line-length=100 --extend-ignore=E203,W503
 	@echo "Running mypy..."
-	.venv/Scripts/python -m mypy --explicit-package-bases src
+	$(PYTHON) -m mypy --explicit-package-bases src
 
 format:
 	@echo "Running isort..."
-	.venv/Scripts/python -m isort src tests
+	$(PYTHON) -m isort src tests
 	@echo "Running black..."
-	.venv/Scripts/python -m black src tests
+	$(PYTHON) -m black src tests
 
 clean:
 	rm -rf build/ dist/ *.egg-info .pytest_cache .mypy_cache .coverage htmlcov/
@@ -44,7 +46,7 @@ clean:
 	find . -type f -name "*.pkl" -delete
 
 build: clean
-	python -m build
+	$(PYTHON) -m build
 
 publish: build
-	python -m twine upload dist/*
+	$(PYTHON) -m twine upload dist/*

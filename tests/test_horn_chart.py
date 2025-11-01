@@ -23,7 +23,7 @@ transactions, summary = run_portfolio_backtest(
     cash_interest_rate_pct=5.0,
 )
 
-print(f"\nBacktest complete!")
+print("\nBacktest complete!")
 print(f"Trading days: {summary['trading_days']}")
 print(f"Total return: {summary['total_return']:.2f}%")
 print(f"Cash interest earned: ${summary['cash_interest_earned']:,.2f}")

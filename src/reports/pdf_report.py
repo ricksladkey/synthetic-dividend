@@ -13,9 +13,7 @@ from datetime import date
 from typing import Any, Dict, List, Optional
 
 import matplotlib.dates as mdates
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 

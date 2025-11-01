@@ -161,7 +161,6 @@ def create_stacked_area_chart(
         raise TypeError(f"Expected StackedAreaData, got {type(data)}")
 
     dates = data.dates
-    n_dates = len(dates)
 
     # Assign colors to series that don't have them
     color_index = 0
@@ -398,7 +397,7 @@ def create_portfolio_horn_chart(
     Returns:
         Path to saved chart file
     """
-    from datetime import date
+    from datetime import date  # noqa: F401
 
     import pandas as pd
 

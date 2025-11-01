@@ -26,7 +26,7 @@ transactions, summary = run_portfolio_backtest(
     withdrawal_frequency_days=30,
 )
 
-print(f"\nBacktest complete!")
+print("\nBacktest complete!")
 print(f"Trading days: {summary['trading_days']}")
 print(f"Total return: {summary['total_return']:.2f}%")
 print(f"Cash interest earned: ${summary['cash_interest_earned']:,.2f}")
@@ -40,11 +40,10 @@ initial_bank = daily_bank[dates[0]]
 final_bank = summary["final_bank"]
 cash_change = final_bank - initial_bank
 
-print(f"\nCash analysis:")
+print("\nCash analysis:")
 print(f"  Starting cash: ${initial_bank:,.2f}")
 print(f"  Ending cash:   ${final_bank:,.2f}")
 print(f"  Change:        ${cash_change:,.2f} ({(cash_change/initial_bank*100):.1f}%)")
-
 if cash_change > 0:
     print("  [OK] Cash GREW - synthetic dividends are accumulating!")
 else:

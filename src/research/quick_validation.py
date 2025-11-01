@@ -6,6 +6,7 @@ Withdrawal rates: 4%, 6%, 8%
 """
 
 from datetime import date
+from typing import Any, Dict
 
 from src.algorithms import (
     BuyAndHoldAlgorithm,
@@ -39,7 +40,7 @@ def main():
     # Withdrawal rates to test
     withdrawal_rates = [0.0, 4.0, 6.0, 8.0]
 
-    results = {}
+    results: Dict[float, Dict[str, Dict[str, Any]]] = {}
 
     for withdrawal_rate in withdrawal_rates:
         print(f"\n{'='*80}")

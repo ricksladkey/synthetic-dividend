@@ -14,8 +14,9 @@ Usage:
     python tests/manual_test_named_portfolios.py
 """
 
-import re
 import sys
+
+from src.algorithms.portfolio_definitions import parse_portfolio_name
 
 
 def test_cli_argument_parsing():
@@ -51,21 +52,21 @@ def test_cli_argument_parsing():
 
             try:
                 allocations = json.loads(allocations_str)
-                print(f"✓ Parsed as JSON")
+                print("✓ Parsed as JSON")
             except json.JSONDecodeError:
-                print(f"✗ Invalid JSON")
+                print("✗ Invalid JSON")
                 continue
         else:
             # Named portfolio
             try:
                 allocations = parse_portfolio_name(allocations_str)
-                print(f"✓ Parsed as named portfolio")
+                print("✓ Parsed as named portfolio")
             except ValueError as e:
                 print(f"✗ Not a valid portfolio name: {e}")
                 continue
 
         # Display result
-        print(f"\nAllocations:")
+        print("\nAllocations:")
         for ticker, alloc in allocations.items():
             print(f"  {ticker}: {alloc*100:.1f}%")
 

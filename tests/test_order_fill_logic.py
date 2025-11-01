@@ -11,8 +11,6 @@ The tests document the expected behavior for all combinations of:
 - Whether order triggers and at what price it fills
 """
 
-import pytest
-
 from src.models.market import Order, OrderAction, OrderType
 
 

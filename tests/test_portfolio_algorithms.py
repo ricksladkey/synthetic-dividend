@@ -38,7 +38,7 @@ def test_quarterly_rebalance_60_40():
     assert "final_bank" in summary
     assert "daily_bank_values" in summary
 
-    print(f"\nQuarterly Rebalance 60/40 Results:")
+    print("\nQuarterly Rebalance 60/40 Results:")
     print(f"  Final Value: ${summary['total_final_value']:,.2f}")
     print(f"  Total Return: {summary['total_return']:.2f}%")
     print(f"  Transactions: {summary['transaction_count']}")
@@ -79,7 +79,7 @@ def test_per_asset_portfolio_hybrid():
     # BIL should only have initial purchase
     assert len(bil_txns) == 0  # Buy-and-hold after initial
 
-    print(f"\nHybrid Strategy Results:")
+    print("\nHybrid Strategy Results:")
     print(f"  Final Value: ${summary['total_final_value']:,.2f}")
     print(f"  Total Return: {summary['total_return']:.2f}%")
     print(f"  VOO Transactions: {len(voo_txns)}")
@@ -108,7 +108,7 @@ def test_shared_bank_isolation():
 
     # Bank should never be super negative (some margin is ok)
     min_bank = min(summary["daily_bank_values"].values())
-    print(f"\nShared Bank Test:")
+    print("\nShared Bank Test:")
     print(f"  Minimum bank balance: ${min_bank:,.2f}")
     print(f"  Final bank balance: ${summary['final_bank']:,.2f}")
 

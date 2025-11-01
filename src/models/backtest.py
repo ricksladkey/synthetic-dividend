@@ -6,7 +6,7 @@ for backtesting against historical OHLC price data.
 
 import math
 from datetime import date
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
 
@@ -14,10 +14,9 @@ import pandas as pd
 from src.algorithms import (
     AlgorithmBase,
     BuyAndHoldAlgorithm,
+    PortfolioAlgorithmBase,
     SyntheticDividendAlgorithm,
 )
-
-# PortfolioAlgorithmBase imported locally in run_portfolio_backtest
 from src.models.backtest_utils import (  # noqa: F401; (re-exported for backwards compatibility)
     calculate_synthetic_dividend_orders,
 )
@@ -998,7 +997,7 @@ def run_portfolio_backtest(
     allocations: Dict[str, float],
     start_date: date,
     end_date: date,
-    portfolio_algo: Union["PortfolioAlgorithmBase", str],  # type: ignore  # Forward reference
+    portfolio_algo: Union[PortfolioAlgorithmBase, str],
     initial_investment: float = 1_000_000.0,
     allow_margin: bool = True,
     withdrawal_rate_pct: float = 0.0,
@@ -1040,7 +1039,6 @@ def run_portfolio_backtest(
     """
     import warnings
 
-    from src.algorithms import PortfolioAlgorithmBase
     from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
     from src.data.fetcher import HistoryFetcher
     from src.models.model_types import AssetState
@@ -1094,7 +1092,7 @@ def run_portfolio_backtest(
         print(f"OK ({len(df)} days)")
 
     # Find common trading dates
-    all_dates = set()
+    all_dates: Set[date] = set()
     for df in price_data.values():
         dates = set(pd.to_datetime(df.index).date)
         all_dates = all_dates.intersection(dates) if all_dates else dates
