@@ -1,7 +1,7 @@
 """Test horn chart with NO withdrawals - cash should accumulate from synthetic dividends."""
 
 from datetime import date
-from src.models.backtest import run_portfolio_backtest_v2
+from src.models.backtest import run_portfolio_backtest
 from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
 from src.charts import create_portfolio_horn_chart
 
@@ -14,7 +14,7 @@ print("Running portfolio backtest with 60/30/10 allocation, NO withdrawals...")
 print("Expectation: Cash should GROW as synthetic dividends sell at ATH")
 portfolio_algo = build_portfolio_algo_from_name("auto", allocations)
 
-transactions, summary = run_portfolio_backtest_v2(
+transactions, summary = run_portfolio_backtest(
     allocations=allocations,
     start_date=start_date,
     end_date=end_date,

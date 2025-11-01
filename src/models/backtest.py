@@ -16,7 +16,7 @@ from src.algorithms import (
     BuyAndHoldAlgorithm,
     SyntheticDividendAlgorithm,
 )
-# PortfolioAlgorithmBase imported locally in run_portfolio_backtest_v2
+# PortfolioAlgorithmBase imported locally in run_portfolio_backtest
 from src.models.backtest_utils import (  # noqa: F401; (re-exported for backwards compatibility)
     calculate_synthetic_dividend_orders,
 )
@@ -986,201 +986,31 @@ def print_income_classification(summary: Dict[str, Any], verbose: bool = True) -
         )
 
 
+# NOTE: Old run_portfolio_backtest (v1) with separate banks per asset was removed 2025-10-31.
+# The function below (formerly run_portfolio_backtest_v2) is now the canonical implementation.
+# It uses a shared cash pool architecture which is more realistic and enables portfolio coordination.
+#
+# Migration: Old code using algo="buy-and-hold" should use portfolio_algo="per-asset:buy-and-hold"
+
+
 def run_portfolio_backtest(
     allocations: Dict[str, float],
     start_date: date,
     end_date: date,
-    initial_investment: float = 1_000_000.0,
-    algo: Optional[Union[AlgorithmBase, Callable, str]] = None,
-    algo_params: Optional[Dict[str, Any]] = None,
-    # All the same parameters as run_algorithm_backtest
-    reference_return_pct: float = 0.0,
-    risk_free_rate_pct: float = 0.0,
-    reference_data: Optional[pd.DataFrame] = None,
-    risk_free_data: Optional[pd.DataFrame] = None,
-    reference_asset_ticker: str = "",
-    risk_free_asset_ticker: str = "",
-    dividend_series: Optional[Dict[str, pd.Series]] = None,
-    withdrawal_rate_pct: float = 0.0,
-    withdrawal_frequency_days: int = 30,
-    cpi_data: Optional[pd.DataFrame] = None,
-    simple_mode: bool = False,
-    normalize_prices: bool = False,
-    allow_margin: bool = True,
-    **kwargs: Any,
-) -> Tuple[List[Transaction], Dict[str, Any]]:
-    """Execute portfolio backtest across multiple assets.
-
-    This is the unified interface that can handle both:
-    - Simple buy-and-hold portfolios (when algo=None or 'buy-and-hold')
-    - Algorithmic portfolios (when algo is specified)
-
-    Args:
-        allocations: Dict mapping ticker → allocation percentage (must sum to 1.0)
-        start_date: Backtest start date
-        end_date: Backtest end date
-        initial_investment: Total dollar amount to invest
-        algo: Algorithm to apply to each asset ('buy-and-hold', AlgorithmBase, or callable)
-        algo_params: Parameters for algorithmic strategies
-        [All other parameters same as run_algorithm_backtest]
-
-    Returns:
-        Tuple of (all_transactions, portfolio_summary)
-        - all_transactions: Combined list of all transactions across assets
-        - portfolio_summary: Portfolio-level metrics plus per-asset breakdowns
-    """
-    # Validate allocations
-    total_allocation = sum(allocations.values())
-    if abs(total_allocation - 1.0) > 0.01:
-        raise ValueError(f"Allocations must sum to 1.0, got {total_allocation:.3f}")
-
-    # Fetch data for all assets
-    from src.data.fetcher import HistoryFetcher
-
-    fetcher = HistoryFetcher()
-    price_data = {}
-    dividend_data = dividend_series or {}
-
-    print(f"Fetching data for {len(allocations)} assets...")
-    for ticker in allocations.keys():
-        print(f"  - {ticker}...", end=" ")
-        df = fetcher.get_history(ticker, start_date, end_date)
-        if df is None or df.empty:
-            raise ValueError(f"No data available for {ticker}")
-        price_data[ticker] = df
-        print(f"OK ({len(df)} days)")
-
-    # Find common date range
-    all_dates = set()
-    for df in price_data.values():
-        dates = set(pd.to_datetime(df.index).date)
-        all_dates = all_dates.intersection(dates) if all_dates else dates
-
-    common_dates = sorted([d for d in all_dates if start_date <= d <= end_date])
-    if not common_dates:
-        raise ValueError("No common trading dates across all assets")
-
-    print(f"Common trading days: {len(common_dates)} ({common_dates[0]} to {common_dates[-1]})")
-
-    # Run individual asset backtests
-    all_transactions = []
-    asset_results = {}
-    portfolio_daily_values = {d: 0.0 for d in common_dates}
-
-    for ticker, allocation in allocations.items():
-        asset_investment = initial_investment * allocation
-        df = price_data[ticker]
-
-        # Filter to common dates
-        df_common = df[df.index.isin([pd.Timestamp(d) for d in common_dates])]
-
-        # Calculate initial quantity
-        first_price = df_common.iloc[0]["Close"].item()
-        initial_qty = int(asset_investment / first_price)
-
-        # Determine algorithm
-        if algo is None or algo == "buy-and-hold":
-            asset_algo = BuyAndHoldAlgorithm()
-        elif isinstance(algo, str):
-            from src.algorithms.factory import build_algo_from_name
-
-            asset_algo = build_algo_from_name(algo)
-        else:
-            asset_algo = algo
-
-        # Get dividend series for this asset
-        asset_dividends = dividend_data.get(ticker)
-
-        # Run backtest for this asset
-        transactions, summary = run_algorithm_backtest(
-            df=df_common,
-            ticker=ticker,
-            initial_qty=initial_qty,
-            start_date=start_date,
-            end_date=end_date,
-            algo=asset_algo,
-            algo_params=algo_params,
-            reference_return_pct=reference_return_pct,
-            risk_free_rate_pct=risk_free_rate_pct,
-            reference_data=reference_data,
-            risk_free_data=risk_free_data,
-            reference_asset_ticker=reference_asset_ticker,
-            risk_free_asset_ticker=risk_free_asset_ticker,
-            dividend_series=asset_dividends,
-            withdrawal_rate_pct=withdrawal_rate_pct,
-            withdrawal_frequency_days=withdrawal_frequency_days,
-            cpi_data=cpi_data,
-            simple_mode=simple_mode,
-            normalize_prices=normalize_prices,
-            allow_margin=allow_margin,
-            **kwargs,
-        )
-
-        # Store results
-        asset_results[ticker] = {
-            "allocation": allocation,
-            "initial_investment": asset_investment,
-            "final_value": summary["total"],
-            "total_return": summary["total_return"] * 100,  # Convert to percentage
-            "summary": summary,
-            "transactions": transactions,
-        }
-
-        # Add transactions to global list
-        all_transactions.extend(transactions)
-
-        # Add to portfolio daily values
-        # Note: This is simplified - in reality we'd need to align dates properly
-        for d in common_dates:
-            if pd.Timestamp(d) in df_common.index:
-                price = df_common.loc[pd.Timestamp(d), "Close"]
-                holdings = summary.get("holdings", initial_qty)  # Simplified
-                portfolio_daily_values[d] += holdings * price
-
-    # Calculate portfolio-level metrics
-    total_final_value = sum(result["final_value"] for result in asset_results.values())
-    total_return = ((total_final_value - initial_investment) / initial_investment) * 100
-
-    # Annualized return
-    days = (common_dates[-1] - common_dates[0]).days
-    years = days / 365.25
-    annualized_return = (
-        (((total_final_value / initial_investment) ** (1 / years)) - 1) * 100 if years > 0 else 0
-    )
-
-    # Build portfolio summary
-    portfolio_summary = {
-        "total_final_value": total_final_value,
-        "total_return": total_return,
-        "annualized_return": annualized_return,
-        "initial_investment": initial_investment,
-        "start_date": common_dates[0],
-        "end_date": common_dates[-1],
-        "trading_days": len(common_dates),
-        "assets": asset_results,
-        "allocations": allocations,
-        "daily_values": portfolio_daily_values,
-    }
-
-    return all_transactions, portfolio_summary
-
-
-def run_portfolio_backtest_v2(
-    allocations: Dict[str, float],
-    start_date: date,
-    end_date: date,
-    portfolio_algo: "PortfolioAlgorithmBase",  # type: ignore  # Forward reference
+    portfolio_algo: Union["PortfolioAlgorithmBase", str],  # type: ignore  # Forward reference
     initial_investment: float = 1_000_000.0,
     allow_margin: bool = True,
     withdrawal_rate_pct: float = 0.0,
     withdrawal_frequency_days: int = 30,
     cash_interest_rate_pct: float = 0.0,
+    # Legacy compatibility parameters (deprecated, ignored with warnings)
+    algo: Optional[Union[AlgorithmBase, Callable, str]] = None,
+    simple_mode: bool = False,
+    **kwargs: Any,
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Execute portfolio backtest with shared cash pool and portfolio-level algorithm.
 
-    This is the new unified backtest runner that implements shared bank architecture.
-    Unlike run_portfolio_backtest() which runs each asset independently,
-    this function:
+    This is the unified backtest runner that implements shared bank architecture:
     - Uses a single shared cash pool across all assets
     - Calls portfolio algorithm once per day with full portfolio state
     - Executes transactions sequentially against shared bank
@@ -1189,18 +1019,27 @@ def run_portfolio_backtest_v2(
         allocations: Dict mapping ticker → target allocation (must sum to 1.0)
         start_date: Backtest start date
         end_date: Backtest end date
-        portfolio_algo: Portfolio algorithm implementing PortfolioAlgorithmBase
+        portfolio_algo: Portfolio algorithm or string name:
+            - "per-asset:buy-and-hold" - Buy and hold each asset independently
+            - "quarterly-rebalance" - Rebalance quarterly to target allocations
+            - "per-asset:sd8" - Synthetic dividend (sd8) per asset
+            - PortfolioAlgorithmBase instance
         initial_investment: Total starting capital
         allow_margin: Whether to allow negative bank balance
         withdrawal_rate_pct: Annual withdrawal rate (0-100)
         withdrawal_frequency_days: Days between withdrawals (default 30)
         cash_interest_rate_pct: Annual interest rate on cash reserves (default 0.0)
             Typical values: ~5% for money market, ~0% for non-interest checking
+        algo: DEPRECATED - Use portfolio_algo instead
+        simple_mode: DEPRECATED - No longer used
+        **kwargs: DEPRECATED - Ignored legacy parameters
 
     Returns:
         Tuple of (all_transactions, portfolio_summary)
     """
+    import warnings
     from src.algorithms import PortfolioAlgorithmBase
+    from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
     from src.data.fetcher import HistoryFetcher
     from src.models.model_types import AssetState
 
@@ -1209,10 +1048,36 @@ def run_portfolio_backtest_v2(
     if abs(total_allocation - 1.0) > 0.01:
         raise ValueError(f"Allocations must sum to 1.0, got {total_allocation:.3f}")
 
-    # Validate portfolio_algo type
+    # Handle string interface
+    if isinstance(portfolio_algo, str):
+        portfolio_algo = build_portfolio_algo_from_name(portfolio_algo, allocations)
+
+    # Handle deprecated 'algo' parameter
+    if algo is not None:
+        warnings.warn(
+            "The 'algo' parameter is deprecated. Use 'portfolio_algo' instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        if isinstance(algo, str):
+            if algo == "buy-and-hold":
+                portfolio_algo = build_portfolio_algo_from_name("per-asset:buy-and-hold", allocations)
+            else:
+                portfolio_algo = build_portfolio_algo_from_name(f"per-asset:{algo}", allocations)
+
+    # Warn about ignored legacy kwargs
+    if kwargs:
+        ignored = ", ".join(kwargs.keys())
+        warnings.warn(
+            f"Ignored deprecated parameters: {ignored}",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
+    # Validate portfolio_algo type (after string conversion)
     if not isinstance(portfolio_algo, PortfolioAlgorithmBase):
         raise TypeError(
-            f"portfolio_algo must be PortfolioAlgorithmBase, got {type(portfolio_algo).__name__}"
+            f"portfolio_algo must be PortfolioAlgorithmBase or string, got {type(portfolio_algo).__name__}"
         )
 
     # Fetch price data for all assets

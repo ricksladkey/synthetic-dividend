@@ -18,7 +18,7 @@
 - `src/models/portfolio_simulator.py` - Legacy `simulate_portfolio()` wrapper
 - Used for backward compatibility with old code
 
-### `run_portfolio_backtest_v2()` (New Architecture)
+### `run_portfolio_backtest()` (New Architecture)
 **Location**: `src/models/backtest.py:1166`
 **Created**: Commit `270c161` - "Implement quarterly rebalancing and portfolio backtest runner"
 
@@ -41,7 +41,7 @@
 
 ## Key Differences
 
-| Feature | `run_portfolio_backtest()` | `run_portfolio_backtest_v2()` |
+| Feature | `run_portfolio_backtest()` | `run_portfolio_backtest()` |
 |---------|---------------------------|------------------------------|
 | **Cash Architecture** | Separate bank per asset | Single shared bank |
 | **Algorithm Interface** | String/Callable/AlgorithmBase | PortfolioAlgorithmBase only |
@@ -65,7 +65,7 @@ Asset BTC: Bank=$100K → Algo makes decisions based on BTC's bank only
 Problem: Can't rebalance across assets, can't handle portfolio-level withdrawals
 ```
 
-### New Architecture (`run_portfolio_backtest_v2`)
+### New Architecture (`run_portfolio_backtest`)
 ```
 Shared Bank: $600K → Portfolio algo sees full state:
   - VOO: 1000 shares @ $400
@@ -113,7 +113,7 @@ Portfolio algo can:
 ### Recommendation: **Phased Unification**
 
 **Phase 1: Feature Parity** (Do This)
-1. Add missing features to `run_portfolio_backtest_v2()`:
+1. Add missing features to `run_portfolio_backtest()`:
    - `dividend_series` parameter
    - `cpi_data` parameter
    - `reference_data` and `risk_free_data` parameters
@@ -127,7 +127,7 @@ Portfolio algo can:
 
 **Phase 3: Removal** (After 1-2 releases)
 1. Delete `run_portfolio_backtest()`
-2. Rename `run_portfolio_backtest_v2()` → `run_portfolio_backtest()`
+2. Rename `run_portfolio_backtest()` → `run_portfolio_backtest()`
 
 ---
 
@@ -153,7 +153,7 @@ from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
 
 algo = build_portfolio_algo_from_name("per-asset:buy-and-hold", allocations)
 
-transactions, portfolio_summary = run_portfolio_backtest_v2(
+transactions, portfolio_summary = run_portfolio_backtest(
     allocations=allocations,
     start_date=start_date,
     end_date=end_date,

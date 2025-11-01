@@ -11,7 +11,7 @@ from src.algorithms import (
     QuarterlyRebalanceAlgorithm,
     build_portfolio_algo_from_name,
 )
-from src.models.backtest import run_portfolio_backtest_v2
+from src.models.backtest import run_portfolio_backtest
 
 
 def test_portfolio(name, allocations, withdrawal_rate, initial=1_000_000):
@@ -30,7 +30,7 @@ def test_portfolio(name, allocations, withdrawal_rate, initial=1_000_000):
         {ticker: BuyAndHoldAlgorithm() for ticker in allocations.keys()}
     )
 
-    txns, summary = run_portfolio_backtest_v2(
+    txns, summary = run_portfolio_backtest(
         allocations=allocations,
         start_date=start_date,
         end_date=end_date,
@@ -51,7 +51,7 @@ def test_portfolio(name, allocations, withdrawal_rate, initial=1_000_000):
         target_allocations=allocations, rebalance_months=[3, 6, 9, 12]
     )
 
-    txns, summary = run_portfolio_backtest_v2(
+    txns, summary = run_portfolio_backtest(
         allocations=allocations,
         start_date=start_date,
         end_date=end_date,
@@ -70,7 +70,7 @@ def test_portfolio(name, allocations, withdrawal_rate, initial=1_000_000):
     print("[3/3] Synthetic dividend auto...")
     auto_algo = build_portfolio_algo_from_name("auto", allocations)
 
-    txns, summary = run_portfolio_backtest_v2(
+    txns, summary = run_portfolio_backtest(
         allocations=allocations,
         start_date=start_date,
         end_date=end_date,

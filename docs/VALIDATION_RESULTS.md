@@ -161,7 +161,7 @@ This per-asset intelligence is critical - applying the same strategy to all asse
 
 ### Critical Bug Discovered and Fixed
 
-During validation, baseline diagnostic revealed synthetic dividend was executing ZERO trades. Root cause: `run_portfolio_backtest_v2()` wasn't calling `on_new_holdings()` to initialize per-asset algorithms.
+During validation, baseline diagnostic revealed synthetic dividend was executing ZERO trades. Root cause: `run_portfolio_backtest()` wasn't calling `on_new_holdings()` to initialize per-asset algorithms.
 
 **Fix applied** (src/models/backtest.py:1271-1282):
 ```python

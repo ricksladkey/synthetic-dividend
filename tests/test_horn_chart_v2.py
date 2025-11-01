@@ -1,7 +1,7 @@
 """Test script to generate proper horn charts with per-asset breakdown."""
 
 from datetime import date
-from src.models.backtest import run_portfolio_backtest_v2
+from src.models.backtest import run_portfolio_backtest
 from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
 from src.charts import create_portfolio_horn_chart
 
@@ -13,7 +13,7 @@ end_date = date(2024, 12, 31)
 print("Running portfolio backtest with 60/30/10 allocation and 8% withdrawals...")
 portfolio_algo = build_portfolio_algo_from_name("auto", allocations)
 
-transactions, summary = run_portfolio_backtest_v2(
+transactions, summary = run_portfolio_backtest(
     allocations=allocations,
     start_date=start_date,
     end_date=end_date,

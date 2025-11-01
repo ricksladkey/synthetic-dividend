@@ -13,7 +13,7 @@ from datetime import date
 from typing import Dict, List, Tuple
 
 from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
-from src.models.backtest import run_portfolio_backtest_v2
+from src.models.backtest import run_portfolio_backtest
 
 
 def find_narrow_neck(
@@ -56,7 +56,7 @@ def find_narrow_neck(
         print(f"Testing {rate:.1f}% withdrawal rate...")
 
         try:
-            transactions, summary = run_portfolio_backtest_v2(
+            transactions, summary = run_portfolio_backtest(
                 allocations=allocations,
                 start_date=start_date,
                 end_date=end_date,

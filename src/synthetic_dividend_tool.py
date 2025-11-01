@@ -648,7 +648,7 @@ def run_portfolio(args) -> int:
 
     from src.algorithms.portfolio_definitions import parse_portfolio_name
     from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
-    from src.models.backtest import run_portfolio_backtest_v2
+    from src.models.backtest import run_portfolio_backtest
 
     try:
         # Parse allocations: try as named portfolio first, then JSON
@@ -698,7 +698,7 @@ def run_portfolio(args) -> int:
         portfolio_algo = build_portfolio_algo_from_name(args.algo, allocations)
 
         # Run the backtest
-        transactions, summary = run_portfolio_backtest_v2(
+        transactions, summary = run_portfolio_backtest(
             allocations=allocations,
             start_date=start_date,
             end_date=end_date,

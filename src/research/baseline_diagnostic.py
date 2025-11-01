@@ -10,7 +10,7 @@ from src.algorithms import (
     PerAssetPortfolioAlgorithm,
     build_portfolio_algo_from_name,
 )
-from src.models.backtest import run_portfolio_backtest_v2
+from src.models.backtest import run_portfolio_backtest
 
 
 def main():
@@ -34,7 +34,7 @@ def main():
         {ticker: BuyAndHoldAlgorithm() for ticker in allocations.keys()}
     )
 
-    txns_bh, summary_bh = run_portfolio_backtest_v2(
+    txns_bh, summary_bh = run_portfolio_backtest(
         allocations=allocations,
         start_date=start_date,
         end_date=end_date,
@@ -59,7 +59,7 @@ def main():
     print("-" * 80)
     auto_algo = build_portfolio_algo_from_name("auto", allocations)
 
-    txns_sd, summary_sd = run_portfolio_backtest_v2(
+    txns_sd, summary_sd = run_portfolio_backtest(
         allocations=allocations,
         start_date=start_date,
         end_date=end_date,

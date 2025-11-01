@@ -81,9 +81,8 @@ def simulate_portfolio(
         allocations=allocations,
         start_date=start_date,
         end_date=end_date,
+        portfolio_algo="per-asset:buy-and-hold",  # Updated to new API
         initial_investment=initial_value,
-        algo="buy-and-hold",
-        simple_mode=True,  # Keep it simple like the original
     )
 
     # Convert to the expected format for backward compatibility

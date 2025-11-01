@@ -10,7 +10,7 @@ from src.algorithms import (
     QuarterlyRebalanceAlgorithm,
     SyntheticDividendAlgorithm,
 )
-from src.models.backtest import run_portfolio_backtest_v2
+from src.models.backtest import run_portfolio_backtest
 
 
 def test_quarterly_rebalance_60_40():
@@ -19,7 +19,7 @@ def test_quarterly_rebalance_60_40():
         target_allocations={"VOO": 0.6, "BIL": 0.4}, rebalance_months=[3, 6, 9, 12]
     )
 
-    transactions, summary = run_portfolio_backtest_v2(
+    transactions, summary = run_portfolio_backtest(
         allocations={"VOO": 0.6, "BIL": 0.4},
         start_date=date(2023, 1, 1),
         end_date=date(2023, 12, 31),
@@ -54,7 +54,7 @@ def test_per_asset_portfolio_hybrid():
         }
     )
 
-    transactions, summary = run_portfolio_backtest_v2(
+    transactions, summary = run_portfolio_backtest(
         allocations={"VOO": 0.7, "BIL": 0.3},
         start_date=date(2023, 1, 1),
         end_date=date(2023, 12, 31),
@@ -98,7 +98,7 @@ def test_shared_bank_isolation():
         }
     )
 
-    transactions, summary = run_portfolio_backtest_v2(
+    transactions, summary = run_portfolio_backtest(
         allocations={"VOO": 0.4, "QQQ": 0.4, "BIL": 0.2},
         start_date=date(2023, 1, 1),
         end_date=date(2023, 12, 31),

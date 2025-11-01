@@ -397,14 +397,14 @@ To see all available portfolio algorithms:
 
 **Python API**:
 ```python
-from src.models.backtest import run_portfolio_backtest_v2
+from src.models.backtest import run_portfolio_backtest
 from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
 
 # Create portfolio algorithm
 algo = build_portfolio_algo_from_name('auto', allocations={'NVDA': 0.4, 'VOO': 0.6})
 
 # Run backtest
-transactions, summary = run_portfolio_backtest_v2(
+transactions, summary = run_portfolio_backtest(
     allocations={'NVDA': 0.4, 'VOO': 0.6},
     start_date=date(2024, 1, 1),
     end_date=date(2025, 1, 1),

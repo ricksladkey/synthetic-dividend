@@ -339,7 +339,7 @@ def create_portfolio_horn_chart(
     """Create horn chart from actual portfolio backtest results.
 
     Args:
-        portfolio_summary: Summary dict from run_portfolio_backtest_v2
+        portfolio_summary: Summary dict from run_portfolio_backtest
         output: Output file path (default: auto-generated)
         resample: Resampling frequency ('D'=daily, 'W'=weekly, 'M' or 'ME'=monthly, None=daily)
 
