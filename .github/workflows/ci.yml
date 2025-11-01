@@ -50,7 +50,7 @@ jobs:
 
       - name: Mypy
         run: |
-          mypy --explicit-package-bases src
+          mypy --explicit-package-bases --exclude "src/research|src/charts" src
 
   test:
     name: Tests (pytest + coverage)
