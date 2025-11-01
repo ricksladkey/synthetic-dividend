@@ -19,37 +19,207 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
     a volatility-harvesting strategy that generates cash flow ("synthetic dividends")
     from price oscillations.
 
-    Operating Modes:
-        Full (buyback_enabled=True):
-            Complete volatility harvesting with symmetric buy/sell brackets.
-            Maintains a buyback stack for FIFO lot tracking and profit calculation.
+    PSEUDO-CODE OVERVIEW:
+    =====================
 
-        ATH-only (buyback_enabled=False):
-            Baseline comparison mode that only sells at new all-time highs.
-            No buybacks, no stack management - pure upside capture only.
+    Core Principle: "Treat volatility as a harvestable asset class"
 
-        ATH-sell (sell_at_new_ath=True):
-            Advanced volatility harvesting: buys on dips but only sells bought-back
-            shares when price reaches a NEW all-time high. This maximizes compounding
-            during recovery phases by holding bought shares through the entire recovery.
+    Given:
+        - A volatile growth asset (NVDA, BTC, ETH, etc.)
+        - Rebalance trigger 'r' (e.g., 9.15% = one bracket)
+        - Profit sharing 's' (e.g., 50% = half position size)
 
-    Parameters:
+    On Initial Purchase:
+        anchor_price ← initial_price
+        all_time_high ← initial_price
+        buyback_stack ← empty
+
+        Place symmetric limit orders:
+            buy_price  ← anchor / (1 + r)      # One bracket below
+            sell_price ← anchor × (1 + r)      # One bracket above
+            buy_qty    ← holdings × r × s
+            sell_qty   ← holdings × r × s / (1 + r)  # Geometric symmetry
+
+    Each Trading Day:
+        # Update all-time high
+        if today.high > all_time_high:
+            all_time_high ← today.high
+
+        # Check if price crossed any brackets (could cross multiple in one day)
+        while orders triggered by today's OHLC range:
+
+            if BUY order triggered:
+                # Price dropped - buy the dip
+                shares_bought ← execute_buy_at(buy_price)
+                holdings ← holdings + shares_bought
+                buyback_stack.push(shares_bought)
+
+                # Measure volatility alpha (profit from mean reversion)
+                profit ← (last_sell_price - buy_price) × shares_bought
+                volatility_alpha ← profit / portfolio_value
+
+                # Reset anchor to new transaction price
+                anchor_price ← buy_price
+
+            if SELL order triggered:
+                # Price rose - take profits
+                shares_sold ← execute_sell_at(sell_price)
+                holdings ← holdings - shares_sold
+
+                if buyback_enabled:
+                    # Track unwinding of buyback stack (diagnostic)
+                    buyback_stack.pop(min(shares_sold, stack_size))
+
+                # Reset anchor to new transaction price
+                anchor_price ← sell_price
+
+            # Place fresh orders from new anchor point
+            cancel_all_old_orders()
+            calculate_and_place_new_symmetric_orders(anchor_price)
+
+            # Anti-chatter: new orders can't execute same day
+            new_orders.earliest_execution ← tomorrow
+
+    Result: Volatility Alpha
+        Each buy-low/sell-high cycle extracts value from price oscillations.
+        Formula (theoretical minimum): α ≈ (trigger%)² / 2 × cycle_count
+        Reality: Actual alpha is 1.1x to 10.6x this formula due to gaps!
+
+    KEY INSIGHTS FROM THEORY:
+    =========================
+
+    1. Dividend Illusion:
+       "There's no free money - every withdrawal has opportunity cost"
+       → We acknowledge this and measure opportunity cost vs buy-and-hold
+
+    2. Time Machine Effect:
+       "Profit sharing creates non-linear time dilation"
+       → 50% profit sharing = 2x time to reach goals
+       → Trade current income for future growth, or vice versa
+
+    3. Volatility as Asset Class:
+       "Traditional finance: volatility = risk to minimize"
+       "Our view: volatility = harvestable value"
+       → Four sources: price path, drawdown recycling, compounding, gap arbitrage
+       → Empirical validation: +1% to +198% alpha over 3 years
+
+    4. Geometric Symmetry:
+       "Why divide sell qty by (1 + r)?"
+       → Ensures exact price unwinding: buy at P/(1+r), sell at P×(1+r)
+       → FIFO stack requires equal dollar amounts, not equal shares
+       → Example: Buy 10 shares @ $91, sell 9.2 shares @ $100 → same $910
+
+    5. Multi-Bracket Gaps:
+       "Price can jump multiple brackets in one day"
+       → Each bracket crossing = separate FIFO stack entry
+       → Iterate until no more triggers (max 20 iterations/day)
+       → Preserves exact symmetry for profit calculation
+
+    OPERATING MODES:
+    ================
+
+    Full Mode (buyback_enabled=True):
+        - Places both BUY and SELL orders
+        - Maintains buyback stack for tracking
+        - Generates volatility alpha from mean reversion
+        - Use for: actual income generation
+
+    ATH-Only Mode (buyback_enabled=False):
+        - Places only SELL orders at new all-time highs
+        - No buyback stack needed
+        - Baseline for measuring volatility alpha
+        - Use for: performance comparison
+
+    ATH-Sell Mode (sell_at_new_ath=True):
+        - Places BUY orders on dips (builds stack)
+        - Only SELLS when price exceeds previous ATH
+        - Maximizes compounding during recoveries
+        - Use for: accumulation phase with minimal selling
+
+    MATHEMATICAL FOUNDATION:
+    ========================
+
+    Bracket Spacing (Geometric):
+        buy_price  = anchor / (1 + r)
+        sell_price = anchor × (1 + r)
+
+    Trade Sizing (Profit Sharing):
+        buy_qty  = holdings × r × s
+        sell_qty = holdings × r × s / (1 + r)
+
+    Where:
+        r = rebalance_size (bracket spacing, e.g., 0.0915 for SD8)
+        s = profit_sharing (extraction ratio, e.g., 0.5 for 50%)
+
+    Volatility Alpha Calculation:
+        profit = (sell_price - buy_price) × shares_in_cycle
+        alpha  = profit / portfolio_value × 100
+
+    Theoretical Minimum (from VOLATILITY_ALPHA_THESIS.md):
+        alpha_per_cycle ≈ (r)² / 2
+        total_alpha     ≈ cycle_count × (r)² / 2
+
+    Reality Check (from empirical validation):
+        GLD (16% vol):  1.1x formula  → predictable
+        BTC (40% vol):  1.9x formula  → moderate gaps
+        MSTR (90% vol): 2.1x formula  → extreme frequency
+        NVDA (52% vol): 5.7x formula  → explosive growth gaps! 🚀
+        PLTR (68% vol): 10.6x formula → explosive growth gaps! 🚀
+
+    PARAMETERS:
+    ===========
         rebalance_size: Bracket spacing as decimal (e.g., 0.0915 = 9.15% brackets)
         profit_sharing: Trade size as fraction of rebalance (e.g., 0.5 = 50%)
         buyback_enabled: True for full algorithm, False for ATH-only baseline
         sell_at_new_ath: True for ATH-sell variant (only sell at new ATHs)
 
-    Mathematical Foundation:
-        The algorithm places symmetric limit orders at prices:
-            Buy:  P_current / (1 + r)
-            Sell: P_current × (1 + r)
+    EXAMPLES:
+    =========
 
-        Where r = rebalance_size ensures geometric symmetry for exact FIFO unwinding.
+    # Full volatility harvesting (standard)
+    algo = SyntheticDividendAlgorithm(
+        rebalance_size=0.0915,  # SD8: 9.15% brackets
+        profit_sharing=0.5,      # 50% extraction
+        buyback_enabled=True
+    )
 
-    Examples:
-        Full: SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=True)
-        ATH-only: SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=False)
-        ATH-sell: SyntheticDividendAlgorithm(0.0915, 0.5, sell_at_new_ath=True)
+    # ATH-only baseline (for comparison)
+    baseline = SyntheticDividendAlgorithm(
+        rebalance_size=0.0915,
+        profit_sharing=0.5,
+        buyback_enabled=False    # Only sells at ATHs
+    )
+
+    # ATH-sell variant (accumulation mode)
+    accumulator = SyntheticDividendAlgorithm(
+        rebalance_size=0.0915,
+        profit_sharing=0.5,
+        sell_at_new_ath=True     # Only sells at new ATHs
+    )
+
+    PERFORMANCE EXPECTATIONS (from experiments/volatility-alpha-validation/):
+    ==========================================================================
+
+    Asset     | Vol  | Algo | Period | Expected Alpha (3yr)
+    ----------|------|------|--------|--------------------
+    GLD       | 16%  | SD16 | Stable | ~1%   (minimal)
+    VOO       | 20%  | SD16 | Stable | ~3%   (low)
+    BTC-USD   | 40%  | SD8  | Crypto | ~27%  (moderate)
+    ETH-USD   | 54%  | SD6  | Crypto | ~46%  (strong)
+    NVDA      | 52%  | SD6  | Growth | ~77%  (explosive!) 🚀
+    PLTR      | 68%  | SD6  | Growth | ~198% (extraordinary!) 🚀🚀
+
+    Rule of Thumb:
+        - Higher volatility → more cycles → more alpha
+        - Explosive growth → large gaps → MASSIVE alpha boost
+        - Formula gives conservative minimum, reality often exceeds it
+
+    SEE ALSO:
+    =========
+    - theory/01-core-concepts.md - Economic foundations
+    - theory/02-algorithm-variants.md - Mode comparisons
+    - theory/VOLATILITY_ALPHA_THESIS.md - Complete mathematical treatment
+    - experiments/volatility-alpha-validation/ - Empirical validation data
     """
 
     # Maximum iterations for multi-bracket gap handling per day
