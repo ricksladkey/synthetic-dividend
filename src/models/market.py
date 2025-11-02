@@ -35,9 +35,6 @@ class Order:
 
     Limit orders trigger when price crosses threshold.
     Market orders execute immediately at current price.
-
-    Orders placed on day D cannot execute until day D+1 to prevent
-    chattering when multiple bracket levels trigger on the same day.
     """
 
     action: OrderAction
@@ -45,7 +42,6 @@ class Order:
     order_type: OrderType = OrderType.LIMIT
     limit_price: Optional[float] = None
     notes: str = ""
-    placed_date: Optional[date] = None  # Date order was placed (for anti-chatter logic)
 
     def __post_init__(self):
         """Validate order parameters."""
@@ -197,10 +193,6 @@ class Market:
             # Check each pending order
             orders_to_remove = []
             for i, order in enumerate(self.pending_orders):
-                # Anti-chatter: skip orders placed today (they execute tomorrow)
-                if order.placed_date is not None and order.placed_date == date_:
-                    continue
-
                 if order.is_triggered(low, high):
                     # Execute the order with realistic market fills
                     actual_price = order.get_execution_price(open_price, low, high)
