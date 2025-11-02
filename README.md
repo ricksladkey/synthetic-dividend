@@ -32,8 +32,11 @@ Traditional approaches fail:
 - ✅ **Sequence-of-returns protection** - Bank buffer avoids forced sales in bear markets
 - ✅ **Configurable distributions** - Flexible profit-sharing ratios (0-100%+)
 - ✅ **Rules-based execution** - No market timing, just mathematics
+- ✅ **NO derivatives** - Direct asset ownership only (no options, futures, or leverage)
 
 > 💎 **Key Insight**: Irregular payments (from market volatility) → Regular income (for lifestyle needs) through temporal buffering.
+>
+> 🎯 **Not Options**: We extract volatility returns using only the spot asset + limit orders. No derivatives, no decay, no counterparty risk.
 
 ## 🔬 How It Works
 

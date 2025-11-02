@@ -19,6 +19,17 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
     a volatility-harvesting strategy that generates cash flow ("synthetic dividends")
     from price oscillations.
 
+    WHAT THIS IS NOT:
+    =================
+    NO derivatives required - just spot asset + limit orders:
+        ❌ No options (covered calls, puts, spreads)
+        ❌ No futures, swaps, or VIX products
+        ❌ No leverage or margin
+        ✅ Direct ownership only - buy low, sell high systematically
+
+    Key differentiator: We extract volatility returns without options decay,
+    counterparty risk, or complex derivatives pricing. Just rebalancing.
+
     PSEUDO-CODE OVERVIEW:
     =====================
 

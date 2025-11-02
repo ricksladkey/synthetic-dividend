@@ -21,6 +21,19 @@ The Synthetic Dividend Algorithm is built on three foundational insights:
 
 These principles explain why systematic rebalancing with buybacks generates measurable excess returns (volatility alpha) while traditional strategies leave this value on the table.
 
+### What This Is NOT
+
+**NO derivatives required:**
+- ❌ No options (covered calls, puts, spreads, collars)
+- ❌ No futures or swaps
+- ❌ No VIX products or volatility ETFs
+- ❌ No leverage or margin
+- ✅ **Just spot asset + limit orders**
+
+**Key differentiator**: We extract returns from volatility using only **direct ownership** of the underlying asset. No options premiums, no decay, no counterparty risk. Just buy low, sell high, systematically.
+
+If you're familiar with volatility trading via derivatives, **this is fundamentally different**. We're harvesting price oscillations through disciplined rebalancing, not betting on implied vs realized volatility spreads.
+
 ---
 
 ## Part 1: The Dividend Illusion
