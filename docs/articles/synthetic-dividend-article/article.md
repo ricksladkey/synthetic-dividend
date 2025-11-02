@@ -33,6 +33,8 @@ The classic **60/40 portfolio** (60% equities, 40% bonds) emerged in the post-Wo
 
 But these approaches fundamentally assume that **volatility equals risk**—and that assumption leaves enormous value on the table.
 
+**Market context**: Whole-market volatility has increased dramatically since roughly 2020, coinciding with the pandemic and its aftermath. Intraday swings that were once rare have become routine. Assets that previously moved 1-2% daily now regularly experience 3-5% moves. This regime shift makes volatility harvesting strategies especially relevant today—the raw material for extracting alpha has become far more abundant.
+
 ### The Rebalancing Insight
 
 Modern portfolio theory has long recognized that rebalancing serves two critical roles:
@@ -52,8 +54,8 @@ These insights are correct—but conservative. Traditional rebalancing extracts 
 Synthetic Dividends are a systematic rebalancing algorithm that treats volatility as a harvestable asset class. Instead of minimizing price fluctuations, we extract value from them—generating predictable income streams from volatile growth assets.
 
 **The core mechanism is deceptively simple:**
-1. Buy when price drops by a trigger percentage (e.g., 9.05%)
-2. Sell when price rises by the same trigger percentage
+1. Sell when price rises by a trigger percentage (e.g., 9.05%)
+2. Buy when price drops to a level where a trigger percentage increase would recover to the last transaction price
 3. Extract a configurable percentage of profits as "synthetic dividends"
 4. Repeat systematically as markets oscillate
 
@@ -138,7 +140,16 @@ while orders triggered by today's OHLC range:
 
 **LIFO Buyback Stack**: Shares are tracked in a stack (last-in, first-out). When you buy at $91.70, then sell at $109.05, those specific shares generate profit. The stack ensures we unwind positions in reverse order of creation.
 
-**Profit Sharing**: Configurable extraction ratio (e.g., 50%) determines what percentage of profits to extract vs. reinvest. Higher profit sharing generates more income but slows portfolio growth.
+**Profit Sharing**: Configurable extraction ratio that determines what percentage of profits to extract vs. reinvest. This parameter typically ranges from 0% to 100%, but the full spectrum reveals distinct strategies:
+
+- **Negative values** (e.g., -25%): Overbuy on dips—builds position aggressively, similar to "dollar-cost averaging in"
+- **0%**: Pure buy-and-hold baseline—no profit extraction, steady-state exposure
+- **10-90%**: Standard range—balance between reinvestment and income extraction
+- **50%**: Balanced approach—extract half of profits, reinvest the other half
+- **100%**: Traditional rebalancing—extract all profits, maintain fixed nominal exposure
+- **>100%** (e.g., 125%): Sell into strength—extract profits plus principal, useful for "dollar-cost averaging out" or de-risking
+
+Higher profit sharing generates more current income but slows portfolio growth and may require more initial capital.
 
 **All-Time-High Tracking**: Records peak portfolio value. Variants can use ATH to modify behavior during drawdowns vs. new highs.
 
@@ -232,6 +243,10 @@ But this creates a painful trade-off: maintain discipline (reduce winners) or le
 
 You can maintain concentrated positions in high-conviction growth assets while systematically extracting income from their volatility. The algorithm doesn't force you to sell winners—it extracts value from price oscillations *around* the growth trend.
 
+Crucially, the algorithm **allows the asset to grow to unbounded concentration** while protecting the rest of your portfolio. As the concentrated asset appreciates, it pays a continuous "tax" to the rest of your portfolio through systematic profit extraction. This tax compensates for the excess concentration risk—the extracted cash flows to the conservative side of your barbell (e.g., cash, bonds, treasuries).
+
+Over time, you recover your entire initial investment (and more) in cash—cash that can never be lost if the asset crashes. Your position becomes a "free ride" funded by harvested volatility.
+
 ### Implementation Approaches
 
 **Calendar Rebalancing** (traditional): Fixed intervals (quarterly, annually). Simple but rigid.
@@ -318,7 +333,7 @@ Before implementing Synthetic Dividends, you must answer:
 2. **Will it likely make new ATHs within a reasonable timeframe (2-5 years)?**
 3. **Is the underlying business/technology/adoption story still valid?**
 
-If the answer to any of these is "no" or "uncertain," **do not use Synthetic Dividends on that asset.**
+If the answer to any of these is "no" or "uncertain," **do not use Synthetic Dividends on that asset.** This same discipline applies to buy-and-hold investing—Synthetic Dividends simply requires you to be honest about your conviction level. Only apply this algorithm to assets you'd confidently hold through severe drawdowns. The classic example: the market itself (SPY, QQQ).
 
 **Asset selection criteria:**
 
