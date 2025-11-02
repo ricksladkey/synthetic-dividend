@@ -30,6 +30,25 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
     Key differentiator: We extract volatility returns without options decay,
     counterparty risk, or complex derivatives pricing. Just rebalancing.
 
+    CRITICAL PREREQUISITE:
+    ======================
+    ⚠️  ASSUMPTION: Asset will eventually recover from drawdowns and make new ATHs.
+
+    The algorithm buys systematically during declines. This is profitable ONLY if
+    the asset recovers. If the investment thesis breaks (permanent decline), those
+    buyback purchases amplify losses.
+
+    Example of BROKEN thesis: Moderna (MRNA) - down 92% from peak, COVID demand gone
+    Example of VALID thesis: NVIDIA (NVDA) - multiple 40-50% drawdowns, always recovered
+
+    Before using this algorithm, confirm:
+        1. Asset has secular growth potential (not speculative)
+        2. Will likely make new ATHs within 2-5 years
+        3. You'd hold through a 50% drawdown (high conviction)
+
+    Only apply to assets where you're confident about eventual ATH recovery.
+    This algorithm amplifies conviction - use only on high-quality holdings.
+
     PSEUDO-CODE OVERVIEW:
     =====================
 

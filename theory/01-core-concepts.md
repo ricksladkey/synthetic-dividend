@@ -174,7 +174,7 @@ If you're familiar with volatility trading via derivatives, **this is fundamenta
 
 **Our solution**: Generate income from volatility while maintaining growth exposure.
 
-### 5.2 Universal Applicability
+### 5.2 Universal Applicability (With Critical Caveat)
 
 **Works on any volatile asset**:
 - **Stocks**: NVDA, TSLA, AMZN
@@ -183,6 +183,38 @@ If you're familiar with volatility trading via derivatives, **this is fundamenta
 - **ETFs**: QQQ, VTI
 
 **No asset-specific assumptions required**.
+
+**BUT—the fundamental prerequisite**: The asset must eventually recover from drawdowns and make new all-time highs.
+
+**Why this matters**: The algorithm systematically buys during declines. If the asset enters permanent decline (broken investment thesis), those purchases amplify losses rather than harvest volatility.
+
+**Example of broken thesis**: Moderna (MRNA)
+- Peak: $497 (August 2021) → Current: ~$40 (down 92%)
+- Thesis breakdown: Post-COVID demand collapse
+- Algorithm would have bought at $400, $350, $300, $250, $200... amplifying losses
+- **Critical error**: Applying volatility harvesting to an asset with broken fundamentals
+
+**Example of valid thesis**: NVIDIA (NVDA)
+- Multiple 40-50% drawdowns over past decade
+- Each time: Recovery to new ATHs within 1-2 years
+- Thesis intact: AI/GPU demand growing secularly
+- Algorithm profits: Buys dips, sells recoveries, extracts alpha
+
+**Asset selection discipline**:
+
+**Good candidates** (secular growth, market leadership):
+- Growth stocks with intact thesis (NVDA, TSLA, AMZN)
+- Diversified indices (SPY, QQQ) with automatic rebalancing
+- Dominant cryptocurrencies (BTC, ETH) with network effects
+- Assets you'd hold through 50% drawdown
+
+**Poor candidates** (speculative, disrupted, single-product risk):
+- Single-product companies (binary success/failure)
+- Disrupted industries (legacy retail, traditional media)
+- Speculative/meme assets without fundamentals
+- Any asset where you're uncertain about 2-5 year recovery
+
+**The discipline**: Synthetic Dividends amplifies conviction. Only use on assets where you're confident about eventual ATH recovery.
 
 ### 5.3 Risk-Adjusted Superiority
 
