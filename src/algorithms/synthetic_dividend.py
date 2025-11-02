@@ -347,9 +347,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         profit = (self.last_transaction_price - fill_price) * quantity
         return (profit / current_value) * 100 if current_value != 0 else 0.0
 
-    def place_orders(
-        self, holdings: int, current_price: float
-    ) -> None:
+    def place_orders(self, holdings: int, current_price: float) -> None:
         """Calculate and place symmetric buy/sell orders with the market.
 
         This is the core strategy logic: place limit orders at geometrically
