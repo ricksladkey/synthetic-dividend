@@ -60,7 +60,7 @@ Until now.
 I've developed a systematic rebalancing algorithm that extracts income from volatility itself—no derivatives, no upside caps, no forced selling.
 
 **How it works:**
-1. Buy when price drops by trigger % (e.g., 6%)
+1. Buy when price drops by trigger % (e.g., 9.05% for SD8)
 2. Sell when price rises by same trigger %
 3. Extract configurable % of profits as "synthetic dividends"
 4. Repeat systematically as markets oscillate
@@ -129,7 +129,7 @@ The formula ignores:
 In this article, I introduce **Synthetic Dividends**—a rebalancing algorithm that treats volatility as a harvestable asset class:
 
 **Core mechanism:**
-→ Place symmetric limit orders (buy at -6%, sell at +6%)
+→ Place symmetric limit orders (buy at -9.05%, sell at +9.05% for SD8)
 → Execute automatically as markets oscillate
 → Extract configurable % of profits as "dividends"
 → Maintain full upside exposure to growth trend

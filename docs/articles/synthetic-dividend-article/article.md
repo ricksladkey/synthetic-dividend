@@ -52,7 +52,7 @@ These insights are correct—but conservative. Traditional rebalancing extracts 
 Synthetic Dividends are a systematic rebalancing algorithm that treats volatility as a harvestable asset class. Instead of minimizing price fluctuations, we extract value from them—generating predictable income streams from volatile growth assets.
 
 **The core mechanism is deceptively simple:**
-1. Buy when price drops by a trigger percentage (e.g., 6%)
+1. Buy when price drops by a trigger percentage (e.g., 9.05%)
 2. Sell when price rises by the same trigger percentage
 3. Extract a configurable percentage of profits as "synthetic dividends"
 4. Repeat systematically as markets oscillate
@@ -82,9 +82,11 @@ The algorithm uses geometrically symmetric rebalancing brackets:
 - **Buy price**: anchor / (1 + trigger)
 - **Sell price**: anchor × (1 + trigger)
 
-For a 6% trigger with anchor price $100:
-- Buy at: $100 / 1.06 = $94.34
-- Sell at: $100 × 1.06 = $106.00
+For a 9.05% trigger (SD8 standard) with anchor price $100:
+- Buy at: $100 / 1.0905 = $91.70
+- Sell at: $100 × 1.0905 = $109.05
+
+This 9.05% spacing creates exactly 8 brackets when price doubles or halves—if you sell at $75,000, you'll also sell at $150,000.
 
 This ensures equal dollar amounts bought and sold, which is essential for capturing volatility value.
 
@@ -130,14 +132,11 @@ while orders triggered by today's OHLC range:
 
     cancel_all_old_orders()
     calculate_and_place_new_symmetric_orders(anchor_price)
-    new_orders.earliest_execution ← tomorrow
 ```
 
 ### Key Features
 
-**Anti-Chatter Protection**: Orders can only execute once per day, preventing noise trading during intraday volatility.
-
-**LIFO Buyback Stack**: Shares are tracked in a stack (last-in, first-out). When you buy at $94, then sell at $100, those specific shares generate profit. The stack ensures we unwind positions in reverse order of creation.
+**LIFO Buyback Stack**: Shares are tracked in a stack (last-in, first-out). When you buy at $91.70, then sell at $109.05, those specific shares generate profit. The stack ensures we unwind positions in reverse order of creation.
 
 **Profit Sharing**: Configurable extraction ratio (e.g., 50%) determines what percentage of profits to extract vs. reinvest. Higher profit sharing generates more income but slows portfolio growth.
 
@@ -173,7 +172,7 @@ Traditional rebalancing (0.1-0.5% annually) has minimal compounding impact. Synt
 
 Markets don't move smoothly. Overnight gaps and intraday volatility create discrete price jumps. These gaps allow multiple bracket crossings per day, each capturing profit.
 
-A 12% intraday swing can trigger both a sell (+6%) and a buy (-6%), capturing profit on both directions.
+An 18% intraday swing can trigger both a sell (+9.05%) and a buy (-9.05%), capturing profit on both directions.
 
 ### Mathematical Framework
 
@@ -182,12 +181,12 @@ A 12% intraday swing can trigger both a sell (+6%) and a buy (-6%), capturing pr
 α ≈ (trigger%)² / 2 × cycle_count
 ```
 
-For a 6% trigger over 3 years with 20 complete cycles:
+For a 9.05% trigger (SD8) over 3 years with 15 complete cycles:
 ```
-α ≈ (0.06)² / 2 × 20 = 0.036 = 3.6%
+α ≈ (0.0905)² / 2 × 15 = 0.0614 = 6.14%
 ```
 
-This predicts 3.6% excess returns over buy-and-hold.
+This predicts 6.14% excess returns over buy-and-hold.
 
 **Empirical Reality:**
 
@@ -361,11 +360,13 @@ This is not a bug—it's a feature. The algorithm forces you to have high-convic
 ### Parameter Selection
 
 **Trigger Percentage**: Determines bracket spacing
-- **2%**: Aggressive (many small trades)
-- **6%**: Balanced (moderate frequency)
-- **16%**: Conservative (fewer large trades)
+- **4.5% (SD16)**: Conservative (16 brackets per doubling, fewer large trades)
+- **9.05% (SD8)**: Balanced standard (8 brackets per doubling, moderate frequency)
+- **19.4% (SD4)**: Aggressive (4 brackets per doubling, many small trades)
 
-Match trigger to asset volatility: higher volatility assets support smaller triggers.
+The "SD" notation refers to how many brackets fit when price doubles or halves. SD8 (9.05%) is the most common choice, balancing trade frequency with transaction costs.
+
+Match trigger to asset volatility: higher volatility assets support smaller triggers (SD16), lower volatility may need larger triggers (SD4).
 
 **Profit Sharing**: Determines income vs. growth
 - **0%**: Pure growth (all profits reinvested)
