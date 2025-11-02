@@ -71,7 +71,7 @@ Price returns to previous high → Sell buybacks → Pure profit to bank
 
 ### 2.2 Stack Mechanics
 
-**FIFO unwinding**: First shares bought are first sold (oldest cost basis).
+**LIFO unwinding**: Last shares bought are first sold (stack semantics - conceptually correct).
 
 **Profit attribution**: Each sale attributes profits to specific buyback lots.
 

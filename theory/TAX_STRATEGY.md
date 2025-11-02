@@ -12,8 +12,8 @@ The distinction between taxable and tax-advantaged accounts isn't just about pap
 
 | Account Type | Strategy | Lot Selection | Rationale |
 |--------------|----------|---------------|-----------|
-| **Taxable** | sd8-ath-only | FIFO | Minimize tax events, likely LTCG |
 | **Tax-Advantaged** | sd8 (full) | LIFO | Conceptually correct, no tax friction |
+| **Taxable** | sd8-ath-only | FIFO (or hybrid) | Minimize tax events, prefer LTCG |
 
 ---
 
@@ -28,22 +28,28 @@ The distinction between taxable and tax-advantaged accounts isn't just about pap
 - ✅ No wash sale complications
 - ✅ Full volatility harvesting enabled
 
-### Why LIFO is Natural
+### Why LIFO is Conceptually Correct
 
-**Conceptual alignment:**
+**The buyback stack is literally a stack (LIFO data structure):**
 
-1. **Volatility alpha calculation assumes LIFO**
-   - When price recovers 50%, newest buybacks unwind first
+1. **Stack semantics**
+   - Price drops → push new shares onto stack
+   - Price rises → pop shares off stack (Last-In-First-Out)
+   - This is how the algorithm conceptually works
+   - The math and the code both think in LIFO terms
+
+2. **Volatility alpha calculation assumes LIFO**
+   - When price recovers, newest buybacks unwind first
    - Alpha boost = profit from recent volatility, not ancient positions
-   - The math already thinks in LIFO terms
+   - Each buy-low/sell-high cycle is a complete stack push/pop
 
-2. **Portfolio pristine after recovery**
-   - Gap down → buyback at lower price
-   - Gap up → unwind newest purchase (LIFO)
+3. **Portfolio pristine after recovery**
+   - Gap down → push shares onto stack at lower price
+   - Gap up → pop shares off stack (LIFO)
    - Original position remains untouched
    - This is what "synthetic dividend" means!
 
-3. **Profit sharing mechanics**
+4. **Profit sharing mechanics**
    - 50% profit sharing = sell half of recent gain
    - "Recent gain" = newest purchases appreciating
    - LIFO directly captures this
@@ -112,6 +118,77 @@ vs. sd8 full algorithm in taxable account:
 → Complex tracking, higher tax burden
 → Not worth the hassle
 ```
+
+### Advanced: Hybrid Lot Selection for Full SD in Taxable Accounts
+
+**If you insist on running full SD in a taxable account, use strategic lot selection:**
+
+**The Problem with Pure LIFO in Taxable:**
+- LIFO sells newest shares first
+- Newest shares = held for days/weeks/months = STCG
+- STCG = taxed at ordinary income rates (22-37% federal + state)
+- This destroys your alpha!
+
+**The Problem with Pure FIFO in Taxable:**
+- FIFO sells oldest shares first (conceptually wrong for stack)
+- Doesn't match algorithm semantics
+- Breaks the "pristine portfolio after recovery" model
+
+**The Solution: Hybrid Strategy**
+
+```
+When selling shares:
+  1. Check all lots for holding period
+  2. LIFO on LTCG lots (held >1 year)
+     → These get favorable tax treatment
+     → Matches conceptual model
+  3. FIFO on remaining STCG lots
+     → Minimizes holding recent lots
+     → Reduces STCG exposure
+```
+
+**Example:**
+```
+Portfolio state:
+  - 1000 shares @ $100 (bought 3 years ago) = LTCG eligible
+  - 50 shares @ $91 (bought 2 months ago) = STCG
+
+Price rises to $105 → trigger sell of 23 shares
+
+Hybrid strategy:
+  1. Check: Do we have LTCG lots? Yes (1000 shares)
+  2. Sell from newest LTCG lot (LIFO on LTCG)
+     → 23 shares @ $100 cost basis
+     → Gain: 23 × $5 = $115
+     → Tax: LTCG rate (~15-20%)
+     → Tax owed: ~$17-23
+
+Pure LIFO would have sold:
+  → 23 shares @ $91 cost basis (STCG)
+  → Gain: 23 × $14 = $322
+  → Tax: Ordinary income rate (~30-50% combined)
+  → Tax owed: ~$97-161
+
+Savings: $74-138 per sale!
+```
+
+**Implementation Complexity:**
+- Requires tracking every lot's acquisition date
+- Must calculate holding period for each lot
+- Partition lots into LTCG vs STCG
+- Apply LIFO within LTCG, FIFO within STCG
+- Worth it if alpha >> tax complexity cost
+
+**When You Burn Through LTCG Lots:**
+
+If volatility is extreme and you exhaust all LTCG lots:
+```
+Warning: All LTCG lots sold, only STCG lots remain
+Consider: Pause SD algorithm until shares age to LTCG
+Reason: STCG tax rate destroys volatility alpha
+```
+
+This is a real risk in highly volatile assets where you're constantly buying/selling!
 
 ---
 

@@ -91,7 +91,7 @@ Market Data → Algorithm.on_day() → Orders Generated → Backtest Execution �
 
 ### 3.1 Stack Structure
 
-**FIFO queue**: Oldest buybacks sold first
+**LIFO stack**: Newest buybacks sold first (Last-In-First-Out)
 
 **Per-lot tracking**: Individual cost basis for each buyback
 

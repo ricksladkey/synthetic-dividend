@@ -106,12 +106,12 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
     4. Geometric Symmetry:
        "Why divide sell qty by (1 + r)?"
        → Ensures exact price unwinding: buy at P/(1+r), sell at P×(1+r)
-       → FIFO stack requires equal dollar amounts, not equal shares
+       → Stack (LIFO) requires equal dollar amounts, not equal shares
        → Example: Buy 10 shares @ $91, sell 9.2 shares @ $100 → same $910
 
     5. Multi-Bracket Gaps:
        "Price can jump multiple brackets in one day"
-       → Each bracket crossing = separate FIFO stack entry
+       → Each bracket crossing = separate stack entry
        → Iterate until no more triggers (max 20 iterations/day)
        → Preserves exact symmetry for profit calculation
 
@@ -224,7 +224,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
     # Maximum iterations for multi-bracket gap handling per day
     # In extreme volatility (e.g., 20% gap = ~2 brackets), we need multiple iterations
-    # to create separate FIFO stack entries for exact symmetry. Limit prevents infinite loops.
+    # to create separate stack entries for exact symmetry. Limit prevents infinite loops.
     MAX_ITERATIONS_PER_DAY = 20
 
     def __init__(
@@ -447,7 +447,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
         Multi-bracket Gap Handling:
             When price gaps 2+ brackets, we iterate to create separate stack
-            entries for exact FIFO symmetry. Each iteration represents one
+            entries for exact geometric symmetry. Each iteration represents one
             bracket crossing, ensuring accurate lot tracking.
 
         Example (gap down 2 brackets):
