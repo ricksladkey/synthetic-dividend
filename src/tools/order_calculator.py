@@ -119,12 +119,12 @@ def format_order_display(
         seed_info = f"\n  Bracket Seed:          ${bracket_seed:.2f}  (bracket n={round(seed_bracket_n)}, aligns all positions)"
 
     output = f"""
-╔══════════════════════════════════════════════════════════════════════════╗
-║                       SYNTHETIC DIVIDEND ORDER CALCULATOR                 ║
-╚══════════════════════════════════════════════════════════════════════════╝
++==============================================================================+
+|                       SYNTHETIC DIVIDEND ORDER CALCULATOR                     |
++==============================================================================+
 
-📊 CURRENT POSITION - {ticker}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+* CURRENT POSITION - {ticker}
+==============================================================================
   Holdings:              {holdings:,} shares
   Last Transaction:      ${last_price:.2f}  (bracket n={round(current_bracket_n)}, normalized=${current_bracket_normalized:.2f}){seed_info}
   Current Price:         ${current_price:.2f}
@@ -132,53 +132,53 @@ def format_order_display(
 
   Strategy:              sd{sdn} ({rebalance_pct:.2f}% rebalance, {profit_pct:.0f}% profit sharing)
 
-📍 BRACKET POSITIONS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+* BRACKET POSITIONS
+==============================================================================
   Your position is on bracket n={round(current_bracket_n)}
 
   Standard bracket ladder for sd{sdn} (normalized to 1.0):
-    Bracket n={round(buy_bracket_n):4}  →  ${buy_bracket_normalized:8.2f}  [BUY TARGET]
-    Bracket n={round(current_bracket_n):4}  →  ${current_bracket_normalized:8.2f}  [YOUR POSITION]
-    Bracket n={round(sell_bracket_n):4}  →  ${sell_bracket_normalized:8.2f}  [SELL TARGET]
+    Bracket n={round(buy_bracket_n):4} -> ${buy_bracket_normalized:8.2f} [BUY TARGET]
+    Bracket n={round(current_bracket_n):4} -> ${current_bracket_normalized:8.2f} [YOUR POSITION]
+    Bracket n={round(sell_bracket_n):4} -> ${sell_bracket_normalized:8.2f} [SELL TARGET]
 
-  💡 All backtests using sd{sdn} will hit these same bracket positions,
-     making your strategy deterministic and comparable.
+  * All backtests using sd{sdn} will hit these same bracket positions,
+    making your strategy deterministic and comparable.
 
-🎯 LIMIT ORDERS TO PLACE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+* LIMIT ORDERS TO PLACE
+==============================================================================
 
-  ╭─ BUY LIMIT ORDER ──────────────────────────────────────╮
-  │                                                         │
-  │  Price:     ${buy_price:.2f}                                  │
-  │  Quantity:  {buy_qty:,} shares                              │
-  │  Total:     ${buy_price * buy_qty:,.2f}                           │
-  │                                                         │
-  │  Trigger:   {buy_trigger_pct:.2f}% below last transaction         │
-  │  Distance:  {to_buy_pct:.2f}% below current price                │
-  │                                                         │
-  ╰─────────────────────────────────────────────────────────╯
+  +-- BUY LIMIT ORDER -----------------------------------------------------+
+  |                                                                       |
+  |  Price:     ${buy_price:.2f}                                                |
+  |  Quantity:  {buy_qty:,} shares                                            |
+  |  Total:     ${buy_price * buy_qty:,.2f}                                         |
+  |                                                                       |
+  |  Trigger:   {buy_trigger_pct:.2f}% below last transaction                   |
+  |  Distance:  {to_buy_pct:.2f}% below current price                          |
+  |                                                                       |
+  +-----------------------------------------------------------------------+
 
-  ╭─ SELL LIMIT ORDER ─────────────────────────────────────╮
-  │                                                         │
-  │  Price:     ${sell_price:.2f}                                 │
-  │  Quantity:  {sell_qty:,} shares                             │
-  │  Total:     ${sell_price * sell_qty:,.2f}                          │
-  │                                                         │
-  │  Trigger:   {sell_trigger_pct:.2f}% above last transaction        │
-  │  Distance:  {to_sell_pct:.2f}% above current price               │
-  │                                                         │
-  ╰─────────────────────────────────────────────────────────╯
+  +-- SELL LIMIT ORDER ----------------------------------------------------+
+  |                                                                       |
+  |  Price:     ${sell_price:.2f}                                               |
+  |  Quantity:  {sell_qty:,} shares                                           |
+  |  Total:     ${sell_price * sell_qty:,.2f}                                        |
+  |                                                                       |
+  |  Trigger:   {sell_trigger_pct:.2f}% above last transaction                  |
+  |  Distance:  {to_sell_pct:.2f}% above current price                         |
+  |                                                                       |
+  +-----------------------------------------------------------------------+
 
-📋 BROKER ENTRY (Copy/Paste)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+* BROKER ENTRY (Copy/Paste)
+==============================================================================
 
   BUY  {ticker:5} {buy_qty:5} @ ${buy_price:.2f}  (LIMIT GTC)
   SELL {ticker:5} {sell_qty:5} @ ${sell_price:.2f}  (LIMIT GTC)
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💡 TIP: Set both orders as "Good Till Canceled" (GTC) limit orders
-        Cancel and replace when either executes
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+==============================================================================
+* TIP: Set both orders as "Good Till Canceled" (GTC) limit orders
+       Cancel and replace when either executes
+==============================================================================
 """
     return output
 
