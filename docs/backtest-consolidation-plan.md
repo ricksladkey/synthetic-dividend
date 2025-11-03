@@ -79,20 +79,25 @@
 
 **Tasks**:
 1. ✅ Analyze feature gaps (this document)
-2. ⬜ Add dividend/interest payment support
+2. ✅ Add dividend/interest payment support (commit: 8956316)
    - Time-weighted holdings calculation (already exists as helper)
    - Ex-dividend date handling
    - Credit to bank on payment dates
-3. ⬜ Add reference asset support
+   - Parameter: `dividend_data: Dict[str, pd.Series]`
+3. ✅ Add reference asset support (commit: 0130f7f)
    - Fetch benchmark data
-   - Calculate market-adjusted returns
+   - Calculate market-adjusted returns (alpha)
+   - Parameter: `reference_rate_ticker: str` (e.g., "VOO")
 4. ⬜ Add risk-free rate support
    - Extend cash interest to model opportunity cost
+   - Parameter: `risk_free_rate_ticker: str` (e.g., "BIL")
 5. ⬜ Add CPI data support
    - Fetch CPI data
    - Calculate inflation-adjusted returns
+   - Parameter: `inflation_rate_ticker: str` (e.g., "CPI")
 6. ⬜ Add price normalization support
    - Preprocessing step before main loop
+   - Parameter: `normalize_prices: bool`
 
 **Estimated effort**: 3-5 hours (spread over multiple sessions)
 
