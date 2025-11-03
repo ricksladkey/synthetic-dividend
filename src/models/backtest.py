@@ -1006,6 +1006,7 @@ def run_portfolio_backtest(
     dividend_data: Optional[Dict[str, pd.Series]] = None,
     reference_rate_ticker: Optional[str] = None,
     risk_free_rate_ticker: Optional[str] = None,
+    inflation_rate_ticker: Optional[str] = None,
     # Legacy compatibility parameters (deprecated, ignored with warnings)
     algo: Optional[Union[AlgorithmBase, Callable, str]] = None,
     simple_mode: bool = False,
@@ -1043,6 +1044,10 @@ def run_portfolio_backtest(
             Used to model opportunity cost on cash holdings
             Daily returns applied to positive cash balance (replaces cash_interest_rate_pct)
             If not provided, falls back to cash_interest_rate_pct
+        inflation_rate_ticker: Optional ticker for inflation data (e.g., "CPI" via custom provider)
+            Used to calculate inflation-adjusted (real) returns
+            Tracks cumulative inflation adjustment from start date
+            Adds real_return and inflation_adjusted metrics to summary
         algo: DEPRECATED - Use portfolio_algo instead
         simple_mode: DEPRECATED - No longer used
         **kwargs: DEPRECATED - Ignored legacy parameters
@@ -1156,6 +1161,34 @@ def run_portfolio_backtest(
         else:
             print("WARN: No data available, falling back to cash_interest_rate_pct")
             risk_free_data = None
+
+    # Fetch inflation data if provided (for real returns calculation)
+    inflation_data: Optional[pd.DataFrame] = None
+    cumulative_inflation: Dict[date, float] = {}
+    if inflation_rate_ticker:
+        print(f"Fetching inflation data ({inflation_rate_ticker})...", end=" ")
+        inflation_data = fetcher.get_history(inflation_rate_ticker, start_date, end_date)
+        if inflation_data is not None and not inflation_data.empty:
+            print(f"OK ({len(inflation_data)} days)")
+            # Calculate cumulative inflation adjustment from start
+            infl_indexed = inflation_data.copy()
+            infl_indexed.index = pd.to_datetime(infl_indexed.index).date
+            value_col = "Close" if "Close" in infl_indexed.columns else "Value"
+            if value_col in infl_indexed.columns:
+                infl_values = infl_indexed[value_col].values
+                infl_dates = list(infl_indexed.index)
+                # Find start CPI value
+                if common_dates[0] in infl_dates:
+                    start_cpi_idx = infl_dates.index(common_dates[0])
+                    start_cpi = float(infl_values[start_cpi_idx])
+                    # Calculate cumulative multiplier for each date
+                    for i, d in enumerate(infl_dates):
+                        if d >= common_dates[0]:
+                            curr_cpi = float(infl_values[i])
+                            cumulative_inflation[d] = curr_cpi / start_cpi if start_cpi > 0 else 1.0
+        else:
+            print("WARN: No data available, skipping inflation adjustment")
+            inflation_data = None
 
     # Initialize portfolio state
     shared_bank = initial_investment
@@ -1595,5 +1628,47 @@ def run_portfolio_backtest(
     else:
         portfolio_summary["baseline"] = None
         portfolio_summary["volatility_alpha"] = None
+
+    # Compute inflation-adjusted (real) returns if inflation data provided
+    if cumulative_inflation and final_date in cumulative_inflation:
+        try:
+            # Get cumulative inflation from start to end
+            inflation_multiplier = cumulative_inflation[final_date]
+
+            # Calculate real (inflation-adjusted) final value
+            real_final_value = final_total_value / inflation_multiplier
+
+            # Calculate real return
+            real_total_return_pct = (
+                (real_final_value - initial_investment) / initial_investment * 100.0
+                if initial_investment > 0
+                else 0.0
+            )
+
+            # Calculate real annualized return
+            if years > 0 and initial_investment > 0:
+                real_annualized_pct = (real_final_value / initial_investment) ** (1.0 / years) - 1.0
+                real_annualized_pct *= 100.0
+            else:
+                real_annualized_pct = 0.0
+
+            portfolio_summary["inflation_rate_ticker"] = inflation_rate_ticker
+            portfolio_summary["cumulative_inflation"] = (inflation_multiplier - 1.0) * 100.0  # As percentage
+            portfolio_summary["real_final_value"] = real_final_value
+            portfolio_summary["real_total_return"] = real_total_return_pct
+            portfolio_summary["real_annualized_return"] = real_annualized_pct
+        except Exception:
+            # Gracefully handle edge cases
+            portfolio_summary["inflation_rate_ticker"] = None
+            portfolio_summary["cumulative_inflation"] = None
+            portfolio_summary["real_final_value"] = None
+            portfolio_summary["real_total_return"] = None
+            portfolio_summary["real_annualized_return"] = None
+    else:
+        portfolio_summary["inflation_rate_ticker"] = None
+        portfolio_summary["cumulative_inflation"] = None
+        portfolio_summary["real_final_value"] = None
+        portfolio_summary["real_total_return"] = None
+        portfolio_summary["real_annualized_return"] = None
 
     return all_transactions, portfolio_summary
