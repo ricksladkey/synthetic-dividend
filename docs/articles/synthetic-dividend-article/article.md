@@ -213,11 +213,13 @@ Real-world results are 1.1x to 10.6x higher than the theoretical formula predict
 
 We backtested the algorithm on three assets with different volatility profiles over 3-year periods:
 
-| Asset | Volatility | Variant | Theoretical Alpha | Actual Alpha | Multiplier |
-|-------|------------|---------|-------------------|--------------|------------|
-| GLD   | 16%        | SD16    | ~1%               | ~1.4%        | 1.4x       |
-| NVDA  | 52%        | SD6     | ~7%               | ~77%         | 11.0x      |
-| PLTR  | 68%        | SD6     | ~19%              | ~198%        | 10.4x      |
+```
+| Asset | Vol | Variant | Theoretical Alpha | Actual Alpha | Multiplier |
+|-------|-----|---------|-------------------|--------------|------------|
+| GLD   | 16% | SD16    | ~1%               | ~1.4%        | 1.4x       |
+| NVDA  | 52% | SD6     | ~7%               | ~77%         | 11.0x      |
+| PLTR  | 68% | SD6     | ~19%              | ~198%        | 10.4x      |
+```
 
 **GLD (Gold)**: Low volatility (16%) generates modest alpha (~1.4%). Better than traditional rebalancing (0.1-0.5%) but not transformative.
 
