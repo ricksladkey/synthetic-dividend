@@ -36,25 +36,29 @@ class TestOrderCalculator(unittest.TestCase):
     def test_with_bracket_seed_changes_prices(self):
         """Test that bracket seed changes order prices but not quantities."""
         # Without seed
-        buy_price_no_seed, buy_qty_no_seed, sell_price_no_seed, sell_qty_no_seed = calculate_orders_for_manual_entry(
-            ticker="NVDA",
-            holdings=1000,
-            last_transaction_price=120.50,
-            current_price=125.30,
-            sdn=8,
-            profit_sharing_pct=50,
-            bracket_seed=None,
+        buy_price_no_seed, buy_qty_no_seed, sell_price_no_seed, sell_qty_no_seed = (
+            calculate_orders_for_manual_entry(
+                ticker="NVDA",
+                holdings=1000,
+                last_transaction_price=120.50,
+                current_price=125.30,
+                sdn=8,
+                profit_sharing_pct=50,
+                bracket_seed=None,
+            )
         )
 
         # With seed
-        buy_price_with_seed, buy_qty_with_seed, sell_price_with_seed, sell_qty_with_seed = calculate_orders_for_manual_entry(
-            ticker="NVDA",
-            holdings=1000,
-            last_transaction_price=120.50,
-            current_price=125.30,
-            sdn=8,
-            profit_sharing_pct=50,
-            bracket_seed=100.0,
+        buy_price_with_seed, buy_qty_with_seed, sell_price_with_seed, sell_qty_with_seed = (
+            calculate_orders_for_manual_entry(
+                ticker="NVDA",
+                holdings=1000,
+                last_transaction_price=120.50,
+                current_price=125.30,
+                sdn=8,
+                profit_sharing_pct=50,
+                bracket_seed=100.0,
+            )
         )
 
         # Quantities should be identical
@@ -68,24 +72,28 @@ class TestOrderCalculator(unittest.TestCase):
     def test_bracket_seed_changes_results(self):
         """Test that bracket seed produces different results than no seed."""
         # Get results with and without seed
-        buy_no_seed, qty_buy_no_seed, sell_no_seed, qty_sell_no_seed = calculate_orders_for_manual_entry(
-            ticker="NVDA",
-            holdings=1000,
-            last_transaction_price=120.50,
-            current_price=125.30,
-            sdn=8,
-            profit_sharing_pct=50,
-            bracket_seed=None,
+        buy_no_seed, qty_buy_no_seed, sell_no_seed, qty_sell_no_seed = (
+            calculate_orders_for_manual_entry(
+                ticker="NVDA",
+                holdings=1000,
+                last_transaction_price=120.50,
+                current_price=125.30,
+                sdn=8,
+                profit_sharing_pct=50,
+                bracket_seed=None,
+            )
         )
 
-        buy_with_seed, qty_buy_with_seed, sell_with_seed, qty_sell_with_seed = calculate_orders_for_manual_entry(
-            ticker="NVDA",
-            holdings=1000,
-            last_transaction_price=120.50,
-            current_price=125.30,
-            sdn=8,
-            profit_sharing_pct=50,
-            bracket_seed=100.0,
+        buy_with_seed, qty_buy_with_seed, sell_with_seed, qty_sell_with_seed = (
+            calculate_orders_for_manual_entry(
+                ticker="NVDA",
+                holdings=1000,
+                last_transaction_price=120.50,
+                current_price=125.30,
+                sdn=8,
+                profit_sharing_pct=50,
+                bracket_seed=100.0,
+            )
         )
 
         # Quantities should be the same
