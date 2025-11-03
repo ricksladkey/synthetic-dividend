@@ -178,6 +178,86 @@ Database architects call it a "row" because that's the abstract concept. Pandas 
 
 ---
 
+## Meta-Principle: Code You Can Maintain Without AI
+
+**The Assembly Language Analogy**:
+
+C++ programmers rarely look at assembly—until there's a problem. Then it becomes foreign territory, hard to navigate. AI-generated code is the same: if you can't read and understand it, you've lost control of your own project.
+
+**Principle**: Write code in a style you can understand and maintain years later, without depending on the tool that generated it.
+
+**Why**:
+- **Maintainability decay**: Code you can't explain becomes technical debt
+- **Dependency risk**: Relying on AI to maintain your codebase is fragile—tools change, access ends, context is lost
+- **Understanding compounds**: Deep code comprehension enables better architecture decisions over time
+- **Debugging requires mastery**: When things break at 2am, you need to understand every line
+
+**AI as Colleague, Not Autopilot**:
+
+The goal is **sustainable collaboration**—AI accelerates work you understand, it doesn't replace understanding.
+
+**Good uses** (delegate the busywork):
+- ✅ Boilerplate generation (test scaffolding, type hints, docstrings)
+- ✅ Repetitive edits across multiple files
+- ✅ Documentation formatting and consistency
+- ✅ Implementing well-specified algorithms you've designed
+- ✅ Converting between data formats you understand
+
+**Bad uses** (don't delegate architecture):
+- ❌ Designing core algorithms without understanding the approach
+- ❌ Accepting abstractions you can't explain
+- ❌ Implementing business logic without grasping the why
+- ❌ "Fix this bug" without understanding the root cause
+- ❌ Any code you wouldn't confidently review and approve yourself
+
+**Bare-Bones Over Clever**:
+
+Prefer simple, obvious code over "elegant" abstractions you don't fully understand. Your future self (and any maintainer) will thank you.
+
+```python
+# GOOD: Straightforward, maintainable
+def calculate_profit(sell_price: float, buy_price: float, qty: int) -> float:
+    """Calculate profit from a trade."""
+    return (sell_price - buy_price) * qty
+
+# AVOID: Clever but opaque (even if "more Pythonic")
+from functools import reduce
+import operator
+calculate_profit = lambda s, b, q: reduce(operator.mul, [operator.sub(s, b), q])
+```
+
+The first version is longer but **you can debug it at 2am without Stack Overflow**. The second requires remembering functional programming patterns and operator precedence.
+
+**The Maintenance Test**:
+
+Before accepting any code (AI-generated or otherwise), ask yourself:
+
+1. **Can I explain what this does to a colleague?** If not, you don't understand it well enough to maintain it.
+2. **Could I debug this at 2am without the AI?** The tool won't be there when production breaks.
+3. **Will I understand this in 6 months?** Context fades fast—code must be self-documenting.
+4. **Is this the simplest solution that works?** Complexity is a liability, not an asset.
+
+If any answer is "no", simplify or reject it.
+
+**Real-World Horror Story**:
+
+Developer builds a complex system with heavy AI assistance. Six months later, a critical bug appears. The original developer can't explain how the code works—they just know it did work. The AI doesn't have context from six months ago. The codebase becomes unmaintainable archaeology instead of living software.
+
+**Prevention**: Own your code conceptually. AI should amplify your understanding, not replace it.
+
+**Practical Guidelines**:
+
+- **Before writing code**: Understand the problem and sketch the solution yourself
+- **While using AI**: Review every line generated; if you wouldn't write it yourself, reject it
+- **After generation**: Explain the code out loud; if you stumble, the code is too complex
+- **During debugging**: If you're lost in your own codebase, you've lost control—simplify
+
+**Caveat**: This doesn't mean avoiding AI—it means using AI **as a force multiplier for work you understand**, not a replacement for understanding. The assembly language analogy isn't "don't use compilers"—it's "understand what your compiler is doing."
+
+Good engineers use abstractions (compilers, frameworks, AI) but maintain conceptual mastery of what's happening underneath. When abstractions leak or fail, understanding is your only defense.
+
+---
+
 ## Core Tenets
 
 ### 1. Functional-Style Programming
