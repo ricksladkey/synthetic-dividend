@@ -85,15 +85,15 @@ def format_order_display(
     """
     # Calculate price changes
     price_change = current_price - last_price
-    _price_change_pct = (price_change / last_price * 100) if last_price > 0 else 0  # noqa: F841
+    price_change_pct = (price_change / last_price * 100) if last_price > 0 else 0
 
     # Calculate distances to triggers
-    _buy_trigger_pct = (last_price - buy_price) / last_price * 100  # noqa: F841
-    _sell_trigger_pct = (sell_price - last_price) / last_price * 100  # noqa: F841
+    buy_trigger_pct = (last_price - buy_price) / last_price * 100
+    sell_trigger_pct = (sell_price - last_price) / last_price * 100
 
     # Distance from current price to triggers
-    _to_buy_pct = (current_price - buy_price) / current_price * 100  # noqa: F841
-    _to_sell_pct = (sell_price - current_price) / current_price * 100  # noqa: F841
+    to_buy_pct = (current_price - buy_price) / current_price * 100
+    to_sell_pct = (sell_price - current_price) / current_price * 100
 
     rebalance_pct = ((2.0 ** (1.0 / float(sdn))) - 1.0) * 100
 
@@ -102,23 +102,23 @@ def format_order_display(
 
     # Current bracket (based on last transaction price)
     current_bracket_n = math.log(last_price) / math.log(1 + trigger_decimal)
-    _ = math.pow(1 + trigger_decimal, round(current_bracket_n))  # noqa: F841
+    current_bracket_normalized = math.pow(1 + trigger_decimal, round(current_bracket_n))
 
     # Buy bracket (one step down)
     buy_bracket_n = math.log(buy_price) / math.log(1 + trigger_decimal)
-    _ = math.pow(1 + trigger_decimal, round(buy_bracket_n))  # noqa: F841
+    buy_bracket_normalized = math.pow(1 + trigger_decimal, round(buy_bracket_n))
 
     # Sell bracket (one step up)
     sell_bracket_n = math.log(sell_price) / math.log(1 + trigger_decimal)
-    _ = math.pow(1 + trigger_decimal, round(sell_bracket_n))  # noqa: F841
+    sell_bracket_normalized = math.pow(1 + trigger_decimal, round(sell_bracket_n))
 
     # Build seed information text if seed is provided
-    _ = ""  # noqa: F841
+    seed_info = ""
     if bracket_seed is not None and bracket_seed > 0:
         seed_bracket_n = math.log(bracket_seed) / math.log(1 + trigger_decimal)
-        _ = f"\n  Bracket Seed:          ${bracket_seed:.2f}  (bracket n={round(seed_bracket_n)}, aligns all positions)"  # noqa: F841
+        seed_info = f"\n  Bracket Seed:          ${bracket_seed:.2f}  (bracket n={round(seed_bracket_n)}, aligns all positions)"
 
-    output = """
+    output = f"""
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║                       SYNTHETIC DIVIDEND ORDER CALCULATOR                 ║
 ╚══════════════════════════════════════════════════════════════════════════╝
