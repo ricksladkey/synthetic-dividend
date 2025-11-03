@@ -1152,12 +1152,12 @@ def run_portfolio_backtest(
             rf_indexed.index = pd.to_datetime(rf_indexed.index).date
             if "Close" in rf_indexed.columns:
                 close_prices = rf_indexed["Close"].values
-                dates = list(rf_indexed.index)
+                rf_dates = list(rf_indexed.index)
                 for i in range(1, len(close_prices)):
                     prev_price = float(close_prices[i - 1])
                     curr_price = float(close_prices[i])
                     if prev_price > 0:
-                        risk_free_returns[dates[i]] = (curr_price - prev_price) / prev_price
+                        risk_free_returns[rf_dates[i]] = (curr_price - prev_price) / prev_price
         else:
             print("WARN: No data available, falling back to cash_interest_rate_pct")
             risk_free_data = None
@@ -1456,9 +1456,10 @@ def run_portfolio_backtest(
                             # Calculate time-weighted average holdings over accrual period
                             # Use 90-day lookback (typical for quarterly dividends)
                             accrual_period_days = 90
-                            period_start = current_date - pd.Timedelta(
-                                days=accrual_period_days
-                            ).to_pytimedelta()
+                            period_start = (
+                                current_date
+                                - pd.Timedelta(days=accrual_period_days).to_pytimedelta()
+                            )
                             avg_holdings = calculate_time_weighted_average_holdings(
                                 holdings_history[ticker], period_start, current_date
                             )
@@ -1590,7 +1591,9 @@ def run_portfolio_backtest(
                 ref_shares = initial_investment / ref_start_price
                 ref_end_value = ref_shares * ref_end_price
                 ref_total_return = (
-                    (ref_end_value - initial_investment) / initial_investment if initial_investment > 0 else 0
+                    (ref_end_value - initial_investment) / initial_investment
+                    if initial_investment > 0
+                    else 0
                 )
 
                 # Calculate annualized return
@@ -1653,7 +1656,9 @@ def run_portfolio_backtest(
                 real_annualized_pct = 0.0
 
             portfolio_summary["inflation_rate_ticker"] = inflation_rate_ticker
-            portfolio_summary["cumulative_inflation"] = (inflation_multiplier - 1.0) * 100.0  # As percentage
+            portfolio_summary["cumulative_inflation"] = (
+                inflation_multiplier - 1.0
+            ) * 100.0  # As percentage
             portfolio_summary["real_final_value"] = real_final_value
             portfolio_summary["real_total_return"] = real_total_return_pct
             portfolio_summary["real_annualized_return"] = real_annualized_pct

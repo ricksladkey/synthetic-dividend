@@ -7,7 +7,6 @@ payments using time-weighted average holdings calculations.
 from datetime import date
 
 import pandas as pd
-import pytest
 
 from src.models.backtest import run_portfolio_backtest
 

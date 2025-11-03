@@ -9,7 +9,6 @@ single-ticker implementation.
 from datetime import date
 
 import pandas as pd
-import pytest
 
 from src.algorithms import BuyAndHoldAlgorithm
 from src.models.backtest import run_algorithm_backtest, run_portfolio_backtest
@@ -91,7 +90,7 @@ class TestDividendParity:
             portfolio_div_txns = [tx for tx in portfolio_txns if tx.action == "DIVIDEND"]
             assert len(single_div_txns) == len(portfolio_div_txns) == 4
 
-            print(f"\n[OK] Dividend parity test passed:")
+            print("\n[OK] Dividend parity test passed:")
             print(f"  Single-ticker dividends: ${single_divs:.2f}")
             print(f"  Portfolio dividends: ${portfolio_divs:.2f}")
             print(f"  Difference: ${abs(single_divs - portfolio_divs):.2f}")
@@ -177,7 +176,7 @@ class TestDividendParity:
                 f"portfolio={portfolio_divs:.2f}"
             )
 
-            print(f"\n[OK] Monthly interest parity test passed:")
+            print("\n[OK] Monthly interest parity test passed:")
             print(f"  Single-ticker total: ${single_divs:.2f}")
             print(f"  Portfolio total: ${portfolio_divs:.2f}")
             print(f"  Difference: ${abs(single_divs - portfolio_divs):.2f}")
@@ -250,13 +249,17 @@ class TestDividendParity:
             )
 
             # Verify both are approximately $100 (time-weighted)
-            assert 95.0 < single_divs < 105.0, f"Single-ticker dividend should be ~$100, got ${single_divs:.2f}"
-            assert 95.0 < portfolio_divs < 105.0, f"Portfolio dividend should be ~$100, got ${portfolio_divs:.2f}"
+            assert (
+                95.0 < single_divs < 105.0
+            ), f"Single-ticker dividend should be ~$100, got ${single_divs:.2f}"
+            assert (
+                95.0 < portfolio_divs < 105.0
+            ), f"Portfolio dividend should be ~$100, got ${portfolio_divs:.2f}"
 
-            print(f"\n[OK] Time-weighted calculation parity test passed:")
+            print("\n[OK] Time-weighted calculation parity test passed:")
             print(f"  Single-ticker: ${single_divs:.2f}")
             print(f"  Portfolio: ${portfolio_divs:.2f}")
-            print(f"  Expected: ~$100 (time-weighted from 200 shares)")
+            print("  Expected: ~$100 (time-weighted from 200 shares)")
 
         finally:
             fetcher_module.HistoryFetcher = original_fetcher
