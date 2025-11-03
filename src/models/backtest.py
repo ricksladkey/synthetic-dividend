@@ -1004,6 +1004,7 @@ def run_portfolio_backtest(
     withdrawal_frequency_days: int = 30,
     cash_interest_rate_pct: float = 0.0,
     dividend_data: Optional[Dict[str, pd.Series]] = None,
+    reference_rate_ticker: Optional[str] = None,
     # Legacy compatibility parameters (deprecated, ignored with warnings)
     algo: Optional[Union[AlgorithmBase, Callable, str]] = None,
     simple_mode: bool = False,
@@ -1034,6 +1035,9 @@ def run_portfolio_backtest(
         dividend_data: Optional dict mapping ticker → pandas Series of dividend payments
             Series index should be payment dates, values are per-share dividend amounts
             Uses 90-day time-weighted average holdings for IRS-compliant calculation
+        reference_rate_ticker: Optional ticker for reference benchmark (e.g., "VOO", "SPY")
+            Used to calculate market-adjusted returns (alpha vs benchmark)
+            If provided, fetches data and computes baseline buy-and-hold comparison
         algo: DEPRECATED - Use portfolio_algo instead
         simple_mode: DEPRECATED - No longer used
         **kwargs: DEPRECATED - Ignored legacy parameters
@@ -1113,6 +1117,17 @@ def run_portfolio_backtest(
         df_copy = df.copy()
         df_copy.index = pd.to_datetime(df_copy.index).date
         price_data_indexed[ticker] = df_copy
+
+    # Fetch reference rate data if provided (for market-adjusted returns)
+    reference_data: Optional[pd.DataFrame] = None
+    if reference_rate_ticker:
+        print(f"Fetching reference benchmark ({reference_rate_ticker})...", end=" ")
+        reference_data = fetcher.get_history(reference_rate_ticker, start_date, end_date)
+        if reference_data is not None and not reference_data.empty:
+            print(f"OK ({len(reference_data)} days)")
+        else:
+            print("WARN: No data available, skipping baseline calculation")
+            reference_data = None
 
     # Initialize portfolio state
     shared_bank = initial_investment
@@ -1486,5 +1501,61 @@ def run_portfolio_backtest(
         "total_dividends": sum(total_dividends_by_asset.values()),
         "dividend_payment_count_by_asset": dividend_payment_count_by_asset,
     }
+
+    # Compute reference benchmark baseline (if provided)
+    if reference_data is not None and not reference_data.empty:
+        try:
+            # Index reference data by date
+            ref_indexed = reference_data.copy()
+            ref_indexed.index = pd.to_datetime(ref_indexed.index).date
+
+            # Get reference prices on first and last common dates
+            if common_dates[0] in ref_indexed.index and final_date in ref_indexed.index:
+                ref_start_price = ref_indexed.loc[common_dates[0], "Close"]
+                ref_end_price = ref_indexed.loc[final_date, "Close"]
+
+                # Calculate buy-and-hold return for reference benchmark
+                # Invest same initial_investment in reference asset
+                ref_shares = initial_investment / ref_start_price
+                ref_end_value = ref_shares * ref_end_price
+                ref_total_return = (
+                    (ref_end_value - initial_investment) / initial_investment if initial_investment > 0 else 0
+                )
+
+                # Calculate annualized return
+                if years > 0 and initial_investment > 0:
+                    ref_annualized = (ref_end_value / initial_investment) ** (1.0 / years) - 1.0
+                else:
+                    ref_annualized = 0.0
+
+                baseline_summary = {
+                    "ticker": reference_rate_ticker,
+                    "start_date": common_dates[0],
+                    "end_date": final_date,
+                    "start_price": ref_start_price,
+                    "end_price": ref_end_price,
+                    "start_value": initial_investment,
+                    "end_value": ref_end_value,
+                    "total_return": ref_total_return,
+                    "annualized": ref_annualized,
+                }
+
+                # Alpha = portfolio return - benchmark return
+                volatility_alpha = total_return_pct / 100.0 - ref_total_return
+
+                portfolio_summary["baseline"] = baseline_summary
+                portfolio_summary["volatility_alpha"] = volatility_alpha
+                portfolio_summary["alpha_pct"] = volatility_alpha * 100.0
+            else:
+                # Reference data doesn't cover our date range
+                portfolio_summary["baseline"] = None
+                portfolio_summary["volatility_alpha"] = None
+        except Exception:
+            # Gracefully handle edge cases in baseline computation
+            portfolio_summary["baseline"] = None
+            portfolio_summary["volatility_alpha"] = None
+    else:
+        portfolio_summary["baseline"] = None
+        portfolio_summary["volatility_alpha"] = None
 
     return all_transactions, portfolio_summary
