@@ -4,6 +4,7 @@ Tests verify that the order calculator produces correct results with and without
 """
 
 import unittest
+
 from src.tools.order_calculator import calculate_orders_for_manual_entry
 
 
