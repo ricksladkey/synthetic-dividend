@@ -1005,6 +1005,7 @@ def run_portfolio_backtest(
     cash_interest_rate_pct: float = 0.0,
     dividend_data: Optional[Dict[str, pd.Series]] = None,
     reference_rate_ticker: Optional[str] = None,
+    risk_free_rate_ticker: Optional[str] = None,
     # Legacy compatibility parameters (deprecated, ignored with warnings)
     algo: Optional[Union[AlgorithmBase, Callable, str]] = None,
     simple_mode: bool = False,
@@ -1038,6 +1039,10 @@ def run_portfolio_backtest(
         reference_rate_ticker: Optional ticker for reference benchmark (e.g., "VOO", "SPY")
             Used to calculate market-adjusted returns (alpha vs benchmark)
             If provided, fetches data and computes baseline buy-and-hold comparison
+        risk_free_rate_ticker: Optional ticker for risk-free asset (e.g., "BIL", "^IRX")
+            Used to model opportunity cost on cash holdings
+            Daily returns applied to positive cash balance (replaces cash_interest_rate_pct)
+            If not provided, falls back to cash_interest_rate_pct
         algo: DEPRECATED - Use portfolio_algo instead
         simple_mode: DEPRECATED - No longer used
         **kwargs: DEPRECATED - Ignored legacy parameters
@@ -1128,6 +1133,29 @@ def run_portfolio_backtest(
         else:
             print("WARN: No data available, skipping baseline calculation")
             reference_data = None
+
+    # Fetch risk-free rate data if provided (for cash interest modeling)
+    risk_free_data: Optional[pd.DataFrame] = None
+    risk_free_returns: Dict[date, float] = {}
+    if risk_free_rate_ticker:
+        print(f"Fetching risk-free asset ({risk_free_rate_ticker})...", end=" ")
+        risk_free_data = fetcher.get_history(risk_free_rate_ticker, start_date, end_date)
+        if risk_free_data is not None and not risk_free_data.empty:
+            print(f"OK ({len(risk_free_data)} days)")
+            # Calculate daily returns from price data
+            rf_indexed = risk_free_data.copy()
+            rf_indexed.index = pd.to_datetime(rf_indexed.index).date
+            if "Close" in rf_indexed.columns:
+                close_prices = rf_indexed["Close"].values
+                dates = list(rf_indexed.index)
+                for i in range(1, len(close_prices)):
+                    prev_price = float(close_prices[i - 1])
+                    curr_price = float(close_prices[i])
+                    if prev_price > 0:
+                        risk_free_returns[dates[i]] = (curr_price - prev_price) / prev_price
+        else:
+            print("WARN: No data available, falling back to cash_interest_rate_pct")
+            risk_free_data = None
 
     # Initialize portfolio state
     shared_bank = initial_investment
@@ -1423,10 +1451,19 @@ def run_portfolio_backtest(
                             )
 
         # Accrue daily interest on cash reserves (if positive balance)
-        if daily_interest_rate > 0 and shared_bank > 0:
-            daily_interest = shared_bank * daily_interest_rate
-            shared_bank += daily_interest
-            total_interest_earned += daily_interest
+        if shared_bank > 0:
+            # Use risk-free asset returns if available, otherwise fall back to fixed rate
+            if risk_free_returns and current_date in risk_free_returns:
+                daily_return = risk_free_returns[current_date]
+                daily_interest = shared_bank * daily_return
+            elif daily_interest_rate > 0:
+                daily_interest = shared_bank * daily_interest_rate
+            else:
+                daily_interest = 0.0
+
+            if daily_interest > 0:
+                shared_bank += daily_interest
+                total_interest_earned += daily_interest
 
         # Record daily portfolio value
         total_asset_value = sum(holdings[t] * assets[t].price for t in allocations.keys())
@@ -1497,6 +1534,7 @@ def run_portfolio_backtest(
         "withdrawal_rate_pct": withdrawal_rate_pct,
         "cash_interest_earned": total_interest_earned,
         "cash_interest_rate_pct": cash_interest_rate_pct,
+        "risk_free_rate_ticker": risk_free_rate_ticker,  # Track which method was used
         "total_dividends_by_asset": total_dividends_by_asset,
         "total_dividends": sum(total_dividends_by_asset.values()),
         "dividend_payment_count_by_asset": dividend_payment_count_by_asset,
