@@ -88,18 +88,21 @@
    - Fetch benchmark data
    - Calculate market-adjusted returns (alpha)
    - Parameter: `reference_rate_ticker: str` (e.g., "VOO")
-4. ⬜ Add risk-free rate support
-   - Extend cash interest to model opportunity cost
+4. ✅ Add risk-free rate support (commit: ec20ce1)
+   - Use actual risk-free asset returns for cash interest
+   - Falls back to cash_interest_rate_pct if not provided
    - Parameter: `risk_free_rate_ticker: str` (e.g., "BIL")
-5. ⬜ Add CPI data support
-   - Fetch CPI data
-   - Calculate inflation-adjusted returns
+5. ✅ Add CPI data support (commit: a565ff0)
+   - Fetch inflation data
+   - Calculate inflation-adjusted (real) returns
    - Parameter: `inflation_rate_ticker: str` (e.g., "CPI")
-6. ⬜ Add price normalization support
-   - Preprocessing step before main loop
-   - Parameter: `normalize_prices: bool`
+6. ⛔ Price normalization support - SKIPPED
+   - Reason: Should be algorithm parameter, not engine parameter
+   - Will be handled in algorithm implementations, not backtest engine
 
-**Estimated effort**: 3-5 hours (spread over multiple sessions)
+**Status**: ✅ PHASE 1 COMPLETE
+
+**Actual effort**: ~3 hours (single session)
 
 ### Phase 2: Make Single-Ticker a Thin Wrapper
 
