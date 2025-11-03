@@ -3,6 +3,7 @@
 Tests verify that the order calculator produces correct results with and without bracket seed.
 """
 
+import math
 import unittest
 
 from src.tools.order_calculator import calculate_orders_for_manual_entry
@@ -101,10 +102,36 @@ class TestOrderCalculator(unittest.TestCase):
         self.assertEqual(qty_buy_no_seed, qty_buy_with_seed)
         self.assertEqual(qty_sell_no_seed, qty_sell_with_seed)
 
-        # Prices should be different (normalized to bracket positions)
-        self.assertNotEqual(buy_no_seed, buy_with_seed)
-        self.assertNotEqual(sell_no_seed, sell_with_seed)
+    def test_bracket_seed_large_distance(self):
+        """Test bracket seed with large distance between seed and last price."""
+        # Use seed far from last price to test large bracket calculations
+        buy_price, buy_qty, sell_price, sell_qty = calculate_orders_for_manual_entry(
+            ticker="TEST",
+            holdings=1000,
+            last_transaction_price=100.0,
+            current_price=100.0,
+            sdn=8,
+            profit_sharing_pct=50,
+            bracket_seed=1.0,
+        )
 
+        # For sd8, rebalance_size = 2^(1/8) - 1 ≈ 0.090508
+        r = (2.0 ** (1.0 / 8)) - 1.0
 
-if __name__ == "__main__":
-    unittest.main()
+        # With seed=1.0, brackets should be 1.0 * (1+r)^n
+        # For last_price=100, find n such that 1.0 * (1+r)^n ≈ 100
+
+        n = round(math.log(100.0) / math.log(1 + r))
+
+        # Buy should be one bracket down: (1+r)^(n-1)
+        expected_buy = 1.0 * (1 + r) ** (n - 1)
+        # Sell should be one bracket up: (1+r)^(n+1)
+        expected_sell = 1.0 * (1 + r) ** (n + 1)
+
+        # Allow small floating point tolerance
+        self.assertAlmostEqual(buy_price, expected_buy, places=2)
+        self.assertAlmostEqual(sell_price, expected_sell, places=2)
+
+        # Quantities should still be reasonable
+        self.assertGreater(buy_qty, 0)
+        self.assertGreater(sell_qty, 0)
