@@ -1003,6 +1003,7 @@ def run_portfolio_backtest(
     withdrawal_rate_pct: float = 0.0,
     withdrawal_frequency_days: int = 30,
     cash_interest_rate_pct: float = 0.0,
+    dividend_data: Optional[Dict[str, pd.Series]] = None,
     # Legacy compatibility parameters (deprecated, ignored with warnings)
     algo: Optional[Union[AlgorithmBase, Callable, str]] = None,
     simple_mode: bool = False,
@@ -1030,6 +1031,9 @@ def run_portfolio_backtest(
         withdrawal_frequency_days: Days between withdrawals (default 30)
         cash_interest_rate_pct: Annual interest rate on cash reserves (default 0.0)
             Typical values: ~5% for money market, ~0% for non-interest checking
+        dividend_data: Optional dict mapping ticker → pandas Series of dividend payments
+            Series index should be payment dates, values are per-share dividend amounts
+            Uses 90-day time-weighted average holdings for IRS-compliant calculation
         algo: DEPRECATED - Use portfolio_algo instead
         simple_mode: DEPRECATED - No longer used
         **kwargs: DEPRECATED - Ignored legacy parameters
@@ -1176,6 +1180,15 @@ def run_portfolio_backtest(
         (cash_interest_rate_pct / 100.0) / 365.25 if cash_interest_rate_pct > 0 else 0.0
     )
 
+    # Dividend tracking (per-asset)
+    total_dividends_by_asset: Dict[str, float] = {ticker: 0.0 for ticker in allocations.keys()}
+    dividend_payment_count_by_asset: Dict[str, int] = {ticker: 0 for ticker in allocations.keys()}
+
+    # Holdings history for time-weighted dividend calculation (per-asset)
+    holdings_history: Dict[str, List[Tuple[date, int]]] = {
+        ticker: [(common_dates[0], holdings[ticker])] for ticker in allocations.keys()
+    }
+
     # Main backtest loop
     for current_date in common_dates:
         # Build current asset states
@@ -1251,6 +1264,15 @@ def run_portfolio_backtest(
                             notes=f"{tx.notes}, insufficient holdings: {holdings[ticker]} < {tx.qty}",
                         )
                         all_transactions.append(skipped_tx)
+
+        # Track holdings changes for time-weighted dividend calculation
+        for ticker in allocations.keys():
+            # If holdings changed from last recorded value, track the change
+            if (
+                len(holdings_history[ticker]) == 0
+                or holdings_history[ticker][-1][1] != holdings[ticker]
+            ):
+                holdings_history[ticker].append((current_date, holdings[ticker]))
 
         # Process withdrawals (if enabled and due)
         if base_withdrawal_amount > 0:
@@ -1342,6 +1364,49 @@ def run_portfolio_backtest(
                 # Track daily withdrawals for visualization
                 daily_withdrawals[current_date] = actual_withdrawal
 
+        # Process dividend/interest payments (if available)
+        if dividend_data:
+            for ticker in allocations.keys():
+                if ticker in dividend_data and dividend_data[ticker] is not None:
+                    div_series = dividend_data[ticker]
+                    if not div_series.empty:
+                        # Check if this date has a dividend payment
+                        div_dates = pd.to_datetime(div_series.index).date
+                        if current_date in div_dates:
+                            # Find the dividend amount for this date
+                            div_idx = list(div_dates).index(current_date)
+                            div_per_share = div_series.iloc[div_idx]
+
+                            # Calculate time-weighted average holdings over accrual period
+                            # Use 90-day lookback (typical for quarterly dividends)
+                            accrual_period_days = 90
+                            period_start = current_date - pd.Timedelta(
+                                days=accrual_period_days
+                            ).to_pytimedelta()
+                            avg_holdings = calculate_time_weighted_average_holdings(
+                                holdings_history[ticker], period_start, current_date
+                            )
+
+                            # Dividend payment based on average holdings during accrual period
+                            div_payment = div_per_share * avg_holdings
+
+                            shared_bank += div_payment
+                            total_dividends_by_asset[ticker] += div_payment
+                            dividend_payment_count_by_asset[ticker] += 1
+
+                            all_transactions.append(
+                                Transaction(
+                                    transaction_date=current_date,
+                                    action="DIVIDEND",
+                                    qty=int(
+                                        avg_holdings
+                                    ),  # Display average holdings (rounded for display)
+                                    price=div_per_share,
+                                    ticker=ticker,
+                                    notes=f"${div_payment:.2f} (avg {avg_holdings:.2f} shares over 90 days), bank = {shared_bank:.2f}",
+                                )
+                            )
+
         # Accrue daily interest on cash reserves (if positive balance)
         if daily_interest_rate > 0 and shared_bank > 0:
             daily_interest = shared_bank * daily_interest_rate
@@ -1417,6 +1482,9 @@ def run_portfolio_backtest(
         "withdrawal_rate_pct": withdrawal_rate_pct,
         "cash_interest_earned": total_interest_earned,
         "cash_interest_rate_pct": cash_interest_rate_pct,
+        "total_dividends_by_asset": total_dividends_by_asset,
+        "total_dividends": sum(total_dividends_by_asset.values()),
+        "dividend_payment_count_by_asset": dividend_payment_count_by_asset,
     }
 
     return all_transactions, portfolio_summary
