@@ -118,6 +118,22 @@ def format_order_display(
         seed_bracket_n = math.log(bracket_seed) / math.log(1 + trigger_decimal)
         seed_info = f"\n  Bracket Seed:          ${bracket_seed:.2f}  (bracket n={round(seed_bracket_n)}, aligns all positions)"
 
+    # Format box lines with proper alignment
+    content_width = 67  # For lines between | |
+    
+    empty_line = f"  |{'':<{content_width}}|"
+    buy_price_line = f"  |{f'  Price:     ${buy_price:.2f}':<{content_width}}|"
+    buy_qty_line = f"  |{f'  Quantity:  {buy_qty:,} shares':<{content_width}}|"
+    buy_total_line = f"  |{f'  Total:     ${buy_price * buy_qty:,.2f}':<{content_width}}|"
+    buy_trigger_line = f"  |{f'  Trigger:   {buy_trigger_pct:.2f}% below last transaction':<{content_width}}|"
+    buy_distance_line = f"  |{f'  Distance:  {to_buy_pct:.2f}% below current price':<{content_width}}|"
+    
+    sell_price_line = f"  |{f'  Price:     ${sell_price:.2f}':<{content_width}}|"
+    sell_qty_line = f"  |{f'  Quantity:  {sell_qty:,} shares':<{content_width}}|"
+    sell_total_line = f"  |{f'  Total:     ${sell_price * sell_qty:,.2f}':<{content_width}}|"
+    sell_trigger_line = f"  |{f'  Trigger:   {sell_trigger_pct:.2f}% above last transaction':<{content_width}}|"
+    sell_distance_line = f"  |{f'  Distance:  {to_sell_pct:.2f}% above current price':<{content_width}}|"
+
     output = f"""
 +==============================================================================+
 |                       SYNTHETIC DIVIDEND ORDER CALCULATOR                     |
@@ -148,25 +164,25 @@ def format_order_display(
 ==============================================================================
 
   +-- BUY LIMIT ORDER -----------------------------------------------------+
-  |                                                                       |
-  |  Price:     ${buy_price:.2f}                                                |
-  |  Quantity:  {buy_qty:,} shares                                            |
-  |  Total:     ${buy_price * buy_qty:,.2f}                                         |
-  |                                                                       |
-  |  Trigger:   {buy_trigger_pct:.2f}% below last transaction                   |
-  |  Distance:  {to_buy_pct:.2f}% below current price                          |
-  |                                                                       |
+{empty_line}
+{buy_price_line}
+{buy_qty_line}
+{buy_total_line}
+{empty_line}
+{buy_trigger_line}
+{buy_distance_line}
+{empty_line}
   +-----------------------------------------------------------------------+
 
   +-- SELL LIMIT ORDER ----------------------------------------------------+
-  |                                                                       |
-  |  Price:     ${sell_price:.2f}                                               |
-  |  Quantity:  {sell_qty:,} shares                                           |
-  |  Total:     ${sell_price * sell_qty:,.2f}                                        |
-  |                                                                       |
-  |  Trigger:   {sell_trigger_pct:.2f}% above last transaction                  |
-  |  Distance:  {to_sell_pct:.2f}% above current price                         |
-  |                                                                       |
+{empty_line}
+{sell_price_line}
+{sell_qty_line}
+{sell_total_line}
+{empty_line}
+{sell_trigger_line}
+{sell_distance_line}
+{empty_line}
   +-----------------------------------------------------------------------+
 
 * BROKER ENTRY (Copy/Paste)
