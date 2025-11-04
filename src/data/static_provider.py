@@ -50,6 +50,12 @@ class StaticAssetProvider(AssetProvider):
         self.testdata_dir = os.path.join(src_dir, "..", "testdata")
         self.csv_path = os.path.join(self.testdata_dir, f"{self.ticker}.csv")
 
+        # Static provider doesn't cache, so don't set cache paths
+        # (prevents Asset class from caching to testdata directory)
+        self.pkl_path = None
+        self.div_pkl_path = None
+        self.div_csv_path = None
+
     def get_prices(self, start_date: date, end_date: date) -> pd.DataFrame:
         """Get OHLC price data from static CSV file.
 
