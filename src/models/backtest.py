@@ -317,12 +317,17 @@ def _map_portfolio_to_single_ticker_summary(
 
 
 def run_algorithm_backtest(
-    df: pd.DataFrame,
-    ticker: str,
+    # Single-ticker parameters (legacy interface) - maintain backward compatibility order
+    df: Optional[pd.DataFrame] = None,
+    ticker: str = "",
     initial_qty: Optional[int] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     algo: Optional[Union[AlgorithmBase, Callable]] = None,
+    # Multi-asset parameters (portfolio interface)
+    allocations: Optional[Dict[str, float]] = None,
+    portfolio_algo: Optional[Union[PortfolioAlgorithmBase, str]] = None,
+    # Common parameters
     algo_params: Optional[Dict[str, Any]] = None,
     reference_return_pct: float = 0.0,
     risk_free_rate_pct: float = 0.0,
@@ -350,8 +355,21 @@ def run_algorithm_backtest(
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Execute backtest of trading algorithm against historical price data.
 
+    **Unified Interface (Phase 3)**:
+    This function provides a unified interface for both single-ticker and multi-asset backtesting.
+    Use single-ticker parameters (df, ticker, algo) for traditional single-asset backtests,
+    or portfolio parameters (allocations, portfolio_algo) for multi-asset portfolio backtests.
+
+    **Single-Ticker Mode** (legacy interface):
+    - Provide: df, ticker, algo (and optionally initial_qty/initial_investment)
+    - Returns: Single-ticker summary with holdings, bank, returns, etc.
+
+    **Multi-Asset Mode** (portfolio interface):
+    - Provide: allocations, portfolio_algo (and optionally initial_investment)
+    - Returns: Portfolio summary with per-asset breakdowns and shared cash pool metrics
+
     **Implementation Note (Phase 2 Consolidation)**:
-    This function is now a thin wrapper around run_portfolio_backtest() for supported
+    For single-ticker backtests, this function routes to run_portfolio_backtest() for supported
     cases, treating the single ticker as a 100% allocated portfolio. This eliminates
     ~800 lines of duplicate backtest logic. Falls back to legacy implementation for
     unsupported features (dividends, reference assets, CPI, price normalization).
@@ -366,13 +384,18 @@ def run_algorithm_backtest(
     7. Calculate opportunity cost (negative bank) and risk-free gains (positive bank)
 
     Args:
-        df: Historical OHLC price data (indexed by date)
-        ticker: Stock symbol for reporting
-        initial_qty: Number of shares to purchase initially (optional)
-                    Either initial_qty OR initial_investment must be provided
+        # Single-ticker parameters (legacy interface)
+        df: Historical OHLC price data (indexed by date) - for single-ticker mode
+        ticker: Stock symbol for reporting - for single-ticker mode
+        initial_qty: Number of shares to purchase initially (optional) - for single-ticker mode
+                    Either initial_qty OR initial_investment must be provided for single-ticker mode
         start_date: Backtest start date (inclusive, optional - defaults to first date)
         end_date: Backtest end date (inclusive, optional - defaults to last date)
-        algo: Algorithm instance or callable (defaults to buy-and-hold)
+        algo: Algorithm instance or callable (defaults to buy-and-hold) - for single-ticker mode
+        # Multi-asset parameters (portfolio interface)
+        allocations: Dict mapping ticker → target allocation (must sum to 1.0) - for portfolio mode
+        portfolio_algo: Portfolio algorithm or string name - for portfolio mode
+        # Common parameters
         algo_params: Optional parameters dict (for callable algos)
         reference_return_pct: Annual return for opportunity cost calc (fallback if no asset data)
                              Applied when bank balance is negative (borrowing cost)
@@ -438,6 +461,56 @@ def run_algorithm_backtest(
         reference_data = kwargs.pop("reference_asset_df")
     if "risk_free_asset_df" in kwargs and risk_free_data is None:
         risk_free_data = kwargs.pop("risk_free_asset_df")
+
+    # ========================================================================
+    # PHASE 3: Unified Interface - Detect which mode to use
+    # ========================================================================
+    # Determine if this is a single-ticker or multi-asset backtest
+    is_portfolio_mode = allocations is not None
+    is_single_ticker_mode = df is not None and ticker
+
+    if is_portfolio_mode and is_single_ticker_mode:
+        raise ValueError(
+            "Cannot specify both single-ticker parameters (df, ticker) and portfolio parameters (allocations)"
+        )
+
+    if not is_portfolio_mode and not is_single_ticker_mode:
+        raise ValueError(
+            "Must specify either single-ticker parameters (df, ticker) or portfolio parameters (allocations)"
+        )
+
+    # Route to appropriate implementation
+    if is_portfolio_mode:
+        # Multi-asset portfolio backtest
+        # Validate required parameters for portfolio mode
+        if allocations is None:
+            raise ValueError("allocations must be provided for portfolio mode")
+        if start_date is None:
+            raise ValueError("start_date must be provided for portfolio mode")
+        if end_date is None:
+            raise ValueError("end_date must be provided for portfolio mode")
+        if portfolio_algo is None:
+            raise ValueError("portfolio_algo must be provided for portfolio mode")
+        if initial_investment is None:
+            initial_investment = 1_000_000.0  # Default for portfolio mode
+
+        return run_portfolio_backtest(
+            allocations=allocations,
+            start_date=start_date,
+            end_date=end_date,
+            portfolio_algo=portfolio_algo,
+            initial_investment=initial_investment,
+            allow_margin=allow_margin,
+            withdrawal_rate_pct=withdrawal_rate_pct,
+            withdrawal_frequency_days=withdrawal_frequency_days,
+            cash_interest_rate_pct=risk_free_rate_pct if not simple_mode else 0.0,
+            simple_mode=simple_mode,
+        )
+
+    # ========================================================================
+    # PHASE 3: Single-ticker mode continues below
+    # ========================================================================
+
     # Check for any remaining unexpected kwargs
     if kwargs:
         # List all parameters that can be passed to this function, including
@@ -446,6 +519,8 @@ def run_algorithm_backtest(
             "df",
             "ticker",
             "initial_qty",
+            "allocations",
+            "portfolio_algo",
             "start_date",
             "end_date",
             "algo",

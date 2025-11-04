@@ -81,32 +81,33 @@ The portfolio backtest now supports all single-ticker features:
 
 **Code Reduction**: ~849 lines of duplicate backtest logic eliminated
 
-### Phase 3: Migrate Callers Incrementally (Future)
+### Phase 3: Unified Tool Interface ✅ COMPLETE
 
-**Goal**: Modernize callsites to use portfolio API directly
+**Goal**: Provide one function that handles both single-ticker and multi-asset cases directly
 
-**Strategy**: As code is touched, migrate from:
-```python
-# Old single-ticker API
-txns, summary = run_algorithm_backtest(
-    df=price_data,
-    ticker="NVDA",
-    algo=SyntheticDividendAlgorithm(...),
-    ...
-)
-```
+**Status**: ✅ COMPLETED - `run_algorithm_backtest()` now accepts both parameter patterns and routes internally
 
-To:
-```python
-# Modern portfolio API (even for N=1)
-txns, summary = run_portfolio_backtest(
-    allocations={"NVDA": 1.0},
-    portfolio_algo="per-asset:sd8",
-    ...
-)
-```
+**Implementation**: Modified `run_algorithm_backtest()` to be a truly unified interface:
+- Accepts both single-ticker parameters (`df`, `ticker`, `algo`) and portfolio parameters (`allocations`, `portfolio_algo`)
+- Automatically detects which interface is being used
+- Routes to appropriate implementation (portfolio backtest for multi-asset, wrapper/fallback for single-ticker)
+- Maintains full backward compatibility
 
-**Non-goal**: Don't force migration. Single-ticker API remains supported indefinitely.
+**Benefits**:
+- Users call one function that "just works" for both cases
+- No need to choose between two separate functions
+- Eliminates the shim approach - direct routing to appropriate implementation
+- Cleaner, more intuitive API
+
+**Date Completed**: November 4, 2025
+
+### Phase 4: Migrate Callers Incrementally (Future)
+
+**Goal**: Modernize callsites to use portfolio API directly when appropriate
+
+**Strategy**: As code is touched, consider migrating from single-ticker API to portfolio API for multi-asset cases, but this is now optional since the unified interface works for both.
+
+**Non-goal**: Don't force migration. Both APIs remain supported indefinitely.
 
 **Estimated effort**: Ongoing, opportunistic
 
@@ -124,9 +125,10 @@ After 6-12 months of stability:
 
 ✅ **Phase 1 Complete**: Portfolio supports all single-ticker features
 ✅ **Phase 2 Complete**: Single-ticker is <100 lines, calls portfolio internally
-✅ **Tests Pass**: All 302 existing tests still pass
+✅ **Phase 3 Complete**: Unified interface handles both single-ticker and multi-asset cases
+✅ **Tests Pass**: All existing tests still pass
 ✅ **No Breaking Changes**: All existing code continues working
-⬜ **Documentation**: Update backtest.py docstrings to explain relationship
+✅ **Documentation**: Updated backtest.py docstrings and consolidation plan
 
 ---
 
@@ -148,8 +150,8 @@ After 6-12 months of stability:
 
 ## Next Steps
 
-**Phase 2: Make Single-Ticker a Thin Wrapper** ✅ COMPLETE
+**Phase 3: Unified Tool Interface** ✅ COMPLETE
 
-**Phase 3: Migrate Callers Incrementally (Future)** ⬜ NEXT
+**Phase 4: Migrate Callers Incrementally (Future)** ⬜ NEXT
 
-**Ready for Phase 3?** The consolidation is complete and stable.
+**Ready for Phase 4?** The consolidation is complete with a unified interface. Migration is now optional since both APIs work seamlessly.
