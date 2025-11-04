@@ -515,7 +515,6 @@ def run_algorithm_backtest(
         reference_data,
         risk_free_data,
         cpi_data,
-        normalize_prices,
         algo,
     ):
         """Check if portfolio wrapper can be used instead of legacy implementation.
@@ -537,8 +536,6 @@ def run_algorithm_backtest(
             return False
         if cpi_data is not None and not cpi_data.empty:
             return False
-        if normalize_prices:
-            return False
         if callable(algo):
             return False
 
@@ -549,7 +546,6 @@ def run_algorithm_backtest(
         reference_data=reference_data,
         risk_free_data=risk_free_data,
         cpi_data=cpi_data,
-        normalize_prices=normalize_prices,
         algo=algo,
     )
 
@@ -735,7 +731,7 @@ def run_algorithm_backtest(
                 f"  (difference due to whole shares: ${actual_invested - investment_amount:+,.2f})"
             )
 
-    transactions: List[Transaction] = []
+    legacy_transactions: List[Transaction] = []
 
     # Initialize portfolio state
     holdings: int = calculated_qty

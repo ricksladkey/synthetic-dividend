@@ -43,7 +43,10 @@ class TestPriceNormalization:
             df.set_index("Date", inplace=True)
 
             algo = SyntheticDividendAlgorithm(
-                rebalance_size=9.05 / 100.0, profit_sharing=50.0 / 100.0, buyback_enabled=True, bracket_seed=start_price
+                rebalance_size=9.05 / 100.0,
+                profit_sharing=50.0 / 100.0,
+                buyback_enabled=True,
+                bracket_seed=start_price,
             )
 
             txns, _ = run_algorithm_backtest(
@@ -90,7 +93,10 @@ class TestPriceNormalization:
         df.set_index("Date", inplace=True)
 
         algo = SyntheticDividendAlgorithm(
-            rebalance_size=9.05 / 100.0, profit_sharing=50.0 / 100.0, buyback_enabled=True, bracket_seed=100.0
+            rebalance_size=9.05 / 100.0,
+            profit_sharing=50.0 / 100.0,
+            buyback_enabled=True,
+            bracket_seed=100.0,
         )
 
         txns, _ = run_algorithm_backtest(
@@ -164,7 +170,10 @@ class TestPriceNormalization:
             df.set_index("Date", inplace=True)
 
             algo = SyntheticDividendAlgorithm(
-                rebalance_size=9.05 / 100.0, profit_sharing=50.0 / 100.0, buyback_enabled=True, bracket_seed=start_price
+                rebalance_size=9.05 / 100.0,
+                profit_sharing=50.0 / 100.0,
+                buyback_enabled=True,
+                bracket_seed=start_price,
             )
 
             txns, _ = run_algorithm_backtest(
@@ -283,7 +292,7 @@ class TestPriceNormalization:
             )
 
             # Extract normalized price from the first limit order transaction (skip initial market order)
-            limit_txns = [tx for tx in txns if tx.price > 0 and 'limit' in str(tx.notes).lower()]
+            limit_txns = [tx for tx in txns if tx.price > 0 and "limit" in str(tx.notes).lower()]
             if limit_txns:
                 first_limit_tx = limit_txns[0]
                 normalized_price = first_limit_tx.price

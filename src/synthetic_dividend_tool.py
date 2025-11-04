@@ -1227,22 +1227,29 @@ def run_order(args) -> int:
         last_price = args.last_price
 
         # Import and call order calculator
-        from src.tools.order_calculator import main as order_main
-
         # Build command line args for order calculator
         import sys
+
+        from src.tools.order_calculator import main as order_main
+
         original_argv = sys.argv
         try:
             sys.argv = [
                 "order_calculator.py",
-                "--ticker", args.ticker,
-                "--holdings", str(args.holdings),
-                "--last-price", f"{last_price:.2f}",
-                "--current-price", f"{current_price:.2f}",
-                "--sdn", str(sdn),
-                "--profit", str(profit_pct),
+                "--ticker",
+                args.ticker,
+                "--holdings",
+                str(args.holdings),
+                "--last-price",
+                f"{last_price:.2f}",
+                "--current-price",
+                f"{current_price:.2f}",
+                "--sdn",
+                str(sdn),
+                "--profit",
+                str(profit_pct),
             ]
-            if hasattr(args, 'bracket_seed') and args.bracket_seed is not None:
+            if hasattr(args, "bracket_seed") and args.bracket_seed is not None:
                 sys.argv.extend(["--bracket-seed", str(args.bracket_seed)])
             order_main()
         finally:
@@ -1253,6 +1260,7 @@ def run_order(args) -> int:
     except Exception as e:
         print(f"Error calculating orders: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

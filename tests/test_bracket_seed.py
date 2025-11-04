@@ -38,17 +38,11 @@ class TestBracketSeed(unittest.TestCase):
     def test_with_seed_aligned_brackets(self):
         """With seed, orders align to bracket ladder."""
         orders = calculate_synthetic_dividend_orders(
-
             holdings=100,
-
             last_transaction_price=100.0,
-
             rebalance_size=0.075,
-
             profit_sharing=0.5,
-
             bracket_seed=100.0,
-
         )
 
         expected_buy = 100.0 * (1 + 0.075)

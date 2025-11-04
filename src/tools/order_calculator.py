@@ -125,14 +125,22 @@ def format_order_display(
     buy_price_line = f"  |{f'  Price:     ${buy_price:.2f}':<{content_width}}|"
     buy_qty_line = f"  |{f'  Quantity:  {buy_qty:,} shares':<{content_width}}|"
     buy_total_line = f"  |{f'  Total:     ${buy_price * buy_qty:,.2f}':<{content_width}}|"
-    buy_trigger_line = f"  |{f'  Trigger:   {buy_trigger_pct:.2f}% below last transaction':<{content_width}}|"
-    buy_distance_line = f"  |{f'  Distance:  {to_buy_pct:.2f}% below current price':<{content_width}}|"
+    buy_trigger_line = (
+        f"  |{f'  Trigger:   {buy_trigger_pct:.2f}% below last transaction':<{content_width}}|"
+    )
+    buy_distance_line = (
+        f"  |{f'  Distance:  {to_buy_pct:.2f}% below current price':<{content_width}}|"
+    )
 
     sell_price_line = f"  |{f'  Price:     ${sell_price:.2f}':<{content_width}}|"
     sell_qty_line = f"  |{f'  Quantity:  {sell_qty:,} shares':<{content_width}}|"
     sell_total_line = f"  |{f'  Total:     ${sell_price * sell_qty:,.2f}':<{content_width}}|"
-    sell_trigger_line = f"  |{f'  Trigger:   {sell_trigger_pct:.2f}% above last transaction':<{content_width}}|"
-    sell_distance_line = f"  |{f'  Distance:  {to_sell_pct:.2f}% above current price':<{content_width}}|"
+    sell_trigger_line = (
+        f"  |{f'  Trigger:   {sell_trigger_pct:.2f}% above last transaction':<{content_width}}|"
+    )
+    sell_distance_line = (
+        f"  |{f'  Distance:  {to_sell_pct:.2f}% above current price':<{content_width}}|"
+    )
 
     output = f"""
 +==============================================================================+

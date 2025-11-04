@@ -72,7 +72,10 @@ Examples:
     parser.add_argument("end_date", help="End date (MM/DD/YYYY or YYYY-MM-DD)")
     parser.add_argument("strategy", help="Strategy name (e.g., buy-and-hold, sd-9.05,50)")
     parser.add_argument(
-        "--initial-investment", type=int, default=10000, help="Initial quantity of shares (default: 10000)"
+        "--initial-investment",
+        type=int,
+        default=10000,
+        help="Initial quantity of shares (default: 10000)",
     )
     parser.add_argument(
         "--reference-asset",
