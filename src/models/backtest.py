@@ -282,7 +282,9 @@ def _map_portfolio_to_single_ticker_summary(
 
     # Income classification
     universal_income_dollars = summary["total_dividends"]
-    universal_income_pct = (universal_income_dollars / start_value * 100) if start_value > 0 else 0.0
+    universal_income_pct = (
+        (universal_income_dollars / start_value * 100) if start_value > 0 else 0.0
+    )
 
     secondary_income_dollars = volatility_alpha * start_value if start_value > 0 else 0.0
     secondary_income_pct = volatility_alpha * 100
@@ -487,7 +489,7 @@ def run_algorithm_backtest(
     # This eliminates ~800 lines of duplicate backtest logic for common cases.
     # Falls back to legacy implementation for unsupported features (dividends,
     # reference assets, CPI, price normalization, callable algorithms).
-    
+
     can_use_wrapper = _can_use_portfolio_wrapper(
         dividend_series=dividend_series,
         reference_data=reference_data,
@@ -560,7 +562,11 @@ def run_algorithm_backtest(
                 df_indexed=df_indexed,
                 start_date=start_date,
                 end_date=end_date,
-                algo_obj=portfolio_algo.strategies[ticker] if hasattr(portfolio_algo, "strategies") else None,
+                algo_obj=(
+                    portfolio_algo.strategies[ticker]
+                    if hasattr(portfolio_algo, "strategies")
+                    else None
+                ),
             )
 
             # Update allow_margin in summary
@@ -1647,7 +1653,7 @@ def run_portfolio_backtest(
                         # Now withdraw what we can (cash available + proceeds from sales)
                         actual_withdrawal = min(withdrawal_amount, shared_bank)
                         shared_bank -= actual_withdrawal
-                        withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn (${cash_available:.2f} cash + ${actual_withdrawal-cash_available:.2f} from asset sales), bank=${shared_bank:.2f}"
+                        withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn (${cash_available:.2f} cash + ${actual_withdrawal - cash_available:.2f} from asset sales), bank=${shared_bank:.2f}"
                     else:
                         # allow_margin=True: allow negative bank balance
                         actual_withdrawal = withdrawal_amount
