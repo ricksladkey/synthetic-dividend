@@ -9,7 +9,7 @@ from datetime import date, timedelta
 
 import pandas as pd
 
-from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
+from src.models.backtest import SyntheticDividendAlgorithm, run_portfolio_backtest
 
 
 def create_price_data(price_path, ticker="TEST"):
@@ -58,17 +58,46 @@ def test_withdrawal_from_bank_balance():
         buyback_enabled=True,
     )
 
-    txns, results = run_algorithm_backtest(
-        df=price_df,
-        ticker="TEST",
-        initial_qty=initial_shares,
-        start_date=start_date,
-        end_date=end_date,
-        algo=algo,
-        withdrawal_rate_pct=4.0,  # 4% annual withdrawal
-        withdrawal_frequency_days=30,  # Monthly
-        simple_mode=True,  # Clean mode for testing
-    )
+    # Convert single-ticker to portfolio format
+    start_price = price_df.iloc[0]["Close"]
+    initial_investment = initial_shares * start_price
+    allocations = {"TEST": 1.0}
+    portfolio_algo = "per-asset:sd8,50"  # 9.05% trigger, 50% profit sharing
+
+    # Mock the HistoryFetcher to return our synthetic data
+    from unittest.mock import patch
+    import src.data.fetcher as fetcher_module
+
+    original_get_history = fetcher_module.HistoryFetcher.get_history
+
+    def mock_get_history(self, ticker, start_date, end_date):
+        if ticker == "TEST":
+            return price_df
+        return original_get_history(self, ticker, start_date, end_date)
+
+    with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
+        txns, portfolio_results = run_portfolio_backtest(
+            allocations=allocations,
+            start_date=start_date,
+            end_date=end_date,
+            portfolio_algo=portfolio_algo,
+            initial_investment=initial_investment,
+            withdrawal_rate_pct=4.0,  # 4% annual withdrawal
+            withdrawal_frequency_days=30,  # Monthly
+            simple_mode=True,  # Clean mode for testing
+        )
+
+        # Map portfolio results to single-ticker format for compatibility
+        from src.models.backtest import _map_portfolio_to_single_ticker_summary
+        results = _map_portfolio_to_single_ticker_summary(
+            portfolio_summary=portfolio_results,
+            ticker="TEST",
+            df_indexed=price_df,
+            start_date=start_date,
+            end_date=end_date,
+            algo_obj=None,  # Not needed for this test
+            transactions=txns,
+        )
 
     # Extract metrics
     total_withdrawn = results["total_withdrawn"]
@@ -125,17 +154,46 @@ def test_withdrawal_forces_selling_for_buy_and_hold():
     end_date = start_date + timedelta(days=12 * 30)
 
     # Run buy-and-hold (no algorithm, just hold)
-    txns, results = run_algorithm_backtest(
-        df=price_df,
-        ticker="TEST",
-        initial_qty=initial_shares,
-        start_date=start_date,
-        end_date=end_date,
-        algo=None,  # Buy-and-hold
-        withdrawal_rate_pct=4.0,  # 4% annual withdrawal
-        withdrawal_frequency_days=30,  # Monthly
-        simple_mode=True,  # Clean mode for testing
-    )
+    # Convert single-ticker to portfolio format
+    start_price = price_df.iloc[0]["Close"]
+    initial_investment = initial_shares * start_price
+    allocations = {"TEST": 1.0}
+    portfolio_algo = "per-asset:buy-and-hold"
+
+    # Mock the HistoryFetcher to return our synthetic data
+    from unittest.mock import patch
+    import src.data.fetcher as fetcher_module
+
+    original_get_history = fetcher_module.HistoryFetcher.get_history
+
+    def mock_get_history(self, ticker, start_date, end_date):
+        if ticker == "TEST":
+            return price_df
+        return original_get_history(self, ticker, start_date, end_date)
+
+    with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
+        txns, portfolio_results = run_portfolio_backtest(
+            allocations=allocations,
+            start_date=start_date,
+            end_date=end_date,
+            portfolio_algo=portfolio_algo,
+            initial_investment=initial_investment,
+            withdrawal_rate_pct=4.0,  # 4% annual withdrawal
+            withdrawal_frequency_days=30,  # Monthly
+            simple_mode=True,  # Clean mode for testing
+        )
+
+        # Map portfolio results to single-ticker format for compatibility
+        from src.models.backtest import _map_portfolio_to_single_ticker_summary
+        results = _map_portfolio_to_single_ticker_summary(
+            portfolio_summary=portfolio_results,
+            ticker="TEST",
+            df_indexed=price_df,
+            start_date=start_date,
+            end_date=end_date,
+            algo_obj=None,  # Not needed for this test
+            transactions=txns,
+        )
 
     # Extract metrics
     total_withdrawn = results["total_withdrawn"]
@@ -186,42 +244,67 @@ def test_simple_mode_no_opportunity_cost():
     start_date = date(2020, 1, 1)
     end_date = start_date + timedelta(days=2 * 30)
 
-    # Run with buybacks (will go negative on bank)
-    algo = SyntheticDividendAlgorithm(
-        rebalance_size=9.05 / 100.0,
-        profit_sharing=50.0 / 100.0,
-        buyback_enabled=True,
-    )
+    # Convert single-ticker to portfolio format
+    start_price = price_df.iloc[0]["Close"]
+    initial_investment = initial_shares * start_price
+    allocations = {"TEST": 1.0}
+    portfolio_algo = "per-asset:sd8,50"  # 9.05% trigger, 50% profit sharing, buybacks enabled
 
-    # Test 1: WITH simple_mode
-    txns_simple, results_simple = run_algorithm_backtest(
-        df=price_df,
-        ticker="TEST",
-        initial_qty=initial_shares,
-        start_date=start_date,
-        end_date=end_date,
-        algo=algo,
-        simple_mode=True,
-    )
+    # Mock the HistoryFetcher to return our synthetic data
+    from unittest.mock import patch
+    import src.data.fetcher as fetcher_module
 
-    # Test 2: WITHOUT simple_mode (normal mode with 10% opportunity cost)
+    original_get_history = fetcher_module.HistoryFetcher.get_history
 
-    algo2 = SyntheticDividendAlgorithm(
-        rebalance_size=9.05 / 100.0,
-        profit_sharing=50.0 / 100.0,
-        buyback_enabled=True,
-    )
+    def mock_get_history(self, ticker, start_date, end_date):
+        if ticker == "TEST":
+            return price_df
+        return original_get_history(self, ticker, start_date, end_date)
 
-    txns_normal, results_normal = run_algorithm_backtest(
-        df=price_df,
-        ticker="TEST",
-        initial_qty=initial_shares,
-        start_date=start_date,
-        end_date=end_date,
-        algo=algo2,
-        simple_mode=False,
-        reference_return_pct=10.0,  # 10% opportunity cost
-    )
+    with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
+        # Test 1: WITH simple_mode
+        txns_simple, portfolio_results_simple = run_portfolio_backtest(
+            allocations=allocations,
+            start_date=start_date,
+            end_date=end_date,
+            portfolio_algo=portfolio_algo,
+            initial_investment=initial_investment,
+            simple_mode=True,
+        )
+
+        # Map portfolio results to single-ticker format for compatibility
+        from src.models.backtest import _map_portfolio_to_single_ticker_summary
+        results_simple = _map_portfolio_to_single_ticker_summary(
+            portfolio_summary=portfolio_results_simple,
+            ticker="TEST",
+            df_indexed=price_df,
+            start_date=start_date,
+            end_date=end_date,
+            algo_obj=None,  # Not needed for this test
+            transactions=txns_simple,
+        )
+
+        # Test 2: WITHOUT simple_mode (normal mode with 10% opportunity cost)
+        txns_normal, portfolio_results_normal = run_portfolio_backtest(
+            allocations=allocations,
+            start_date=start_date,
+            end_date=end_date,
+            portfolio_algo=portfolio_algo,
+            initial_investment=initial_investment,
+            simple_mode=False,
+            reference_return_pct=10.0,  # 10% opportunity cost
+        )
+
+        # Map portfolio results to single-ticker format for compatibility
+        results_normal = _map_portfolio_to_single_ticker_summary(
+            portfolio_summary=portfolio_results_normal,
+            ticker="TEST",
+            df_indexed=price_df,
+            start_date=start_date,
+            end_date=end_date,
+            algo_obj=None,  # Not needed for this test
+            transactions=txns_normal,
+        )
 
     print("\n=== Simple Mode Test ===")
     print("\nSimple Mode:")

@@ -296,11 +296,11 @@ def _map_portfolio_to_single_ticker_summary(
 
     # Algorithm-specific stats
     if algo_obj is not None:
-        summary["final_stack_size"] = getattr(algo_obj, "buyback_stack_count", 0)
         summary["total_volatility_alpha"] = getattr(algo_obj, "total_volatility_alpha", 0.0)
     else:
-        summary["final_stack_size"] = 0
-        summary["total_volatility_alpha"] = 0.0
+        summary["total_volatility_alpha"] = portfolio_summary.get("total_volatility_alpha", 0.0)
+
+    summary["final_stack_size"] = portfolio_summary.get("final_stack_size", 0)
 
     return summary
 
@@ -2171,5 +2171,25 @@ def run_portfolio_backtest(
         portfolio_summary["real_final_value"] = None
         portfolio_summary["real_total_return"] = None
         portfolio_summary["real_annualized_return"] = None
+
+    # Add algorithm-specific stats for single-ticker compatibility
+    if len(allocations) == 1 and isinstance(portfolio_algo, PortfolioAlgorithmBase):
+        from src.algorithms import PerAssetPortfolioAlgorithm
+        if isinstance(portfolio_algo, PerAssetPortfolioAlgorithm):
+            ticker = list(allocations.keys())[0]
+            algo = portfolio_algo.strategies.get(ticker)
+            if algo:
+                portfolio_summary["final_stack_size"] = getattr(algo, "buyback_stack_count", 0)
+                portfolio_summary["total_volatility_alpha"] = getattr(algo, "total_volatility_alpha", 0.0)
+            else:
+                portfolio_summary["final_stack_size"] = 0
+                portfolio_summary["total_volatility_alpha"] = 0.0
+        else:
+            # For other portfolio algorithms, no stack
+            portfolio_summary["final_stack_size"] = 0
+            portfolio_summary["total_volatility_alpha"] = 0.0
+    else:
+        portfolio_summary["final_stack_size"] = 0
+        portfolio_summary["total_volatility_alpha"] = 0.0
 
     return all_transactions, portfolio_summary
