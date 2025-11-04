@@ -10,11 +10,11 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 import pandas as pd
 
 # Import algorithm classes from dedicated package
-from src.algorithms import (
+from src.algorithms import (  # noqa: F401; (re-exported for backwards compatibility)
     AlgorithmBase,
     BuyAndHoldAlgorithm,
     PortfolioAlgorithmBase,
-    SyntheticDividendAlgorithm,  # noqa: F401; (re-exported for backwards compatibility)
+    SyntheticDividendAlgorithm,
 )
 from src.models.backtest_utils import (  # noqa: F401; (re-exported for backwards compatibility)
     calculate_synthetic_dividend_orders,
