@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test lint format clean build publish
+.PHONY: help install install-dev test test-all lint check format clean build publish
 
 PYTHON = .venv/Scripts/python
 
@@ -8,7 +8,9 @@ help:
 	@echo "  make install       Install package in development mode"
 	@echo "  make install-dev   Install with development dependencies"
 	@echo "  make test          Run tests (CI mode - quiet)"
+	@echo "  make test-all      Run all tests (verbose, includes network tests)"
 	@echo "  make lint          Run all linters (black, isort, flake8, mypy)"
+	@echo "  make check         Run lint and test (simulates CI checks)"
 	@echo "  make format        Format code with black and isort"
 	@echo "  make clean         Remove build artifacts and cache"
 	@echo "  make build         Build distribution packages"
@@ -23,6 +25,9 @@ install-dev:
 test:
 	$(PYTHON) -m pytest -q
 
+test-all:
+	$(PYTHON) -m pytest
+
 lint:
 	@echo "Running black..."
 	$(PYTHON) -m black --check .
@@ -32,6 +37,8 @@ lint:
 	$(PYTHON) -m flake8 src tests --max-line-length=100 --extend-ignore=E203,W503
 	@echo "Running mypy..."
 	$(PYTHON) -m mypy --explicit-package-bases --exclude "src/research|src/charts" src
+
+check: lint test
 
 format:
 	@echo "Running isort..."
