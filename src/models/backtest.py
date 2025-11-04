@@ -4,7 +4,6 @@ Provides abstract base for strategy implementations and execution framework
 for backtesting against historical OHLC price data.
 """
 
-import math
 from datetime import date
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
@@ -15,7 +14,7 @@ from src.algorithms import (
     AlgorithmBase,
     BuyAndHoldAlgorithm,
     PortfolioAlgorithmBase,
-    SyntheticDividendAlgorithm,
+    SyntheticDividendAlgorithm,  # noqa: F401; (re-exported for backwards compatibility)
 )
 from src.models.backtest_utils import (  # noqa: F401; (re-exported for backwards compatibility)
     calculate_synthetic_dividend_orders,
