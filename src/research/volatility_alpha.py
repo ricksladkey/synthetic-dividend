@@ -223,7 +223,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument(
         "--profit", type=float, default=50.0, help="Profit-taking percentage (default: 50%%)"
     )
-    parser.add_argument("--qty", type=int, default=10000, help="Initial quantity (default: 10000)")
+    parser.add_argument("--initial-investment", type=int, default=10000, help="Initial quantity (default: 10000)")
     parser.add_argument(
         "--output",
         default="volatility_alpha_results.csv",
@@ -252,7 +252,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # Run comparisons
     results = []
     for ticker in tickers:
-        result = run_single_comparison(ticker, args.start, args.end, args.profit, args.qty)
+        result = run_single_comparison(ticker, args.start, args.end, args.profit, args.initial_investment)
         if result:
             results.append(result)
 

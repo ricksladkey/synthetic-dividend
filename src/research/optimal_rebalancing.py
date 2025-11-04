@@ -280,7 +280,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         help="Profit sharing percentage (default: 50)",
     )
     parser.add_argument(
-        "--qty",
+        "--initial-investment",
         type=int,
         default=10000,
         help="Initial quantity of shares (default: 10000)",
@@ -303,7 +303,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     print("\nOPTIMAL REBALANCING RESEARCH")
     print(f"Date Range: {start_date} to {end_date}")
     print(f"Profit Sharing: {args.profit}%")
-    print(f"Initial Quantity: {args.qty:,} shares\n")
+    print(f"Initial Quantity: {args.initial_investment:,} shares\n")
 
     # Run appropriate sweep
     if args.ticker:
@@ -318,7 +318,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 end_date=end_date,
                 sd_n=sd_n,
                 profit_pct=args.profit,
-                initial_qty=args.qty,
+                initial_qty=args.initial_investment,
             )
             if result:
                 results.append(result)
@@ -330,7 +330,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             start_date=start_date,
             end_date=end_date,
             profit_pct=args.profit,
-            initial_qty=args.qty,
+            initial_qty=args.initial_investment,
         )
 
     else:
@@ -339,7 +339,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             start_date=start_date,
             end_date=end_date,
             profit_pct=args.profit,
-            initial_qty=args.qty,
+            initial_qty=args.initial_investment,
         )
 
     # Save and analyze results
