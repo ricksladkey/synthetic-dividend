@@ -25,7 +25,7 @@ Parameters typed as `pd.DataFrame` that should use `Data` alias for clean abstra
 - ✅ Line 139: `df: Data` - FIXED
 - ✅ Line 208: `df: Data` - FIXED
 
-**src/run_model.py**:
+**src/synthetic_dividend_tool.py**:
 - ✅ Line 128: `reference_data: Optional[Data]` - FIXED (was reference_df)
 - ✅ Line 129: `risk_free_data: Optional[Data]` - FIXED (was risk_free_df)
 
@@ -119,7 +119,7 @@ These are internal calculations for display purposes, not API parameters:
 ### Phase 2: Core API Parameters (NEXT)
 1. Update backtest.py to use `Data` for `df` parameter
 2. Update retirement_backtest.py to use `Data`
-3. Update run_model.py parameter names and types
+3. Update synthetic_dividend_tool.py parameter names and types
 4. Update compare/ module public APIs
 
 ### Phase 3: Unit Standardization (CRITICAL)

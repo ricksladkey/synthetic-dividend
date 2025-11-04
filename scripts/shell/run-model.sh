@@ -24,5 +24,5 @@ if [ $# -lt 4 ]; then
     exit 2
 fi
 
-# Run the backtest
-"$PYTHON_EXE" -m src.run_model "$@"
+# Run the backtest using synthetic-dividend CLI
+"$PYTHON_EXE" -m src.synthetic_dividend_tool run backtest "$@"

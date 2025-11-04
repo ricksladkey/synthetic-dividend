@@ -1396,10 +1396,10 @@ sd research optimal-rebalancing --output results.csv
 | Scenario | Recommended Approach |
 |----------|---------------------|
 | **Exploring new asset** | `analyze-alpha.bat` (auto-suggest) |
-| **Retirement planning** | `run_model` with `--withdrawal-rate 4.0` |
+| **Retirement planning** | `synthetic-dividend backtest` with `--withdrawal-rate 4.0` |
 | **Comparing parameters** | `optimal_rebalancing --comprehensive` |
 | **Checking dividends** | `demo_dividends.py` or manual with `get_dividends()` |
-| **Portfolio simulation** | Multiple `run_model` calls with different tickers |
+| **Portfolio simulation** | Multiple `synthetic-dividend backtest` calls with different tickers |
 
 ---
 

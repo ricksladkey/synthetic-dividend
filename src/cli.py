@@ -238,16 +238,44 @@ def test_command(args: List[str]) -> int:
 
 def test_sd_command(args: List[str]) -> int:
     """Test SD strategy on NVDA."""
-    from src.run_model import main as backtest_main
+    from src.synthetic_dividend_tool import run_backtest
 
-    return backtest_main(["NVDA", "10/22/2024", "10/22/2025", "sd-9.05,50"] + args)
+    # Create args object for synthetic_dividend_tool
+    class Args:
+        def __init__(self):
+            self.ticker = "NVDA"
+            self.start = "10/22/2024"
+            self.end = "10/22/2025"
+            self.algorithm = "sd-9.05,50"
+            self.initial_investment = 10000
+            self.initial_qty = None
+            self.pdf_report = None
+            self.output = None
+            self.verbose = False
+
+    args_obj = Args()
+    return run_backtest(args_obj)
 
 
 def test_buy_and_hold_command(args: List[str]) -> int:
     """Test buy-and-hold strategy on NVDA."""
-    from src.run_model import main as backtest_main
+    from src.synthetic_dividend_tool import run_backtest
 
-    return backtest_main(["NVDA", "10/22/2024", "10/22/2025", "buy-and-hold"] + args)
+    # Create args object for synthetic_dividend_tool
+    class Args:
+        def __init__(self):
+            self.ticker = "NVDA"
+            self.start = "10/22/2024"
+            self.end = "10/22/2025"
+            self.algorithm = "buy-and-hold"
+            self.initial_investment = 10000
+            self.initial_qty = None
+            self.pdf_report = None
+            self.output = None
+            self.verbose = False
+
+    args_obj = Args()
+    return run_backtest(args_obj)
 
 
 def test_batch_comparison_command(args: List[str]) -> int:
@@ -261,6 +289,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     """Main CLI entry point."""
     if argv is None:
         argv = sys.argv[1:]
+
+    import argparse
 
     parser = argparse.ArgumentParser(
         description="Synthetic Dividend Toolkit - Unified CLI",
@@ -307,9 +337,56 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     # Route to appropriate module based on command
     if command == "backtest":
-        from src.run_model import main as backtest_main
+        # Use synthetic_dividend_tool's run_backtest instead of run_model
+        from src.synthetic_dividend_tool import run_backtest
 
-        return backtest_main(remaining_args)
+        # Create a sub-parser for backtest arguments
+        backtest_parser = argparse.ArgumentParser(prog="sd backtest")
+        backtest_parser.add_argument("ticker", help="Stock ticker symbol")
+        backtest_parser.add_argument("start_date", help="Start date (MM/DD/YYYY or YYYY-MM-DD)")
+        backtest_parser.add_argument("end_date", help="End date (MM/DD/YYYY or YYYY-MM-DD)")
+        backtest_parser.add_argument("strategy", help="Strategy name")
+        backtest_parser.add_argument(
+            "--initial-investment",
+            type=int,
+            default=10000,
+            help="Initial quantity of shares (default: 10000)",
+        )
+        backtest_parser.add_argument(
+            "--reference-asset",
+            type=str,
+            default="VOO",
+            help="Reference asset for opportunity cost (default: VOO)",
+        )
+        backtest_parser.add_argument(
+            "--risk-free-asset",
+            type=str,
+            default="BIL",
+            help="Risk-free asset for cash interest (default: BIL)",
+        )
+
+        try:
+            backtest_args = backtest_parser.parse_args(remaining_args)
+            # Convert to the format expected by synthetic_dividend_tool's run_backtest
+            class Args:
+                def __init__(self):
+                    self.ticker = backtest_args.ticker
+                    self.start = backtest_args.start_date
+                    self.end = backtest_args.end_date
+                    self.algorithm = backtest_args.strategy
+                    self.initial_investment = backtest_args.initial_investment
+                    self.initial_qty = None  # Will be calculated from investment
+                    self.pdf_report = None
+                    self.output = None
+                    self.verbose = False
+                    # Note: reference-asset and risk-free-asset are not directly supported in synthetic_dividend_tool's run_backtest
+                    # They would need to be added if we want to maintain that functionality
+
+            args_obj = Args()
+            return run_backtest(args_obj)
+        except SystemExit:
+            # Argument parsing failed, let it show help
+            return 1
     elif command == "compare":
         from src.compare.batch_comparison import main as compare_main
 

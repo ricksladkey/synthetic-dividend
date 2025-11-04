@@ -53,13 +53,13 @@ Investigate `run_algorithm_backtest()` or the function it calls to ensure:
 3. Dict keys match what `run_single_backtest()` expects
 
 ## Workaround
-Use `src/run_model.py` directly for individual backtests (known to work correctly), then manually aggregate results.
+Use `src/synthetic_dividend_tool.py` directly for individual backtests (known to work correctly), then manually aggregate results.
 
 ## Priority
 High - blocks core research objectives outlined in RESEARCH_PLAN.md
 
 ## Related Files
 - `src/research/optimal_rebalancing.py` (broken)
-- `src/run_model.py` (working reference implementation)
+- `src/synthetic_dividend_tool.py` (working reference implementation)
 - `RESEARCH_PLAN.md` (research framework requiring this tool)
 - `research-phase1.bat` (automation script waiting for fix)

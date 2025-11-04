@@ -175,7 +175,7 @@ grep "^[0-9]\+\." theory/README.md | sort | uniq -d
 **Test from README**:
 ```bash
 # Should work exactly as shown
-python -m src.run_model NVDA 10/23/2023 10/23/2024 sd8 --qty 10000
+synthetic-dividend backtest NVDA 2023-10-23 2024-10-23 sd8 --qty 10000
 
 # Should produce 44 passing tests
 pytest tests/ -v
