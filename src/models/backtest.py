@@ -4,6 +4,7 @@ Provides abstract base for strategy implementations and execution framework
 for backtesting against historical OHLC price data.
 """
 
+import math
 from datetime import date
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
@@ -130,6 +131,7 @@ def _map_portfolio_to_single_ticker_summary(
     start_date: date,
     end_date: date,
     algo_obj: Optional[AlgorithmBase],
+    transactions: Optional[List[Transaction]] = None,
 ) -> Dict[str, Any]:
     """Map portfolio backtest summary to single-ticker format.
 
@@ -158,6 +160,22 @@ def _map_portfolio_to_single_ticker_summary(
     days = (last_date - first_date).days
     years = days / 365.25 if days > 0 else 0.0
 
+    # Calculate bank balance statistics from daily_bank_values
+    daily_bank_balances = list(portfolio_summary.get("daily_bank_values", {}).values())
+    if daily_bank_balances:
+        bank_min = min(daily_bank_balances)
+        bank_max = max(daily_bank_balances)
+        bank_avg = sum(daily_bank_balances) / len(daily_bank_balances)
+        bank_negative_count = sum(1 for b in daily_bank_balances if b < 0)
+        bank_positive_count = sum(1 for b in daily_bank_balances if b > 0)
+    else:
+        # Fallback if no daily values (shouldn't happen)
+        bank_min = portfolio_summary["final_bank"]
+        bank_max = portfolio_summary["final_bank"]
+        bank_avg = portfolio_summary["final_bank"]
+        bank_negative_count = 0
+        bank_positive_count = 0
+
     # Build single-ticker summary
     summary = {
         "ticker": ticker,
@@ -169,14 +187,14 @@ def _map_portfolio_to_single_ticker_summary(
         "end_value": asset_results["final_value"],
         "holdings": asset_results["final_holdings"],
         "bank": portfolio_summary["final_bank"],
-        # Bank statistics - not tracked in portfolio backtest yet
-        "bank_min": portfolio_summary["final_bank"],  # Approximate
-        "bank_max": portfolio_summary["final_bank"],  # Approximate
-        "bank_avg": portfolio_summary["final_bank"],  # Approximate
-        "bank_negative_count": 0,  # Not tracked
-        "bank_positive_count": 0,  # Not tracked
-        # Costs/Gains - not in portfolio backtest
-        "opportunity_cost": 0.0,  # Not yet supported
+        # Bank statistics - now calculated from daily_bank_values
+        "bank_min": bank_min,
+        "bank_max": bank_max,
+        "bank_avg": bank_avg,
+        "bank_negative_count": bank_negative_count,
+        "bank_positive_count": bank_positive_count,
+        # Costs/Gains - now supported in portfolio backtest
+        "opportunity_cost": portfolio_summary.get("opportunity_cost", 0.0),
         "risk_free_gains": portfolio_summary.get("cash_interest_earned", 0.0),
         # Returns
         "total": portfolio_summary["total_final_value"],
@@ -186,14 +204,32 @@ def _map_portfolio_to_single_ticker_summary(
         # Withdrawals
         "total_withdrawn": portfolio_summary["total_withdrawn"],
         "withdrawal_count": portfolio_summary["withdrawal_count"],
-        "shares_sold_for_withdrawals": 0,  # Not tracked separately
+        "shares_sold_for_withdrawals": (
+            sum(
+                tx.qty
+                for tx in transactions
+                if tx.action == "SELL" and "withdrawal" in tx.notes.lower()
+            )
+            if transactions
+            else 0
+        ),
         "withdrawal_rate_pct": portfolio_summary["withdrawal_rate_pct"],
-        # Dividends - not yet supported
-        "total_dividends": 0.0,
-        "dividend_payment_count": 0,
+        # Dividends - now supported in portfolio backtest
+        "total_dividends": portfolio_summary.get("total_dividends", 0.0),
+        "dividend_payment_count": sum(
+            portfolio_summary.get("dividend_payment_count_by_asset", {}).values()
+        ),
         # Strict mode
         "skipped_buys": portfolio_summary["skipped_count"],
-        "skipped_buy_value": 0.0,  # Not tracked
+        "skipped_buy_value": (
+            sum(
+                tx.price * tx.qty
+                for tx in transactions
+                if tx.action == "SKIP BUY" and "insufficient cash" in tx.notes.lower()
+            )
+            if transactions
+            else 0.0
+        ),
         "allow_margin": True,  # TODO: Get from params
         # Capital deployment - not tracked in portfolio
         "avg_deployed_capital": 0.0,
@@ -205,7 +241,7 @@ def _map_portfolio_to_single_ticker_summary(
     }
 
     # Calculate baseline (buy-and-hold)
-    initial_qty = asset_results["final_holdings"]  # Approximate initial qty
+    initial_qty = int(asset_results["initial_investment"] / start_price)
     baseline_end_value = initial_qty * end_price
     baseline_total = baseline_end_value
     baseline_total_return = (baseline_total - start_value) / start_value if start_value > 0 else 0.0
@@ -520,22 +556,14 @@ def run_algorithm_backtest(
         """Check if portfolio wrapper can be used instead of legacy implementation.
 
         Returns True if none of the unsupported features are requested:
-        - Dividends
-        - Reference assets
-        - Risk-free assets
-        - CPI data
+        - Dividends (now supported)
+        - Reference assets (now supported)
+        - Risk-free assets (now supported)
+        - CPI data (now supported)
         - Price normalization
         - Callable algorithms (must be AlgorithmBase instances)
         """
         # Check for unsupported features
-        if dividend_series is not None and not dividend_series.empty:
-            return False
-        if reference_data is not None and not reference_data.empty:
-            return False
-        if risk_free_data is not None and not risk_free_data.empty:
-            return False
-        if cpi_data is not None and not cpi_data.empty:
-            return False
         if callable(algo):
             return False
 
@@ -599,38 +627,60 @@ def run_algorithm_backtest(
         # If the ticker isn't available, it will fail and we'll fall back to legacy
 
         try:
-            # Call portfolio backtest
-            transactions, portfolio_summary = run_portfolio_backtest(
-                allocations=allocations,
-                start_date=start_date,
-                end_date=end_date,
-                portfolio_algo=portfolio_algo,
-                initial_investment=investment,
-                allow_margin=allow_margin,
-                withdrawal_rate_pct=withdrawal_rate_pct,
-                withdrawal_frequency_days=withdrawal_frequency_days,
-                cash_interest_rate_pct=cash_interest_rate,
-                simple_mode=simple_mode,
-            )
+            # Mock the fetcher to return our DataFrame
+            from unittest.mock import patch
 
-            # Map portfolio results to single-ticker format
-            summary = _map_portfolio_to_single_ticker_summary(
-                portfolio_summary=portfolio_summary,
-                ticker=ticker,
-                df_indexed=df_indexed,
-                start_date=start_date,
-                end_date=end_date,
-                algo_obj=(
-                    portfolio_algo.strategies[ticker]
-                    if hasattr(portfolio_algo, "strategies")
-                    else None
-                ),
-            )
+            import src.data.fetcher as fetcher_module
 
-            # Update allow_margin in summary
-            summary["allow_margin"] = allow_margin
+            original_get_history = fetcher_module.HistoryFetcher.get_history
 
-            return transactions, summary
+            def mock_get_history(self, ticker, start_date, end_date):
+                if ticker == ticker:  # Our single ticker
+                    return df_indexed
+                return original_get_history(self, ticker, start_date, end_date)
+
+            # Use patch to temporarily replace the method
+            with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
+                # Call portfolio backtest
+                transactions, portfolio_summary = run_portfolio_backtest(
+                    allocations=allocations,
+                    start_date=start_date,
+                    end_date=end_date,
+                    portfolio_algo=portfolio_algo,
+                    initial_investment=investment,
+                    allow_margin=allow_margin,
+                    withdrawal_rate_pct=withdrawal_rate_pct,
+                    withdrawal_frequency_days=withdrawal_frequency_days,
+                    cash_interest_rate_pct=cash_interest_rate,
+                    dividend_data=(
+                        {ticker: dividend_series} if dividend_series is not None else None
+                    ),
+                    reference_data=reference_data,
+                    risk_free_data=risk_free_data,
+                    inflation_data=cpi_data,
+                    simple_mode=simple_mode,
+                    reference_return_pct=reference_return_pct,
+                )
+
+                # Map portfolio results to single-ticker format
+                summary = _map_portfolio_to_single_ticker_summary(
+                    portfolio_summary=portfolio_summary,
+                    ticker=ticker,
+                    df_indexed=df_indexed,
+                    start_date=start_date,
+                    end_date=end_date,
+                    algo_obj=(
+                        portfolio_algo.strategies[ticker]
+                        if hasattr(portfolio_algo, "strategies")
+                        else None
+                    ),
+                    transactions=transactions,
+                )
+
+                # Update allow_margin in summary
+                summary["allow_margin"] = allow_margin
+
+                return transactions, summary
         except Exception:
             # Fall back to legacy implementation if portfolio wrapper fails
             pass
@@ -1359,9 +1409,14 @@ def run_portfolio_backtest(
     reference_rate_ticker: Optional[str] = None,
     risk_free_rate_ticker: Optional[str] = None,
     inflation_rate_ticker: Optional[str] = None,
+    # DataFrame alternatives for single-ticker compatibility
+    reference_data: Optional[pd.DataFrame] = None,
+    risk_free_data: Optional[pd.DataFrame] = None,
+    inflation_data: Optional[pd.DataFrame] = None,
     # Legacy compatibility parameters (deprecated, ignored with warnings)
     algo: Optional[Union[AlgorithmBase, Callable, str]] = None,
     simple_mode: bool = False,
+    reference_return_pct: float = 0.0,
     **kwargs: Any,
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Execute portfolio backtest with shared cash pool and portfolio-level algorithm.
@@ -1400,6 +1455,18 @@ def run_portfolio_backtest(
             Used to calculate inflation-adjusted (real) returns
             Tracks cumulative inflation adjustment from start date
             Adds real_return and inflation_adjusted metrics to summary
+        reference_data: Optional DataFrame alternative to reference_rate_ticker
+            Historical price data for reference asset (e.g., VOO)
+            Used when DataFrame is provided directly instead of ticker
+        risk_free_data: Optional DataFrame alternative to risk_free_rate_ticker
+            Historical price data for risk-free asset (e.g., BIL)
+            Used when DataFrame is provided directly instead of ticker
+        inflation_data: Optional DataFrame alternative to inflation_rate_ticker
+            Historical inflation data (e.g., CPI values)
+            Used when DataFrame is provided directly instead of ticker
+        reference_return_pct: Annual return for opportunity cost calc (fallback if no asset data)
+            Applied when bank balance is negative (borrowing cost)
+            Ignored if simple_mode=True
         algo: DEPRECATED - Use portfolio_algo instead
         simple_mode: DEPRECATED - No longer used
         **kwargs: DEPRECATED - Ignored legacy parameters
@@ -1436,6 +1503,13 @@ def run_portfolio_backtest(
                 )
             else:
                 portfolio_algo = build_portfolio_algo_from_name(f"per-asset:{algo}", allocations)
+
+    # Handle deprecated simple_mode parameter
+    if "simple_mode" in kwargs:
+        simple_mode = kwargs.pop("simple_mode")
+        if simple_mode:
+            # In simple mode, disable cash interest
+            cash_interest_rate_pct = 0.0
 
     # Warn about ignored legacy kwargs
     if kwargs:
@@ -1481,26 +1555,68 @@ def run_portfolio_backtest(
         price_data_indexed[ticker] = df_copy
 
     # Fetch reference rate data if provided (for market-adjusted returns)
-    reference_data: Optional[pd.DataFrame] = None
-    if reference_rate_ticker:
+    fetched_reference_data: Optional[pd.DataFrame] = None
+    reference_returns: Dict[date, float] = {}
+    if reference_data is not None:
+        # Use provided DataFrame
+        fetched_reference_data = reference_data
+        print(f"Using provided reference data ({len(fetched_reference_data)} days)")
+        # Calculate daily returns from price data
+        ref_indexed = fetched_reference_data.copy()
+        ref_indexed.index = pd.to_datetime(ref_indexed.index).date
+        if "Close" in ref_indexed.columns:
+            close_prices = ref_indexed["Close"].values
+            ref_dates = list(ref_indexed.index)
+            for i in range(1, len(close_prices)):
+                prev_price = float(close_prices[i - 1])
+                curr_price = float(close_prices[i])
+                if prev_price > 0:
+                    reference_returns[ref_dates[i]] = (curr_price - prev_price) / prev_price
+    elif reference_rate_ticker:
         print(f"Fetching reference benchmark ({reference_rate_ticker})...", end=" ")
-        reference_data = fetcher.get_history(reference_rate_ticker, start_date, end_date)
-        if reference_data is not None and not reference_data.empty:
-            print(f"OK ({len(reference_data)} days)")
+        fetched_reference_data = fetcher.get_history(reference_rate_ticker, start_date, end_date)
+        if fetched_reference_data is not None and not fetched_reference_data.empty:
+            print(f"OK ({len(fetched_reference_data)} days)")
+            # Calculate daily returns from price data
+            ref_indexed = fetched_reference_data.copy()
+            ref_indexed.index = pd.to_datetime(ref_indexed.index).date
+            if "Close" in ref_indexed.columns:
+                close_prices = ref_indexed["Close"].values
+                ref_dates = list(ref_indexed.index)
+                for i in range(1, len(close_prices)):
+                    prev_price = float(close_prices[i - 1])
+                    curr_price = float(close_prices[i])
+                    if prev_price > 0:
+                        reference_returns[ref_dates[i]] = (curr_price - prev_price) / prev_price
         else:
             print("WARN: No data available, skipping baseline calculation")
-            reference_data = None
+            fetched_reference_data = None
 
     # Fetch risk-free rate data if provided (for cash interest modeling)
-    risk_free_data: Optional[pd.DataFrame] = None
+    fetched_risk_free_data: Optional[pd.DataFrame] = None
     risk_free_returns: Dict[date, float] = {}
-    if risk_free_rate_ticker:
+    if risk_free_data is not None:
+        # Use provided DataFrame
+        fetched_risk_free_data = risk_free_data
+        print(f"Using provided risk-free data ({len(fetched_risk_free_data)} days)")
+        # Calculate daily returns from price data
+        rf_indexed = fetched_risk_free_data.copy()
+        rf_indexed.index = pd.to_datetime(rf_indexed.index).date
+        if "Close" in rf_indexed.columns:
+            close_prices = rf_indexed["Close"].values
+            rf_dates = list(rf_indexed.index)
+            for i in range(1, len(close_prices)):
+                prev_price = float(close_prices[i - 1])
+                curr_price = float(close_prices[i])
+                if prev_price > 0:
+                    risk_free_returns[rf_dates[i]] = (curr_price - prev_price) / prev_price
+    elif risk_free_rate_ticker:
         print(f"Fetching risk-free asset ({risk_free_rate_ticker})...", end=" ")
-        risk_free_data = fetcher.get_history(risk_free_rate_ticker, start_date, end_date)
-        if risk_free_data is not None and not risk_free_data.empty:
-            print(f"OK ({len(risk_free_data)} days)")
+        fetched_risk_free_data = fetcher.get_history(risk_free_rate_ticker, start_date, end_date)
+        if fetched_risk_free_data is not None and not fetched_risk_free_data.empty:
+            print(f"OK ({len(fetched_risk_free_data)} days)")
             # Calculate daily returns from price data
-            rf_indexed = risk_free_data.copy()
+            rf_indexed = fetched_risk_free_data.copy()
             rf_indexed.index = pd.to_datetime(rf_indexed.index).date
             if "Close" in rf_indexed.columns:
                 close_prices = rf_indexed["Close"].values
@@ -1512,18 +1628,38 @@ def run_portfolio_backtest(
                         risk_free_returns[rf_dates[i]] = (curr_price - prev_price) / prev_price
         else:
             print("WARN: No data available, falling back to cash_interest_rate_pct")
-            risk_free_data = None
+            fetched_risk_free_data = None
 
     # Fetch inflation data if provided (for real returns calculation)
-    inflation_data: Optional[pd.DataFrame] = None
+    fetched_inflation_data: Optional[pd.DataFrame] = None
     cumulative_inflation: Dict[date, float] = {}
-    if inflation_rate_ticker:
+    if inflation_data is not None:
+        # Use provided DataFrame
+        fetched_inflation_data = inflation_data
+        print(f"Using provided inflation data ({len(fetched_inflation_data)} days)")
+        # Calculate cumulative inflation adjustment from start
+        infl_indexed = fetched_inflation_data.copy()
+        infl_indexed.index = pd.to_datetime(infl_indexed.index).date
+        value_col = "Close" if "Close" in infl_indexed.columns else "Value"
+        if value_col in infl_indexed.columns:
+            infl_values = infl_indexed[value_col].values
+            infl_dates = list(infl_indexed.index)
+            # Find start CPI value
+            if common_dates[0] in infl_dates:
+                start_cpi_idx = infl_dates.index(common_dates[0])
+                start_cpi = float(infl_values[start_cpi_idx])
+                # Calculate cumulative multiplier for each date
+                for i, d in enumerate(infl_dates):
+                    if d >= common_dates[0]:
+                        curr_cpi = float(infl_values[i])
+                        cumulative_inflation[d] = curr_cpi / start_cpi if start_cpi > 0 else 1.0
+    elif inflation_rate_ticker:
         print(f"Fetching inflation data ({inflation_rate_ticker})...", end=" ")
-        inflation_data = fetcher.get_history(inflation_rate_ticker, start_date, end_date)
-        if inflation_data is not None and not inflation_data.empty:
-            print(f"OK ({len(inflation_data)} days)")
+        fetched_inflation_data = fetcher.get_history(inflation_rate_ticker, start_date, end_date)
+        if fetched_inflation_data is not None and not fetched_inflation_data.empty:
+            print(f"OK ({len(fetched_inflation_data)} days)")
             # Calculate cumulative inflation adjustment from start
-            infl_indexed = inflation_data.copy()
+            infl_indexed = fetched_inflation_data.copy()
             infl_indexed.index = pd.to_datetime(infl_indexed.index).date
             value_col = "Close" if "Close" in infl_indexed.columns else "Value"
             if value_col in infl_indexed.columns:
@@ -1540,7 +1676,7 @@ def run_portfolio_backtest(
                             cumulative_inflation[d] = curr_cpi / start_cpi if start_cpi > 0 else 1.0
         else:
             print("WARN: No data available, skipping inflation adjustment")
-            inflation_data = None
+            fetched_inflation_data = None
 
     # Initialize portfolio state
     shared_bank = initial_investment
@@ -1604,8 +1740,13 @@ def run_portfolio_backtest(
 
     # Cash interest tracking
     total_interest_earned: float = 0.0
+    opportunity_cost_total: float = 0.0
     daily_interest_rate = (
         (cash_interest_rate_pct / 100.0) / 365.25 if cash_interest_rate_pct > 0 else 0.0
+    )
+    # Fallback daily reference rate for opportunity cost (when bank is negative)
+    daily_reference_rate_fallback = (
+        (1 + reference_return_pct / 100.0) ** (1.0 / 365.25) - 1.0 if not simple_mode else 0.0
     )
 
     # Dividend tracking (per-asset)
@@ -1707,8 +1848,8 @@ def run_portfolio_backtest(
             # Check if withdrawal is due
             days_since_last = None
             if last_withdrawal_date is None:
-                # First withdrawal happens on first day
-                days_since_last = withdrawal_frequency_days
+                # First withdrawal happens after withdrawal_frequency_days from start
+                days_since_last = (current_date - common_dates[0]).days
             else:
                 days_since_last = (current_date - last_withdrawal_date).days
 
@@ -1730,48 +1871,42 @@ def run_portfolio_backtest(
                     cash_available = max(0, shared_bank)
                     shortfall = withdrawal_amount - cash_available
 
-                    if not allow_margin and shortfall > 0:
-                        # Sell assets proportionally to raise cash for shortfall
-                        total_asset_value = sum(
-                            holdings[t] * assets[t].price for t in allocations.keys()
-                        )
+                    # Sell assets proportionally to raise cash for shortfall
+                    total_asset_value = sum(
+                        holdings[t] * assets[t].price for t in allocations.keys()
+                    )
 
-                        if total_asset_value > 0:
-                            # Sell proportionally from each asset
-                            for ticker in allocations.keys():
-                                if holdings[ticker] > 0:
-                                    asset_value = holdings[ticker] * assets[ticker].price
-                                    proportion = asset_value / total_asset_value
-                                    amount_to_raise = shortfall * proportion
-                                    shares_to_sell = int(amount_to_raise / assets[ticker].price)
+                    if total_asset_value > 0:
+                        # Sell proportionally from each asset
+                        for ticker in allocations.keys():
+                            if holdings[ticker] > 0:
+                                asset_value = holdings[ticker] * assets[ticker].price
+                                proportion = asset_value / total_asset_value
+                                amount_to_raise = shortfall * proportion
+                                shares_to_sell = math.ceil(amount_to_raise / assets[ticker].price)
 
-                                    if shares_to_sell > 0:
-                                        shares_to_sell = min(shares_to_sell, holdings[ticker])
-                                        proceeds = shares_to_sell * assets[ticker].price
-                                        holdings[ticker] -= shares_to_sell
-                                        shared_bank += proceeds
+                                if shares_to_sell > 0:
+                                    shares_to_sell = min(shares_to_sell, holdings[ticker])
+                                    proceeds = shares_to_sell * assets[ticker].price
+                                    holdings[ticker] -= shares_to_sell
+                                    shared_bank += proceeds
 
-                                        # Record forced sale
-                                        all_transactions.append(
-                                            Transaction(
-                                                transaction_date=current_date,
-                                                action="SELL",
-                                                qty=shares_to_sell,
-                                                price=assets[ticker].price,
-                                                ticker=ticker,
-                                                notes=f"Forced sale to fund withdrawal (raised ${proceeds:.2f})",
-                                            )
+                                    # Record forced sale
+                                    all_transactions.append(
+                                        Transaction(
+                                            transaction_date=current_date,
+                                            action="SELL",
+                                            qty=shares_to_sell,
+                                            price=assets[ticker].price,
+                                            ticker=ticker,
+                                            notes=f"Forced sale to fund withdrawal (raised ${proceeds:.2f})",
                                         )
+                                    )
 
-                        # Now withdraw what we can (cash available + proceeds from sales)
-                        actual_withdrawal = min(withdrawal_amount, shared_bank)
-                        shared_bank -= actual_withdrawal
-                        withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn (${cash_available:.2f} cash + ${actual_withdrawal - cash_available:.2f} from asset sales), bank=${shared_bank:.2f}"
-                    else:
-                        # allow_margin=True: allow negative bank balance
-                        actual_withdrawal = withdrawal_amount
-                        shared_bank -= actual_withdrawal
-                        withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn (margin used), bank=${shared_bank:.2f}"
+                    # Now withdraw what we can (cash available + proceeds from sales)
+                    actual_withdrawal = min(withdrawal_amount, shared_bank)
+                    shared_bank -= actual_withdrawal
+                    withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn (${cash_available:.2f} cash + ${actual_withdrawal - cash_available:.2f} from asset sales), bank=${shared_bank:.2f}"
 
                 total_withdrawn += actual_withdrawal
                 withdrawal_count += 1
@@ -1835,6 +1970,14 @@ def run_portfolio_backtest(
                                     notes=f"${div_payment:.2f} (avg {avg_holdings:.2f} shares over 90 days), bank = {shared_bank:.2f}",
                                 )
                             )
+
+        # Apply daily opportunity cost on negative cash balance
+        if shared_bank < 0 and not simple_mode:
+            # Negative balance: opportunity cost of borrowed money
+            daily_return = reference_returns.get(current_date, daily_reference_rate_fallback)
+            opportunity_cost_today = abs(shared_bank) * daily_return
+            shared_bank -= opportunity_cost_today  # Makes bank more negative
+            opportunity_cost_total += opportunity_cost_today
 
         # Accrue daily interest on cash reserves (if positive balance)
         if shared_bank > 0:
@@ -1919,6 +2062,7 @@ def run_portfolio_backtest(
         "withdrawal_count": withdrawal_count,
         "withdrawal_rate_pct": withdrawal_rate_pct,
         "cash_interest_earned": total_interest_earned,
+        "opportunity_cost": opportunity_cost_total,
         "cash_interest_rate_pct": cash_interest_rate_pct,
         "risk_free_rate_ticker": risk_free_rate_ticker,  # Track which method was used
         "total_dividends_by_asset": total_dividends_by_asset,
@@ -1927,10 +2071,10 @@ def run_portfolio_backtest(
     }
 
     # Compute reference benchmark baseline (if provided)
-    if reference_data is not None and not reference_data.empty:
+    if fetched_reference_data is not None and not fetched_reference_data.empty:
         try:
             # Index reference data by date
-            ref_indexed = reference_data.copy()
+            ref_indexed = fetched_reference_data.copy()
             ref_indexed.index = pd.to_datetime(ref_indexed.index).date
 
             # Get reference prices on first and last common dates
@@ -1955,7 +2099,7 @@ def run_portfolio_backtest(
                     ref_annualized = 0.0
 
                 baseline_summary = {
-                    "ticker": reference_rate_ticker,
+                    "ticker": reference_rate_ticker or "provided_data",
                     "start_date": common_dates[0],
                     "end_date": final_date,
                     "start_price": ref_start_price,

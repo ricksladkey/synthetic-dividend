@@ -73,7 +73,7 @@ class StaticAssetProvider(AssetProvider):
             return pd.DataFrame(columns=["Open", "High", "Low", "Close"])
 
         # Load CSV file
-        df = pd.read_csv(self.csv_path, index_col="Date", parse_dates=True)
+        df = pd.read_csv(self.csv_path, index_col=0, parse_dates=True)
 
         # Filter to requested date range
         mask = (df.index >= pd.Timestamp(start_date)) & (df.index <= pd.Timestamp(end_date))
@@ -117,7 +117,7 @@ class StaticAssetProvider(AssetProvider):
             return pd.Series(dtype=float)
 
         # Load dividend CSV
-        df = pd.read_csv(div_path, index_col="Date", parse_dates=True)
+        df = pd.read_csv(div_path, index_col=0, parse_dates=True)
 
         # Filter to requested date range
         mask = (df.index >= pd.Timestamp(start_date)) & (df.index <= pd.Timestamp(end_date))
