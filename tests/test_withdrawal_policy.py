@@ -9,7 +9,7 @@ from datetime import date, timedelta
 
 import pandas as pd
 
-from src.models.backtest import SyntheticDividendAlgorithm, run_portfolio_backtest
+from src.models.backtest import run_portfolio_backtest
 
 
 def create_price_data(price_path, ticker="TEST"):
@@ -52,12 +52,6 @@ def test_withdrawal_from_bank_balance():
     end_date = start_date + timedelta(days=12 * 30)
 
     # Run SD8 with 4% withdrawal rate (monthly withdrawals)
-    algo = SyntheticDividendAlgorithm(
-        rebalance_size=9.05 / 100.0,
-        profit_sharing=50.0 / 100.0,
-        buyback_enabled=True,
-    )
-
     # Convert single-ticker to portfolio format
     start_price = price_df.iloc[0]["Close"]
     initial_investment = initial_shares * start_price
@@ -66,6 +60,7 @@ def test_withdrawal_from_bank_balance():
 
     # Mock the HistoryFetcher to return our synthetic data
     from unittest.mock import patch
+
     import src.data.fetcher as fetcher_module
 
     original_get_history = fetcher_module.HistoryFetcher.get_history
@@ -89,6 +84,7 @@ def test_withdrawal_from_bank_balance():
 
         # Map portfolio results to single-ticker format for compatibility
         from src.models.backtest import _map_portfolio_to_single_ticker_summary
+
         results = _map_portfolio_to_single_ticker_summary(
             portfolio_summary=portfolio_results,
             ticker="TEST",
@@ -162,6 +158,7 @@ def test_withdrawal_forces_selling_for_buy_and_hold():
 
     # Mock the HistoryFetcher to return our synthetic data
     from unittest.mock import patch
+
     import src.data.fetcher as fetcher_module
 
     original_get_history = fetcher_module.HistoryFetcher.get_history
@@ -185,6 +182,7 @@ def test_withdrawal_forces_selling_for_buy_and_hold():
 
         # Map portfolio results to single-ticker format for compatibility
         from src.models.backtest import _map_portfolio_to_single_ticker_summary
+
         results = _map_portfolio_to_single_ticker_summary(
             portfolio_summary=portfolio_results,
             ticker="TEST",
@@ -252,6 +250,7 @@ def test_simple_mode_no_opportunity_cost():
 
     # Mock the HistoryFetcher to return our synthetic data
     from unittest.mock import patch
+
     import src.data.fetcher as fetcher_module
 
     original_get_history = fetcher_module.HistoryFetcher.get_history
@@ -274,6 +273,7 @@ def test_simple_mode_no_opportunity_cost():
 
         # Map portfolio results to single-ticker format for compatibility
         from src.models.backtest import _map_portfolio_to_single_ticker_summary
+
         results_simple = _map_portfolio_to_single_ticker_summary(
             portfolio_summary=portfolio_results_simple,
             ticker="TEST",

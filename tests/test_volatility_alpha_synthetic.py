@@ -21,8 +21,6 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.models.backtest import (  # noqa: E402
-    SyntheticDividendAlgorithm,
-    run_algorithm_backtest,
     run_portfolio_backtest,
 )
 
@@ -139,6 +137,7 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
         # Mock the HistoryFetcher to return our synthetic data
         from unittest.mock import patch
+
         import src.data.fetcher as fetcher_module
 
         original_get_history = fetcher_module.HistoryFetcher.get_history
@@ -159,6 +158,7 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
             # Map portfolio results to single-ticker format for compatibility
             from src.models.backtest import _map_portfolio_to_single_ticker_summary
+
             summary = _map_portfolio_to_single_ticker_summary(
                 portfolio_summary=portfolio_results,
                 ticker="SYNTHETIC",
@@ -194,6 +194,7 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
         # Mock the HistoryFetcher to return our synthetic data
         from unittest.mock import patch
+
         import src.data.fetcher as fetcher_module
 
         original_get_history = fetcher_module.HistoryFetcher.get_history
@@ -205,7 +206,9 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
         with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
             # ATH-only
-            ath_portfolio_algo = "per-asset:sd-ath-only-9.05,50"  # 9.05% trigger, 50% profit sharing, ATH-only
+            ath_portfolio_algo = (
+                "per-asset:sd-ath-only-9.05,50"  # 9.05% trigger, 50% profit sharing, ATH-only
+            )
             ath_txns, ath_portfolio_results = run_portfolio_backtest(
                 allocations=allocations,
                 start_date=df.index[0],
@@ -216,6 +219,7 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
             # Map portfolio results to single-ticker format for compatibility
             from src.models.backtest import _map_portfolio_to_single_ticker_summary
+
             ath_summary = _map_portfolio_to_single_ticker_summary(
                 portfolio_summary=ath_portfolio_results,
                 ticker="SYNTHETIC",
@@ -227,7 +231,9 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
             )
 
             # Enhanced
-            enhanced_portfolio_algo = "per-asset:sd-9.05,50"  # 9.05% trigger, 50% profit sharing, buybacks enabled
+            enhanced_portfolio_algo = (
+                "per-asset:sd-9.05,50"  # 9.05% trigger, 50% profit sharing, buybacks enabled
+            )
             enhanced_txns, enhanced_portfolio_results = run_portfolio_backtest(
                 allocations=allocations,
                 start_date=df.index[0],
@@ -296,10 +302,13 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         start_price = df.iloc[0]["Close"]
         initial_investment = 1000 * start_price
         allocations = {"SYNTHETIC": 1.0}
-        portfolio_algo = "per-asset:sd-9.05,50"  # 9.05% trigger, 50% profit sharing, buybacks enabled
+        portfolio_algo = (
+            "per-asset:sd-9.05,50"  # 9.05% trigger, 50% profit sharing, buybacks enabled
+        )
 
         # Mock the HistoryFetcher to return our synthetic data
         from unittest.mock import patch
+
         import src.data.fetcher as fetcher_module
 
         original_get_history = fetcher_module.HistoryFetcher.get_history
@@ -319,8 +328,9 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
             )
 
             # Map portfolio results to single-ticker format for compatibility
-            from src.models.backtest import _map_portfolio_to_single_ticker_summary
             from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
+            from src.models.backtest import _map_portfolio_to_single_ticker_summary
+
             portfolio_obj = build_portfolio_algo_from_name(portfolio_algo, allocations)
             enhanced_summary = _map_portfolio_to_single_ticker_summary(
                 portfolio_summary=portfolio_results,
@@ -356,10 +366,13 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         start_price_gap = gap_df.iloc[0]["Close"]
         initial_investment_gap = 1000 * start_price_gap
         allocations = {"SYNTHETIC": 1.0}
-        portfolio_algo = "per-asset:sd-9.05,50"  # 9.05% trigger, 50% profit sharing, buybacks enabled
+        portfolio_algo = (
+            "per-asset:sd-9.05,50"  # 9.05% trigger, 50% profit sharing, buybacks enabled
+        )
 
         # Mock the HistoryFetcher to return our synthetic data
         from unittest.mock import patch
+
         import src.data.fetcher as fetcher_module
 
         original_get_history = fetcher_module.HistoryFetcher.get_history
@@ -371,7 +384,7 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
                 elif start_date == volatile_df.index[0] and end_date == volatile_df.index[-1]:
                     return volatile_df
                 else:
-                    return df  # fallback, but shouldn't happen
+                    return None  # fallback, but shouldn't happen
             return original_get_history(self, ticker, start_date, end_date)
 
         with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
@@ -386,7 +399,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
             # Map portfolio results to single-ticker format for compatibility
             from src.models.backtest import _map_portfolio_to_single_ticker_summary
-            gap_summary = _map_portfolio_to_single_ticker_summary(
+
+            _map_portfolio_to_single_ticker_summary(
                 portfolio_summary=gap_portfolio_results,
                 ticker="SYNTHETIC",
                 df_indexed=gap_df,
@@ -408,7 +422,7 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
             )
 
             # Map portfolio results to single-ticker format for compatibility
-            volatile_summary = _map_portfolio_to_single_ticker_summary(
+            _map_portfolio_to_single_ticker_summary(
                 portfolio_summary=volatile_portfolio_results,
                 ticker="SYNTHETIC",
                 df_indexed=volatile_df,
@@ -433,10 +447,13 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         start_price = df.iloc[0]["Close"]
         initial_investment = 1000 * start_price
         allocations = {"SYNTHETIC": 1.0}
-        portfolio_algo = "per-asset:sd-ath-only-9.05,50"  # 9.05% trigger, 50% profit sharing, ATH-only
+        portfolio_algo = (
+            "per-asset:sd-ath-only-9.05,50"  # 9.05% trigger, 50% profit sharing, ATH-only
+        )
 
         # Mock the HistoryFetcher to return our synthetic data
         from unittest.mock import patch
+
         import src.data.fetcher as fetcher_module
 
         original_get_history = fetcher_module.HistoryFetcher.get_history
@@ -457,7 +474,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
             # Map portfolio results to single-ticker format for compatibility
             from src.models.backtest import _map_portfolio_to_single_ticker_summary
-            summary = _map_portfolio_to_single_ticker_summary(
+
+            _map_portfolio_to_single_ticker_summary(
                 portfolio_summary=portfolio_results,
                 ticker="SYNTHETIC",
                 df_indexed=df,
@@ -481,10 +499,13 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
         start_price = df.iloc[0]["Close"]
         initial_investment = 1000 * start_price
         allocations = {"SYNTHETIC": 1.0}
-        portfolio_algo = "per-asset:sd-ath-only-9.05,50"  # 9.05% trigger, 50% profit sharing, ATH-only
+        portfolio_algo = (
+            "per-asset:sd-ath-only-9.05,50"  # 9.05% trigger, 50% profit sharing, ATH-only
+        )
 
         # Mock the HistoryFetcher to return our synthetic data
         from unittest.mock import patch
+
         import src.data.fetcher as fetcher_module
 
         original_get_history = fetcher_module.HistoryFetcher.get_history
@@ -505,6 +526,7 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
             # Map portfolio results to single-ticker format for compatibility
             from src.models.backtest import _map_portfolio_to_single_ticker_summary
+
             summary = _map_portfolio_to_single_ticker_summary(
                 portfolio_summary=portfolio_results,
                 ticker="SYNTHETIC",
@@ -541,6 +563,7 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
         # Mock the HistoryFetcher to return our synthetic data
         from unittest.mock import patch
+
         import src.data.fetcher as fetcher_module
 
         original_get_history = fetcher_module.HistoryFetcher.get_history
@@ -552,7 +575,9 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
         with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
             # ATH-only
-            ath_portfolio_algo = "per-asset:sd-ath-only-9.05,50"  # 9.05% trigger, 50% profit sharing, ATH-only
+            ath_portfolio_algo = (
+                "per-asset:sd-ath-only-9.05,50"  # 9.05% trigger, 50% profit sharing, ATH-only
+            )
             ath_txns, ath_portfolio_results = run_portfolio_backtest(
                 allocations=allocations,
                 start_date=df.index[0],
@@ -563,7 +588,8 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
             # Map portfolio results to single-ticker format for compatibility
             from src.models.backtest import _map_portfolio_to_single_ticker_summary
-            ath_summary = _map_portfolio_to_single_ticker_summary(
+
+            _map_portfolio_to_single_ticker_summary(
                 portfolio_summary=ath_portfolio_results,
                 ticker="SYNTHETIC",
                 df_indexed=df,
@@ -574,7 +600,9 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
             )
 
             # Enhanced
-            enhanced_portfolio_algo = "per-asset:sd-9.05,50"  # 9.05% trigger, 50% profit sharing, buybacks enabled
+            enhanced_portfolio_algo = (
+                "per-asset:sd-9.05,50"  # 9.05% trigger, 50% profit sharing, buybacks enabled
+            )
             enhanced_txns, enhanced_portfolio_results = run_portfolio_backtest(
                 allocations=allocations,
                 start_date=df.index[0],
@@ -617,6 +645,7 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
         # Mock the HistoryFetcher to return our synthetic data
         from unittest.mock import patch
+
         import src.data.fetcher as fetcher_module
 
         original_get_history = fetcher_module.HistoryFetcher.get_history
@@ -628,7 +657,9 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
         with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
             # ATH-only
-            ath_portfolio_algo = "per-asset:sd-ath-only-9.05,50"  # 9.05% trigger, 50% profit sharing, ATH-only
+            ath_portfolio_algo = (
+                "per-asset:sd-ath-only-9.05,50"  # 9.05% trigger, 50% profit sharing, ATH-only
+            )
             ath_txns, ath_portfolio_results = run_portfolio_backtest(
                 allocations=allocations,
                 start_date=df.index[0],
@@ -639,6 +670,7 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
 
             # Map portfolio results to single-ticker format for compatibility
             from src.models.backtest import _map_portfolio_to_single_ticker_summary
+
             ath_summary = _map_portfolio_to_single_ticker_summary(
                 portfolio_summary=ath_portfolio_results,
                 ticker="SYNTHETIC",
@@ -650,7 +682,9 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
             )
 
             # Enhanced
-            enhanced_portfolio_algo = "per-asset:sd-9.05,50"  # 9.05% trigger, 50% profit sharing, buybacks enabled
+            enhanced_portfolio_algo = (
+                "per-asset:sd-9.05,50"  # 9.05% trigger, 50% profit sharing, buybacks enabled
+            )
             enhanced_txns, enhanced_portfolio_results = run_portfolio_backtest(
                 allocations=allocations,
                 start_date=df.index[0],
@@ -660,8 +694,6 @@ class TestVolatilityAlphaWithSyntheticData(unittest.TestCase):
             )
 
             # Map portfolio results to single-ticker format for compatibility
-            from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
-            enhanced_portfolio_obj = build_portfolio_algo_from_name(enhanced_portfolio_algo, allocations)
             enhanced_summary = _map_portfolio_to_single_ticker_summary(
                 portfolio_summary=enhanced_portfolio_results,
                 ticker="SYNTHETIC",
@@ -788,6 +820,7 @@ class TestProfitSharingSymmetry(unittest.TestCase):
 
         # Mock the HistoryFetcher to return our synthetic data
         from unittest.mock import patch
+
         import src.data.fetcher as fetcher_module
 
         original_get_history = fetcher_module.HistoryFetcher.get_history
@@ -808,6 +841,7 @@ class TestProfitSharingSymmetry(unittest.TestCase):
 
             # Map portfolio results to single-ticker format for compatibility
             from src.models.backtest import _map_portfolio_to_single_ticker_summary
+
             summary = _map_portfolio_to_single_ticker_summary(
                 portfolio_summary=portfolio_results,
                 ticker="SYNTHETIC",
@@ -839,10 +873,13 @@ class TestProfitSharingSymmetry(unittest.TestCase):
         start_price = df.iloc[0]["Close"]
         initial_investment = 1000 * start_price
         allocations = {"SYNTHETIC": 1.0}
-        portfolio_algo = "per-asset:sd-ath-only-9.05,100"  # 9.05% trigger, 100% profit sharing, ATH-only
+        portfolio_algo = (
+            "per-asset:sd-ath-only-9.05,100"  # 9.05% trigger, 100% profit sharing, ATH-only
+        )
 
         # Mock the HistoryFetcher to return our synthetic data
         from unittest.mock import patch
+
         import src.data.fetcher as fetcher_module
 
         original_get_history = fetcher_module.HistoryFetcher.get_history
@@ -863,7 +900,8 @@ class TestProfitSharingSymmetry(unittest.TestCase):
 
             # Map portfolio results to single-ticker format for compatibility
             from src.models.backtest import _map_portfolio_to_single_ticker_summary
-            summary = _map_portfolio_to_single_ticker_summary(
+
+            _map_portfolio_to_single_ticker_summary(
                 portfolio_summary=portfolio_results,
                 ticker="SYNTHETIC",
                 df_indexed=df,

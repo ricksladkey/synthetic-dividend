@@ -2175,12 +2175,15 @@ def run_portfolio_backtest(
     # Add algorithm-specific stats for single-ticker compatibility
     if len(allocations) == 1 and isinstance(portfolio_algo, PortfolioAlgorithmBase):
         from src.algorithms import PerAssetPortfolioAlgorithm
+
         if isinstance(portfolio_algo, PerAssetPortfolioAlgorithm):
             ticker = list(allocations.keys())[0]
             algo = portfolio_algo.strategies.get(ticker)
             if algo:
                 portfolio_summary["final_stack_size"] = getattr(algo, "buyback_stack_count", 0)
-                portfolio_summary["total_volatility_alpha"] = getattr(algo, "total_volatility_alpha", 0.0)
+                portfolio_summary["total_volatility_alpha"] = getattr(
+                    algo, "total_volatility_alpha", 0.0
+                )
             else:
                 portfolio_summary["final_stack_size"] = 0
                 portfolio_summary["total_volatility_alpha"] = 0.0
