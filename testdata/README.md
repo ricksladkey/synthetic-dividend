@@ -26,6 +26,10 @@ Date,Dividend
 ...
 ```
 
+## Data Integrity
+
+⚠️ **Important**: Files in this directory are committed test data and should never be modified by the application. The `StaticAssetProvider` only reads from these files - it does not write to them. If you find these files being modified during testing, this indicates a bug in the caching logic.
+
 ## Available Data
 
 - **SPY.csv**: S&P 500 ETF (2020-2024) - Primary test asset

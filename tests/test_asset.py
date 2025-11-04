@@ -36,11 +36,11 @@ class TestAssetBasics:
             # In that case, check that paths are set appropriately for the provider
             if hasattr(asset, "_provider") and asset._provider is not None:
                 # Provider is registered - paths may be overridden
-                # Just check that paths are strings and exist
-                assert isinstance(asset.pkl_path, str)
-                assert isinstance(asset.csv_path, str)
-                assert isinstance(asset.div_pkl_path, str)
-                assert isinstance(asset.div_csv_path, str)
+                # Just check that paths are either strings or None (providers may disable caching)
+                assert asset.pkl_path is None or isinstance(asset.pkl_path, str)
+                assert asset.csv_path is None or isinstance(asset.csv_path, str)
+                assert asset.div_pkl_path is None or isinstance(asset.div_pkl_path, str)
+                assert asset.div_csv_path is None or isinstance(asset.div_csv_path, str)
             else:
                 # No provider - should use cache directory
                 assert asset.pkl_path == os.path.join(tmpdir, "NVDA.pkl")
@@ -70,13 +70,15 @@ class TestAssetPrices:
             df = asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
 
             if not df.empty:
-                # Both cache files should exist
-                assert os.path.exists(asset.pkl_path)
-                assert os.path.exists(asset.csv_path)
+                # Both cache files should exist (unless provider disables caching)
+                if asset.pkl_path is not None:
+                    assert os.path.exists(asset.pkl_path)
+                if asset.csv_path is not None:
+                    assert os.path.exists(asset.csv_path)
 
-                # CSV should be readable
-                df_csv = pd.read_csv(asset.csv_path, index_col=0, parse_dates=True)
-                assert not df_csv.empty
+                    # CSV should be readable
+                    df_csv = pd.read_csv(asset.csv_path, index_col=0, parse_dates=True)
+                    assert not df_csv.empty
 
     def test_get_prices_uses_cache_on_second_call(self):
         """Second call with same range should use cache (no download)."""
@@ -86,7 +88,7 @@ class TestAssetPrices:
             # First call: download and cache
             df1 = asset.get_prices(date(2024, 1, 2), date(2024, 1, 5))
 
-            if not df1.empty:
+            if not df1.empty and asset.pkl_path is not None:
                 # Modify pkl cache to test that it's being used
                 df_modified = df1.copy()
                 df_modified.to_pickle(asset.pkl_path)
