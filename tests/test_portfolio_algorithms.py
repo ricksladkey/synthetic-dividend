@@ -145,17 +145,31 @@ def test_wrapper_vs_portfolio_equivalence():
     This validates that the Phase 2 consolidation wrapper correctly delegates to portfolio backtest
     for supported scenarios, ensuring both approaches produce identical results.
     """
-    # Use a mock ticker that has some volatility for SD8 to work with
-    mock_ticker = "MOCK-SINE-100-20"  # Sine wave around $100 with $20 amplitude
+    # Use NVDA with a date range that should have data
+    ticker = "NVDA"
 
-    start_date = date(2020, 1, 1)
-    end_date = date(2020, 12, 31)  # Use a longer period to get more data
+    start_date = date(2024, 1, 1)
+    end_date = date(2024, 6, 30)  # Shorter period to ensure data availability
 
-    # Fetch data using the Asset system (works for both backtest types)
-    from src.data.asset import Asset
+    # Load data from cache (should exist for NVDA)
+    import os
+    import pandas as pd
 
-    asset = Asset(mock_ticker)
-    price_df = asset.get_prices(start_date, end_date)
+    cache_dir = "cache"
+    csv_path = os.path.join(cache_dir, f"{ticker}.csv")
+
+    if os.path.exists(csv_path):
+        # Load from existing cache
+        price_df = pd.read_csv(csv_path, index_col=0, parse_dates=True)
+        # Filter to requested date range
+        price_df = price_df[(price_df.index >= pd.Timestamp(start_date)) &
+                           (price_df.index <= pd.Timestamp(end_date))]
+        if price_df.empty:
+            # If no data in range, skip test
+            pytest.skip(f"No {ticker} data available for date range {start_date} to {end_date}")
+    else:
+        # Skip test if no cache
+        pytest.skip(f"No cached data available for {ticker}")
 
     # Use SD8 algorithm (supported by wrapper)
     algo = SyntheticDividendAlgorithm(
@@ -169,7 +183,7 @@ def test_wrapper_vs_portfolio_equivalence():
     # Run with single-ticker wrapper (should delegate to portfolio backtest)
     wrapper_txns, wrapper_summary = run_algorithm_backtest(
         df=price_df,
-        ticker=mock_ticker,
+        ticker=ticker,
         initial_investment=initial_investment,
         start_date=start_date,
         end_date=end_date,
@@ -180,10 +194,10 @@ def test_wrapper_vs_portfolio_equivalence():
     # Run equivalent scenario with portfolio backtest (100% allocation to single asset)
     from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
 
-    portfolio_algo = build_portfolio_algo_from_name("per-asset:sd8", {mock_ticker: 1.0})
+    portfolio_algo = build_portfolio_algo_from_name("per-asset:sd8", {ticker: 1.0})
 
     portfolio_txns, portfolio_summary = run_portfolio_backtest(
-        allocations={mock_ticker: 1.0},
+        allocations={ticker: 1.0},
         start_date=start_date,
         end_date=end_date,
         portfolio_algo=portfolio_algo,
@@ -194,7 +208,7 @@ def test_wrapper_vs_portfolio_equivalence():
     print("\n=== Wrapper vs Portfolio Equivalence Test ===")
 
     # Map portfolio results to single-ticker format for comparison
-    test_asset = portfolio_summary["assets"][mock_ticker]
+    test_asset = portfolio_summary["assets"][ticker]
 
     print("Wrapper Results:")
     print(f"  Total Return: {wrapper_summary['total_return']:.4f}")
