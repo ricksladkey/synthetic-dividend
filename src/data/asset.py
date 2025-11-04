@@ -95,6 +95,7 @@ class Asset:
             if not result.empty:
                 # Cache the result (but not for StaticAssetProvider - it reads committed test data)
                 from src.data.static_provider import StaticAssetProvider
+
                 if not isinstance(self._provider, StaticAssetProvider):
                     self._save_price_cache(result)
                 return result
@@ -147,6 +148,7 @@ class Asset:
             if not result.empty:
                 # Cache the result (but not for StaticAssetProvider - it reads committed test data)
                 from src.data.static_provider import StaticAssetProvider
+
                 if not isinstance(self._provider, StaticAssetProvider):
                     self._save_dividend_cache(result)
                 return result
