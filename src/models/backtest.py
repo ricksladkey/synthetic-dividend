@@ -112,8 +112,6 @@ def run_algorithm_backtest(
     withdrawal_frequency_days: int = 30,
     cpi_data: Optional[pd.DataFrame] = None,
     simple_mode: bool = False,
-    # Price normalization
-    normalize_prices: bool = False,
     # Bank behavior
     allow_margin: bool = True,
     # Investment amount (alternative to initial_qty)
@@ -169,11 +167,6 @@ def run_algorithm_backtest(
         simple_mode: If True, disables opportunity cost, risk-free gains, and CPI adjustment
                     Useful for unit tests where we want clean, simple behavior
                     (free borrowing, cash holds value, no inflation)
-        normalize_prices: If True, normalize all prices so brackets are at standard positions
-                         relative to 1.0 based on rebalance_trigger.
-                         This makes bracket placement deterministic across different backtests.
-                         For sd8 (9.05% trigger): brackets at 1.0, 1.0905, 1.1893, 1.2968, ...
-                         The first price is scaled so it lands on a standard bracket.
         allow_margin: If True (default), bank can go negative (borrowing from yourself)
                      BUY transactions always execute, withdrawals cover amount only.
                      If False (strict mode), bank never goes negative (closed system)
@@ -227,7 +220,6 @@ def run_algorithm_backtest(
             "withdrawal_frequency_days",
             "cpi_data",
             "simple_mode",
-            "normalize_prices",
             "allow_margin",
             "initial_investment",
             "reference_asset_df",
@@ -337,53 +329,6 @@ def run_algorithm_backtest(
             print(
                 f"  (difference due to whole shares: ${actual_invested - investment_amount:+,.2f})"
             )
-
-    # Price normalization (if enabled)
-    # Normalize so that brackets are at standard positions relative to 1.0
-    # For example, with sd8 (9.05% trigger), brackets at: 1.0, 1.0905, 1.1893, 1.2968, ...
-    price_scale_factor: float = 1.0
-    if normalize_prices:
-        # Get rebalance trigger from algorithm
-        rebalance_trigger = 0.0
-        if algo is not None:
-            if isinstance(algo, SyntheticDividendAlgorithm):
-                rebalance_trigger = algo.rebalance_size  # Already in decimal form
-            elif hasattr(algo, "rebalance_size"):
-                rebalance_trigger = algo.rebalance_size
-
-        if rebalance_trigger > 0:
-            # Find which bracket the start_price should be on
-            # Brackets are at: 1.0 * (1 + r)^n for integer n
-            # We want: start_price * scale = 1.0 * (1 + r)^n for some integer n
-            # So: n = log(start_price * scale) / log(1 + r)
-            # We want n to be an integer, so find closest integer bracket
-
-            # Start by assuming scale=1, find which bracket that gives us
-            n_float = math.log(start_price) / math.log(1 + rebalance_trigger)
-            n_int = round(n_float)  # Round to nearest integer bracket
-
-            # Now calculate the scale to land exactly on that bracket
-            # target_price = 1.0 * (1 + r)^n
-            # scale = target_price / start_price
-            target_price = math.pow(1 + rebalance_trigger, n_int)
-            price_scale_factor = target_price / start_price
-
-            # Scale all prices in the dataframe
-            df_indexed = df_indexed.copy()
-            for col in ["Open", "High", "Low", "Close"]:
-                if col in df_indexed.columns:
-                    df_indexed[col] = df_indexed[col] * price_scale_factor
-
-            # Update start/end prices
-            start_price = start_price * price_scale_factor
-            end_price = end_price * price_scale_factor
-
-            print(f"Price normalization: scaling factor = {price_scale_factor:.6f}")
-            print(f"  Original start price: ${start_price / price_scale_factor:.2f}")
-            print(f"  Normalized start price: ${start_price:.2f} (bracket n={n_int})")
-            print(f"  Rebalance trigger: {rebalance_trigger * 100:.4f}%")
-            print(f"  Next bracket up: ${start_price * (1 + rebalance_trigger):.2f}")
-            print(f"  Next bracket down: ${start_price / (1 + rebalance_trigger):.2f}")
 
     transactions: List[Transaction] = []
 
@@ -578,7 +523,15 @@ def run_algorithm_backtest(
 
             # Enhance transaction with date, price, and ticker (algorithms don't know these)
             tx.transaction_date = d
-            tx.price = price
+            # Try to extract actual execution price from notes, fall back to market price
+            if "filled=$" in tx.notes:
+                try:
+                    fill_price_str = tx.notes.split("filled=$")[1].split()[0]
+                    tx.price = float(fill_price_str)
+                except (IndexError, ValueError):
+                    tx.price = price
+            else:
+                tx.price = price
             tx.ticker = ticker
 
             # Execute SELL transaction

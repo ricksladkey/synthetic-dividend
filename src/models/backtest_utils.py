@@ -42,11 +42,11 @@ def calculate_synthetic_dividend_orders(
     # If bracket_seed is provided, normalize last_transaction_price to bracket ladder
     anchor_price = last_transaction_price
     if bracket_seed is not None and bracket_seed > 0 and rebalance_size > 0:
-        # Calculate which bracket the current price is on
-        bracket_n = math.log(last_transaction_price) / math.log(1 + rebalance_size)
+        # Calculate which bracket the current price is on relative to bracket_seed
+        bracket_n = math.log(last_transaction_price / bracket_seed) / math.log(1 + rebalance_size)
         bracket_rounded = round(bracket_n)
-        # Normalize to the exact bracket position
-        anchor_price = math.pow(1 + rebalance_size, bracket_rounded)
+        # Normalize to the exact bracket position on the bracket_seed ladder
+        anchor_price = bracket_seed * math.pow(1 + rebalance_size, bracket_rounded)
 
     # Buy at r% below anchor price
     next_buy_price: float = anchor_price / (1 + rebalance_size)
