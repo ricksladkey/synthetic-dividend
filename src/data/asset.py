@@ -93,8 +93,10 @@ class Asset:
             result = self._provider.get_prices(start_date, end_date)
             # If primary provider returns empty data, try fallback providers
             if not result.empty:
-                # Cache the result
-                self._save_price_cache(result)
+                # Cache the result (but not for StaticAssetProvider - it reads committed test data)
+                from src.data.static_provider import StaticAssetProvider
+                if not isinstance(self._provider, StaticAssetProvider):
+                    self._save_price_cache(result)
                 return result
 
             # Try fallback providers in priority order (excluding the primary)
@@ -143,8 +145,10 @@ class Asset:
             result = self._provider.get_dividends(start_date, end_date)
             # If primary provider returns empty data, try fallback providers
             if not result.empty:
-                # Cache the result
-                self._save_dividend_cache(result)
+                # Cache the result (but not for StaticAssetProvider - it reads committed test data)
+                from src.data.static_provider import StaticAssetProvider
+                if not isinstance(self._provider, StaticAssetProvider):
+                    self._save_dividend_cache(result)
                 return result
 
             # Try fallback providers in priority order (excluding the primary)
@@ -195,16 +199,17 @@ class Asset:
                 pass
 
         for path in (self.pkl_path, self.csv_path, self.div_pkl_path, self.div_csv_path):
-            try:
-                if os.path.exists(path):
-                    os.remove(path)
-            except Exception:
-                # Ignore file deletion errors: cache clearing is best-effort
-                pass
+            if path is not None:
+                try:
+                    if os.path.exists(path):
+                        os.remove(path)
+                except Exception:
+                    # Ignore file deletion errors: cache clearing is best-effort
+                    pass
 
     # --- Internal helpers for the fallback implementation ---
     def _load_price_cache(self) -> Optional[pd.DataFrame]:
-        if os.path.exists(self.pkl_path):
+        if self.pkl_path is not None and os.path.exists(self.pkl_path):
             try:
                 return pd.read_pickle(self.pkl_path)
             except Exception:
@@ -213,14 +218,16 @@ class Asset:
 
     def _save_price_cache(self, df: pd.DataFrame) -> None:
         try:
-            df.to_pickle(self.pkl_path)
-            df.to_csv(self.csv_path, index=True)
+            if self.pkl_path is not None:
+                df.to_pickle(self.pkl_path)
+            if self.csv_path is not None:
+                df.to_csv(self.csv_path, index=True)
         except Exception:
             # Ignore cache write errors: cache is non-critical and failures should not interrupt main flow
             pass
 
     def _load_dividend_cache(self) -> Optional[pd.Series]:
-        if os.path.exists(self.div_pkl_path):
+        if self.div_pkl_path is not None and os.path.exists(self.div_pkl_path):
             try:
                 return pd.read_pickle(self.div_pkl_path)
             except Exception:
@@ -229,8 +236,10 @@ class Asset:
 
     def _save_dividend_cache(self, series: pd.Series) -> None:
         try:
-            series.to_pickle(self.div_pkl_path)
-            series.to_frame(name="Dividends").to_csv(self.div_csv_path)
+            if self.div_pkl_path is not None:
+                series.to_pickle(self.div_pkl_path)
+            if self.div_csv_path is not None:
+                series.to_frame(name="Dividends").to_csv(self.div_csv_path)
         except Exception:
             # Ignore cache write errors: cache is non-critical and failures should not interrupt main flow
             pass
