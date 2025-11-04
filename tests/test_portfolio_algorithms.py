@@ -151,25 +151,14 @@ def test_wrapper_vs_portfolio_equivalence():
     start_date = date(2024, 1, 1)
     end_date = date(2024, 6, 30)  # Shorter period to ensure data availability
 
-    # Load data from cache (should exist for NVDA)
-    import os
-    import pandas as pd
+    # Fetch data using HistoryFetcher (same as portfolio backtest)
+    from src.data.fetcher import HistoryFetcher
 
-    cache_dir = "cache"
-    csv_path = os.path.join(cache_dir, f"{ticker}.csv")
+    fetcher = HistoryFetcher()
+    price_df = fetcher.get_history(ticker, start_date, end_date)
 
-    if os.path.exists(csv_path):
-        # Load from existing cache
-        price_df = pd.read_csv(csv_path, index_col=0, parse_dates=True)
-        # Filter to requested date range
-        price_df = price_df[(price_df.index >= pd.Timestamp(start_date)) &
-                           (price_df.index <= pd.Timestamp(end_date))]
-        if price_df.empty:
-            # If no data in range, skip test
-            pytest.skip(f"No {ticker} data available for date range {start_date} to {end_date}")
-    else:
-        # Skip test if no cache
-        pytest.skip(f"No cached data available for {ticker}")
+    if price_df is None or price_df.empty:
+        pytest.skip(f"No data available for {ticker}")
 
     # Use SD8 algorithm (supported by wrapper)
     algo = SyntheticDividendAlgorithm(

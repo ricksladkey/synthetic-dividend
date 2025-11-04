@@ -124,52 +124,6 @@ def _create_portfolio_algorithm_from_single_ticker(
     return PerAssetPortfolioAlgorithm({ticker: algo_obj})
 
 
-def _can_use_portfolio_wrapper(
-    dividend_series: Optional[pd.Series],
-    reference_data: Optional[pd.DataFrame],
-    risk_free_data: Optional[pd.DataFrame],
-    cpi_data: Optional[pd.DataFrame],
-    normalize_prices: bool,
-    algo: Optional[Union[AlgorithmBase, Callable]],
-) -> bool:
-    """Check if parameters allow using portfolio backtest wrapper.
-
-    The portfolio backtest doesn't yet support:
-    - Dividend tracking
-    - Reference asset data
-    - Risk-free asset data
-    - CPI adjustment
-    - Price normalization
-    - Callable algorithms
-
-    Args:
-        dividend_series: Dividend data (unsupported)
-        reference_data: Reference asset data (unsupported)
-        risk_free_data: Risk-free asset data (unsupported)
-        cpi_data: CPI data (unsupported)
-        normalize_prices: Price normalization flag (unsupported)
-        algo: Algorithm (callables unsupported)
-
-    Returns:
-        True if portfolio wrapper can be used, False if legacy path needed
-    """
-    # Check for unsupported features
-    if dividend_series is not None and not dividend_series.empty:
-        return False
-    if reference_data is not None and not reference_data.empty:
-        return False
-    if risk_free_data is not None and not risk_free_data.empty:
-        return False
-    if cpi_data is not None and not cpi_data.empty:
-        return False
-    if normalize_prices:
-        return False
-    if callable(algo) and not isinstance(algo, AlgorithmBase):
-        return False
-
-    return True
-
-
 def _map_portfolio_to_single_ticker_summary(
     portfolio_summary: Dict[str, Any],
     ticker: str,
@@ -565,6 +519,40 @@ def run_algorithm_backtest(
     # Falls back to legacy implementation for unsupported features (dividends,
     # reference assets, CPI, price normalization, callable algorithms).
 
+    def _can_use_portfolio_wrapper(
+        dividend_series,
+        reference_data,
+        risk_free_data,
+        cpi_data,
+        normalize_prices,
+        algo,
+    ):
+        """Check if portfolio wrapper can be used instead of legacy implementation.
+
+        Returns True if none of the unsupported features are requested:
+        - Dividends
+        - Reference assets
+        - Risk-free assets
+        - CPI data
+        - Price normalization
+        - Callable algorithms (must be AlgorithmBase instances)
+        """
+        # Check for unsupported features
+        if dividend_series is not None and not dividend_series.empty:
+            return False
+        if reference_data is not None and not reference_data.empty:
+            return False
+        if risk_free_data is not None and not risk_free_data.empty:
+            return False
+        if cpi_data is not None and not cpi_data.empty:
+            return False
+        if normalize_prices:
+            return False
+        if callable(algo):
+            return False
+
+        return True
+
     can_use_wrapper = _can_use_portfolio_wrapper(
         dividend_series=dividend_series,
         reference_data=reference_data,
@@ -577,45 +565,53 @@ def run_algorithm_backtest(
     if can_use_wrapper:
         # Use portfolio backtest for this single-ticker backtest
         # Create single-asset portfolio (100% allocation to this ticker)
+        # Prepare data
+        df_indexed = df.copy()
+        df_indexed.index = pd.to_datetime(df_indexed.index).date
+
+        # Set default start/end dates if not provided
+        if start_date is None:
+            start_date = min(df_indexed.index)
+        if end_date is None:
+            end_date = max(df_indexed.index)
+
+        # Ensure the data is cached so run_portfolio_backtest can fetch it
+        from src.data.asset import Asset
+
+        asset = Asset(ticker, cache_dir="cache")
+        asset._save_price_cache(df_indexed)
+        # Force use of cache by disabling provider
+        asset._provider = None
+
+        # Convert algorithm to portfolio algorithm
+        portfolio_algo = _create_portfolio_algorithm_from_single_ticker(
+            algo=algo,
+            algo_params=algo_params,
+            ticker=ticker,
+        )
+
+        # Calculate investment amount
+        first_idx = min(d for d in df_indexed.index if d >= start_date)
+        start_price = float(df_indexed.loc[first_idx, "Close"])
+
+        if initial_qty is not None:
+            investment = initial_qty * start_price
+        elif initial_investment is not None:
+            investment = initial_investment
+        else:
+            investment = 1_000_000.0  # Default
+
+        # Call portfolio backtest with single asset at 100% allocation
+        allocations = {ticker: 1.0}
+
+        # Map risk_free_rate_pct to cash_interest_rate_pct (simple_mode ignores it anyway)
+        cash_interest_rate = 0.0 if simple_mode else risk_free_rate_pct
+
+        # Note: run_portfolio_backtest() fetches data internally using HistoryFetcher
+        # This means it will try to fetch ticker data from registered providers
+        # If the ticker isn't available, it will fail and we'll fall back to legacy
+
         try:
-            # Prepare data
-            df_indexed = df.copy()
-            df_indexed.index = pd.to_datetime(df_indexed.index).date
-
-            # Set default start/end dates if not provided
-            if start_date is None:
-                start_date = min(df_indexed.index)
-            if end_date is None:
-                end_date = max(df_indexed.index)
-
-            # Convert algorithm to portfolio algorithm
-            portfolio_algo = _create_portfolio_algorithm_from_single_ticker(
-                algo=algo,
-                algo_params=algo_params,
-                ticker=ticker,
-            )
-
-            # Calculate investment amount
-            first_idx = min(d for d in df_indexed.index if d >= start_date)
-            start_price = float(df_indexed.loc[first_idx, "Close"])
-
-            if initial_qty is not None:
-                investment = initial_qty * start_price
-            elif initial_investment is not None:
-                investment = initial_investment
-            else:
-                investment = 1_000_000.0  # Default
-
-            # Call portfolio backtest with single asset at 100% allocation
-            allocations = {ticker: 1.0}
-
-            # Map risk_free_rate_pct to cash_interest_rate_pct (simple_mode ignores it anyway)
-            cash_interest_rate = 0.0 if simple_mode else risk_free_rate_pct
-
-            # Note: run_portfolio_backtest() fetches data internally using HistoryFetcher
-            # This means it will try to fetch ticker data from registered providers
-            # If the ticker isn't available, it will fail and we'll fall back to legacy
-
             # Call portfolio backtest
             transactions, portfolio_summary = run_portfolio_backtest(
                 allocations=allocations,
@@ -648,11 +644,9 @@ def run_algorithm_backtest(
             summary["allow_margin"] = allow_margin
 
             return transactions, summary
-
-        except Exception as e:
-            # If portfolio wrapper fails for any reason, fall back to legacy
-            print(f"Portfolio wrapper failed ({e}), using legacy implementation")
-            # Fall through to legacy implementation below
+        except Exception:
+            # Fall back to legacy implementation if portfolio wrapper fails
+            pass
 
     # ========================================================================
     # LEGACY IMPLEMENTATION
@@ -1587,7 +1581,7 @@ def run_portfolio_backtest(
     )
 
     # Main backtest loop
-    for current_date in common_dates:
+    for i, current_date in enumerate(common_dates):
         # Build current asset states
         assets: Dict[str, AssetState] = {}
         for ticker in allocations.keys():
