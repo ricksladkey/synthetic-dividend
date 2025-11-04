@@ -4,14 +4,13 @@ Provides abstract base for strategy implementations and execution framework
 for backtesting against historical OHLC price data.
 """
 
-import math
 from datetime import date
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
 
 # Import algorithm classes from dedicated package
-from src.algorithms import (
+from src.algorithms import (  # noqa: F401; (re-exported for backwards compatibility)
     AlgorithmBase,
     BuyAndHoldAlgorithm,
     PortfolioAlgorithmBase,
@@ -299,8 +298,6 @@ def run_algorithm_backtest(
     withdrawal_frequency_days: int = 30,
     cpi_data: Optional[pd.DataFrame] = None,
     simple_mode: bool = False,
-    # Price normalization
-    normalize_prices: bool = False,
     # Bank behavior
     allow_margin: bool = True,
     # Investment amount (alternative to initial_qty)
@@ -380,11 +377,6 @@ def run_algorithm_backtest(
         simple_mode: If True, disables opportunity cost, risk-free gains, and CPI adjustment
                     Useful for unit tests where we want clean, simple behavior
                     (free borrowing, cash holds value, no inflation)
-        normalize_prices: If True, normalize all prices so brackets are at standard positions
-                         relative to 1.0 based on rebalance_trigger.
-                         This makes bracket placement deterministic across different backtests.
-                         For sd8 (9.05% trigger): brackets at 1.0, 1.0905, 1.1893, 1.2968, ...
-                         The first price is scaled so it lands on a standard bracket.
         allow_margin: If True (default), bank can go negative (borrowing from yourself)
                      BUY transactions always execute, withdrawals cover amount only.
                      If False (strict mode), bank never goes negative (closed system)
@@ -490,7 +482,6 @@ def run_algorithm_backtest(
             "withdrawal_frequency_days",
             "cpi_data",
             "simple_mode",
-            "normalize_prices",
             "allow_margin",
             "initial_investment",
             "reference_asset_df",
@@ -524,7 +515,6 @@ def run_algorithm_backtest(
         reference_data,
         risk_free_data,
         cpi_data,
-        normalize_prices,
         algo,
     ):
         """Check if portfolio wrapper can be used instead of legacy implementation.
@@ -546,8 +536,6 @@ def run_algorithm_backtest(
             return False
         if cpi_data is not None and not cpi_data.empty:
             return False
-        if normalize_prices:
-            return False
         if callable(algo):
             return False
 
@@ -558,7 +546,6 @@ def run_algorithm_backtest(
         reference_data=reference_data,
         risk_free_data=risk_free_data,
         cpi_data=cpi_data,
-        normalize_prices=normalize_prices,
         algo=algo,
     )
 
@@ -743,53 +730,6 @@ def run_algorithm_backtest(
             print(
                 f"  (difference due to whole shares: ${actual_invested - investment_amount:+,.2f})"
             )
-
-    # Price normalization (if enabled)
-    # Normalize so that brackets are at standard positions relative to 1.0
-    # For example, with sd8 (9.05% trigger), brackets at: 1.0, 1.0905, 1.1893, 1.2968, ...
-    price_scale_factor: float = 1.0
-    if normalize_prices:
-        # Get rebalance trigger from algorithm
-        rebalance_trigger = 0.0
-        if algo is not None:
-            if isinstance(algo, SyntheticDividendAlgorithm):
-                rebalance_trigger = algo.rebalance_size  # Already in decimal form
-            elif hasattr(algo, "rebalance_size"):
-                rebalance_trigger = algo.rebalance_size
-
-        if rebalance_trigger > 0:
-            # Find which bracket the start_price should be on
-            # Brackets are at: 1.0 * (1 + r)^n for integer n
-            # We want: start_price * scale = 1.0 * (1 + r)^n for some integer n
-            # So: n = log(start_price * scale) / log(1 + r)
-            # We want n to be an integer, so find closest integer bracket
-
-            # Start by assuming scale=1, find which bracket that gives us
-            n_float = math.log(legacy_start_price) / math.log(1 + rebalance_trigger)
-            n_int = round(n_float)  # Round to nearest integer bracket
-
-            # Now calculate the scale to land exactly on that bracket
-            # target_price = 1.0 * (1 + r)^n
-            # scale = target_price / start_price
-            target_price = math.pow(1 + rebalance_trigger, n_int)
-            price_scale_factor = target_price / legacy_start_price
-
-            # Scale all prices in the dataframe
-            df_indexed = df_indexed.copy()
-            for col in ["Open", "High", "Low", "Close"]:
-                if col in df_indexed.columns:
-                    df_indexed[col] = df_indexed[col] * price_scale_factor
-
-            # Update start/end prices
-            legacy_start_price = legacy_start_price * price_scale_factor
-            end_price = end_price * price_scale_factor
-
-            print(f"Price normalization: scaling factor = {price_scale_factor:.6f}")
-            print(f"  Original start price: ${legacy_start_price / price_scale_factor:.2f}")
-            print(f"  Normalized start price: ${legacy_start_price:.2f} (bracket n={n_int})")
-            print(f"  Rebalance trigger: {rebalance_trigger * 100:.4f}%")
-            print(f"  Next bracket up: ${legacy_start_price * (1 + rebalance_trigger):.2f}")
-            print(f"  Next bracket down: ${legacy_start_price / (1 + rebalance_trigger):.2f}")
 
     legacy_transactions: List[Transaction] = []
 
@@ -984,7 +924,15 @@ def run_algorithm_backtest(
 
             # Enhance transaction with date, price, and ticker (algorithms don't know these)
             tx.transaction_date = d
-            tx.price = price
+            # Try to extract actual execution price from notes, fall back to market price
+            if "filled=$" in tx.notes:
+                try:
+                    fill_price_str = tx.notes.split("filled=$")[1].split()[0]
+                    tx.price = float(fill_price_str)
+                except (IndexError, ValueError):
+                    tx.price = price
+            else:
+                tx.price = price
             tx.ticker = ticker
 
             # Execute SELL transaction
@@ -1407,6 +1355,10 @@ def run_portfolio_backtest(
     withdrawal_rate_pct: float = 0.0,
     withdrawal_frequency_days: int = 30,
     cash_interest_rate_pct: float = 0.0,
+    dividend_data: Optional[Dict[str, pd.Series]] = None,
+    reference_rate_ticker: Optional[str] = None,
+    risk_free_rate_ticker: Optional[str] = None,
+    inflation_rate_ticker: Optional[str] = None,
     # Legacy compatibility parameters (deprecated, ignored with warnings)
     algo: Optional[Union[AlgorithmBase, Callable, str]] = None,
     simple_mode: bool = False,
@@ -1434,6 +1386,20 @@ def run_portfolio_backtest(
         withdrawal_frequency_days: Days between withdrawals (default 30)
         cash_interest_rate_pct: Annual interest rate on cash reserves (default 0.0)
             Typical values: ~5% for money market, ~0% for non-interest checking
+        dividend_data: Optional dict mapping ticker → pandas Series of dividend payments
+            Series index should be payment dates, values are per-share dividend amounts
+            Uses 90-day time-weighted average holdings for IRS-compliant calculation
+        reference_rate_ticker: Optional ticker for reference benchmark (e.g., "VOO", "SPY")
+            Used to calculate market-adjusted returns (alpha vs benchmark)
+            If provided, fetches data and computes baseline buy-and-hold comparison
+        risk_free_rate_ticker: Optional ticker for risk-free asset (e.g., "BIL", "^IRX")
+            Used to model opportunity cost on cash holdings
+            Daily returns applied to positive cash balance (replaces cash_interest_rate_pct)
+            If not provided, falls back to cash_interest_rate_pct
+        inflation_rate_ticker: Optional ticker for inflation data (e.g., "CPI" via custom provider)
+            Used to calculate inflation-adjusted (real) returns
+            Tracks cumulative inflation adjustment from start date
+            Adds real_return and inflation_adjusted metrics to summary
         algo: DEPRECATED - Use portfolio_algo instead
         simple_mode: DEPRECATED - No longer used
         **kwargs: DEPRECATED - Ignored legacy parameters
@@ -1514,6 +1480,68 @@ def run_portfolio_backtest(
         df_copy.index = pd.to_datetime(df_copy.index).date
         price_data_indexed[ticker] = df_copy
 
+    # Fetch reference rate data if provided (for market-adjusted returns)
+    reference_data: Optional[pd.DataFrame] = None
+    if reference_rate_ticker:
+        print(f"Fetching reference benchmark ({reference_rate_ticker})...", end=" ")
+        reference_data = fetcher.get_history(reference_rate_ticker, start_date, end_date)
+        if reference_data is not None and not reference_data.empty:
+            print(f"OK ({len(reference_data)} days)")
+        else:
+            print("WARN: No data available, skipping baseline calculation")
+            reference_data = None
+
+    # Fetch risk-free rate data if provided (for cash interest modeling)
+    risk_free_data: Optional[pd.DataFrame] = None
+    risk_free_returns: Dict[date, float] = {}
+    if risk_free_rate_ticker:
+        print(f"Fetching risk-free asset ({risk_free_rate_ticker})...", end=" ")
+        risk_free_data = fetcher.get_history(risk_free_rate_ticker, start_date, end_date)
+        if risk_free_data is not None and not risk_free_data.empty:
+            print(f"OK ({len(risk_free_data)} days)")
+            # Calculate daily returns from price data
+            rf_indexed = risk_free_data.copy()
+            rf_indexed.index = pd.to_datetime(rf_indexed.index).date
+            if "Close" in rf_indexed.columns:
+                close_prices = rf_indexed["Close"].values
+                rf_dates = list(rf_indexed.index)
+                for i in range(1, len(close_prices)):
+                    prev_price = float(close_prices[i - 1])
+                    curr_price = float(close_prices[i])
+                    if prev_price > 0:
+                        risk_free_returns[rf_dates[i]] = (curr_price - prev_price) / prev_price
+        else:
+            print("WARN: No data available, falling back to cash_interest_rate_pct")
+            risk_free_data = None
+
+    # Fetch inflation data if provided (for real returns calculation)
+    inflation_data: Optional[pd.DataFrame] = None
+    cumulative_inflation: Dict[date, float] = {}
+    if inflation_rate_ticker:
+        print(f"Fetching inflation data ({inflation_rate_ticker})...", end=" ")
+        inflation_data = fetcher.get_history(inflation_rate_ticker, start_date, end_date)
+        if inflation_data is not None and not inflation_data.empty:
+            print(f"OK ({len(inflation_data)} days)")
+            # Calculate cumulative inflation adjustment from start
+            infl_indexed = inflation_data.copy()
+            infl_indexed.index = pd.to_datetime(infl_indexed.index).date
+            value_col = "Close" if "Close" in infl_indexed.columns else "Value"
+            if value_col in infl_indexed.columns:
+                infl_values = infl_indexed[value_col].values
+                infl_dates = list(infl_indexed.index)
+                # Find start CPI value
+                if common_dates[0] in infl_dates:
+                    start_cpi_idx = infl_dates.index(common_dates[0])
+                    start_cpi = float(infl_values[start_cpi_idx])
+                    # Calculate cumulative multiplier for each date
+                    for i, d in enumerate(infl_dates):
+                        if d >= common_dates[0]:
+                            curr_cpi = float(infl_values[i])
+                            cumulative_inflation[d] = curr_cpi / start_cpi if start_cpi > 0 else 1.0
+        else:
+            print("WARN: No data available, skipping inflation adjustment")
+            inflation_data = None
+
     # Initialize portfolio state
     shared_bank = initial_investment
     holdings: Dict[str, int] = {}
@@ -1579,6 +1607,15 @@ def run_portfolio_backtest(
     daily_interest_rate = (
         (cash_interest_rate_pct / 100.0) / 365.25 if cash_interest_rate_pct > 0 else 0.0
     )
+
+    # Dividend tracking (per-asset)
+    total_dividends_by_asset: Dict[str, float] = {ticker: 0.0 for ticker in allocations.keys()}
+    dividend_payment_count_by_asset: Dict[str, int] = {ticker: 0 for ticker in allocations.keys()}
+
+    # Holdings history for time-weighted dividend calculation (per-asset)
+    holdings_history: Dict[str, List[Tuple[date, int]]] = {
+        ticker: [(common_dates[0], holdings[ticker])] for ticker in allocations.keys()
+    }
 
     # Main backtest loop
     for i, current_date in enumerate(common_dates):
@@ -1655,6 +1692,15 @@ def run_portfolio_backtest(
                             notes=f"{tx.notes}, insufficient holdings: {holdings[ticker]} < {tx.qty}",
                         )
                         all_transactions.append(skipped_tx)
+
+        # Track holdings changes for time-weighted dividend calculation
+        for ticker in allocations.keys():
+            # If holdings changed from last recorded value, track the change
+            if (
+                len(holdings_history[ticker]) == 0
+                or holdings_history[ticker][-1][1] != holdings[ticker]
+            ):
+                holdings_history[ticker].append((current_date, holdings[ticker]))
 
         # Process withdrawals (if enabled and due)
         if base_withdrawal_amount > 0:
@@ -1746,11 +1792,64 @@ def run_portfolio_backtest(
                 # Track daily withdrawals for visualization
                 daily_withdrawals[current_date] = actual_withdrawal
 
+        # Process dividend/interest payments (if available)
+        if dividend_data:
+            for ticker in allocations.keys():
+                if ticker in dividend_data and dividend_data[ticker] is not None:
+                    div_series = dividend_data[ticker]
+                    if not div_series.empty:
+                        # Check if this date has a dividend payment
+                        div_dates = pd.to_datetime(div_series.index).date
+                        if current_date in div_dates:
+                            # Find the dividend amount for this date
+                            div_idx = list(div_dates).index(current_date)
+                            div_per_share = div_series.iloc[div_idx]
+
+                            # Calculate time-weighted average holdings over accrual period
+                            # Use 90-day lookback (typical for quarterly dividends)
+                            accrual_period_days = 90
+                            period_start = (
+                                current_date
+                                - pd.Timedelta(days=accrual_period_days).to_pytimedelta()
+                            )
+                            avg_holdings = calculate_time_weighted_average_holdings(
+                                holdings_history[ticker], period_start, current_date
+                            )
+
+                            # Dividend payment based on average holdings during accrual period
+                            div_payment = div_per_share * avg_holdings
+
+                            shared_bank += div_payment
+                            total_dividends_by_asset[ticker] += div_payment
+                            dividend_payment_count_by_asset[ticker] += 1
+
+                            all_transactions.append(
+                                Transaction(
+                                    transaction_date=current_date,
+                                    action="DIVIDEND",
+                                    qty=int(
+                                        avg_holdings
+                                    ),  # Display average holdings (rounded for display)
+                                    price=div_per_share,
+                                    ticker=ticker,
+                                    notes=f"${div_payment:.2f} (avg {avg_holdings:.2f} shares over 90 days), bank = {shared_bank:.2f}",
+                                )
+                            )
+
         # Accrue daily interest on cash reserves (if positive balance)
-        if daily_interest_rate > 0 and shared_bank > 0:
-            daily_interest = shared_bank * daily_interest_rate
-            shared_bank += daily_interest
-            total_interest_earned += daily_interest
+        if shared_bank > 0:
+            # Use risk-free asset returns if available, otherwise fall back to fixed rate
+            if risk_free_returns and current_date in risk_free_returns:
+                daily_return = risk_free_returns[current_date]
+                daily_interest = shared_bank * daily_return
+            elif daily_interest_rate > 0:
+                daily_interest = shared_bank * daily_interest_rate
+            else:
+                daily_interest = 0.0
+
+            if daily_interest > 0:
+                shared_bank += daily_interest
+                total_interest_earned += daily_interest
 
         # Record daily portfolio value
         total_asset_value = sum(holdings[t] * assets[t].price for t in allocations.keys())
@@ -1821,6 +1920,112 @@ def run_portfolio_backtest(
         "withdrawal_rate_pct": withdrawal_rate_pct,
         "cash_interest_earned": total_interest_earned,
         "cash_interest_rate_pct": cash_interest_rate_pct,
+        "risk_free_rate_ticker": risk_free_rate_ticker,  # Track which method was used
+        "total_dividends_by_asset": total_dividends_by_asset,
+        "total_dividends": sum(total_dividends_by_asset.values()),
+        "dividend_payment_count_by_asset": dividend_payment_count_by_asset,
     }
+
+    # Compute reference benchmark baseline (if provided)
+    if reference_data is not None and not reference_data.empty:
+        try:
+            # Index reference data by date
+            ref_indexed = reference_data.copy()
+            ref_indexed.index = pd.to_datetime(ref_indexed.index).date
+
+            # Get reference prices on first and last common dates
+            if common_dates[0] in ref_indexed.index and final_date in ref_indexed.index:
+                ref_start_price = ref_indexed.loc[common_dates[0], "Close"]
+                ref_end_price = ref_indexed.loc[final_date, "Close"]
+
+                # Calculate buy-and-hold return for reference benchmark
+                # Invest same initial_investment in reference asset
+                ref_shares = initial_investment / ref_start_price
+                ref_end_value = ref_shares * ref_end_price
+                ref_total_return = (
+                    (ref_end_value - initial_investment) / initial_investment
+                    if initial_investment > 0
+                    else 0
+                )
+
+                # Calculate annualized return
+                if years > 0 and initial_investment > 0:
+                    ref_annualized = (ref_end_value / initial_investment) ** (1.0 / years) - 1.0
+                else:
+                    ref_annualized = 0.0
+
+                baseline_summary = {
+                    "ticker": reference_rate_ticker,
+                    "start_date": common_dates[0],
+                    "end_date": final_date,
+                    "start_price": ref_start_price,
+                    "end_price": ref_end_price,
+                    "start_value": initial_investment,
+                    "end_value": ref_end_value,
+                    "total_return": ref_total_return,
+                    "annualized": ref_annualized,
+                }
+
+                # Alpha = portfolio return - benchmark return
+                volatility_alpha = total_return_pct / 100.0 - ref_total_return
+
+                portfolio_summary["baseline"] = baseline_summary
+                portfolio_summary["volatility_alpha"] = volatility_alpha
+                portfolio_summary["alpha_pct"] = volatility_alpha * 100.0
+            else:
+                # Reference data doesn't cover our date range
+                portfolio_summary["baseline"] = None
+                portfolio_summary["volatility_alpha"] = None
+        except Exception:
+            # Gracefully handle edge cases in baseline computation
+            portfolio_summary["baseline"] = None
+            portfolio_summary["volatility_alpha"] = None
+    else:
+        portfolio_summary["baseline"] = None
+        portfolio_summary["volatility_alpha"] = None
+
+    # Compute inflation-adjusted (real) returns if inflation data provided
+    if cumulative_inflation and final_date in cumulative_inflation:
+        try:
+            # Get cumulative inflation from start to end
+            inflation_multiplier = cumulative_inflation[final_date]
+
+            # Calculate real (inflation-adjusted) final value
+            real_final_value = final_total_value / inflation_multiplier
+
+            # Calculate real return
+            real_total_return_pct = (
+                (real_final_value - initial_investment) / initial_investment * 100.0
+                if initial_investment > 0
+                else 0.0
+            )
+
+            # Calculate real annualized return
+            if years > 0 and initial_investment > 0:
+                real_annualized_pct = (real_final_value / initial_investment) ** (1.0 / years) - 1.0
+                real_annualized_pct *= 100.0
+            else:
+                real_annualized_pct = 0.0
+
+            portfolio_summary["inflation_rate_ticker"] = inflation_rate_ticker
+            portfolio_summary["cumulative_inflation"] = (
+                inflation_multiplier - 1.0
+            ) * 100.0  # As percentage
+            portfolio_summary["real_final_value"] = real_final_value
+            portfolio_summary["real_total_return"] = real_total_return_pct
+            portfolio_summary["real_annualized_return"] = real_annualized_pct
+        except Exception:
+            # Gracefully handle edge cases
+            portfolio_summary["inflation_rate_ticker"] = None
+            portfolio_summary["cumulative_inflation"] = None
+            portfolio_summary["real_final_value"] = None
+            portfolio_summary["real_total_return"] = None
+            portfolio_summary["real_annualized_return"] = None
+    else:
+        portfolio_summary["inflation_rate_ticker"] = None
+        portfolio_summary["cumulative_inflation"] = None
+        portfolio_summary["real_final_value"] = None
+        portfolio_summary["real_total_return"] = None
+        portfolio_summary["real_annualized_return"] = None
 
     return all_transactions, portfolio_summary

@@ -85,15 +85,15 @@ def format_order_display(
     """
     # Calculate price changes
     price_change = current_price - last_price
-    _price_change_pct = (price_change / last_price * 100) if last_price > 0 else 0  # noqa: F841
+    price_change_pct = (price_change / last_price * 100) if last_price > 0 else 0
 
     # Calculate distances to triggers
-    _buy_trigger_pct = (last_price - buy_price) / last_price * 100  # noqa: F841
-    _sell_trigger_pct = (sell_price - last_price) / last_price * 100  # noqa: F841
+    buy_trigger_pct = (last_price - buy_price) / last_price * 100
+    sell_trigger_pct = (sell_price - last_price) / last_price * 100
 
     # Distance from current price to triggers
-    _to_buy_pct = (current_price - buy_price) / current_price * 100  # noqa: F841
-    _to_sell_pct = (sell_price - current_price) / current_price * 100  # noqa: F841
+    to_buy_pct = (current_price - buy_price) / current_price * 100
+    to_sell_pct = (sell_price - current_price) / current_price * 100
 
     rebalance_pct = ((2.0 ** (1.0 / float(sdn))) - 1.0) * 100
 
@@ -102,29 +102,53 @@ def format_order_display(
 
     # Current bracket (based on last transaction price)
     current_bracket_n = math.log(last_price) / math.log(1 + trigger_decimal)
-    _ = math.pow(1 + trigger_decimal, round(current_bracket_n))  # noqa: F841
+    current_bracket_normalized = math.pow(1 + trigger_decimal, round(current_bracket_n))
 
     # Buy bracket (one step down)
     buy_bracket_n = math.log(buy_price) / math.log(1 + trigger_decimal)
-    _ = math.pow(1 + trigger_decimal, round(buy_bracket_n))  # noqa: F841
+    buy_bracket_normalized = math.pow(1 + trigger_decimal, round(buy_bracket_n))
 
     # Sell bracket (one step up)
     sell_bracket_n = math.log(sell_price) / math.log(1 + trigger_decimal)
-    _ = math.pow(1 + trigger_decimal, round(sell_bracket_n))  # noqa: F841
+    sell_bracket_normalized = math.pow(1 + trigger_decimal, round(sell_bracket_n))
 
     # Build seed information text if seed is provided
-    _ = ""  # noqa: F841
+    seed_info = ""
     if bracket_seed is not None and bracket_seed > 0:
         seed_bracket_n = math.log(bracket_seed) / math.log(1 + trigger_decimal)
-        _ = f"\n  Bracket Seed:          ${bracket_seed:.2f}  (bracket n={round(seed_bracket_n)}, aligns all positions)"  # noqa: F841
+        seed_info = f"\n  Bracket Seed:          ${bracket_seed:.2f}  (bracket n={round(seed_bracket_n)}, aligns all positions)"
 
-    output = """
-╔══════════════════════════════════════════════════════════════════════════╗
-║                       SYNTHETIC DIVIDEND ORDER CALCULATOR                 ║
-╚══════════════════════════════════════════════════════════════════════════╝
+    # Format box lines with proper alignment
+    content_width = 67  # For lines between | |
 
-📊 CURRENT POSITION - {ticker}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    empty_line = f"  |{'':<{content_width}}|"
+    buy_price_line = f"  |{f'  Price:     ${buy_price:.2f}':<{content_width}}|"
+    buy_qty_line = f"  |{f'  Quantity:  {buy_qty:,} shares':<{content_width}}|"
+    buy_total_line = f"  |{f'  Total:     ${buy_price * buy_qty:,.2f}':<{content_width}}|"
+    buy_trigger_line = (
+        f"  |{f'  Trigger:   {buy_trigger_pct:.2f}% below last transaction':<{content_width}}|"
+    )
+    buy_distance_line = (
+        f"  |{f'  Distance:  {to_buy_pct:.2f}% below current price':<{content_width}}|"
+    )
+
+    sell_price_line = f"  |{f'  Price:     ${sell_price:.2f}':<{content_width}}|"
+    sell_qty_line = f"  |{f'  Quantity:  {sell_qty:,} shares':<{content_width}}|"
+    sell_total_line = f"  |{f'  Total:     ${sell_price * sell_qty:,.2f}':<{content_width}}|"
+    sell_trigger_line = (
+        f"  |{f'  Trigger:   {sell_trigger_pct:.2f}% above last transaction':<{content_width}}|"
+    )
+    sell_distance_line = (
+        f"  |{f'  Distance:  {to_sell_pct:.2f}% above current price':<{content_width}}|"
+    )
+
+    output = f"""
++==============================================================================+
+|                       SYNTHETIC DIVIDEND ORDER CALCULATOR                     |
++==============================================================================+
+
+* CURRENT POSITION - {ticker}
+==============================================================================
   Holdings:              {holdings:,} shares
   Last Transaction:      ${last_price:.2f}  (bracket n={round(current_bracket_n)}, normalized=${current_bracket_normalized:.2f}){seed_info}
   Current Price:         ${current_price:.2f}
@@ -132,53 +156,53 @@ def format_order_display(
 
   Strategy:              sd{sdn} ({rebalance_pct:.2f}% rebalance, {profit_pct:.0f}% profit sharing)
 
-📍 BRACKET POSITIONS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+* BRACKET POSITIONS
+==============================================================================
   Your position is on bracket n={round(current_bracket_n)}
 
   Standard bracket ladder for sd{sdn} (normalized to 1.0):
-    Bracket n={round(buy_bracket_n):4}  →  ${buy_bracket_normalized:8.2f}  [BUY TARGET]
-    Bracket n={round(current_bracket_n):4}  →  ${current_bracket_normalized:8.2f}  [YOUR POSITION]
-    Bracket n={round(sell_bracket_n):4}  →  ${sell_bracket_normalized:8.2f}  [SELL TARGET]
+    Bracket n={round(buy_bracket_n):4} -> ${buy_bracket_normalized:8.2f} [BUY TARGET]
+    Bracket n={round(current_bracket_n):4} -> ${current_bracket_normalized:8.2f} [YOUR POSITION]
+    Bracket n={round(sell_bracket_n):4} -> ${sell_bracket_normalized:8.2f} [SELL TARGET]
 
-  💡 All backtests using sd{sdn} will hit these same bracket positions,
-     making your strategy deterministic and comparable.
+  * All backtests using sd{sdn} will hit these same bracket positions,
+    making your strategy deterministic and comparable.
 
-🎯 LIMIT ORDERS TO PLACE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+* LIMIT ORDERS TO PLACE
+==============================================================================
 
-  ╭─ BUY LIMIT ORDER ──────────────────────────────────────╮
-  │                                                         │
-  │  Price:     ${buy_price:.2f}                                  │
-  │  Quantity:  {buy_qty:,} shares                              │
-  │  Total:     ${buy_price * buy_qty:,.2f}                           │
-  │                                                         │
-  │  Trigger:   {buy_trigger_pct:.2f}% below last transaction         │
-  │  Distance:  {to_buy_pct:.2f}% below current price                │
-  │                                                         │
-  ╰─────────────────────────────────────────────────────────╯
+  +-- BUY LIMIT ORDER ------------------------------------------------+
+{empty_line}
+{buy_price_line}
+{buy_qty_line}
+{buy_total_line}
+{empty_line}
+{buy_trigger_line}
+{buy_distance_line}
+{empty_line}
+  +-------------------------------------------------------------------+
 
-  ╭─ SELL LIMIT ORDER ─────────────────────────────────────╮
-  │                                                         │
-  │  Price:     ${sell_price:.2f}                                 │
-  │  Quantity:  {sell_qty:,} shares                             │
-  │  Total:     ${sell_price * sell_qty:,.2f}                          │
-  │                                                         │
-  │  Trigger:   {sell_trigger_pct:.2f}% above last transaction        │
-  │  Distance:  {to_sell_pct:.2f}% above current price               │
-  │                                                         │
-  ╰─────────────────────────────────────────────────────────╯
+  +-- SELL LIMIT ORDER -----------------------------------------------+
+{empty_line}
+{sell_price_line}
+{sell_qty_line}
+{sell_total_line}
+{empty_line}
+{sell_trigger_line}
+{sell_distance_line}
+{empty_line}
+  +-------------------------------------------------------------------+
 
-📋 BROKER ENTRY (Copy/Paste)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+* BROKER ENTRY (Copy/Paste)
+==============================================================================
 
   BUY  {ticker:5} {buy_qty:5} @ ${buy_price:.2f}  (LIMIT GTC)
   SELL {ticker:5} {sell_qty:5} @ ${sell_price:.2f}  (LIMIT GTC)
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💡 TIP: Set both orders as "Good Till Canceled" (GTC) limit orders
-        Cancel and replace when either executes
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+==============================================================================
+* TIP: Set both orders as "Good Till Canceled" (GTC) limit orders
+       Cancel and replace when either executes
+==============================================================================
 """
     return output
 

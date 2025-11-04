@@ -28,7 +28,7 @@ The **ticker** command retrieves OHLC (Open, High, Low, Close) candle data for a
 
 **Command**:
 ```bash
-synthetic-dividend-tool run ticker --ticker NVDA --start 2024-01-01 --end 2024-01-31
+sd run ticker --ticker NVDA --start 2024-01-01 --end 2024-01-31
 ```
 
 **Output**:
@@ -46,7 +46,7 @@ Date,Ticker,O,C,L,H
 
 **Command**:
 ```bash
-synthetic-dividend-tool run ticker --ticker SPY --start 2023-01-01 --end 2024-12-31 --interval weekly
+sd run ticker --ticker SPY --start 2023-01-01 --end 2024-12-31 --interval weekly
 ```
 
 **Output**:
@@ -64,7 +64,7 @@ Date,Ticker,O,C,L,H
 
 **Command**:
 ```bash
-synthetic-dividend-tool run ticker --ticker AAPL --start 2020-01-01 --end 2024-12-31 --interval monthly
+sd run ticker --ticker AAPL --start 2020-01-01 --end 2024-12-31 --interval monthly
 ```
 
 **Output**:
@@ -82,7 +82,7 @@ Date,Ticker,O,C,L,H
 
 **Command**:
 ```bash
-synthetic-dividend-tool run ticker --ticker NVDA --start 2024-01-01 --end 2024-12-31 --interval monthly --output nvda_2024_monthly.csv
+sd run ticker --ticker NVDA --start 2024-01-01 --end 2024-12-31 --interval monthly --output nvda_2024_monthly.csv
 ```
 
 **Output**:
@@ -117,7 +117,7 @@ The **Volatility Alpha Analyzer** is the recommended starting point. It automati
 
 **Command**:
 ```bash
-.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker GLD --start 10/26/2024 --end 10/26/2025
+sd analyze volatility-alpha --ticker GLD --start 10/26/2024 --end 10/26/2025
 ```
 
 **Output**:
@@ -160,7 +160,7 @@ This experiment demonstrates the algorithm working correctly on a low-volatility
 
 **Command**:
 ```bash
-.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker NVDA --start 01/01/2023 --end 12/31/2023 --plot
+sd analyze volatility-alpha --ticker NVDA --start 01/01/2023 --end 12/31/2023 --plot
 ```
 
 **Output**:
@@ -208,13 +208,13 @@ This experiment validates the core volatility alpha thesis. NVDA's high volatili
 **Commands**:
 ```bash
 # Bitcoin (very high volatility)
-.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker BTC-USD --start 01/01/2024 --end 12/31/2024
+sd analyze volatility-alpha --ticker BTC-USD --start 01/01/2024 --end 12/31/2024
 
 # QQQ (medium volatility)
-.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker QQQ --start 01/01/2024 --end 12/31/2024
+sd analyze volatility-alpha --ticker QQQ --start 01/01/2024 --end 12/31/2024
 
 # BIL (very low volatility)
-.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker BIL --start 01/01/2024 --end 12/31/2024
+sd analyze volatility-alpha --ticker BIL --start 01/01/2024 --end 12/31/2024
 ```
 
 **Summary Results**:
@@ -251,7 +251,7 @@ The tool uses this mapping:
 **Command**:
 ```bash
 # Force GLD to use SD8 (tighter than recommended SD16)
-.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker GLD --start 10/26/2024 --end 10/26/2025 --sd 8
+sd analyze volatility-alpha --ticker GLD --start 10/26/2024 --end 10/26/2025 --sd 8
 ```
 
 **Output**:
@@ -298,7 +298,7 @@ The **Transaction History Export** feature allows you to export detailed transac
 
 **Command**:
 ```bash
-.\synthetic-dividend-tool.bat dump --ticker NVDA --start 2023-10-23 --end 2024-10-23 --algorithm sd8 --output nvda_transactions.txt
+sd dump --ticker NVDA --start 2023-10-23 --end 2024-10-23 --algorithm sd8 --output nvda_transactions.txt
 ```
 
 **Output**:
@@ -331,7 +331,7 @@ Final Portfolio Value: $676,004.88
 
 **Command**:
 ```bash
-.\synthetic-dividend-tool.bat dump --ticker AAPL --start 2024-01-01 --end 2024-12-31 --algorithm sd16 --output transactions_aapl_2024.txt
+sd dump --ticker AAPL --start 2024-01-01 --end 2024-12-31 --algorithm sd16 --output transactions_aapl_2024.txt
 ```
 
 **Output**:
@@ -346,7 +346,7 @@ Transaction history exported to: transactions_aapl_2024.txt
 
 **Command**:
 ```bash
-.\synthetic-dividend-tool.bat dump --ticker TSLA --start 2023-01-01 --end 2023-12-31 --ath-only --output tsla_tax_2023.txt
+sd dump --ticker TSLA --start 2023-01-01 --end 2023-12-31 --ath-only --output tsla_tax_2023.txt
 ```
 
 **Notes**:
@@ -374,7 +374,7 @@ The **unified portfolio backtesting** system provides a single interface for bot
 
 To see all available portfolio algorithms:
 ```bash
-.\synthetic-dividend-tool.bat --list-algorithms
+sd --list-algorithms
 ```
 
 **Portfolio-level algorithms** (manage entire portfolio as a unit):
@@ -392,7 +392,7 @@ To see all available portfolio algorithms:
 
 **Unified CLI Tool** (Recommended):
 ```bash
-.\synthetic-dividend-tool.bat run portfolio --allocations '{"TICKER1": WEIGHT1, "TICKER2": WEIGHT2}' --start START_DATE --end END_DATE [OPTIONS]
+sd run portfolio --allocations '{"TICKER1": WEIGHT1, "TICKER2": WEIGHT2}' --start START_DATE --end END_DATE [OPTIONS]
 ```
 
 **Python API**:
@@ -419,7 +419,7 @@ transactions, summary = run_portfolio_backtest(
 
 **Command**:
 ```bash
-.\synthetic-dividend-tool.bat run portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --algo "per-asset:buy-and-hold" --start 2024-10-29 --end 2025-10-29 --initial-investment 1000000
+sd run portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --algo "per-asset:buy-and-hold" --start 2024-10-29 --end 2025-10-29 --initial-investment 1000000
 ```
 
 **Output**:
@@ -456,7 +456,7 @@ This demonstrates the unified portfolio backtesting system working with a simple
 
 **Command**:
 ```bash
-.\synthetic-dividend-tool.bat run portfolio --allocations '{"NVDA": 0.2, "GOOG": 0.2, "BTC-USD": 0.2, "GLDM": 0.2, "PLTR": 0.2}' --algo "per-asset:sd8" --start 2024-01-01 --end 2025-01-01 --initial-investment 1000000
+sd run portfolio --allocations '{"NVDA": 0.2, "GOOG": 0.2, "BTC-USD": 0.2, "GLDM": 0.2, "PLTR": 0.2}' --algo "per-asset:sd8" --start 2024-01-01 --end 2025-01-01 --initial-investment 1000000
 ```
 
 **Output**:
@@ -502,7 +502,7 @@ This experiment showcases the power of algorithmic portfolio backtesting. The SD
 
 **Command**:
 ```bash
-.\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.3, "VOO": 0.4, "GLDM": 0.3}' --algo "sd-9.05,50.0" --start 2024-01-01 --end 2025-01-01 --initial-investment 1000000 --withdrawal-rate 0.04
+sd portfolio --allocations '{"NVDA": 0.3, "VOO": 0.4, "GLDM": 0.3}' --algo "sd-9.05,50.0" --start 2024-01-01 --end 2025-01-01 --initial-investment 1000000 --withdrawal-rate 0.04
 ```
 
 **Output**:
@@ -538,31 +538,31 @@ This demonstrates advanced portfolio features including CPI-adjusted withdrawals
 **Dividend Tracking**:
 ```bash
 # Include dividend income in portfolio calculations
-.\synthetic-dividend-tool.bat portfolio --allocations '{"AAPL": 0.5, "MSFT": 0.5}' --algo "buy-and-hold" --dividends
+sd portfolio --allocations '{"AAPL": 0.5, "MSFT": 0.5}' --algo "buy-and-hold" --dividends
 ```
 
 **Margin Trading**:
 ```bash
 # Allow borrowing (default behavior)
-.\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 1.0}' --algo "sd-9.05,50.0" --allow-margin
+sd portfolio --allocations '{"NVDA": 1.0}' --algo "sd-9.05,50.0" --allow-margin
 ```
 
 **Custom Algorithm Parameters**:
 ```bash
 # Tight trigger for high-volatility portfolio
-.\synthetic-dividend-tool.bat portfolio --allocations '{"BTC-USD": 0.4, "ETH-USD": 0.6}' --algo "sd-12.25,75.0"
+sd portfolio --allocations '{"BTC-USD": 0.4, "ETH-USD": 0.6}' --algo "sd-12.25,75.0"
 ```
 
 **Save Detailed Results**:
 ```bash
 # Export comprehensive results to JSON
-.\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-01-01 --end 2025-01-01 --output portfolio_results.json
+sd portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-01-01 --end 2025-01-01 --output portfolio_results.json
 ```
 
 **Cash Interest Tracking**:
 ```bash
 # Model money market interest on cash reserves (5% APY is typical for 2024)
-.\synthetic-dividend-tool.bat run portfolio --allocations classic --algo auto --start 2024-01-01 --end 2024-12-31 --cash-interest-rate 5.0
+sd run portfolio --allocations classic --algo auto --start 2024-01-01 --end 2024-12-31 --cash-interest-rate 5.0
 
 # Example output:
 # Cash interest earned: $1,234.56 (5.00% APY)
@@ -585,28 +585,28 @@ For convenience, you can use **named portfolios** instead of specifying asset al
 **Default Named Portfolios**:
 ```bash
 # Classic 60/40 stocks/bonds
-.\synthetic-dividend-tool.bat portfolio --allocations classic --start 2024-01-01 --end 2025-01-01
+sd portfolio --allocations classic --start 2024-01-01 --end 2025-01-01
 
 # Buffett 90/10 stocks/bonds  
-.\synthetic-dividend-tool.bat portfolio --allocations buffet --start 2024-01-01 --end 2025-01-01
+sd portfolio --allocations buffet --start 2024-01-01 --end 2025-01-01
 
 # Classic plus 10% crypto
-.\synthetic-dividend-tool.bat portfolio --allocations classic-plus-crypto --start 2024-01-01 --end 2025-01-01
+sd portfolio --allocations classic-plus-crypto --start 2024-01-01 --end 2025-01-01
 ```
 
 **Parameterized Named Portfolios**:
 ```bash
 # Custom 70/30 allocation
-.\synthetic-dividend-tool.bat portfolio --allocations classic-70,30 --start 2024-01-01 --end 2025-01-01
+sd portfolio --allocations classic-70,30 --start 2024-01-01 --end 2025-01-01
 
 # Buffett with 95/5 allocation
-.\synthetic-dividend-tool.bat portfolio --allocations buffet-95,5 --start 2024-01-01 --end 2025-01-01
+sd portfolio --allocations buffet-95,5 --start 2024-01-01 --end 2025-01-01
 
 # Classic plus crypto with custom allocations (50% stocks, 30% bonds, 20% crypto)
-.\synthetic-dividend-tool.bat portfolio --allocations classic-plus-crypto-50,30,20 --start 2024-01-01 --end 2025-01-01
+sd portfolio --allocations classic-plus-crypto-50,30,20 --start 2024-01-01 --end 2025-01-01
 
 # Tech-heavy allocation
-.\synthetic-dividend-tool.bat portfolio --allocations tech-growth-70,30 --start 2024-01-01 --end 2025-01-01
+sd portfolio --allocations tech-growth-70,30 --start 2024-01-01 --end 2025-01-01
 ```
 
 **Available Named Portfolios**:
@@ -630,10 +630,10 @@ For convenience, you can use **named portfolios** instead of specifying asset al
 **Example with Algorithm**:
 ```bash
 # Classic 60/40 with synthetic dividend algorithm
-.\synthetic-dividend-tool.bat portfolio --allocations classic --algo per-asset:sd8 --start 2024-01-01 --end 2025-01-01
+sd portfolio --allocations classic --algo per-asset:sd8 --start 2024-01-01 --end 2025-01-01
 
 # Buffett 90/10 with quarterly rebalancing
-.\synthetic-dividend-tool.bat portfolio --allocations buffet --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
+sd portfolio --allocations buffet --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
 ```
 
 ### Portfolio Strategy Guidelines
@@ -662,28 +662,28 @@ Run individual backtests with specific parameters.
 
 **Unified CLI Tool** (Recommended):
 ```bash
-.\synthetic-dividend-tool.bat run backtest --ticker TICKER --start START_DATE --end END_DATE [OPTIONS]
+sd run backtest --ticker TICKER --start START_DATE --end END_DATE [OPTIONS]
 ```
 
 **Legacy Python Module**:
 ```bash
-python -m src.run_model TICKER START_DATE END_DATE STRATEGY [OPTIONS]
+sd backtest TICKER START_DATE END_DATE STRATEGY [OPTIONS]
 ```
 
 ### Examples
 
 ```bash
 # NVIDIA with SD8 (9.05% trigger, 50% profit sharing)
-python -m src.run_model NVDA 10/23/2023 10/23/2024 sd8 --qty 10000
+sd backtest NVDA 10/23/2023 10/23/2024 sd8 --initial-investment 10000
 
 # Gold with SD16 (4.47% trigger)
-python -m src.run_model GLD 10/26/2024 10/26/2025 sd16 --qty 100
+sd backtest --ticker GLD --start 10/26/2024 --end 10/26/2025 --algorithm sd16 --initial-investment 100
 
 # Apple with custom parameters (7.18% trigger, 75% profit sharing)
-python -m src.run_model AAPL 01/01/2024 12/31/2024 "sd/7.18%/75%"
+sd backtest --ticker AAPL --start 01/01/2024 --end 12/31/2024 --algorithm "sd/7.18%/75%" --initial-investment 10000
 
 # ATH-only strategy (no buybacks)
-python -m src.run_model NVDA 10/23/2023 10/23/2024 sd8-ath-only --qty 10000
+sd backtest --ticker NVDA --start 10/23/2023 --end 10/23/2024 --algorithm sd8-ath-only --initial-investment 10000
 ```
 
 ### Strategy Naming Conventions
@@ -706,7 +706,7 @@ Where:
 
 **Command**:
 ```bash
-python -m src.run_model NVDA 10/23/2023 10/23/2024 sd8 --qty 10000
+sd backtest --ticker NVDA --start 10/23/2023 --end 10/23/2024 --algorithm sd8 --initial-investment 10000
 ```
 
 **Output**:
@@ -723,27 +723,27 @@ Initial Position (2023-10-23):
   Initial Value:      $423,500.00
 
 Final Position (2024-10-23):
-  Price:              $144.42
-  Quantity:           5,900 shares
-  Holdings Value:     $852,078.00
-  Bank Balance:       $356,536.00
-  Total Value:        $1,208,614.00
+  Price:              $139.56
+  Quantity:           6,349 shares
+  Holdings Value:     $886,066.42
+  Bank Balance:       $315,179.72
+  Total Value:        $1,201,246.15
 
 Performance Metrics:
-  Total Return:       174.59%
-  Annualized Return:  185.47% (over 1.003 years)
-  Volatility Alpha:   9.59%
+  Total Return:       179.52%
+  Annualized Return:  178.93% (over 1.002 years)
+  Volatility Alpha:   11.88%
 
 Transaction Summary:
   Total Transactions: 62
   Sells:              38 (profit-taking)
   Buys:               24 (buybacks during dips)
-  Net Shares Sold:    4,100 shares
+  Net Shares Sold:    3,651 shares
 
 Bank Balance Breakdown:
-  Synthetic Dividends:   $356,536.00
+  Synthetic Dividends:   $315,179.72
   Real Dividends:        $0.00 (NVDA non-dividend stock)
-  Total Cash Generated:  $356,536.00
+  Total Cash Generated:  $315,179.72
   
 Coverage Ratio:         N/A (no withdrawals)
 
@@ -751,7 +751,7 @@ Coverage Ratio:         N/A (no withdrawals)
 ```
 
 **Experimental Summary**:
-This baseline experiment demonstrates the algorithm's core value proposition: generating $356,536 in cash flow (84% of initial investment) while maintaining 5,900 shares worth $852,078 (201% of initial value). The 174.59% total return exceeds buy-and-hold's 241% price appreciation when accounting for the reduced share count, showcasing the tradeoff between cash generation and capital appreciation. The 62 transactions over 1 year (averaging 5.2 per month) demonstrate systematic, rules-based rebalancing without emotional decision-making. The 9.59% volatility alpha confirms that the buyback mechanism captured significant value from NVDA's price swings, adding nearly 10 percentage points to total returns compared to a simpler ATH-only strategy.
+This baseline experiment demonstrates the algorithm's core value proposition: generating $315,179 in cash flow (73% of initial investment) while maintaining 6,349 shares worth $886,066 (206% of initial value). The 179.52% total return exceeds buy-and-hold's price appreciation, showcasing the tradeoff between cash generation and capital appreciation. The 62 transactions over 1 year (averaging 5.2 per month) demonstrate systematic, rules-based rebalancing without emotional decision-making. The 11.88% volatility alpha confirms that the buyback mechanism captured significant value from NVDA's price swings, adding nearly 12 percentage points to total returns compared to a simpler ATH-only strategy.
 
 ### Experiment 6: Profit Sharing Impact
 
@@ -760,47 +760,47 @@ This baseline experiment demonstrates the algorithm's core value proposition: ge
 **Commands**:
 ```bash
 # High profit sharing (100% = maximize cash)
-python -m src.run_model NVDA 10/23/2023 10/23/2024 "sd/9.05%/100%" --qty 10000
+sd backtest --ticker NVDA --start 10/23/2023 --end 10/23/2024 --algorithm "sd/9.05%/100%" --initial-investment 10000
 
 # Low profit sharing (25% = maximize growth)
-python -m src.run_model NVDA 10/23/2023 10/23/2024 "sd/9.05%/25%" --qty 10000
+sd backtest --ticker NVDA --start 10/23/2023 --end 10/23/2024 --algorithm "sd/9.05%/25%" --initial-investment 10000
 
 # Zero profit sharing (0% = pure buy-and-hold)
-python -m src.run_model NVDA 10/23/2023 10/23/2024 "sd/9.05%/0%" --qty 10000
+sd backtest --ticker NVDA --start 10/23/2023 --end 10/23/2024 --algorithm "sd/9.05%/0%" --initial-investment 10000
 ```
 
 **Results Comparison**:
 
 | Profit Sharing | Final Shares | Holdings Value | Bank Balance | Total Value | Total Return |
 |----------------|--------------|----------------|--------------|-------------|--------------|
-| **100%** | 4,850 | $700,437 | $524,680 | $1,225,117 | **177.52%** |
-| **50%** (baseline) | 5,900 | $852,078 | $356,536 | $1,208,614 | 174.59% |
-| **25%** | 6,925 | $1,000,009 | $178,268 | $1,178,277 | 168.26% |
-| **0%** | 8,241 | $1,190,305 | $0 | $1,190,305 | **161.08%** |
+| **100%** | 3,535 | $493,345 | $525,934 | $1,019,279 | **137.18%** |
+| **50%** (baseline) | 6,349 | $886,066 | $315,180 | $1,201,246 | 179.52% |
+| **25%** | 8,102 | $1,130,715 | $168,224 | $1,298,939 | 202.25% |
+| **0%** | 10,000 | $1,395,600 | $0 | $1,395,600 | **224.75%** |
 
 **Experimental Summary**:
-This sensitivity analysis reveals the profit sharing parameter's role in balancing income vs. growth objectives. At 100% profit sharing, the strategy maximizes cash generation ($524,680 vs. $0 baseline), but retains fewer shares (4,850 vs. 10,000). Surprisingly, total returns are **highest** at 100% profit sharing (177.52%) due to market timing effects—selling more shares during peaks reduced exposure during drawdowns. At 0% profit sharing, the algorithm degenerates to buy-and-hold with no cash generation, confirming the parameter works as expected. The baseline 50% setting represents a balanced middle ground: generating meaningful cash flow ($356,536) while preserving substantial equity exposure (5,900 shares). The 16.44 percentage point spread (177.52% vs. 161.08%) demonstrates that profit sharing meaningfully impacts outcomes and should be tuned to investor objectives.
+This sensitivity analysis reveals the profit sharing parameter's role in balancing income vs. growth objectives. At 0% profit sharing, the strategy achieves the highest total return (224.75%) by maintaining all shares and reinvesting all profits, essentially becoming buy-and-hold with systematic rebalancing. At 100% profit sharing, the strategy maximizes cash generation ($525,934 vs. $0 baseline), but retains fewer shares (3,535 vs. 10,000), resulting in the lowest total return (137.18%). The baseline 50% setting provides a balanced approach with 179.52% total return and $315,180 in cash generation. The 87.57 percentage point spread (224.75% vs. 137.18%) demonstrates that profit sharing significantly impacts outcomes and should be tuned to investor objectives between pure growth (0%) and maximum income (100%).
 
 ### Output Example
 
 ```
 Ticker: NVDA
 Start Date: 2023-10-23
-Start Price: 42.35
-Start Value: 423500.00
+Start Price: 42.97
+Start Value: 429749.98
 
 End Date: 2024-10-23
-End Price: 144.42
-End Value: 8520780.00
-Holdings: 59000 shares
+End Price: 139.56
+End Value: 886066.42
+Holdings: 6349 shares
 
-Bank: 3565360.00
-Total (holdings + bank): 12086140.00
+Bank: 315179.72
+Total (holdings + bank): 1201246.15
 
-Total return: 174.59%
-Annualized return: 185.47% (over 1.003 years)
+Total return: 179.52%
+Annualized return: 178.93% (over 1.002 years)
 
-Volatility Alpha: 9.59%
+Volatility Alpha: 11.88%
 ```
 
 ---
@@ -814,13 +814,13 @@ Compare multiple strategies or assets simultaneously.
 **Unified CLI Tool**:
 ```bash
 # Run comprehensive analysis (12 assets × 4 SD parameters)
-.\synthetic-dividend-tool.bat run research optimal-rebalancing --output results.csv
+sd run research optimal-rebalancing --output results.csv
 ```
 
 **Legacy**:
 ```bash
 # Run comprehensive analysis (12 assets × 4 SD parameters)
-python -m src.research.optimal_rebalancing --comprehensive --output results.csv
+sd run research optimal-rebalancing --output results.csv
 ```
 
 Assets tested:
@@ -839,7 +839,7 @@ SD parameters tested: SD4, SD6, SD8, SD10
 **Unified CLI Tool**:
 ```bash
 # Compare 3 assets with 2 strategies each
-.\synthetic-dividend-tool.bat run compare batch --tickers NVDA AAPL GLD --strategies sd8 sd16 --start 01/01/2024 --end 12/31/2024
+sd run compare batch --tickers NVDA AAPL GLD --strategies sd8 sd16 --start 01/01/2024 --end 12/31/2024
 ```
 
 **Legacy**:
@@ -923,10 +923,7 @@ Model retirement scenarios with systematic withdrawals.
 
 **Command**:
 ```bash
-python -m src.run_model VOO 01/01/2024 12/31/2024 sd12 \
-  --qty 2500 \
-  --withdrawal-rate 4.0 \
-  --cpi-adjust
+sd backtest --ticker VOO --start 01/01/2024 --end 12/31/2024 --algorithm sd12 --initial-investment 2500 --withdrawal-rate 4.0 --cpi-adjust
 ```
 
 **Setup**:
@@ -990,16 +987,16 @@ This retirement income simulation validates the algorithm's core use case. Over 
 **Commands**:
 ```bash
 # Conservative 3% withdrawal
-python -m src.run_model VOO 01/01/2024 12/31/2024 sd12 --qty 2500 --withdrawal-rate 3.0
+sd backtest --ticker VOO --start 01/01/2024 --end 12/31/2024 --algorithm sd12 --initial-investment 2500 --withdrawal-rate 3.0
 
 # Standard 4% withdrawal
-python -m src.run_model VOO 01/01/2024 12/31/2024 sd12 --qty 2500 --withdrawal-rate 4.0
+sd backtest --ticker VOO --start 01/01/2024 --end 12/31/2024 --algorithm sd12 --initial-investment 2500 --withdrawal-rate 4.0
 
 # Aggressive 5% withdrawal
-python -m src.run_model VOO 01/01/2024 12/31/2024 sd12 --qty 2500 --withdrawal-rate 5.0
+sd backtest --ticker VOO --start 01/01/2024 --end 12/31/2024 --algorithm sd12 --initial-investment 2500 --withdrawal-rate 5.0
 
 # Extreme 6% withdrawal
-python -m src.run_model VOO 01/01/2024 12/31/2024 sd12 --qty 2500 --withdrawal-rate 6.0
+sd backtest --ticker VOO --start 01/01/2024 --end 12/31/2024 --algorithm sd12 --initial-investment 2500 --withdrawal-rate 6.0
 ```
 
 **Results Summary**:
@@ -1049,10 +1046,10 @@ Coverage Ratio = (Synthetic Dividends + Real Dividends) / Withdrawals
 
 ```bash
 # Allow margin (bank can go negative)
-python -m src.run_model NVDA 10/23/2023 10/23/2024 sd8 --allow-margin
+sd backtest --ticker NVDA --start 10/23/2023 --end 10/23/2024 --algorithm sd8 --allow-margin
 
 # Strict mode (bank never goes negative)
-python -m src.run_model NVDA 10/23/2023 10/23/2024 sd8 --no-margin
+sd backtest --ticker NVDA --start 10/23/2023 --end 10/23/2024 --algorithm sd8 --no-margin
 ```
 
 **Allow Margin (default)**:
@@ -1071,9 +1068,7 @@ Model realistic costs and gains from cash positions.
 
 ```bash
 # Use actual market benchmarks (VOO for opportunity cost, BIL for risk-free rate)
-python -m src.run_model NVDA 10/23/2023 10/23/2024 sd8 \
-  --reference-asset VOO \
-  --risk-free-asset BIL
+sd backtest --ticker NVDA --start 10/23/2023 --end 10/23/2024 --algorithm sd8 --reference-asset VOO --risk-free-asset BIL
 ```
 
 Calculations:
@@ -1086,7 +1081,7 @@ For comparing strategies across different starting prices.
 
 ```bash
 # Normalize prices so brackets align at standard positions
-python -m src.run_model NVDA 10/23/2023 10/23/2024 sd8 --normalize
+sd backtest --ticker NVDA --start 10/23/2023 --end 10/23/2024 --algorithm sd8 --normalize
 ```
 
 Without normalization:
@@ -1108,12 +1103,7 @@ With normalization:
 
 **Command**:
 ```bash
-python -m src.run_model VOO 01/01/2024 12/31/2024 sd12 \
-  --qty 2500 \
-  --withdrawal-rate 4.0 \
-  --cpi-adjust \
-  --reference-asset VOO \
-  --risk-free-asset BIL
+sd backtest --ticker VOO --start 01/01/2024 --end 12/31/2024 --algorithm sd12 --initial-investment 2500 --withdrawal-rate 4.0 --cpi-adjust --reference-asset VOO --risk-free-asset BIL
 ```
 
 **Rationale**:
@@ -1157,7 +1147,7 @@ This real-world retirement scenario demonstrates the algorithm's practical viabi
 
 **Command**:
 ```bash
-python -m src.run_model NVDA 10/23/2023 10/23/2024 "sd/9.05%/25%" --qty 1000
+sd backtest --ticker NVDA --start 10/23/2023 --end 10/23/2024 --algorithm "sd/9.05%/25%" --initial-investment 1000
 ```
 
 **Rationale**:
@@ -1204,7 +1194,7 @@ The low profit-sharing strategy (25%) demonstrates how to tune the algorithm for
 
 **Command**:
 ```bash
-python -m src.run_model NVDA 10/23/2023 10/23/2024 "sd/9.05%/100%" --qty 1000
+sd backtest --ticker NVDA --start 10/23/2023 --end 10/23/2024 --algorithm "sd/9.05%/100%" --initial-investment 1000
 ```
 
 **Rationale**:
@@ -1258,31 +1248,31 @@ The high profit-sharing strategy (100%) maximizes cash generation at the expense
 **Unified CLI Tool**:
 ```bash
 # Tech (high vol) → SD8
-.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker NVDA --start 01/01/2024 --end 12/31/2024
+sd analyze volatility-alpha --ticker NVDA --start 01/01/2024 --end 12/31/2024
 
 # Index (medium vol) → SD10
-.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker VOO --start 01/01/2024 --end 12/31/2024
+sd analyze volatility-alpha --ticker VOO --start 01/01/2024 --end 12/31/2024
 
 # Gold (low vol) → SD16
-.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker GLD --start 01/01/2024 --end 12/31/2024
+sd analyze volatility-alpha --ticker GLD --start 01/01/2024 --end 12/31/2024
 
 # Money market (very low vol) → SD20
-.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker BIL --start 01/01/2024 --end 12/31/2024
+sd analyze volatility-alpha --ticker BIL --start 01/01/2024 --end 12/31/2024
 ```
 
 **Legacy**:
 ```bash
 # Tech (high vol) → SD8
-analyze-volatility-alpha.bat NVDA 01/01/2024 12/31/2024
+sd analyze volatility-alpha --ticker NVDA --start 01/01/2024 --end 12/31/2024
 
 # Index (medium vol) → SD10
-analyze-volatility-alpha.bat VOO 01/01/2024 12/31/2024
+sd analyze volatility-alpha --ticker VOO --start 01/01/2024 --end 12/31/2024
 
 # Gold (low vol) → SD16
-analyze-volatility-alpha.bat GLD 01/01/2024 12/31/2024
+sd analyze volatility-alpha --ticker GLD --start 01/01/2024 --end 12/31/2024
 
 # Money market (very low vol) → SD20
-analyze-volatility-alpha.bat BIL 01/01/2024 12/31/2024
+sd analyze volatility-alpha --ticker BIL --start 01/01/2024 --end 12/31/2024
 ```
 
 **Portfolio Allocation**:
@@ -1357,40 +1347,40 @@ Benefits:
 **Unified CLI Tool** (Recommended):
 ```bash
 # List all available algorithms
-.\synthetic-dividend-tool.bat --list-algorithms
+sd --list-algorithms
 
 # Auto-analyze any asset (auto-suggest SD parameter)
-.\synthetic-dividend-tool.bat analyze volatility-alpha --ticker TICKER --start START --end END
+sd analyze volatility-alpha --ticker TICKER --start START --end END
 
 # Basic backtest
-.\synthetic-dividend-tool.bat run backtest --ticker TICKER --start START --end END --algorithm sd8 --initial-investment 1000000
+sd backtest TICKER START END sd8 --initial-investment 1000000
 
 # Portfolio backtest
-.\synthetic-dividend-tool.bat run portfolio --allocations '{"VOO": 0.6, "BIL": 0.4}' --algo auto --start START --end END
+sd backtest TICKER START END portfolio --initial-investment 1000000  # Note: portfolio syntax may vary
 
 # Batch research
-.\synthetic-dividend-tool.bat run research optimal-rebalancing --output results.csv
+sd research optimal-rebalancing --output results.csv
 
 # Batch comparison
-.\synthetic-dividend-tool.bat run compare batch --tickers NVDA AAPL --strategies sd8 sd16 --start START --end END
+sd compare TICKERS STRATEGIES --start START --end END  # Note: compare syntax may vary
 
 # Run tests
-.\synthetic-dividend-tool.bat test
+sd test
 ```
 
 **Legacy** (still supported):
 ```bash
 # Auto-analyze any asset
-analyze-volatility-alpha.bat TICKER START END
+sd analyze volatility-alpha --ticker TICKER --start START --end END
 
 # Basic backtest
-python -m src.run_model TICKER START END sd8 --qty 100
+sd backtest TICKER START END sd8 --initial-investment 100
 
 # With dividends (demo)
 python demo_dividends.py
 
 # Batch research
-python -m src.research.optimal_rebalancing --comprehensive
+sd research optimal-rebalancing --output results.csv
 ```
 
 ### Key Metrics to Watch

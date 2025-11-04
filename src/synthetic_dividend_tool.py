@@ -653,15 +653,20 @@ Examples:
     order_parser.add_argument("--ticker", required=True, help="Asset ticker")
     order_parser.add_argument("--holdings", type=int, required=True, help="Current holdings")
     order_parser.add_argument(
-        "--algorithm",
-        default="sd8",
-        help='Algorithm name (e.g., "sd8", "sd-9.15,50", default: "sd8")',
+        "--last-price", type=float, required=True, help="Price of last transaction"
     )
     order_parser.add_argument(
-        "--ath", type=float, help="Current ATH (optional, will fetch if omitted)"
+        "--algorithm",
+        default="sd8",
+        help='Algorithm name (e.g., "sd8", "sd8,75", default: "sd8")',
     )
     order_parser.add_argument(
         "--current-price", type=float, help="Current price (optional, will fetch if omitted)"
+    )
+    order_parser.add_argument(
+        "--bracket-seed",
+        type=float,
+        help="Optional bracket seed price to align positions (e.g., 100.0)",
     )
 
     # ========================================================================
@@ -1188,13 +1193,76 @@ def run_analyze(args) -> int:
 
 def run_order(args) -> int:
     """Execute order calculation command."""
+    import re
+    from datetime import datetime
 
-    print(f"Calculating orders for {args.ticker}...")
-    print(f"Holdings: {args.holdings}")
-    print(f"Algorithm: {args.algorithm}")
+    from src.data.asset import Asset
 
-    # Would integrate with order_calculator
-    return 0
+    try:
+        # Parse algorithm string (e.g., "sd8", "sd8,75")
+        algo_match = re.match(r"sd(\d+)(?:,(\d+))?", args.algorithm)
+        if not algo_match:
+            print(f"Error: Invalid algorithm format: {args.algorithm}")
+            print("Expected format: sdN or sdN,profit_pct (e.g., sd8 or sd8,75)")
+            return 1
+
+        sdn = int(algo_match.group(1))
+        profit_pct = int(algo_match.group(2)) if algo_match.group(2) else 50
+
+        # Get current price if not provided
+        if args.current_price is None:
+            asset = Asset(args.ticker)
+            # Get latest price (assuming we want current market price)
+            df = asset.get_prices(datetime.now().date(), datetime.now().date())
+            if df.empty:
+                print(f"Error: Could not fetch current price for {args.ticker}")
+                return 1
+            current_price = df.iloc[-1]["Close"]
+            print(f"Fetched current price: ${current_price:.2f}")
+        else:
+            current_price = args.current_price
+
+        # For now, assume last_price is current_price (simplified)
+        # In a real implementation, you'd want to track last transaction price
+        last_price = args.last_price
+
+        # Import and call order calculator
+        # Build command line args for order calculator
+        import sys
+
+        from src.tools.order_calculator import main as order_main
+
+        original_argv = sys.argv
+        try:
+            sys.argv = [
+                "order_calculator.py",
+                "--ticker",
+                args.ticker,
+                "--holdings",
+                str(args.holdings),
+                "--last-price",
+                f"{last_price:.2f}",
+                "--current-price",
+                f"{current_price:.2f}",
+                "--sdn",
+                str(sdn),
+                "--profit",
+                str(profit_pct),
+            ]
+            if hasattr(args, "bracket_seed") and args.bracket_seed is not None:
+                sys.argv.extend(["--bracket-seed", str(args.bracket_seed)])
+            order_main()
+        finally:
+            sys.argv = original_argv
+
+        return 0
+
+    except Exception as e:
+        print(f"Error calculating orders: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return 1
 
 
 def run_dump(args) -> int:

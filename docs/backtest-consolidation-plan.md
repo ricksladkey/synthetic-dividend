@@ -150,8 +150,12 @@ After 6-12 months of stability:
 
 ## Next Steps
 
-**Phase 3: Unified Tool Interface** ✅ COMPLETE
+**Phase 2: Make Single-Ticker a Thin Wrapper** ⬜ NEXT
 
-**Phase 4: Migrate Callers Incrementally (Future)** ⬜ NEXT
+1. **Create parameter mapping function** - Convert single-ticker params to portfolio format
+2. **Implement wrapper** - Make `run_algorithm_backtest()` call `run_portfolio_backtest()` internally
+3. **Test equivalence** - Verify identical results for single-asset portfolios
+4. **Update documentation** - Mark single-ticker as wrapper, update docstrings
+5. **Run full test suite** - Ensure no regressions
 
-**Ready for Phase 4?** The consolidation is complete with a unified interface. Migration is now optional since both APIs work seamlessly.
+**Ready to start Phase 2?** Let's implement the single-ticker wrapper.

@@ -48,7 +48,7 @@ Issues = "https://github.com/ricksladkey/synthetic-dividend/issues"
 
 [project.scripts]
 # Main CLI entry point
-synthetic-dividend = "src.cli:main"
+sd = "src.cli:main"
 
 # Direct access to core modules
 sd-backtest = "src.run_model:main"
