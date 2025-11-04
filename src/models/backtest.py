@@ -114,7 +114,7 @@ def _create_portfolio_algorithm_from_single_ticker(
 
     # Default to buy-and-hold if no algorithm
     if algo is None:
-        algo_obj = BuyAndHoldAlgorithm()
+        algo_obj: AlgorithmBase = BuyAndHoldAlgorithm()
     elif isinstance(algo, AlgorithmBase):
         algo_obj = algo
     else:
@@ -635,7 +635,7 @@ def run_algorithm_backtest(
         daily_risk_free_rate_fallback = (1 + risk_free_rate_pct / 100.0) ** (1.0 / 365.25) - 1.0
 
     # Extract start/end prices for return calculations
-    start_price: float = df_indexed.loc[first_idx, "Close"].item()
+    legacy_start_price: float = df_indexed.loc[first_idx, "Close"].item()
     end_price: float = df_indexed.loc[last_idx, "Close"].item()
 
     # Calculate initial quantity from investment amount or shares
@@ -647,23 +647,23 @@ def run_algorithm_backtest(
         # Explicit share count provided
         calculated_qty = int(initial_qty)
         investment_method = "shares"
-        investment_amount = calculated_qty * start_price
+        investment_amount = calculated_qty * legacy_start_price
     elif initial_investment is not None:
         # Dollar amount provided - calculate shares
-        calculated_qty = int(initial_investment / start_price)
+        calculated_qty = int(initial_investment / legacy_start_price)
         investment_method = "investment"
         investment_amount = initial_investment
     else:
         # Default to $1,000,000 investment (psychologically meaningful)
         default_investment = 1_000_000.0
-        calculated_qty = int(default_investment / start_price)
+        calculated_qty = int(default_investment / legacy_start_price)
         investment_method = "default_investment"
         investment_amount = default_investment
 
     # Display initial purchase info
-    actual_invested = calculated_qty * start_price
+    actual_invested = calculated_qty * legacy_start_price
     print(
-        f"Initial purchase: {calculated_qty} shares × ${start_price:.2f} = ${actual_invested:,.2f}"
+        f"Initial purchase: {calculated_qty} shares × ${legacy_start_price:.2f} = ${actual_invested:,.2f}"
     )
     if investment_method in ("investment", "default_investment"):
         if investment_method == "default_investment":
@@ -696,14 +696,14 @@ def run_algorithm_backtest(
             # We want n to be an integer, so find closest integer bracket
 
             # Start by assuming scale=1, find which bracket that gives us
-            n_float = math.log(start_price) / math.log(1 + rebalance_trigger)
+            n_float = math.log(legacy_start_price) / math.log(1 + rebalance_trigger)
             n_int = round(n_float)  # Round to nearest integer bracket
 
             # Now calculate the scale to land exactly on that bracket
             # target_price = 1.0 * (1 + r)^n
             # scale = target_price / start_price
             target_price = math.pow(1 + rebalance_trigger, n_int)
-            price_scale_factor = target_price / start_price
+            price_scale_factor = target_price / legacy_start_price
 
             # Scale all prices in the dataframe
             df_indexed = df_indexed.copy()
@@ -712,17 +712,17 @@ def run_algorithm_backtest(
                     df_indexed[col] = df_indexed[col] * price_scale_factor
 
             # Update start/end prices
-            start_price = start_price * price_scale_factor
+            legacy_start_price = legacy_start_price * price_scale_factor
             end_price = end_price * price_scale_factor
 
             print(f"Price normalization: scaling factor = {price_scale_factor:.6f}")
-            print(f"  Original start price: ${start_price / price_scale_factor:.2f}")
-            print(f"  Normalized start price: ${start_price:.2f} (bracket n={n_int})")
+            print(f"  Original start price: ${legacy_start_price / price_scale_factor:.2f}")
+            print(f"  Normalized start price: ${legacy_start_price:.2f} (bracket n={n_int})")
             print(f"  Rebalance trigger: {rebalance_trigger * 100:.4f}%")
-            print(f"  Next bracket up: ${start_price * (1 + rebalance_trigger):.2f}")
-            print(f"  Next bracket down: ${start_price / (1 + rebalance_trigger):.2f}")
+            print(f"  Next bracket up: ${legacy_start_price * (1 + rebalance_trigger):.2f}")
+            print(f"  Next bracket down: ${legacy_start_price / (1 + rebalance_trigger):.2f}")
 
-    transactions: List[Transaction] = []
+    legacy_transactions: List[Transaction] = []
 
     # Initialize portfolio state
     holdings: int = calculated_qty
@@ -759,7 +759,7 @@ def run_algorithm_backtest(
     risk_free_gains_total: float = 0.0
 
     # Calculate initial withdrawal amount (if withdrawal policy enabled)
-    start_value = holdings * start_price
+    start_value = holdings * legacy_start_price
     if withdrawal_rate_pct > 0:
         # Annual withdrawal based on initial portfolio value
         annual_withdrawal = start_value * (withdrawal_rate_pct / 100.0)
@@ -786,12 +786,12 @@ def run_algorithm_backtest(
                         cpi_returns[d] = float(cpi_values[i]) / start_cpi
 
     # Record initial purchase
-    transactions.append(
+    legacy_transactions.append(
         Transaction(
             transaction_date=first_idx,
             action="BUY",
             qty=holdings,
-            price=start_price,
+            price=legacy_start_price,
             ticker=ticker,
             notes="Initial purchase",
         )
@@ -863,14 +863,14 @@ def run_algorithm_backtest(
         raise ValueError("algo must be AlgorithmBase instance or callable")
 
     # Initialize algorithm with starting position
-    algo_obj.on_new_holdings(holdings, start_price)
+    algo_obj.on_new_holdings(holdings, legacy_start_price)
 
     # Main backtest loop: process each trading day
     for i, d in enumerate(dates):
         # Skip initial purchase day (already processed above)
         if d == first_idx:
             # Track initial deployment
-            deployment_history.append((d, holdings * start_price))
+            deployment_history.append((d, holdings * legacy_start_price))
             continue
 
         # Get current day's prices
@@ -924,7 +924,7 @@ def run_algorithm_backtest(
                 proceeds = sell_qty * price
                 holdings -= sell_qty
                 bank += proceeds
-                transactions.append(
+                legacy_transactions.append(
                     Transaction(
                         transaction_date=d,
                         action="SELL",
@@ -952,7 +952,7 @@ def run_algorithm_backtest(
                     # Strict mode: skip buy if insufficient cash
                     skipped_buys += 1
                     skipped_buy_value += cost
-                    transactions.append(
+                    legacy_transactions.append(
                         Transaction(
                             transaction_date=d,
                             action="SKIP BUY",
@@ -966,7 +966,7 @@ def run_algorithm_backtest(
                     # Execute buy (allow_margin=True OR sufficient cash)
                     holdings += buy_qty
                     bank -= cost  # May go negative if allow_margin=True
-                    transactions.append(
+                    legacy_transactions.append(
                         Transaction(
                             transaction_date=d,
                             action="BUY",
@@ -1012,7 +1012,7 @@ def run_algorithm_backtest(
                 total_dividends += div_payment
                 dividend_payment_count += 1
 
-                transactions.append(
+                legacy_transactions.append(
                     Transaction(
                         transaction_date=d,
                         action="DIVIDEND",
@@ -1060,7 +1060,7 @@ def run_algorithm_backtest(
                     bank += proceeds
                     shares_sold_for_withdrawals += shares_to_sell
 
-                    transactions.append(
+                    legacy_transactions.append(
                         Transaction(
                             transaction_date=d,
                             action="SELL",
@@ -1076,7 +1076,7 @@ def run_algorithm_backtest(
                 # Withdraw cash from bank
                 actual_withdrawal = min(withdrawal_result.cash_from_bank, bank)
                 bank -= actual_withdrawal
-                transactions.append(
+                legacy_transactions.append(
                     Transaction(
                         transaction_date=d,
                         action="WITHDRAWAL",
@@ -1104,9 +1104,7 @@ def run_algorithm_backtest(
     # Time-based calculations
     days = (last_idx - first_idx).days
     years = days / 365.25 if days > 0 else 0.0
-    start_val = calculated_qty * start_price
-
-    # Returns calculation
+    start_val = calculated_qty * legacy_start_price
     total_return = (total - start_val) / start_val if start_val != 0 else 0.0
     if years > 0 and start_val > 0:
         annualized = (total / start_val) ** (1.0 / years) - 1.0
@@ -1138,10 +1136,10 @@ def run_algorithm_backtest(
     # (No longer need post-processing calculation)
 
     # Build summary dict
-    summary: Dict[str, Any] = {
+    legacy_summary: Dict[str, Any] = {
         "ticker": ticker,
         "start_date": first_idx,
-        "start_price": start_price,
+        "start_price": legacy_start_price,
         "start_value": start_val,
         "end_date": last_idx,
         "end_price": final_price,
@@ -1196,7 +1194,7 @@ def run_algorithm_backtest(
         baseline_summary: Dict[str, Any] = {
             "start_date": first_idx,
             "end_date": last_idx,
-            "start_price": start_price,
+            "start_price": legacy_start_price,
             "end_price": final_price,
             "start_value": start_val,
             "end_value": baseline_end_value,
@@ -1235,12 +1233,12 @@ def run_algorithm_backtest(
         primary_income_dollars = total_gains - universal_income_dollars - secondary_income_dollars
         primary_income_pct = (primary_income_dollars / start_val * 100) if start_val > 0 else 0.0
 
-        summary["baseline"] = baseline_summary
-        summary["volatility_alpha"] = volatility_alpha
-        summary["return_on_deployed_capital"] = return_on_deployed_capital
+        legacy_summary["baseline"] = baseline_summary
+        legacy_summary["volatility_alpha"] = volatility_alpha
+        legacy_summary["return_on_deployed_capital"] = return_on_deployed_capital
 
         # Add income classification metrics
-        summary["income_classification"] = {
+        legacy_summary["income_classification"] = {
             "universal_dollars": universal_income_dollars,
             "universal_pct": universal_income_pct,
             "primary_dollars": primary_income_dollars,
@@ -1250,8 +1248,8 @@ def run_algorithm_backtest(
         }
     except Exception:
         # Gracefully handle edge cases in baseline computation
-        summary["baseline"] = None
-        summary["volatility_alpha"] = None
+        legacy_summary["baseline"] = None
+        legacy_summary["volatility_alpha"] = None
 
     # Notify algorithm of completion
     try:
@@ -1263,15 +1261,15 @@ def run_algorithm_backtest(
     # Include algorithm-specific final stats when available for tests and reporting
     try:
         # Buyback stack final size (used by volatility-alpha tests)
-        summary["final_stack_size"] = getattr(algo_obj, "buyback_stack_count", 0)
+        legacy_summary["final_stack_size"] = getattr(algo_obj, "buyback_stack_count", 0)
         # Total volatility alpha accumulated by algorithm (percentage)
-        summary["total_volatility_alpha"] = getattr(algo_obj, "total_volatility_alpha", 0.0)
+        legacy_summary["total_volatility_alpha"] = getattr(algo_obj, "total_volatility_alpha", 0.0)
     except Exception:
         # Be tolerant of algorithms that don't expose these attributes
-        summary.setdefault("final_stack_size", 0)
-        summary.setdefault("total_volatility_alpha", 0.0)
+        legacy_summary.setdefault("final_stack_size", 0)
+        legacy_summary.setdefault("total_volatility_alpha", 0.0)
 
-    return transactions, summary
+    return legacy_transactions, legacy_summary
 
 
 def print_income_classification(summary: Dict[str, Any], verbose: bool = True) -> None:
