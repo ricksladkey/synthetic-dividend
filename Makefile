@@ -7,8 +7,9 @@ help:
 	@echo ""
 	@echo "  make install       Install package in development mode"
 	@echo "  make install-dev   Install with development dependencies"
-	@echo "  make test          Run tests (CI mode - quiet)"
-	@echo "  make test-all      Run all tests (verbose, includes network tests)"
+	@echo "  make test-checks    Run tests (CI mode - quiet)"
+	@echo "  make test-all      Run all tests (quiet, includes network tests)"
+	@echo "  make test          Run both CI-only and all tests (quiet)"
 	@echo "  make lint          Run all linters (black, isort, flake8, mypy)"
 	@echo "  make check         Run lint and test (simulates CI checks)"
 	@echo "  make format        Format code with black and isort"
@@ -22,11 +23,13 @@ install:
 install-dev:
 	pip install -e ".[dev]"
 
-test:
-	$(PYTHON) -m pytest -q
+test-checks:
+	env CI=true $(PYTHON) -m pytest -q
 
 test-all:
-	$(PYTHON) -m pytest
+	$(PYTHON) -m pytest -q
+
+test: test-checks test-all
 
 lint:
 	@echo "Running black..."
