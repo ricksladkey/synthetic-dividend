@@ -77,13 +77,7 @@ def run_retirement_backtest(
     """
     # Get CPI data if adjusting for inflation
     cpi_adjustment_df = None
-    if cpi_adjust:
-        try:
-            cpi_fetcher = CPIFetcher(FredCPIProvider())
-            cpi_adjustment_df = cpi_fetcher.get_cpi(start_date, end_date)
-        except Exception as e:
-            print(f"Warning: CPI data unavailable: {e}. Proceeding without CPI adjustment.")
-            cpi_adjustment_df = None
+    cpi_adjustment_df = None  # No longer used - inflation handled by backtest
 
     # Convert withdrawal frequency to days
     if withdrawal_frequency == "monthly":
@@ -108,7 +102,7 @@ def run_retirement_backtest(
         algo_obj,
         withdrawal_rate_pct=withdrawal_rate_percentage,
         withdrawal_frequency_days=frequency_days,
-        cpi_data=cpi_adjustment_df,
+        inflation_rate_ticker="CPI" if cpi_adjust else None,
         simple_mode=simple_mode,
     )
 
@@ -117,11 +111,10 @@ def run_retirement_backtest(
     final_value = summary.get("end_value", summary.get("total", 0))
 
     # Calculate final purchasing power if CPI data available
-    if cpi_adjust and cpi_adjustment_df is not None and not cpi_adjustment_df.empty:
+    if cpi_adjust and summary.get("cumulative_inflation") is not None:
         try:
-            base_cpi = cpi_adjustment_df.iloc[0]["CPI"]
-            final_cpi = cpi_adjustment_df.iloc[-1]["CPI"]
-            inflation_factor = final_cpi / base_cpi
+            # Use inflation data from backtest summary
+            inflation_factor = 1.0 + (summary["cumulative_inflation"] / 100.0)
             final_purchasing_power = final_value / inflation_factor
         except Exception:
             final_purchasing_power = final_value
@@ -136,7 +129,7 @@ def run_retirement_backtest(
             "final_value": final_value,  # For consistency
             "final_purchasing_power": final_purchasing_power,
             "portfolio_survived": final_value > 0,
-            "cpi_adjusted": cpi_adjust and cpi_adjustment_df is not None,
+            "cpi_adjusted": cpi_adjust and summary.get("inflation_rate_ticker") is not None,
         }
     )
 

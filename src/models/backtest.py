@@ -7,6 +7,7 @@ for backtesting against historical OHLC price data.
 import math
 from datetime import date
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+import warnings
 
 import pandas as pd
 
@@ -325,7 +326,7 @@ def run_algorithm_backtest(
     # Withdrawal policy parameters
     withdrawal_rate_pct: float = 0.0,
     withdrawal_frequency_days: int = 30,
-    cpi_data: Optional[pd.DataFrame] = None,
+    inflation_rate_ticker: Optional[str] = None,
     simple_mode: bool = False,
     # Bank behavior
     allow_margin: bool = True,
@@ -393,9 +394,9 @@ def run_algorithm_backtest(
                             (e.g., 4.0 for 4% withdrawal rate)
                             Withdrawals are taken monthly and CPI-adjusted
         withdrawal_frequency_days: Days between withdrawals (default 30 for monthly)
-        cpi_data: Historical CPI data for inflation adjustment
-                          If provided, withdrawals adjust with inflation
-                          If None, withdrawals remain constant in nominal terms
+        inflation_rate_ticker: Optional ticker for inflation data (e.g., "CPI" via custom provider)
+                          Used to calculate inflation-adjusted (real) returns
+                          If provided, adds real_return and inflation_adjusted metrics to summary
         simple_mode: If True, disables opportunity cost, risk-free gains, and CPI adjustment
                     Useful for unit tests where we want clean, simple behavior
                     (free borrowing, cash holds value, no inflation)
@@ -429,6 +430,16 @@ def run_algorithm_backtest(
         reference_data = kwargs.pop("reference_asset_df")
     if "risk_free_asset_df" in kwargs and risk_free_data is None:
         risk_free_data = kwargs.pop("risk_free_asset_df")
+    # Handle deprecated cpi_data parameter
+    if "cpi_data" in kwargs:
+        warnings.warn(
+            "The 'cpi_data' parameter is deprecated. Use 'inflation_rate_ticker' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        if kwargs["cpi_data"] is not None and inflation_rate_ticker is None:
+            inflation_rate_ticker = "CPI"  # Assume CPI ticker if raw data was provided
+        kwargs.pop("cpi_data")
 
     # ========================================================================
     # PHASE 3: Unified Interface - Detect which mode to use
@@ -501,7 +512,7 @@ def run_algorithm_backtest(
             "dividend_series",
             "withdrawal_rate_pct",
             "withdrawal_frequency_days",
-            "cpi_data",
+            "inflation_rate_ticker",
             "simple_mode",
             "allow_margin",
             "initial_investment",
@@ -583,7 +594,7 @@ def run_algorithm_backtest(
             withdrawal_frequency_days=withdrawal_frequency_days,
             reference_rate_ticker=reference_rate_ticker,
             risk_free_rate_ticker=risk_free_rate_ticker,
-            inflation_data=cpi_data,
+            inflation_rate_ticker=inflation_rate_ticker,
             dividend_data=dividend_data,
         )
 
