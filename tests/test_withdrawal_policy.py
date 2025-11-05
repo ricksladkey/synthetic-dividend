@@ -292,7 +292,7 @@ def test_simple_mode_no_opportunity_cost():
             portfolio_algo=portfolio_algo,
             initial_investment=initial_investment,
             simple_mode=False,
-            reference_return_pct=10.0,  # 10% opportunity cost
+            reference_rate_ticker="MOCK-LINEAR-100-110",  # 10% annual return asset
         )
 
         # Map portfolio results to single-ticker format for compatibility

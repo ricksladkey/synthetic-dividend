@@ -18,7 +18,6 @@ from typing import Any, Dict, List, Tuple
 import pandas as pd
 
 from src.algorithms.base import AlgorithmBase
-from src.data.cpi_fetcher import CPIFetcher, FredCPIProvider
 from src.models.backtest import Data, run_algorithm_backtest
 from src.models.model_types import Transaction
 
@@ -76,14 +75,7 @@ def run_retirement_backtest(
         >>> print(f"Total withdrawn: ${summary['total_withdrawn']:,.0f}")
     """
     # Get CPI data if adjusting for inflation
-    cpi_adjustment_df = None
-    if cpi_adjust:
-        try:
-            cpi_fetcher = CPIFetcher(FredCPIProvider())
-            cpi_adjustment_df = cpi_fetcher.get_cpi(start_date, end_date)
-        except Exception as e:
-            print(f"Warning: CPI data unavailable: {e}. Proceeding without CPI adjustment.")
-            cpi_adjustment_df = None
+    # No longer needed - inflation handled by backtest with inflation_rate_ticker
 
     # Convert withdrawal frequency to days
     if withdrawal_frequency == "monthly":
@@ -108,7 +100,7 @@ def run_retirement_backtest(
         algo_obj,
         withdrawal_rate_pct=withdrawal_rate_percentage,
         withdrawal_frequency_days=frequency_days,
-        cpi_data=cpi_adjustment_df,
+        inflation_rate_ticker="CPI" if cpi_adjust else None,
         simple_mode=simple_mode,
     )
 
@@ -117,11 +109,10 @@ def run_retirement_backtest(
     final_value = summary.get("end_value", summary.get("total", 0))
 
     # Calculate final purchasing power if CPI data available
-    if cpi_adjust and cpi_adjustment_df is not None and not cpi_adjustment_df.empty:
+    if cpi_adjust and summary.get("cumulative_inflation") is not None:
         try:
-            base_cpi = cpi_adjustment_df.iloc[0]["CPI"]
-            final_cpi = cpi_adjustment_df.iloc[-1]["CPI"]
-            inflation_factor = final_cpi / base_cpi
+            # Use inflation data from backtest summary
+            inflation_factor = 1.0 + (summary["cumulative_inflation"] / 100.0)
             final_purchasing_power = final_value / inflation_factor
         except Exception:
             final_purchasing_power = final_value
@@ -136,7 +127,7 @@ def run_retirement_backtest(
             "final_value": final_value,  # For consistency
             "final_purchasing_power": final_purchasing_power,
             "portfolio_survived": final_value > 0,
-            "cpi_adjusted": cpi_adjust and cpi_adjustment_df is not None,
+            "cpi_adjusted": cpi_adjust and summary.get("inflation_rate_ticker") is not None,
         }
     )
 
