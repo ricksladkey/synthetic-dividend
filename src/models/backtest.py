@@ -758,10 +758,6 @@ def run_portfolio_backtest(
     reference_rate_ticker: Optional[str] = None,
     risk_free_rate_ticker: Optional[str] = None,
     inflation_rate_ticker: Optional[str] = None,
-    # DataFrame alternatives for single-ticker compatibility
-    reference_data: Optional[pd.DataFrame] = None,
-    risk_free_data: Optional[pd.DataFrame] = None,
-    inflation_data: Optional[pd.DataFrame] = None,
     # Legacy compatibility parameters (deprecated, ignored with warnings)
     algo: Optional[Union[AlgorithmBase, Callable, str]] = None,
     simple_mode: bool = False,
@@ -804,15 +800,6 @@ def run_portfolio_backtest(
             Used to calculate inflation-adjusted (real) returns
             Tracks cumulative inflation adjustment from start date
             Adds real_return and inflation_adjusted metrics to summary
-        reference_data: Optional DataFrame alternative to reference_rate_ticker
-            Historical price data for reference asset (e.g., VOO)
-            Used when DataFrame is provided directly instead of ticker
-        risk_free_data: Optional DataFrame alternative to risk_free_rate_ticker
-            Historical price data for risk-free asset (e.g., BIL)
-            Used when DataFrame is provided directly instead of ticker
-        inflation_data: Optional DataFrame alternative to inflation_rate_ticker
-            Historical inflation data (e.g., CPI values)
-            Used when DataFrame is provided directly instead of ticker
         reference_return_pct: Annual return for opportunity cost calc (fallback if no asset data)
             Applied when bank balance is negative (borrowing cost)
             Ignored if simple_mode=True
@@ -906,22 +893,7 @@ def run_portfolio_backtest(
     # Fetch reference rate data if provided (for market-adjusted returns)
     fetched_reference_data: Optional[pd.DataFrame] = None
     reference_returns: Dict[date, float] = {}
-    if reference_data is not None:
-        # Use provided DataFrame
-        fetched_reference_data = reference_data
-        print(f"Using provided reference data ({len(fetched_reference_data)} days)")
-        # Calculate daily returns from price data
-        ref_indexed = fetched_reference_data.copy()
-        ref_indexed.index = pd.to_datetime(ref_indexed.index).date
-        if "Close" in ref_indexed.columns:
-            close_prices = ref_indexed["Close"].values
-            ref_dates = list(ref_indexed.index)
-            for i in range(1, len(close_prices)):
-                prev_price = float(close_prices[i - 1])
-                curr_price = float(close_prices[i])
-                if prev_price > 0:
-                    reference_returns[ref_dates[i]] = (curr_price - prev_price) / prev_price
-    elif reference_rate_ticker:
+    if reference_rate_ticker:
         print(f"Fetching reference benchmark ({reference_rate_ticker})...", end=" ")
         fetched_reference_data = fetcher.get_history(reference_rate_ticker, start_date, end_date)
         if fetched_reference_data is not None and not fetched_reference_data.empty:
@@ -944,22 +916,7 @@ def run_portfolio_backtest(
     # Fetch risk-free rate data if provided (for cash interest modeling)
     fetched_risk_free_data: Optional[pd.DataFrame] = None
     risk_free_returns: Dict[date, float] = {}
-    if risk_free_data is not None:
-        # Use provided DataFrame
-        fetched_risk_free_data = risk_free_data
-        print(f"Using provided risk-free data ({len(fetched_risk_free_data)} days)")
-        # Calculate daily returns from price data
-        rf_indexed = fetched_risk_free_data.copy()
-        rf_indexed.index = pd.to_datetime(rf_indexed.index).date
-        if "Close" in rf_indexed.columns:
-            close_prices = rf_indexed["Close"].values
-            rf_dates = list(rf_indexed.index)
-            for i in range(1, len(close_prices)):
-                prev_price = float(close_prices[i - 1])
-                curr_price = float(close_prices[i])
-                if prev_price > 0:
-                    risk_free_returns[rf_dates[i]] = (curr_price - prev_price) / prev_price
-    elif risk_free_rate_ticker:
+    if risk_free_rate_ticker:
         print(f"Fetching risk-free asset ({risk_free_rate_ticker})...", end=" ")
         fetched_risk_free_data = fetcher.get_history(risk_free_rate_ticker, start_date, end_date)
         if fetched_risk_free_data is not None and not fetched_risk_free_data.empty:
@@ -982,27 +939,7 @@ def run_portfolio_backtest(
     # Fetch inflation data if provided (for real returns calculation)
     fetched_inflation_data: Optional[pd.DataFrame] = None
     cumulative_inflation: Dict[date, float] = {}
-    if inflation_data is not None:
-        # Use provided DataFrame
-        fetched_inflation_data = inflation_data
-        print(f"Using provided inflation data ({len(fetched_inflation_data)} days)")
-        # Calculate cumulative inflation adjustment from start
-        infl_indexed = fetched_inflation_data.copy()
-        infl_indexed.index = pd.to_datetime(infl_indexed.index).date
-        value_col = "Close" if "Close" in infl_indexed.columns else "Value"
-        if value_col in infl_indexed.columns:
-            infl_values = infl_indexed[value_col].values
-            infl_dates = list(infl_indexed.index)
-            # Find start CPI value
-            if common_dates[0] in infl_dates:
-                start_cpi_idx = infl_dates.index(common_dates[0])
-                start_cpi = float(infl_values[start_cpi_idx])
-                # Calculate cumulative multiplier for each date
-                for i, d in enumerate(infl_dates):
-                    if d >= common_dates[0]:
-                        curr_cpi = float(infl_values[i])
-                        cumulative_inflation[d] = curr_cpi / start_cpi if start_cpi > 0 else 1.0
-    elif inflation_rate_ticker:
+    if inflation_rate_ticker:
         print(f"Fetching inflation data ({inflation_rate_ticker})...", end=" ")
         fetched_inflation_data = fetcher.get_history(inflation_rate_ticker, start_date, end_date)
         if fetched_inflation_data is not None and not fetched_inflation_data.empty:
