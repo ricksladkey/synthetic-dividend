@@ -964,6 +964,10 @@ def run_portfolio_backtest(
     )
     # Fallback daily reference rate for opportunity cost (when bank is negative)
     daily_reference_rate_fallback = 0.0
+    if reference_rate_ticker:
+        # If reference ticker is provided but data fetch fails, use a default daily return
+        # This ensures opportunity cost is applied even if reference data is unavailable
+        daily_reference_rate_fallback = 0.00027  # ~10% annual return as fallback
 
     # Dividend tracking (per-asset)
     total_dividends_by_asset: Dict[str, float] = {ticker: 0.0 for ticker in allocations.keys()}
