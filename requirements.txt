@@ -4,3 +4,4 @@ yfinance
 pytest>=7.0
 pandas-datareader
 lxml
+simpy>=4.0
