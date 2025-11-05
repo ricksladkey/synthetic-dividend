@@ -17,9 +17,8 @@ import sys
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from src.algorithms.factory import build_algo_from_name
 from src.data.fetcher import HistoryFetcher
-from src.models.backtest import Data, run_algorithm_backtest  # noqa: E402
+from src.models.backtest import run_portfolio_backtest  # noqa: E402
 
 
 def parse_date(s: str) -> date:
@@ -43,79 +42,102 @@ def parse_date(s: str) -> date:
 
 
 def run_single_backtest(
-    df: Data,
     ticker: str,
     start_date: date,
     end_date: date,
     algo_name: str,
     initial_qty: int = 10000,
-    reference_return_pct: float = 0.0,
-    risk_free_rate_pct: float = 0.0,
-    reference_data: Data = None,
-    risk_free_data: Data = None,
-    reference_asset_ticker: str = "",
-    risk_free_asset_ticker: str = "",
+    reference_rate_ticker: str = "",
+    risk_free_rate_ticker: str = "",
 ) -> Dict[str, Any]:
     """Run single backtest and extract key metrics.
 
     Args:
-        df: Historical OHLC price data
         ticker: Stock symbol
         start_date: Backtest start date
         end_date: Backtest end date
-        algo_name: Algorithm identifier string
+        algo_name: Algorithm identifier string (portfolio format)
         initial_qty: Initial share quantity
-        reference_return_pct: Annual reference return for opportunity cost (fallback, default 0%)
-        risk_free_rate_pct: Annual risk-free rate for cash (fallback, default 0%)
-        reference_asset_df: Historical data for reference asset (e.g., VOO)
-        risk_free_asset_df: Historical data for risk-free asset (e.g., BIL)
-        reference_asset_ticker: Ticker symbol for reference asset
-        risk_free_asset_ticker: Ticker symbol for risk-free asset
+        reference_rate_ticker: Ticker symbol for reference asset
+        risk_free_rate_ticker: Ticker symbol for risk-free asset
 
     Returns:
         Dict with extracted metrics for CSV row
     """
     try:
-        algo = build_algo_from_name(algo_name)
-        transactions, summary = run_algorithm_backtest(
-            df=df,
-            ticker=ticker,
-            initial_qty=initial_qty,
-            start_date=start_date,
-            end_date=end_date,
-            algo=algo,
-            reference_return_pct=reference_return_pct,
-            risk_free_rate_pct=risk_free_rate_pct,
-            reference_data=reference_data,
-            risk_free_data=risk_free_data,
-            reference_asset_ticker=reference_asset_ticker,
-            risk_free_asset_ticker=risk_free_asset_ticker,
+        # Convert single-ticker to portfolio format
+        allocations = {ticker: 1.0}
+        
+        # Convert algorithm name to portfolio format
+        if algo_name == "buy-and-hold":
+            portfolio_algo = "per-asset:buy-and-hold"
+        elif algo_name.startswith("sd-"):
+            portfolio_algo = f"per-asset:{algo_name}"
+        else:
+            portfolio_algo = algo_name
+        
+        # Calculate initial investment from initial_qty and start price
+        # We'll need to fetch the start price first
+        fetcher = HistoryFetcher()
+        df = fetcher.get_history(ticker, start_date, end_date)
+        if df is None or df.empty:
+            raise ValueError(f"No price data available for {ticker}")
+        
+        # Get start price
+        df_indexed = df.copy()
+        df_indexed.index = df_indexed.index.date
+        
+        # Find the actual start date (first available date >= requested start_date)
+        available_dates = sorted([d for d in df_indexed.index if d >= start_date])
+        if not available_dates:
+            raise ValueError(f"No data available for {ticker} starting from {start_date}")
+        actual_start_date = available_dates[0]
+        
+        start_price = float(df_indexed.loc[actual_start_date, "Close"])
+        initial_investment = initial_qty * start_price
+
+        # Find the actual end date (last available date <= requested end_date)
+        available_end_dates = sorted([d for d in df_indexed.index if d <= end_date])
+        if not available_end_dates:
+            raise ValueError(f"No data available for {ticker} ending at {end_date}")
+        actual_end_date = available_end_dates[-1]
+        
+        transactions, summary = run_portfolio_backtest(
+            allocations=allocations,
+            start_date=actual_start_date,
+            end_date=actual_end_date,
+            portfolio_algo=portfolio_algo,
+            initial_investment=initial_investment,
+            reference_rate_ticker=reference_rate_ticker if reference_rate_ticker else None,
+            risk_free_rate_ticker=risk_free_rate_ticker if risk_free_rate_ticker else None,
         )
 
-        # Extract key metrics including new bank statistics
+        # Extract key metrics from portfolio summary
+        asset_results = summary["assets"][ticker]
+        
         return {
             "algorithm": algo_name,
             "start_date": summary["start_date"].isoformat(),
             "end_date": summary["end_date"].isoformat(),
-            "start_price": summary["start_price"],
-            "end_price": summary["end_price"],
+            "start_price": start_price,
+            "end_price": float(df_indexed.loc[actual_end_date, "Close"]),
             "initial_qty": initial_qty,
-            "final_shares": summary["holdings"],
-            "final_value": summary["end_value"],
-            "bank": summary.get("bank", 0.0),
-            "bank_min": summary.get("bank_min", 0.0),
-            "bank_max": summary.get("bank_max", 0.0),
-            "bank_avg": summary.get("bank_avg", 0.0),
-            "bank_negative_count": summary.get("bank_negative_count", 0),
-            "bank_positive_count": summary.get("bank_positive_count", 0),
+            "final_shares": asset_results["final_holdings"],
+            "final_value": asset_results["final_value"],
+            "bank": summary.get("final_bank", 0.0),
+            "bank_min": min(summary.get("daily_bank_values", {}).values()) if summary.get("daily_bank_values") else summary.get("final_bank", 0.0),
+            "bank_max": max(summary.get("daily_bank_values", {}).values()) if summary.get("daily_bank_values") else summary.get("final_bank", 0.0),
+            "bank_avg": sum(summary.get("daily_bank_values", {}).values()) / len(summary.get("daily_bank_values", {})) if summary.get("daily_bank_values") else summary.get("final_bank", 0.0),
+            "bank_negative_count": sum(1 for b in summary.get("daily_bank_values", {}).values() if b < 0),
+            "bank_positive_count": sum(1 for b in summary.get("daily_bank_values", {}).values() if b > 0),
             "opportunity_cost": summary.get("opportunity_cost", 0.0),
-            "risk_free_gains": summary.get("risk_free_gains", 0.0),
-            "total": summary.get("total", summary["end_value"]),
-            "total_return_pct": summary["total_return"] * 100,
-            "annualized_return_pct": summary["annualized"] * 100,
-            "years": summary["years"],
-            "num_transactions": len(transactions),
-            "start_value": summary["start_value"],
+            "risk_free_gains": summary.get("cash_interest_earned", 0.0),
+            "total": summary.get("total_final_value", asset_results["final_value"]),
+            "total_return_pct": summary["total_return"],
+            "annualized_return_pct": summary["annualized_return"],
+            "years": summary["trading_days"] / 365.25,
+            "num_transactions": summary.get("transaction_count", len(transactions)),
+            "start_value": initial_investment,
         }
     except Exception as e:
         # Return error row if backtest fails
@@ -183,41 +205,6 @@ def run_batch_comparison(
     Returns:
         List of result dicts, one per configuration
     """
-    # Fetch price data once (uses cache)
-    print(f"Fetching price data for {ticker}...")
-    fetcher = HistoryFetcher()
-    df = fetcher.get_history(ticker, start_date, end_date)
-
-    if df is None or df.empty:
-        raise ValueError(f"No price data available for {ticker}")
-
-    print(f"Data loaded: {len(df)} trading days")
-
-    # Fetch reference and risk-free asset data
-    print(f"Fetching {reference_asset} (reference asset)...", end=" ", flush=True)
-    reference_df = None
-    try:
-        reference_df = fetcher.get_history(reference_asset, start_date, end_date)
-        if reference_df.empty:
-            print("Warning: No data, using fallback rate")
-            reference_df = None
-        else:
-            print(f"OK {len(reference_df)} days")
-    except Exception as e:
-        print(f"Warning: {e}, using fallback rate")
-
-    print(f"Fetching {risk_free_asset} (risk-free asset)...", end=" ", flush=True)
-    risk_free_df = None
-    try:
-        risk_free_df = fetcher.get_history(risk_free_asset, start_date, end_date)
-        if risk_free_df.empty:
-            print("Warning: No data, using fallback rate")
-            risk_free_df = None
-        else:
-            print(f"OK {len(risk_free_df)} days")
-    except Exception as e:
-        print(f"Warning: {e}, using fallback rate")
-
     # Use default configs if not provided
     if configs is None:
         configs = generate_algorithm_configs()
@@ -231,16 +218,13 @@ def run_batch_comparison(
         print(f"[{i}/{len(configs)}] {algo_name}...", end=" ", flush=True)
 
         result = run_single_backtest(
-            df=df,
             ticker=ticker,
             start_date=start_date,
             end_date=end_date,
             algo_name=algo_name,
             initial_qty=initial_qty,
-            reference_data=reference_df,
-            risk_free_data=risk_free_df,
-            reference_asset_ticker=reference_asset,
-            risk_free_asset_ticker=risk_free_asset,
+            reference_rate_ticker=reference_asset,
+            risk_free_rate_ticker=risk_free_asset,
         )
 
         # Add ticker for reference
