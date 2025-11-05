@@ -23,7 +23,6 @@ Examples:
     python -m src.cli analyze volatility-alpha --ticker NVDA --start 2023-01-01 --end 2023-12-31
 """
 
-import argparse
 import sys
 from typing import List, Optional
 
@@ -367,6 +366,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
         try:
             backtest_args = backtest_parser.parse_args(remaining_args)
+
             # Convert to the format expected by synthetic_dividend_tool's run_backtest
             class Args:
                 def __init__(self):

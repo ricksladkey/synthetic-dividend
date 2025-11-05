@@ -27,14 +27,17 @@ df.set_index("Date", inplace=True)
 
 # Mock the fetcher
 from unittest.mock import patch
+
 import src.data.fetcher as fetcher_module
 
 original_get_history = fetcher_module.HistoryFetcher.get_history
+
 
 def mock_get_history(self, ticker, start_date, end_date):
     if ticker == "SYNTHETIC":
         return df
     return original_get_history(self, ticker, start_date, end_date)
+
 
 allocations = {"SYNTHETIC": 1.0}
 initial_investment = 1000 * df.iloc[0]["Close"]

@@ -9,7 +9,10 @@ from datetime import date, timedelta
 
 import pandas as pd
 
-from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest, run_portfolio_backtest
+from src.models.backtest import (
+    SyntheticDividendAlgorithm,
+    run_portfolio_backtest,
+)
 
 
 def create_price_data(price_path, ticker="TEST"):
@@ -86,7 +89,7 @@ def test_drawdown_recovery_generates_alpha():
     ]
 
     price_df = create_price_data(prices)
-    ref_df = create_flat_reference(len(prices))
+    # ref_df = create_flat_reference(len(prices))  # Not used in this test
 
     # Initial position: 1000 shares @ $100 = $100,000
     initial_shares = 1000
@@ -106,6 +109,7 @@ def test_drawdown_recovery_generates_alpha():
 
     # Mock the fetcher to return our synthetic data
     from unittest.mock import patch
+
     import src.data.fetcher as fetcher_module
 
     original_get_history = fetcher_module.HistoryFetcher.get_history

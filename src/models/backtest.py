@@ -606,9 +606,7 @@ def run_algorithm_backtest(
             withdrawal_rate_pct=withdrawal_rate_pct,
             withdrawal_frequency_days=withdrawal_frequency_days,
             cash_interest_rate_pct=cash_interest_rate,
-            dividend_data=(
-                {ticker: dividend_series} if dividend_series is not None else None
-            ),
+            dividend_data=({ticker: dividend_series} if dividend_series is not None else None),
             reference_data=reference_data,
             risk_free_data=risk_free_data,
             inflation_data=cpi_data,
@@ -624,9 +622,7 @@ def run_algorithm_backtest(
             start_date=start_date,
             end_date=end_date,
             algo_obj=(
-                portfolio_algo.strategies[ticker]
-                if hasattr(portfolio_algo, "strategies")
-                else None
+                portfolio_algo.strategies[ticker] if hasattr(portfolio_algo, "strategies") else None
             ),
             transactions=transactions,
         )
