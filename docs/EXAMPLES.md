@@ -360,7 +360,7 @@ sd dump --ticker TSLA --start 2023-01-01 --end 2023-12-31 --ath-only --output ts
 
 ## Portfolio Backtesting
 
-The **unified portfolio backtesting** system provides a single interface for both simple buy-and-hold portfolios and algorithmic multi-asset strategies. This replaces the need for separate `simulate_portfolio` and `run_algorithm_backtest` tools.
+The **unified portfolio backtesting** system provides a single interface for both simple buy-and-hold portfolios and algorithmic multi-asset strategies via `run_portfolio_backtest()`.
 
 ### Key Features
 
@@ -863,29 +863,35 @@ The system automatically tracks dividend and interest payments.
 ```python
 from datetime import date
 from src.data.fetcher import HistoryFetcher
-from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
+from src.models.backtest import run_portfolio_backtest
 
 fetcher = HistoryFetcher()
 
 # Fetch price and dividend data
-price_df = fetcher.get_history("AAPL", date(2024, 1, 1), date(2024, 12, 31))
-div_series = fetcher.get_dividends("AAPL", date(2024, 1, 1), date(2024, 12, 31))
+ticker = "AAPL"
+start_date = date(2024, 1, 1)
+end_date = date(2024, 12, 31)
+
+price_df = fetcher.get_history(ticker, start_date, end_date)
+div_series = fetcher.get_dividends(ticker, start_date, end_date)
 
 # Run backtest with dividends
-algo = SyntheticDividendAlgorithm(9.05, 50)
-_, summary = run_algorithm_backtest(
-    df=price_df,
-    ticker="AAPL",
-    initial_qty=100,
-    start_date=date(2024, 1, 1),
-    end_date=date(2024, 12, 31),
-    algo=algo,
-    dividend_series=div_series,  # Include real dividends
+initial_qty = 100
+start_price = price_df.iloc[0]["Close"]
+
+_, summary = run_portfolio_backtest(
+    allocations={ticker: 1.0},
+    start_date=start_date,
+    end_date=end_date,
+    portfolio_algo="per-asset:sd-9.05,50",  # SD8 algorithm: 9.05% trigger, 50% profit sharing
+    initial_investment=initial_qty * start_price,
+    dividend_data={ticker: div_series},  # Include real dividends
     simple_mode=True,
 )
 
 print(f"Total dividends received: ${summary['total_dividends']:.2f}")
-print(f"Dividend payment count: {summary['dividend_payment_count']}")
+asset_summary = summary["assets"][ticker]
+print(f"Dividend payment count: {summary.get('dividend_payment_count_by_asset', {}).get(ticker, 0)}")
 ```
 
 ### Pre-built Demo
