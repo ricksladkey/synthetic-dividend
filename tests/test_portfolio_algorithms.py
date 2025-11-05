@@ -248,4 +248,4 @@ if __name__ == "__main__":
     test_quarterly_rebalance_60_40()
     test_per_asset_portfolio_hybrid()
     test_shared_bank_isolation()
-    test_wrapper_vs_portfolio_equivalence()
+    test_portfolio_algo_string_vs_instance_equivalence()
