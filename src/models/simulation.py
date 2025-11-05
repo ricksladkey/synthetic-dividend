@@ -13,6 +13,7 @@ Key differences from loop-based approach:
 - More flexible for modeling complex timing dependencies
 """
 
+import math
 import warnings
 from datetime import date, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -227,12 +228,6 @@ def run_portfolio_simulation(
     # Start the simulation processes
     env.process(market_process(env, sim_state, portfolio_algo))
 
-    # Schedule withdrawal events
-    if withdrawal_rate_pct > 0:
-        annual_withdrawal = initial_investment * (withdrawal_rate_pct / 100.0)
-        base_withdrawal_amount = annual_withdrawal * (withdrawal_frequency_days / 365.25)
-        env.process(withdrawal_process(env, sim_state, base_withdrawal_amount, withdrawal_frequency_days))
-
     # Schedule dividend events
     if dividend_data:
         env.process(dividend_process(env, sim_state))
@@ -281,6 +276,12 @@ class SimulationState:
         self.total_withdrawn = 0.0
         self.withdrawal_count = 0
         self.last_withdrawal_date = None
+        self.base_withdrawal_amount = 0.0
+        
+        # Calculate withdrawal amounts if enabled
+        if self.withdrawal_rate_pct > 0:
+            annual_withdrawal = self.initial_investment * (self.withdrawal_rate_pct / 100.0)
+            self.base_withdrawal_amount = annual_withdrawal * (self.withdrawal_frequency_days / 365.25)
 
         # Interest tracking
         self.total_interest_earned = 0.0
@@ -328,12 +329,13 @@ class SimulationState:
         day_index = int(self.env.now)
         return self.common_dates[min(day_index, len(self.common_dates) - 1)]
 
-    def execute_transaction(self, tx: Transaction) -> None:
+    def execute_transaction(self, tx: Transaction, ticker: str) -> None:
         """Execute a transaction against the portfolio state."""
         current_date = self.get_current_date()
 
         # Fill in execution details
         tx.transaction_date = current_date
+        tx.ticker = ticker  # Ensure ticker is set correctly
         if tx.price == 0.0:
             tx.price = self.price_data[tx.ticker].loc[current_date, "Close"].item()
 
@@ -546,7 +548,92 @@ def market_process(env: simpy.Environment, state: SimulationState, portfolio_alg
         # Execute transactions
         for ticker, txns in transactions_by_ticker.items():
             for tx in txns:
-                state.execute_transaction(tx)
+                state.execute_transaction(tx, ticker)
+
+        # Process withdrawals (if enabled and due)
+        if state.base_withdrawal_amount > 0:
+            # Check if withdrawal is due
+            days_since_last = None
+            if state.last_withdrawal_date is None:
+                # First withdrawal happens after withdrawal_frequency_days from start
+                days_since_last = (current_date - state.common_dates[0]).days
+            else:
+                days_since_last = (current_date - state.last_withdrawal_date).days
+
+            if days_since_last >= state.withdrawal_frequency_days:
+                # Withdraw from shared bank (portfolio-level, not per-asset)
+                withdrawal_amount = state.base_withdrawal_amount
+
+                # Check if we have enough cash
+                if state.shared_bank >= withdrawal_amount:
+                    # Simple case: withdraw from cash
+                    actual_withdrawal = withdrawal_amount
+                    state.shared_bank -= actual_withdrawal
+                    withdrawal_notes = (
+                        f"${actual_withdrawal:.2f} withdrawn from cash, bank=${state.shared_bank:.2f}"
+                    )
+                else:
+                    # Need to sell assets to meet withdrawal
+                    # First, withdraw all available cash
+                    cash_available = max(0, state.shared_bank)
+                    shortfall = withdrawal_amount - cash_available
+
+                    # Sell assets proportionally to raise cash for shortfall
+                    total_asset_value = sum(
+                        state.holdings[t] * state.price_data[t].loc[current_date, "Close"].item()
+                        for t in state.allocations.keys()
+                    )
+
+                    if total_asset_value > 0:
+                        # Sell proportionally from each asset
+                        for ticker in state.allocations.keys():
+                            if state.holdings[ticker] > 0:
+                                asset_value = state.holdings[ticker] * state.price_data[ticker].loc[current_date, "Close"].item()
+                                proportion = asset_value / total_asset_value
+                                amount_to_raise = shortfall * proportion
+                                shares_to_sell = math.ceil(amount_to_raise / state.price_data[ticker].loc[current_date, "Close"].item())
+
+                                if shares_to_sell > 0:
+                                    shares_to_sell = min(shares_to_sell, state.holdings[ticker])
+                                    proceeds = shares_to_sell * state.price_data[ticker].loc[current_date, "Close"].item()
+                                    state.holdings[ticker] -= shares_to_sell
+                                    state.shared_bank += proceeds
+
+                                    # Record forced sale
+                                    state.all_transactions.append(
+                                        Transaction(
+                                            transaction_date=current_date,
+                                            action="SELL",
+                                            qty=shares_to_sell,
+                                            price=state.price_data[ticker].loc[current_date, "Close"].item(),
+                                            ticker=ticker,
+                                            notes=f"Forced sale to fund withdrawal (raised ${proceeds:.2f})",
+                                        )
+                                    )
+
+                    # Now withdraw what we can (cash available + proceeds from sales)
+                    actual_withdrawal = min(withdrawal_amount, state.shared_bank)
+                    state.shared_bank -= actual_withdrawal
+                    withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn (${cash_available:.2f} cash + ${actual_withdrawal - cash_available:.2f} from asset sales), bank=${state.shared_bank:.2f}"
+
+                state.total_withdrawn += actual_withdrawal
+                state.withdrawal_count += 1
+                state.last_withdrawal_date = current_date
+
+                # Record withdrawal transaction
+                state.all_transactions.append(
+                    Transaction(
+                        transaction_date=current_date,
+                        action="WITHDRAWAL",
+                        qty=0,
+                        price=0.0,
+                        ticker="CASH",
+                        notes=withdrawal_notes,
+                    )
+                )
+
+                # Track daily withdrawals for visualization
+                state.daily_withdrawals[current_date] = actual_withdrawal
 
         # Process daily interest/opportunity cost
         state.process_daily_interest()
@@ -563,83 +650,88 @@ def withdrawal_process(env: simpy.Environment, state: SimulationState, base_amou
     """Process that handles periodic withdrawals."""
     withdrawal_number = 1
     while True:
-        # Calculate days since start
-        days_elapsed = int(env.now)
-        if days_elapsed == 0:
-            # First withdrawal timing
-            next_withdrawal_day = frequency_days
+        # Find the next withdrawal day based on calendar days, not simulation time
+        start_date = state.common_dates[0]
+        current_day_index = int(env.now)
+        current_date = state.common_dates[current_day_index] if current_day_index < len(state.common_dates) else state.common_dates[-1]
+        
+        # Calculate days since start or last withdrawal
+        if state.last_withdrawal_date is None:
+            days_since_last = (current_date - start_date).days
         else:
-            # Subsequent withdrawals
-            next_withdrawal_day = ((days_elapsed // frequency_days) + 1) * frequency_days
+            days_since_last = (current_date - state.last_withdrawal_date).days
+        
+        # If withdrawal is due, do it now
+        if days_since_last >= frequency_days:
+            # Perform withdrawal
+            withdrawal_amount = base_amount
 
-        # Wait until next withdrawal
-        if next_withdrawal_day > days_elapsed:
-            yield env.timeout(next_withdrawal_day - days_elapsed)
+            if state.shared_bank >= withdrawal_amount:
+                actual_withdrawal = withdrawal_amount
+                state.shared_bank -= actual_withdrawal
+                notes = f"${actual_withdrawal:.2f} withdrawn from cash, bank=${state.shared_bank:.2f}"
+            else:
+                # Need to sell assets
+                cash_available = max(0, state.shared_bank)
+                shortfall = withdrawal_amount - cash_available
 
-        # Perform withdrawal
-        current_date = state.get_current_date()
-        withdrawal_amount = base_amount
+                total_asset_value = sum(
+                    state.holdings[t] * state.price_data[t].loc[current_date, "Close"].item()
+                    for t in state.allocations.keys()
+                )
 
-        if state.shared_bank >= withdrawal_amount:
-            actual_withdrawal = withdrawal_amount
-            state.shared_bank -= actual_withdrawal
-            notes = f"${actual_withdrawal:.2f} withdrawn from cash, bank=${state.shared_bank:.2f}"
-        else:
-            # Need to sell assets
-            cash_available = max(0, state.shared_bank)
-            shortfall = withdrawal_amount - cash_available
+                if total_asset_value > 0:
+                    for ticker in state.allocations.keys():
+                        if state.holdings[ticker] > 0:
+                            asset_value = state.holdings[ticker] * state.price_data[ticker].loc[current_date, "Close"].item()
+                            proportion = asset_value / total_asset_value
+                            amount_to_raise = shortfall * proportion
+                            shares_to_sell = max(1, int(amount_to_raise / state.price_data[ticker].loc[current_date, "Close"].item()))
 
-            total_asset_value = sum(
-                state.holdings[t] * state.price_data[t].loc[current_date, "Close"].item()
-                for t in state.allocations.keys()
-            )
+                            if shares_to_sell > 0:
+                                shares_to_sell = min(shares_to_sell, state.holdings[ticker])
+                                proceeds = shares_to_sell * state.price_data[ticker].loc[current_date, "Close"].item()
+                                state.holdings[ticker] -= shares_to_sell
+                                state.shared_bank += proceeds
 
-            if total_asset_value > 0:
-                for ticker in state.allocations.keys():
-                    if state.holdings[ticker] > 0:
-                        asset_value = state.holdings[ticker] * state.price_data[ticker].loc[current_date, "Close"].item()
-                        proportion = asset_value / total_asset_value
-                        amount_to_raise = shortfall * proportion
-                        shares_to_sell = max(1, int(amount_to_raise / state.price_data[ticker].loc[current_date, "Close"].item()))
-
-                        if shares_to_sell > 0:
-                            shares_to_sell = min(shares_to_sell, state.holdings[ticker])
-                            proceeds = shares_to_sell * state.price_data[ticker].loc[current_date, "Close"].item()
-                            state.holdings[ticker] -= shares_to_sell
-                            state.shared_bank += proceeds
-
-                            state.all_transactions.append(
-                                Transaction(
-                                    transaction_date=current_date,
-                                    action="SELL",
-                                    qty=shares_to_sell,
-                                    price=state.price_data[ticker].loc[current_date, "Close"].item(),
-                                    ticker=ticker,
-                                    notes=f"Forced sale to fund withdrawal (raised ${proceeds:.2f})",
+                                state.all_transactions.append(
+                                    Transaction(
+                                        transaction_date=current_date,
+                                        action="SELL",
+                                        qty=shares_to_sell,
+                                        price=state.price_data[ticker].loc[current_date, "Close"].item(),
+                                        ticker=ticker,
+                                        notes=f"Forced sale to fund withdrawal (raised ${proceeds:.2f})",
+                                    )
                                 )
-                            )
 
-            actual_withdrawal = min(withdrawal_amount, state.shared_bank)
-            state.shared_bank -= actual_withdrawal
-            notes = f"${actual_withdrawal:.2f} withdrawn (${cash_available:.2f} cash + ${actual_withdrawal - cash_available:.2f} from asset sales), bank=${state.shared_bank:.2f}"
+                actual_withdrawal = min(withdrawal_amount, state.shared_bank)
+                state.shared_bank -= actual_withdrawal
+                notes = f"${actual_withdrawal:.2f} withdrawn (${cash_available:.2f} cash + ${actual_withdrawal - cash_available:.2f} from asset sales), bank=${state.shared_bank:.2f}"
 
-        state.total_withdrawn += actual_withdrawal
-        state.withdrawal_count += 1
-        state.last_withdrawal_date = current_date
-        state.daily_withdrawals[current_date] = actual_withdrawal
+            state.total_withdrawn += actual_withdrawal
+            state.withdrawal_count += 1
+            state.last_withdrawal_date = current_date
+            state.daily_withdrawals[current_date] = actual_withdrawal
 
-        state.all_transactions.append(
-            Transaction(
-                transaction_date=current_date,
-                action="WITHDRAWAL",
-                qty=0,
-                price=0.0,
-                ticker="CASH",
-                notes=notes,
+            state.all_transactions.append(
+                Transaction(
+                    transaction_date=current_date,
+                    action="WITHDRAWAL",
+                    qty=0,
+                    price=0.0,
+                    ticker="CASH",
+                    notes=notes,
+                )
             )
-        )
 
-        withdrawal_number += 1
+            withdrawal_number += 1
+        
+        # Wait for next day
+        if current_day_index < len(state.common_dates) - 1:
+            yield env.timeout(1)
+        else:
+            break  # End of simulation
 
 
 def dividend_process(env: simpy.Environment, state: SimulationState) -> simpy.events.Event:
