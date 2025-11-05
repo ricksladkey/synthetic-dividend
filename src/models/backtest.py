@@ -4,6 +4,7 @@ Provides abstract base for strategy implementations and execution framework
 for backtesting against historical OHLC price data.
 """
 
+import math
 from datetime import date
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
@@ -130,6 +131,7 @@ def _map_portfolio_to_single_ticker_summary(
     start_date: date,
     end_date: date,
     algo_obj: Optional[AlgorithmBase],
+    transactions: Optional[List[Transaction]] = None,
 ) -> Dict[str, Any]:
     """Map portfolio backtest summary to single-ticker format.
 
@@ -158,6 +160,22 @@ def _map_portfolio_to_single_ticker_summary(
     days = (last_date - first_date).days
     years = days / 365.25 if days > 0 else 0.0
 
+    # Calculate bank balance statistics from daily_bank_values
+    daily_bank_balances = list(portfolio_summary.get("daily_bank_values", {}).values())
+    if daily_bank_balances:
+        bank_min = min(daily_bank_balances)
+        bank_max = max(daily_bank_balances)
+        bank_avg = sum(daily_bank_balances) / len(daily_bank_balances)
+        bank_negative_count = sum(1 for b in daily_bank_balances if b < 0)
+        bank_positive_count = sum(1 for b in daily_bank_balances if b > 0)
+    else:
+        # Fallback if no daily values (shouldn't happen)
+        bank_min = portfolio_summary["final_bank"]
+        bank_max = portfolio_summary["final_bank"]
+        bank_avg = portfolio_summary["final_bank"]
+        bank_negative_count = 0
+        bank_positive_count = 0
+
     # Build single-ticker summary
     summary = {
         "ticker": ticker,
@@ -169,14 +187,14 @@ def _map_portfolio_to_single_ticker_summary(
         "end_value": asset_results["final_value"],
         "holdings": asset_results["final_holdings"],
         "bank": portfolio_summary["final_bank"],
-        # Bank statistics - not tracked in portfolio backtest yet
-        "bank_min": portfolio_summary["final_bank"],  # Approximate
-        "bank_max": portfolio_summary["final_bank"],  # Approximate
-        "bank_avg": portfolio_summary["final_bank"],  # Approximate
-        "bank_negative_count": 0,  # Not tracked
-        "bank_positive_count": 0,  # Not tracked
-        # Costs/Gains - not in portfolio backtest
-        "opportunity_cost": 0.0,  # Not yet supported
+        # Bank statistics - now calculated from daily_bank_values
+        "bank_min": bank_min,
+        "bank_max": bank_max,
+        "bank_avg": bank_avg,
+        "bank_negative_count": bank_negative_count,
+        "bank_positive_count": bank_positive_count,
+        # Costs/Gains - now supported in portfolio backtest
+        "opportunity_cost": portfolio_summary.get("opportunity_cost", 0.0),
         "risk_free_gains": portfolio_summary.get("cash_interest_earned", 0.0),
         # Returns
         "total": portfolio_summary["total_final_value"],
@@ -186,14 +204,32 @@ def _map_portfolio_to_single_ticker_summary(
         # Withdrawals
         "total_withdrawn": portfolio_summary["total_withdrawn"],
         "withdrawal_count": portfolio_summary["withdrawal_count"],
-        "shares_sold_for_withdrawals": 0,  # Not tracked separately
+        "shares_sold_for_withdrawals": (
+            sum(
+                tx.qty
+                for tx in transactions
+                if tx.action == "SELL" and "withdrawal" in tx.notes.lower()
+            )
+            if transactions
+            else 0
+        ),
         "withdrawal_rate_pct": portfolio_summary["withdrawal_rate_pct"],
-        # Dividends - not yet supported
-        "total_dividends": 0.0,
-        "dividend_payment_count": 0,
+        # Dividends - now supported in portfolio backtest
+        "total_dividends": portfolio_summary.get("total_dividends", 0.0),
+        "dividend_payment_count": sum(
+            portfolio_summary.get("dividend_payment_count_by_asset", {}).values()
+        ),
         # Strict mode
         "skipped_buys": portfolio_summary["skipped_count"],
-        "skipped_buy_value": 0.0,  # Not tracked
+        "skipped_buy_value": (
+            sum(
+                tx.price * tx.qty
+                for tx in transactions
+                if tx.action == "SKIP BUY" and "insufficient cash" in tx.notes.lower()
+            )
+            if transactions
+            else 0.0
+        ),
         "allow_margin": True,  # TODO: Get from params
         # Capital deployment - not tracked in portfolio
         "avg_deployed_capital": 0.0,
@@ -205,7 +241,7 @@ def _map_portfolio_to_single_ticker_summary(
     }
 
     # Calculate baseline (buy-and-hold)
-    initial_qty = asset_results["final_holdings"]  # Approximate initial qty
+    initial_qty = int(asset_results["initial_investment"] / start_price)
     baseline_end_value = initial_qty * end_price
     baseline_total = baseline_end_value
     baseline_total_return = (baseline_total - start_value) / start_value if start_value > 0 else 0.0
@@ -260,11 +296,11 @@ def _map_portfolio_to_single_ticker_summary(
 
     # Algorithm-specific stats
     if algo_obj is not None:
-        summary["final_stack_size"] = getattr(algo_obj, "buyback_stack_count", 0)
         summary["total_volatility_alpha"] = getattr(algo_obj, "total_volatility_alpha", 0.0)
     else:
-        summary["final_stack_size"] = 0
-        summary["total_volatility_alpha"] = 0.0
+        summary["total_volatility_alpha"] = portfolio_summary.get("total_volatility_alpha", 0.0)
+
+    summary["final_stack_size"] = portfolio_summary.get("final_stack_size", 0)
 
     return summary
 
@@ -319,11 +355,10 @@ def run_algorithm_backtest(
     - Provide: allocations, portfolio_algo (and optionally initial_investment)
     - Returns: Portfolio summary with per-asset breakdowns and shared cash pool metrics
 
-    **Implementation Note (Phase 2 Consolidation)**:
-    For single-ticker backtests, this function routes to run_portfolio_backtest() for supported
-    cases, treating the single ticker as a 100% allocated portfolio. This eliminates
-    ~800 lines of duplicate backtest logic. Falls back to legacy implementation for
-    unsupported features (dividends, reference assets, CPI, price normalization).
+    **Implementation Note (Phase 3 Consolidation)**:
+    For single-ticker backtests, this function routes to run_portfolio_backtest(),
+    treating the single ticker as a 100% allocated portfolio. This eliminates
+    ~800 lines of duplicate backtest logic.
 
     Flow:
     1. Initial BUY of initial_qty shares on first trading day ≥ start_date
@@ -454,7 +489,7 @@ def run_algorithm_backtest(
         )
 
     # ========================================================================
-    # PHASE 3: Single-ticker mode continues below
+    # PHASE 3: Single-ticker mode
     # ========================================================================
 
     # Check for any remaining unexpected kwargs
@@ -502,791 +537,149 @@ def run_algorithm_backtest(
     if risk_free_data is None and risk_free_asset_df is not None:
         risk_free_data = risk_free_asset_df
 
-    # ========================================================================
-    # PHASE 2 CONSOLIDATION: Try to use portfolio backtest wrapper
-    # ========================================================================
-    # Check if we can delegate to run_portfolio_backtest() (single-asset portfolio)
-    # This eliminates ~800 lines of duplicate backtest logic for common cases.
-    # Falls back to legacy implementation for unsupported features (dividends,
-    # reference assets, CPI, price normalization, callable algorithms).
-
-    def _can_use_portfolio_wrapper(
-        dividend_series,
-        reference_data,
-        risk_free_data,
-        cpi_data,
-        algo,
-    ):
-        """Check if portfolio wrapper can be used instead of legacy implementation.
-
-        Returns True if none of the unsupported features are requested:
-        - Dividends
-        - Reference assets
-        - Risk-free assets
-        - CPI data
-        - Price normalization
-        - Callable algorithms (must be AlgorithmBase instances)
-        """
-        # Check for unsupported features
-        if dividend_series is not None and not dividend_series.empty:
-            return False
-        if reference_data is not None and not reference_data.empty:
-            return False
-        if risk_free_data is not None and not risk_free_data.empty:
-            return False
-        if cpi_data is not None and not cpi_data.empty:
-            return False
-        if callable(algo):
-            return False
-
-        return True
-
-    can_use_wrapper = _can_use_portfolio_wrapper(
-        dividend_series=dividend_series,
-        reference_data=reference_data,
-        risk_free_data=risk_free_data,
-        cpi_data=cpi_data,
-        algo=algo,
-    )
-
-    if can_use_wrapper:
-        # Use portfolio backtest for this single-ticker backtest
-        # Create single-asset portfolio (100% allocation to this ticker)
-        # Prepare data
-        df_indexed = df.copy()
-        df_indexed.index = pd.to_datetime(df_indexed.index).date
-
-        # Set default start/end dates if not provided
-        if start_date is None:
-            start_date = min(df_indexed.index)
-        if end_date is None:
-            end_date = max(df_indexed.index)
-
-        # Ensure the data is cached so run_portfolio_backtest can fetch it
-        from src.data.asset import Asset
-
-        asset = Asset(ticker, cache_dir="cache")
-        asset._save_price_cache(df_indexed)
-        # Force use of cache by disabling provider
-        asset._provider = None
-
-        # Convert algorithm to portfolio algorithm
-        portfolio_algo = _create_portfolio_algorithm_from_single_ticker(
-            algo=algo,
-            algo_params=algo_params,
-            ticker=ticker,
-        )
-
-        # Calculate investment amount
-        first_idx = min(d for d in df_indexed.index if d >= start_date)
-        start_price = float(df_indexed.loc[first_idx, "Close"])
-
-        if initial_qty is not None:
-            investment = initial_qty * start_price
-        elif initial_investment is not None:
-            investment = initial_investment
-        else:
-            investment = 1_000_000.0  # Default
-
-        # Call portfolio backtest with single asset at 100% allocation
-        allocations = {ticker: 1.0}
-
-        # Map risk_free_rate_pct to cash_interest_rate_pct (simple_mode ignores it anyway)
-        cash_interest_rate = 0.0 if simple_mode else risk_free_rate_pct
-
-        # Note: run_portfolio_backtest() fetches data internally using HistoryFetcher
-        # This means it will try to fetch ticker data from registered providers
-        # If the ticker isn't available, it will fail and we'll fall back to legacy
-
-        try:
-            # Call portfolio backtest
-            transactions, portfolio_summary = run_portfolio_backtest(
-                allocations=allocations,
-                start_date=start_date,
-                end_date=end_date,
-                portfolio_algo=portfolio_algo,
-                initial_investment=investment,
-                allow_margin=allow_margin,
-                withdrawal_rate_pct=withdrawal_rate_pct,
-                withdrawal_frequency_days=withdrawal_frequency_days,
-                cash_interest_rate_pct=cash_interest_rate,
-                simple_mode=simple_mode,
-            )
-
-            # Map portfolio results to single-ticker format
-            summary = _map_portfolio_to_single_ticker_summary(
-                portfolio_summary=portfolio_summary,
-                ticker=ticker,
-                df_indexed=df_indexed,
-                start_date=start_date,
-                end_date=end_date,
-                algo_obj=(
-                    portfolio_algo.strategies[ticker]
-                    if hasattr(portfolio_algo, "strategies")
-                    else None
-                ),
-            )
-
-            # Update allow_margin in summary
-            summary["allow_margin"] = allow_margin
-
-            return transactions, summary
-        except Exception:
-            # Fall back to legacy implementation if portfolio wrapper fails
-            pass
-
-    # ========================================================================
-    # LEGACY IMPLEMENTATION
-    # ========================================================================
-    # This is the original ~800-line implementation.
-    # Used when advanced features are requested or wrapper fails.
-
-    # Normalize index to date objects for consistent lookup
+    # Use portfolio backtest for single-ticker backtest
+    # Create single-asset portfolio (100% allocation to this ticker)
+    # Prepare data
     df_indexed = df.copy()
     df_indexed.index = pd.to_datetime(df_indexed.index).date
 
-    # Find first and last trading days within requested range
-    try:
-        first_idx = min(d for d in df_indexed.index if d >= start_date)
-        last_idx = max(d for d in df_indexed.index if d <= end_date)
-    except ValueError:
-        raise ValueError("No overlapping trading days in requested date range.")
+    # Set default start/end dates if not provided
+    if start_date is None:
+        start_date = min(df_indexed.index)
+    if end_date is None:
+        end_date = max(df_indexed.index)
 
-    # Prepare reference asset daily returns (for opportunity cost)
-    reference_returns: Dict[date, float] = {}
-    if reference_data is not None and not reference_data.empty:
-        ref_indexed = reference_data.copy()
-        ref_indexed.index = pd.to_datetime(ref_indexed.index).date
-        if "Close" in ref_indexed.columns:
-            # Calculate daily returns: (today - yesterday) / yesterday
-            close_prices = ref_indexed["Close"].values  # Extract as numpy array
-            dates = ref_indexed.index.tolist()
-            for i in range(1, len(close_prices)):
-                prev_price = float(close_prices[i - 1])
-                curr_price = float(close_prices[i])
-                if prev_price > 0:
-                    reference_returns[dates[i]] = (curr_price - prev_price) / prev_price
+    # Ensure the data is cached so run_portfolio_backtest can fetch it
+    from src.data.asset import Asset
 
-    # Prepare risk-free asset daily returns (for cash interest)
-    risk_free_returns: Dict[date, float] = {}
-    if risk_free_data is not None and not risk_free_data.empty:
-        rf_indexed = risk_free_data.copy()
-        rf_indexed.index = pd.to_datetime(rf_indexed.index).date
-        if "Close" in rf_indexed.columns:
-            # Calculate daily returns: (today - yesterday) / yesterday
-            close_prices = rf_indexed["Close"].values  # Extract as numpy array
-            dates = rf_indexed.index.tolist()
-            for i in range(1, len(close_prices)):
-                prev_price = float(close_prices[i - 1])
-                curr_price = float(close_prices[i])
-                if prev_price > 0:
-                    risk_free_returns[dates[i]] = (curr_price - prev_price) / prev_price
+    asset = Asset(ticker, cache_dir="cache")
+    asset._save_price_cache(df_indexed)
+    # Force use of cache by disabling provider
+    asset._provider = None
 
-    # Fallback daily rates (if asset data not available or simple_mode)
-    if simple_mode:
-        daily_reference_rate_fallback = 0.0
-        daily_risk_free_rate_fallback = 0.0
-    else:
-        daily_reference_rate_fallback = (1 + reference_return_pct / 100.0) ** (1.0 / 365.25) - 1.0
-        daily_risk_free_rate_fallback = (1 + risk_free_rate_pct / 100.0) ** (1.0 / 365.25) - 1.0
+    # Convert algorithm to portfolio algorithm
+    portfolio_algo = _create_portfolio_algorithm_from_single_ticker(
+        algo=algo,
+        algo_params=algo_params,
+        ticker=ticker,
+    )
 
-    # Extract start/end prices for return calculations
-    legacy_start_price: float = df_indexed.loc[first_idx, "Close"].item()
-    end_price: float = df_indexed.loc[last_idx, "Close"].item()
-
-    # Calculate initial quantity from investment amount or shares
-    # Prefer initial_qty if both are provided, otherwise use initial_investment
-    calculated_qty: int
-    investment_method: str
+    # Calculate investment amount
+    first_idx = min(d for d in df_indexed.index if d >= start_date)
+    start_price = float(df_indexed.loc[first_idx, "Close"])
 
     if initial_qty is not None:
-        # Explicit share count provided
-        calculated_qty = int(initial_qty)
-        investment_method = "shares"
-        investment_amount = calculated_qty * legacy_start_price
+        investment = initial_qty * start_price
     elif initial_investment is not None:
-        # Dollar amount provided - calculate shares
-        calculated_qty = int(initial_investment / legacy_start_price)
-        investment_method = "investment"
-        investment_amount = initial_investment
+        investment = initial_investment
     else:
-        # Default to $1,000,000 investment (psychologically meaningful)
-        default_investment = 1_000_000.0
-        calculated_qty = int(default_investment / legacy_start_price)
-        investment_method = "default_investment"
-        investment_amount = default_investment
+        investment = 1_000_000.0  # Default
 
-    # Display initial purchase info
-    actual_invested = calculated_qty * legacy_start_price
-    print(
-        f"Initial purchase: {calculated_qty} shares × ${legacy_start_price:.2f} = ${actual_invested:,.2f}"
-    )
-    if investment_method in ("investment", "default_investment"):
-        if investment_method == "default_investment":
-            print(f"  (using default investment amount: ${investment_amount:,.2f})")
-        else:
-            print(f"  (target investment: ${investment_amount:,.2f})")
-        if abs(actual_invested - investment_amount) > 0.01:
-            print(
-                f"  (difference due to whole shares: ${actual_invested - investment_amount:+,.2f})"
-            )
+    # Call portfolio backtest with single asset at 100% allocation
+    allocations = {ticker: 1.0}
 
-    legacy_transactions: List[Transaction] = []
+    # Map risk_free_rate_pct to cash_interest_rate_pct (simple_mode ignores it anyway)
+    cash_interest_rate = 0.0 if simple_mode else risk_free_rate_pct
 
-    # Initialize portfolio state
-    holdings: int = calculated_qty
-    bank: float = 0.0  # Cash balance (may go negative)
+    # Mock the fetcher to return our DataFrame
+    from unittest.mock import patch
 
-    # Bank balance tracking for statistics (list of (date, balance) tuples)
-    bank_history: List[Tuple[date, float]] = [(first_idx, 0.0)]
-    bank_min: float = 0.0
-    bank_max: float = 0.0
+    import src.data.fetcher as fetcher_module
 
-    # Deployed capital tracking for capital utilization metrics
-    deployment_history: List[Tuple[date, float]] = []  # (date, deployed_capital)
+    original_get_history = fetcher_module.HistoryFetcher.get_history
 
-    # Withdrawal tracking
-    total_withdrawn: float = 0.0
-    withdrawal_count: int = 0
-    shares_sold_for_withdrawals: int = 0
-    last_withdrawal_date: Optional[date] = None
+    def mock_get_history(self, ticker, start_date, end_date):
+        if ticker == ticker:  # Our single ticker
+            return df_indexed
+        return original_get_history(self, ticker, start_date, end_date)
 
-    # Dividend/interest income tracking
-    total_dividends: float = 0.0
-    dividend_payment_count: int = 0
+    # Use patch to temporarily replace the method
+    with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
+        # Call portfolio backtest
+        transactions, portfolio_summary = run_portfolio_backtest(
+            allocations=allocations,
+            start_date=start_date,
+            end_date=end_date,
+            portfolio_algo=portfolio_algo,
+            initial_investment=investment,
+            allow_margin=allow_margin,
+            withdrawal_rate_pct=withdrawal_rate_pct,
+            withdrawal_frequency_days=withdrawal_frequency_days,
+            cash_interest_rate_pct=cash_interest_rate,
+            dividend_data=({ticker: dividend_series} if dividend_series is not None else None),
+            reference_data=reference_data,
+            risk_free_data=risk_free_data,
+            inflation_data=cpi_data,
+            simple_mode=simple_mode,
+            reference_return_pct=reference_return_pct,
+        )
 
-    # Holdings history for time-weighted dividend calculation
-    # Each entry: (date, holdings_after_transactions)
-    holdings_history: List[Tuple[date, int]] = []
-
-    # Skipped transaction tracking (for strict mode)
-    skipped_buys: int = 0
-    skipped_buy_value: float = 0.0
-
-    # Opportunity cost and risk-free gains tracking
-    opportunity_cost_total: float = 0.0
-    risk_free_gains_total: float = 0.0
-
-    # Calculate initial withdrawal amount (if withdrawal policy enabled)
-    start_value = holdings * legacy_start_price
-    if withdrawal_rate_pct > 0:
-        # Annual withdrawal based on initial portfolio value
-        annual_withdrawal = start_value * (withdrawal_rate_pct / 100.0)
-        # Convert to per-period withdrawal
-        base_withdrawal_amount = annual_withdrawal * (withdrawal_frequency_days / 365.25)
-    else:
-        base_withdrawal_amount = 0.0
-
-    # CPI adjustment setup
-    cpi_returns: Dict[date, float] = {}
-    if cpi_data is not None and not cpi_data.empty and not simple_mode:
-        cpi_indexed = cpi_data.copy()
-        cpi_indexed.index = pd.to_datetime(cpi_indexed.index).date
-        if "Close" in cpi_indexed.columns or "Value" in cpi_indexed.columns:
-            value_col = "Value" if "Value" in cpi_indexed.columns else "Close"
-            cpi_values = cpi_indexed[value_col].values
-            cpi_dates = cpi_indexed.index.tolist()
-            # Calculate cumulative CPI adjustment from start
-            if len(cpi_values) > 0 and first_idx in cpi_dates:
-                start_cpi_idx = cpi_dates.index(first_idx)
-                start_cpi = float(cpi_values[start_cpi_idx])
-                for i, d in enumerate(cpi_dates):
-                    if d >= first_idx:
-                        cpi_returns[d] = float(cpi_values[i]) / start_cpi
-
-    # Record initial purchase
-    legacy_transactions.append(
-        Transaction(
-            transaction_date=first_idx,
-            action="BUY",
-            qty=holdings,
-            price=legacy_start_price,
+        # Map portfolio results to single-ticker format
+        summary = _map_portfolio_to_single_ticker_summary(
+            portfolio_summary=portfolio_summary,
             ticker=ticker,
-            notes="Initial purchase",
+            df_indexed=df_indexed,
+            start_date=start_date,
+            end_date=end_date,
+            algo_obj=(
+                portfolio_algo.strategies[ticker] if hasattr(portfolio_algo, "strategies") else None
+            ),
+            transactions=transactions,
         )
-    )
 
-    # Record initial holdings for time-weighted calculations
-    holdings_history.append((first_idx, holdings))
+        # Update allow_margin in summary
+        summary["allow_margin"] = allow_margin
 
-    # Prepare sorted list of all trading days in range
-    dates = sorted(d for d in df_indexed.index if d >= first_idx and d <= last_idx)
+        return transactions, summary
 
-    # Normalize algo to AlgorithmBase interface
-    if algo is None:
-        algo_obj: AlgorithmBase = BuyAndHoldAlgorithm()
-    elif isinstance(algo, AlgorithmBase):
-        algo_obj = algo
-    elif callable(algo):
-        # Wrap legacy callable in adapter
-        class _FuncAdapter(AlgorithmBase):
-            """Adapter that wraps a callable function as an AlgorithmBase.
-
-            This allows using simple functions as algorithms without implementing
-            the full AlgorithmBase interface. Useful for quick prototyping and
-            backward compatibility with function-based algorithms.
-            """
-
-            def __init__(self, fn: Callable) -> None:
-                """Initialize adapter with callable.
-
-                Args:
-                    fn: Callable that implements algorithm logic
-                """
-                super().__init__()
-                self.fn = fn
-
-            def on_new_holdings(self, holdings: int, current_price: float) -> None:
-                """Initialize algorithm state - no-op for function adapters."""
-                pass
-
-            def on_day(
-                self,
-                date_: date,
-                price_row: pd.Series,
-                holdings: int,
-                bank: float,
-                history: pd.DataFrame,
-            ) -> List[Transaction]:
-                """Execute algorithm by calling wrapped function.
-
-                Args:
-                    date_: Current date
-                    price_row: OHLC prices for current day
-                    holdings: Current share count
-                    bank: Current cash balance
-                    history: All price data up to previous day
-
-                Returns:
-                    List of transactions (converted from function return value)
-                """
-                result = self.fn(date_, price_row, holdings, bank, history, algo_params)
-                return [result] if result is not None else []
-
-            def on_end_holding(self) -> None:
-                """Cleanup - no-op for function adapters."""
-                pass
-
-        algo_obj = _FuncAdapter(algo)
-    else:
-        raise ValueError("algo must be AlgorithmBase instance or callable")
-
-    # Initialize algorithm with starting position
-    algo_obj.on_new_holdings(holdings, legacy_start_price)
-
-    # Main backtest loop: process each trading day
-    for i, d in enumerate(dates):
-        # Skip initial purchase day (already processed above)
-        if d == first_idx:
-            # Track initial deployment
-            deployment_history.append((d, holdings * legacy_start_price))
-            continue
-
-        # Get current day's prices
-        price_row = df_indexed.loc[d]
-        price: float = df_indexed.loc[d, "Close"].item()
-
-        # Apply daily gains/costs to bank balance (if not in simple mode)
-        if not simple_mode:
-            if bank < 0:
-                # Negative balance: opportunity cost of borrowed money
-                daily_return = reference_returns.get(d, daily_reference_rate_fallback)
-                opportunity_cost_today = abs(bank) * daily_return
-                bank -= opportunity_cost_today  # Makes bank more negative
-                opportunity_cost_total += opportunity_cost_today
-            elif bank > 0:
-                # Positive balance: risk-free interest earned on cash
-                daily_return = risk_free_returns.get(d, daily_risk_free_rate_fallback)
-                risk_free_gain_today = bank * daily_return
-                bank += risk_free_gain_today  # Adds to cash balance
-                risk_free_gains_total += risk_free_gain_today
-
-        # Track deployed capital (market value of holdings) at start of day
-        deployed_capital = holdings * price
-        deployment_history.append((d, deployed_capital))
-
-        # History includes all data up to previous day
-        history = df_indexed.loc[: dates[i - 1]] if i > 0 else df_indexed.loc[:d]
-
-        # Let algorithm evaluate the day (may return multiple transactions for multi-bracket gaps)
-        try:
-            daily_transactions: List[Transaction] = algo_obj.on_day(
-                d, price_row, holdings, bank, history
-            )
-        except Exception as e:
-            raise RuntimeError(f"Algorithm raised an error on {d}: {e}")
-
-        # Process all transactions from this day
-        for tx in daily_transactions:
-            # Validate transaction type
-            if not isinstance(tx, Transaction):
-                raise ValueError("Algorithm must return a list of Transactions")
-
-            # Enhance transaction with date, price, and ticker (algorithms don't know these)
-            tx.transaction_date = d
-            # Try to extract actual execution price from notes, fall back to market price
-            if "filled=$" in tx.notes:
-                try:
-                    fill_price_str = tx.notes.split("filled=$")[1].split()[0]
-                    tx.price = float(fill_price_str)
-                except (IndexError, ValueError):
-                    tx.price = price
-            else:
-                tx.price = price
-            tx.ticker = ticker
-
-            # Execute SELL transaction
-            if tx.action.upper() == "SELL":
-                sell_qty = min(int(tx.qty), holdings)  # Cap at available holdings
-                proceeds = sell_qty * price
-                holdings -= sell_qty
-                bank += proceeds
-                legacy_transactions.append(
-                    Transaction(
-                        transaction_date=d,
-                        action="SELL",
-                        qty=sell_qty,
-                        price=price,
-                        ticker=ticker,
-                        notes=f"{tx.notes}, holdings = {holdings}, bank = {bank:.2f}",
-                        limit_price=tx.limit_price,
-                    )
-                )
-                # Record holdings change for time-weighted calculations
-                holdings_history.append((d, holdings))
-                # Track bank balance statistics
-                bank_history.append((d, bank))
-                bank_min = min(bank_min, bank)
-                bank_max = max(bank_max, bank)
-
-            # Execute BUY transaction
-            elif tx.action.upper() == "BUY":
-                buy_qty = int(tx.qty)
-                cost = buy_qty * price
-
-                # Check if we can afford this buy
-                if not allow_margin and bank < cost:
-                    # Strict mode: skip buy if insufficient cash
-                    skipped_buys += 1
-                    skipped_buy_value += cost
-                    legacy_transactions.append(
-                        Transaction(
-                            transaction_date=d,
-                            action="SKIP BUY",
-                            qty=buy_qty,
-                            price=price,
-                            ticker=ticker,
-                            notes=f"{tx.notes}, insufficient cash: ${bank:.2f} < ${cost:.2f}",
-                        )
-                    )
-                else:
-                    # Execute buy (allow_margin=True OR sufficient cash)
-                    holdings += buy_qty
-                    bank -= cost  # May go negative if allow_margin=True
-                    legacy_transactions.append(
-                        Transaction(
-                            transaction_date=d,
-                            action="BUY",
-                            qty=buy_qty,
-                            price=price,
-                            ticker=ticker,
-                            notes=f"{tx.notes}, holdings = {holdings}, bank = {bank:.2f}",
-                            limit_price=tx.limit_price,
-                        )
-                    )
-                    # Record holdings change for time-weighted calculations
-                    holdings_history.append((d, holdings))
-                    # Track bank balance statistics
-                    bank_history.append((d, bank))
-                    bank_min = min(bank_min, bank)
-                    bank_max = max(bank_max, bank)
-
-            else:
-                raise ValueError("Transaction action must be 'BUY' or 'SELL'")
-
-        # Process dividend/interest payments (if available for this date)
-        if dividend_series is not None and not dividend_series.empty:
-            # Check if this date has a dividend payment
-            # Convert date index to date objects for comparison
-            div_dates = pd.to_datetime(dividend_series.index).date
-            if d in div_dates:
-                # Find the dividend amount for this date
-                div_idx = list(div_dates).index(d)
-                div_per_share = dividend_series.iloc[div_idx]
-
-                # Calculate time-weighted average holdings over accrual period
-                # Use 90-day lookback (typical for quarterly dividends)
-                accrual_period_days = 90
-                period_start = d - pd.Timedelta(days=accrual_period_days).to_pytimedelta()
-                avg_holdings = calculate_time_weighted_average_holdings(
-                    holdings_history, period_start, d
-                )
-
-                # Dividend payment based on average holdings during accrual period
-                div_payment = div_per_share * avg_holdings
-
-                bank += div_payment
-                total_dividends += div_payment
-                dividend_payment_count += 1
-
-                legacy_transactions.append(
-                    Transaction(
-                        transaction_date=d,
-                        action="DIVIDEND",
-                        qty=int(avg_holdings),  # Display average holdings (rounded for display)
-                        price=div_per_share,
-                        ticker=ticker,
-                        notes=f"${div_payment:.2f} (avg {avg_holdings:.2f} shares over 90 days), bank = {bank:.2f}",
-                    )
-                )
-
-                # Track bank balance statistics
-                bank_history.append((d, bank))
-                bank_max = max(bank_max, bank)
-
-        # Process withdrawals (if enabled and due)
-        if base_withdrawal_amount > 0:
-            # Check if withdrawal is due
-            days_since_last = None
-            if last_withdrawal_date is None:
-                # First withdrawal after start date
-                days_since_last = (d - first_idx).days
-            else:
-                days_since_last = (d - last_withdrawal_date).days
-
-            if days_since_last is not None and days_since_last >= withdrawal_frequency_days:
-                # Calculate CPI-adjusted withdrawal amount
-                cpi_multiplier = cpi_returns.get(d, 1.0)
-                withdrawal_amount = base_withdrawal_amount * cpi_multiplier
-
-                # Let algorithm decide how to fulfill withdrawal
-                withdrawal_result = algo_obj.on_withdrawal(
-                    date_=d,
-                    requested_amount=withdrawal_amount,
-                    current_price=price,
-                    holdings=holdings,
-                    bank=bank,
-                    allow_margin=allow_margin,
-                )
-
-                # Execute share sale if algorithm decided to liquidate
-                if withdrawal_result.shares_to_sell > 0:
-                    shares_to_sell = withdrawal_result.shares_to_sell
-                    proceeds = shares_to_sell * price
-                    holdings -= shares_to_sell
-                    bank += proceeds
-                    shares_sold_for_withdrawals += shares_to_sell
-
-                    legacy_transactions.append(
-                        Transaction(
-                            transaction_date=d,
-                            action="SELL",
-                            qty=shares_to_sell,
-                            price=price,
-                            ticker=ticker,
-                            notes=f"For withdrawal, {withdrawal_result.notes}, holdings = {holdings}, bank = {bank:.2f}",
-                        )
-                    )
-                    # Record holdings change for time-weighted calculations
-                    holdings_history.append((d, holdings))
-
-                # Withdraw cash from bank
-                actual_withdrawal = min(withdrawal_result.cash_from_bank, bank)
-                bank -= actual_withdrawal
-                legacy_transactions.append(
-                    Transaction(
-                        transaction_date=d,
-                        action="WITHDRAWAL",
-                        qty=0,
-                        price=0.0,
-                        ticker=ticker,
-                        notes=f"${actual_withdrawal:.2f} from bank, bank = {bank:.2f}",
-                    )
-                )
-
-                total_withdrawn += actual_withdrawal
-                withdrawal_count += 1
-                last_withdrawal_date = d
-
-                # Track bank balance after withdrawal
-                bank_history.append((d, bank))
-                bank_min = min(bank_min, bank)
-                bank_max = max(bank_max, bank)
-
-    # Calculate final portfolio metrics
-    final_price = end_price
-    end_value = holdings * final_price  # Market value of remaining shares
-    total = bank + end_value  # Total portfolio value
-
-    # Time-based calculations
-    days = (last_idx - first_idx).days
-    years = days / 365.25 if days > 0 else 0.0
-    start_val = calculated_qty * legacy_start_price
-    total_return = (total - start_val) / start_val if start_val != 0 else 0.0
-    if years > 0 and start_val > 0:
-        annualized = (total / start_val) ** (1.0 / years) - 1.0
-    else:
-        annualized = 0.0
-
-    # Calculate bank balance statistics
-    bank_balances = [b for d, b in bank_history]
-    bank_avg: float = sum(bank_balances) / len(bank_balances) if bank_balances else 0.0
-    bank_negative_count = sum(1 for b in bank_balances if b < 0)
-    bank_positive_count = sum(1 for b in bank_balances if b > 0)
-
-    # Calculate capital deployment statistics
-    deployed_amounts = [dep for d, dep in deployment_history]
-    avg_deployed_capital: float = (
-        sum(deployed_amounts) / len(deployed_amounts) if deployed_amounts else 0.0
-    )
-    min_deployed_capital: float = min(deployed_amounts) if deployed_amounts else 0.0
-    max_deployed_capital: float = max(deployed_amounts) if deployed_amounts else 0.0
-
-    # Capital utilization rate: average deployed capital as % of initial investment
-    capital_utilization: float = avg_deployed_capital / start_val if start_val > 0 else 0.0
-
-    # Deployment range as percentages
-    deployment_min_pct: float = min_deployed_capital / start_val if start_val > 0 else 0.0
-    deployment_max_pct: float = max_deployed_capital / start_val if start_val > 0 else 0.0
-
-    # opportunity_cost_total and risk_free_gains_total were accumulated during daily loop
-    # (No longer need post-processing calculation)
-
-    # Build summary dict
-    legacy_summary: Dict[str, Any] = {
-        "ticker": ticker,
-        "start_date": first_idx,
-        "start_price": legacy_start_price,
-        "start_value": start_val,
-        "end_date": last_idx,
-        "end_price": final_price,
-        "end_value": end_value,
-        "holdings": holdings,
-        "bank": bank,
-        "bank_min": bank_min,
-        "bank_max": bank_max,
-        "bank_avg": bank_avg,
-        "bank_negative_count": bank_negative_count,
-        "bank_positive_count": bank_positive_count,
-        "opportunity_cost": opportunity_cost_total,
-        "risk_free_gains": risk_free_gains_total,
-        "total": total,
-        "total_return": total_return,
-        "annualized": annualized,
-        "years": years,
-        # Withdrawal metrics
-        "total_withdrawn": total_withdrawn,
-        "withdrawal_count": withdrawal_count,
-        "shares_sold_for_withdrawals": shares_sold_for_withdrawals,
-        "withdrawal_rate_pct": withdrawal_rate_pct,
-        # Dividend/interest income metrics
-        "total_dividends": total_dividends,
-        "dividend_payment_count": dividend_payment_count,
-        # Strict mode metrics
-        "skipped_buys": skipped_buys,
-        "skipped_buy_value": skipped_buy_value,
-        "allow_margin": allow_margin,
-        # Capital deployment supplementary metrics
-        "avg_deployed_capital": avg_deployed_capital,
-        "capital_utilization": capital_utilization,
-        "deployment_min": min_deployed_capital,
-        "deployment_max": max_deployed_capital,
-        "deployment_min_pct": deployment_min_pct,
-        "deployment_max_pct": deployment_max_pct,
-    }
-
-    # Compute buy-and-hold baseline for alpha comparison
-    try:
-        # Baseline: hold initial_qty shares, no trading
-        assert initial_qty is not None, "initial_qty should be set for baseline calculation"
-        baseline_end_value = initial_qty * final_price
-        baseline_total = baseline_end_value  # No cash, just shares
-        baseline_total_return = (baseline_total - start_val) / start_val if start_val != 0 else 0.0
-
-        if years > 0 and start_val > 0:
-            baseline_annualized = (baseline_total / start_val) ** (1.0 / years) - 1.0
-        else:
-            baseline_annualized = 0.0
-
-        baseline_summary: Dict[str, Any] = {
-            "start_date": first_idx,
-            "end_date": last_idx,
-            "start_price": legacy_start_price,
-            "end_price": final_price,
-            "start_value": start_val,
-            "end_value": baseline_end_value,
-            "total": baseline_total,
-            "total_return": baseline_total_return,
-            "annualized": baseline_annualized,
-        }
-
-        # Alpha = algorithm return - baseline return
-        volatility_alpha = total_return - baseline_total_return
-
-        # Return on deployed capital: measures efficiency when capital was actually at risk
-        # This adjusts for strategies that hold significant cash positions
-        return_on_deployed_capital: float = 0.0
-        if capital_utilization > 0:
-            return_on_deployed_capital = total_return / capital_utilization
-
-        # Income Classification Framework
-        # Calculate three-tier income breakdown for reporting
-
-        # Universal Income: Real dividends (already tracked)
-        universal_income_dollars = total_dividends
-        universal_income_pct = (total_dividends / start_val * 100) if start_val > 0 else 0.0
-
-        # Secondary Income: Volatility alpha (algorithm vs buy-and-hold)
-        # This is the outperformance from mean-reversion trading
-        secondary_income_dollars = (
-            volatility_alpha * start_val if start_val > 0 and volatility_alpha is not None else 0.0
+    # Check for any remaining unexpected kwargs
+    if kwargs:
+        # List all parameters that can be passed to this function, including
+        # backwards-compatible aliases (even though they're consumed above)
+        valid_params = [
+            "df",
+            "ticker",
+            "initial_qty",
+            "allocations",
+            "portfolio_algo",
+            "start_date",
+            "end_date",
+            "algo",
+            "algo_params",
+            "reference_return_pct",
+            "risk_free_rate_pct",
+            "reference_data",
+            "risk_free_data",
+            "reference_asset_ticker",
+            "risk_free_asset_ticker",
+            "dividend_series",
+            "withdrawal_rate_pct",
+            "withdrawal_frequency_days",
+            "cpi_data",
+            "simple_mode",
+            "allow_margin",
+            "initial_investment",
+            "reference_asset_df",
+            "risk_free_asset_df",  # Backwards-compatible aliases
+        ]
+        raise TypeError(
+            "run_algorithm_backtest() got unexpected keyword argument(s): "
+            f"{', '.join(repr(k) for k in kwargs.keys())}. "
+            f"Valid parameters are: {', '.join(valid_params)}"
         )
-        secondary_income_pct = volatility_alpha * 100 if volatility_alpha is not None else 0.0
 
-        # Primary Income: Everything else (ATH selling + general trading)
-        # Total gains = dividends + primary + secondary
-        # So: primary = total_gains - dividends - secondary
-        total_gains = total - start_val  # Absolute dollar gain
-        primary_income_dollars = total_gains - universal_income_dollars - secondary_income_dollars
-        primary_income_pct = (primary_income_dollars / start_val * 100) if start_val > 0 else 0.0
+    if df is None or df.empty:
+        raise ValueError("Empty price data")
 
-        legacy_summary["baseline"] = baseline_summary
-        legacy_summary["volatility_alpha"] = volatility_alpha
-        legacy_summary["return_on_deployed_capital"] = return_on_deployed_capital
+    # Backward compatibility: map legacy args if provided
+    if reference_data is None and reference_asset_df is not None:
+        reference_data = reference_asset_df
+    if risk_free_data is None and risk_free_asset_df is not None:
+        risk_free_data = risk_free_asset_df
 
-        # Add income classification metrics
-        legacy_summary["income_classification"] = {
-            "universal_dollars": universal_income_dollars,
-            "universal_pct": universal_income_pct,
-            "primary_dollars": primary_income_dollars,
-            "primary_pct": primary_income_pct,
-            "secondary_dollars": secondary_income_dollars,
-            "secondary_pct": secondary_income_pct,
-        }
-    except Exception:
-        # Gracefully handle edge cases in baseline computation
-        legacy_summary["baseline"] = None
-        legacy_summary["volatility_alpha"] = None
-
-    # Notify algorithm of completion
-    try:
-        algo_obj.on_end_holding()
-    except Exception:
-        # Ensure backtest completion proceeds even if algorithm cleanup prints/logs fail
-        pass
-
-    # Include algorithm-specific final stats when available for tests and reporting
-    try:
-        # Buyback stack final size (used by volatility-alpha tests)
-        legacy_summary["final_stack_size"] = getattr(algo_obj, "buyback_stack_count", 0)
-        # Total volatility alpha accumulated by algorithm (percentage)
-        legacy_summary["total_volatility_alpha"] = getattr(algo_obj, "total_volatility_alpha", 0.0)
-    except Exception:
-        # Be tolerant of algorithms that don't expose these attributes
-        legacy_summary.setdefault("final_stack_size", 0)
-        legacy_summary.setdefault("total_volatility_alpha", 0.0)
-
-    return legacy_transactions, legacy_summary
+    # ========================================================================
+    # PHASE 3: Single-ticker mode continues below
+    # ========================================================================
 
 
 def print_income_classification(summary: Dict[str, Any], verbose: bool = True) -> None:
@@ -1359,9 +752,14 @@ def run_portfolio_backtest(
     reference_rate_ticker: Optional[str] = None,
     risk_free_rate_ticker: Optional[str] = None,
     inflation_rate_ticker: Optional[str] = None,
+    # DataFrame alternatives for single-ticker compatibility
+    reference_data: Optional[pd.DataFrame] = None,
+    risk_free_data: Optional[pd.DataFrame] = None,
+    inflation_data: Optional[pd.DataFrame] = None,
     # Legacy compatibility parameters (deprecated, ignored with warnings)
     algo: Optional[Union[AlgorithmBase, Callable, str]] = None,
     simple_mode: bool = False,
+    reference_return_pct: float = 0.0,
     **kwargs: Any,
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Execute portfolio backtest with shared cash pool and portfolio-level algorithm.
@@ -1400,6 +798,18 @@ def run_portfolio_backtest(
             Used to calculate inflation-adjusted (real) returns
             Tracks cumulative inflation adjustment from start date
             Adds real_return and inflation_adjusted metrics to summary
+        reference_data: Optional DataFrame alternative to reference_rate_ticker
+            Historical price data for reference asset (e.g., VOO)
+            Used when DataFrame is provided directly instead of ticker
+        risk_free_data: Optional DataFrame alternative to risk_free_rate_ticker
+            Historical price data for risk-free asset (e.g., BIL)
+            Used when DataFrame is provided directly instead of ticker
+        inflation_data: Optional DataFrame alternative to inflation_rate_ticker
+            Historical inflation data (e.g., CPI values)
+            Used when DataFrame is provided directly instead of ticker
+        reference_return_pct: Annual return for opportunity cost calc (fallback if no asset data)
+            Applied when bank balance is negative (borrowing cost)
+            Ignored if simple_mode=True
         algo: DEPRECATED - Use portfolio_algo instead
         simple_mode: DEPRECATED - No longer used
         **kwargs: DEPRECATED - Ignored legacy parameters
@@ -1436,6 +846,13 @@ def run_portfolio_backtest(
                 )
             else:
                 portfolio_algo = build_portfolio_algo_from_name(f"per-asset:{algo}", allocations)
+
+    # Handle deprecated simple_mode parameter
+    if "simple_mode" in kwargs:
+        simple_mode = kwargs.pop("simple_mode")
+        if simple_mode:
+            # In simple mode, disable cash interest
+            cash_interest_rate_pct = 0.0
 
     # Warn about ignored legacy kwargs
     if kwargs:
@@ -1481,26 +898,68 @@ def run_portfolio_backtest(
         price_data_indexed[ticker] = df_copy
 
     # Fetch reference rate data if provided (for market-adjusted returns)
-    reference_data: Optional[pd.DataFrame] = None
-    if reference_rate_ticker:
+    fetched_reference_data: Optional[pd.DataFrame] = None
+    reference_returns: Dict[date, float] = {}
+    if reference_data is not None:
+        # Use provided DataFrame
+        fetched_reference_data = reference_data
+        print(f"Using provided reference data ({len(fetched_reference_data)} days)")
+        # Calculate daily returns from price data
+        ref_indexed = fetched_reference_data.copy()
+        ref_indexed.index = pd.to_datetime(ref_indexed.index).date
+        if "Close" in ref_indexed.columns:
+            close_prices = ref_indexed["Close"].values
+            ref_dates = list(ref_indexed.index)
+            for i in range(1, len(close_prices)):
+                prev_price = float(close_prices[i - 1])
+                curr_price = float(close_prices[i])
+                if prev_price > 0:
+                    reference_returns[ref_dates[i]] = (curr_price - prev_price) / prev_price
+    elif reference_rate_ticker:
         print(f"Fetching reference benchmark ({reference_rate_ticker})...", end=" ")
-        reference_data = fetcher.get_history(reference_rate_ticker, start_date, end_date)
-        if reference_data is not None and not reference_data.empty:
-            print(f"OK ({len(reference_data)} days)")
+        fetched_reference_data = fetcher.get_history(reference_rate_ticker, start_date, end_date)
+        if fetched_reference_data is not None and not fetched_reference_data.empty:
+            print(f"OK ({len(fetched_reference_data)} days)")
+            # Calculate daily returns from price data
+            ref_indexed = fetched_reference_data.copy()
+            ref_indexed.index = pd.to_datetime(ref_indexed.index).date
+            if "Close" in ref_indexed.columns:
+                close_prices = ref_indexed["Close"].values
+                ref_dates = list(ref_indexed.index)
+                for i in range(1, len(close_prices)):
+                    prev_price = float(close_prices[i - 1])
+                    curr_price = float(close_prices[i])
+                    if prev_price > 0:
+                        reference_returns[ref_dates[i]] = (curr_price - prev_price) / prev_price
         else:
             print("WARN: No data available, skipping baseline calculation")
-            reference_data = None
+            fetched_reference_data = None
 
     # Fetch risk-free rate data if provided (for cash interest modeling)
-    risk_free_data: Optional[pd.DataFrame] = None
+    fetched_risk_free_data: Optional[pd.DataFrame] = None
     risk_free_returns: Dict[date, float] = {}
-    if risk_free_rate_ticker:
+    if risk_free_data is not None:
+        # Use provided DataFrame
+        fetched_risk_free_data = risk_free_data
+        print(f"Using provided risk-free data ({len(fetched_risk_free_data)} days)")
+        # Calculate daily returns from price data
+        rf_indexed = fetched_risk_free_data.copy()
+        rf_indexed.index = pd.to_datetime(rf_indexed.index).date
+        if "Close" in rf_indexed.columns:
+            close_prices = rf_indexed["Close"].values
+            rf_dates = list(rf_indexed.index)
+            for i in range(1, len(close_prices)):
+                prev_price = float(close_prices[i - 1])
+                curr_price = float(close_prices[i])
+                if prev_price > 0:
+                    risk_free_returns[rf_dates[i]] = (curr_price - prev_price) / prev_price
+    elif risk_free_rate_ticker:
         print(f"Fetching risk-free asset ({risk_free_rate_ticker})...", end=" ")
-        risk_free_data = fetcher.get_history(risk_free_rate_ticker, start_date, end_date)
-        if risk_free_data is not None and not risk_free_data.empty:
-            print(f"OK ({len(risk_free_data)} days)")
+        fetched_risk_free_data = fetcher.get_history(risk_free_rate_ticker, start_date, end_date)
+        if fetched_risk_free_data is not None and not fetched_risk_free_data.empty:
+            print(f"OK ({len(fetched_risk_free_data)} days)")
             # Calculate daily returns from price data
-            rf_indexed = risk_free_data.copy()
+            rf_indexed = fetched_risk_free_data.copy()
             rf_indexed.index = pd.to_datetime(rf_indexed.index).date
             if "Close" in rf_indexed.columns:
                 close_prices = rf_indexed["Close"].values
@@ -1512,18 +971,38 @@ def run_portfolio_backtest(
                         risk_free_returns[rf_dates[i]] = (curr_price - prev_price) / prev_price
         else:
             print("WARN: No data available, falling back to cash_interest_rate_pct")
-            risk_free_data = None
+            fetched_risk_free_data = None
 
     # Fetch inflation data if provided (for real returns calculation)
-    inflation_data: Optional[pd.DataFrame] = None
+    fetched_inflation_data: Optional[pd.DataFrame] = None
     cumulative_inflation: Dict[date, float] = {}
-    if inflation_rate_ticker:
+    if inflation_data is not None:
+        # Use provided DataFrame
+        fetched_inflation_data = inflation_data
+        print(f"Using provided inflation data ({len(fetched_inflation_data)} days)")
+        # Calculate cumulative inflation adjustment from start
+        infl_indexed = fetched_inflation_data.copy()
+        infl_indexed.index = pd.to_datetime(infl_indexed.index).date
+        value_col = "Close" if "Close" in infl_indexed.columns else "Value"
+        if value_col in infl_indexed.columns:
+            infl_values = infl_indexed[value_col].values
+            infl_dates = list(infl_indexed.index)
+            # Find start CPI value
+            if common_dates[0] in infl_dates:
+                start_cpi_idx = infl_dates.index(common_dates[0])
+                start_cpi = float(infl_values[start_cpi_idx])
+                # Calculate cumulative multiplier for each date
+                for i, d in enumerate(infl_dates):
+                    if d >= common_dates[0]:
+                        curr_cpi = float(infl_values[i])
+                        cumulative_inflation[d] = curr_cpi / start_cpi if start_cpi > 0 else 1.0
+    elif inflation_rate_ticker:
         print(f"Fetching inflation data ({inflation_rate_ticker})...", end=" ")
-        inflation_data = fetcher.get_history(inflation_rate_ticker, start_date, end_date)
-        if inflation_data is not None and not inflation_data.empty:
-            print(f"OK ({len(inflation_data)} days)")
+        fetched_inflation_data = fetcher.get_history(inflation_rate_ticker, start_date, end_date)
+        if fetched_inflation_data is not None and not fetched_inflation_data.empty:
+            print(f"OK ({len(fetched_inflation_data)} days)")
             # Calculate cumulative inflation adjustment from start
-            infl_indexed = inflation_data.copy()
+            infl_indexed = fetched_inflation_data.copy()
             infl_indexed.index = pd.to_datetime(infl_indexed.index).date
             value_col = "Close" if "Close" in infl_indexed.columns else "Value"
             if value_col in infl_indexed.columns:
@@ -1540,7 +1019,7 @@ def run_portfolio_backtest(
                             cumulative_inflation[d] = curr_cpi / start_cpi if start_cpi > 0 else 1.0
         else:
             print("WARN: No data available, skipping inflation adjustment")
-            inflation_data = None
+            fetched_inflation_data = None
 
     # Initialize portfolio state
     shared_bank = initial_investment
@@ -1604,8 +1083,13 @@ def run_portfolio_backtest(
 
     # Cash interest tracking
     total_interest_earned: float = 0.0
+    opportunity_cost_total: float = 0.0
     daily_interest_rate = (
         (cash_interest_rate_pct / 100.0) / 365.25 if cash_interest_rate_pct > 0 else 0.0
+    )
+    # Fallback daily reference rate for opportunity cost (when bank is negative)
+    daily_reference_rate_fallback = (
+        (1 + reference_return_pct / 100.0) ** (1.0 / 365.25) - 1.0 if not simple_mode else 0.0
     )
 
     # Dividend tracking (per-asset)
@@ -1707,8 +1191,8 @@ def run_portfolio_backtest(
             # Check if withdrawal is due
             days_since_last = None
             if last_withdrawal_date is None:
-                # First withdrawal happens on first day
-                days_since_last = withdrawal_frequency_days
+                # First withdrawal happens after withdrawal_frequency_days from start
+                days_since_last = (current_date - common_dates[0]).days
             else:
                 days_since_last = (current_date - last_withdrawal_date).days
 
@@ -1730,48 +1214,42 @@ def run_portfolio_backtest(
                     cash_available = max(0, shared_bank)
                     shortfall = withdrawal_amount - cash_available
 
-                    if not allow_margin and shortfall > 0:
-                        # Sell assets proportionally to raise cash for shortfall
-                        total_asset_value = sum(
-                            holdings[t] * assets[t].price for t in allocations.keys()
-                        )
+                    # Sell assets proportionally to raise cash for shortfall
+                    total_asset_value = sum(
+                        holdings[t] * assets[t].price for t in allocations.keys()
+                    )
 
-                        if total_asset_value > 0:
-                            # Sell proportionally from each asset
-                            for ticker in allocations.keys():
-                                if holdings[ticker] > 0:
-                                    asset_value = holdings[ticker] * assets[ticker].price
-                                    proportion = asset_value / total_asset_value
-                                    amount_to_raise = shortfall * proportion
-                                    shares_to_sell = int(amount_to_raise / assets[ticker].price)
+                    if total_asset_value > 0:
+                        # Sell proportionally from each asset
+                        for ticker in allocations.keys():
+                            if holdings[ticker] > 0:
+                                asset_value = holdings[ticker] * assets[ticker].price
+                                proportion = asset_value / total_asset_value
+                                amount_to_raise = shortfall * proportion
+                                shares_to_sell = math.ceil(amount_to_raise / assets[ticker].price)
 
-                                    if shares_to_sell > 0:
-                                        shares_to_sell = min(shares_to_sell, holdings[ticker])
-                                        proceeds = shares_to_sell * assets[ticker].price
-                                        holdings[ticker] -= shares_to_sell
-                                        shared_bank += proceeds
+                                if shares_to_sell > 0:
+                                    shares_to_sell = min(shares_to_sell, holdings[ticker])
+                                    proceeds = shares_to_sell * assets[ticker].price
+                                    holdings[ticker] -= shares_to_sell
+                                    shared_bank += proceeds
 
-                                        # Record forced sale
-                                        all_transactions.append(
-                                            Transaction(
-                                                transaction_date=current_date,
-                                                action="SELL",
-                                                qty=shares_to_sell,
-                                                price=assets[ticker].price,
-                                                ticker=ticker,
-                                                notes=f"Forced sale to fund withdrawal (raised ${proceeds:.2f})",
-                                            )
+                                    # Record forced sale
+                                    all_transactions.append(
+                                        Transaction(
+                                            transaction_date=current_date,
+                                            action="SELL",
+                                            qty=shares_to_sell,
+                                            price=assets[ticker].price,
+                                            ticker=ticker,
+                                            notes=f"Forced sale to fund withdrawal (raised ${proceeds:.2f})",
                                         )
+                                    )
 
-                        # Now withdraw what we can (cash available + proceeds from sales)
-                        actual_withdrawal = min(withdrawal_amount, shared_bank)
-                        shared_bank -= actual_withdrawal
-                        withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn (${cash_available:.2f} cash + ${actual_withdrawal - cash_available:.2f} from asset sales), bank=${shared_bank:.2f}"
-                    else:
-                        # allow_margin=True: allow negative bank balance
-                        actual_withdrawal = withdrawal_amount
-                        shared_bank -= actual_withdrawal
-                        withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn (margin used), bank=${shared_bank:.2f}"
+                    # Now withdraw what we can (cash available + proceeds from sales)
+                    actual_withdrawal = min(withdrawal_amount, shared_bank)
+                    shared_bank -= actual_withdrawal
+                    withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn (${cash_available:.2f} cash + ${actual_withdrawal - cash_available:.2f} from asset sales), bank=${shared_bank:.2f}"
 
                 total_withdrawn += actual_withdrawal
                 withdrawal_count += 1
@@ -1835,6 +1313,14 @@ def run_portfolio_backtest(
                                     notes=f"${div_payment:.2f} (avg {avg_holdings:.2f} shares over 90 days), bank = {shared_bank:.2f}",
                                 )
                             )
+
+        # Apply daily opportunity cost on negative cash balance
+        if shared_bank < 0 and not simple_mode:
+            # Negative balance: opportunity cost of borrowed money
+            daily_return = reference_returns.get(current_date, daily_reference_rate_fallback)
+            opportunity_cost_today = abs(shared_bank) * daily_return
+            shared_bank -= opportunity_cost_today  # Makes bank more negative
+            opportunity_cost_total += opportunity_cost_today
 
         # Accrue daily interest on cash reserves (if positive balance)
         if shared_bank > 0:
@@ -1919,6 +1405,7 @@ def run_portfolio_backtest(
         "withdrawal_count": withdrawal_count,
         "withdrawal_rate_pct": withdrawal_rate_pct,
         "cash_interest_earned": total_interest_earned,
+        "opportunity_cost": opportunity_cost_total,
         "cash_interest_rate_pct": cash_interest_rate_pct,
         "risk_free_rate_ticker": risk_free_rate_ticker,  # Track which method was used
         "total_dividends_by_asset": total_dividends_by_asset,
@@ -1927,10 +1414,10 @@ def run_portfolio_backtest(
     }
 
     # Compute reference benchmark baseline (if provided)
-    if reference_data is not None and not reference_data.empty:
+    if fetched_reference_data is not None and not fetched_reference_data.empty:
         try:
             # Index reference data by date
-            ref_indexed = reference_data.copy()
+            ref_indexed = fetched_reference_data.copy()
             ref_indexed.index = pd.to_datetime(ref_indexed.index).date
 
             # Get reference prices on first and last common dates
@@ -1955,7 +1442,7 @@ def run_portfolio_backtest(
                     ref_annualized = 0.0
 
                 baseline_summary = {
-                    "ticker": reference_rate_ticker,
+                    "ticker": reference_rate_ticker or "provided_data",
                     "start_date": common_dates[0],
                     "end_date": final_date,
                     "start_price": ref_start_price,
@@ -2027,5 +1514,28 @@ def run_portfolio_backtest(
         portfolio_summary["real_final_value"] = None
         portfolio_summary["real_total_return"] = None
         portfolio_summary["real_annualized_return"] = None
+
+    # Add algorithm-specific stats for single-ticker compatibility
+    if len(allocations) == 1 and isinstance(portfolio_algo, PortfolioAlgorithmBase):
+        from src.algorithms import PerAssetPortfolioAlgorithm
+
+        if isinstance(portfolio_algo, PerAssetPortfolioAlgorithm):
+            ticker = list(allocations.keys())[0]
+            algo = portfolio_algo.strategies.get(ticker)
+            if algo:
+                portfolio_summary["final_stack_size"] = getattr(algo, "buyback_stack_count", 0)
+                portfolio_summary["total_volatility_alpha"] = getattr(
+                    algo, "total_volatility_alpha", 0.0
+                )
+            else:
+                portfolio_summary["final_stack_size"] = 0
+                portfolio_summary["total_volatility_alpha"] = 0.0
+        else:
+            # For other portfolio algorithms, no stack
+            portfolio_summary["final_stack_size"] = 0
+            portfolio_summary["total_volatility_alpha"] = 0.0
+    else:
+        portfolio_summary["final_stack_size"] = 0
+        portfolio_summary["total_volatility_alpha"] = 0.0
 
     return all_transactions, portfolio_summary

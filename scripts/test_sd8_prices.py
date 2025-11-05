@@ -4,7 +4,7 @@ from datetime import date
 
 from src.algorithms.factory import build_algo_from_name
 from src.data.fetcher import HistoryFetcher
-from src.models.backtest import run_algorithm_backtest
+from src.models.backtest import run_portfolio_backtest
 
 fetcher = HistoryFetcher()
 df = fetcher.get_history("NVDA", date(2024, 1, 1), date(2024, 2, 29))
@@ -14,8 +14,18 @@ print(
     f"Algorithm settings: rebalance={algo.rebalance_size:.6f}, profit={algo.profit_sharing:.6f}\n"
 )
 
-transactions, summary = run_algorithm_backtest(
-    df, "NVDA", 1000, date(2024, 1, 1), date(2024, 2, 29), algo
+# Convert to portfolio format
+start_price = df.iloc[0]["Close"]
+initial_investment = 1000 * start_price
+allocations = {"NVDA": 1.0}
+portfolio_algo = "per-asset:sd8"
+
+transactions, summary = run_portfolio_backtest(
+    allocations=allocations,
+    start_date=date(2024, 1, 1),
+    end_date=date(2024, 2, 29),
+    portfolio_algo=portfolio_algo,
+    initial_investment=initial_investment,
 )
 
 print("All transactions:")

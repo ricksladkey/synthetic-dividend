@@ -71,6 +71,7 @@ class TestDividendParity:
                 portfolio_algo="per-asset:buy-and-hold",
                 initial_investment=10_000.0,  # 100 shares × $100 = $10,000
                 dividend_data={"TEST": div_series},
+                simple_mode=True,
             )
 
             # Verify dividend metrics match
@@ -162,6 +163,7 @@ class TestDividendParity:
                 portfolio_algo="per-asset:buy-and-hold",
                 initial_investment=10_000.0,
                 dividend_data={"BIL": div_series},
+                simple_mode=True,
             )
 
             # Verify counts match
@@ -233,6 +235,7 @@ class TestDividendParity:
                 portfolio_algo="per-asset:buy-and-hold",
                 initial_investment=20_000.0,  # 200 shares × $100
                 dividend_data={"TEST": div_series},
+                simple_mode=True,
             )
 
             # Both should use same time-weighted calculation

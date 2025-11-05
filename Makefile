@@ -41,7 +41,7 @@ lint:
 	@echo "Running mypy..."
 	$(PYTHON) -m mypy --explicit-package-bases --exclude "src/research|src/charts" src
 
-check: lint test
+check: format lint test-checks test-all
 
 format:
 	@echo "Running isort..."

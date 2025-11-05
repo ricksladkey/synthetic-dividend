@@ -226,7 +226,7 @@ analyze-volatility-alpha.bat GLD 10/26/2024 10/26/2025
 analyze-volatility-alpha.bat NVDA 10/23/2023 10/23/2024
 
 # Single backtest with detailed output
-python -m src.run_model NVDA 10/23/2023 10/23/2024 sd8 --qty 10000
+synthetic-dividend backtest NVDA 2023-10-23 2024-10-23 sd8 --qty 10000
 
 # Batch research across 12 assets, 4 rebalancing triggers
 python -m src.research.optimal_rebalancing --comprehensive --output results.csv
@@ -264,7 +264,6 @@ See [**EXAMPLES.md**](docs/EXAMPLES.md) for comprehensive usage guide!
 synthetic-dividend/
 ├── 📊 src/
 │   ├── main.py                         # GUI entry point
-│   ├── run_model.py                    # CLI for single backtests
 │   │
 │   ├── 📡 data/
 │   │   └── fetcher.py                  # Yahoo Finance integration
@@ -426,7 +425,7 @@ source .venv/bin/activate
 **Run NVDA with optimal settings (sd8, 50% profit sharing):**
 
 ```bash
-python -m src.run_model NVDA 10/23/2023 10/23/2024 sd8 --qty 10000
+synthetic-dividend backtest NVDA 2023-10-23 2024-10-23 sd8 --qty 10000
 ```
 
 **Output**:
@@ -638,10 +637,10 @@ Controls the balance between **cash flow** and **position growth**:
 
 ```bash
 # Format: sd-<trigger_pct>,<profit_pct>
-python -m src.run_model NVDA 10/23/2023 10/23/2024 sd-7.5,50 --qty 10000
+synthetic-dividend backtest NVDA 2023-10-23 2024-10-23 sd-7.5,50 --qty 10000
 
 # ATH-only mode (no buybacks)
-python -m src.run_model NVDA 10/23/2023 10/23/2024 sd-ath-only-9.05,50 --qty 10000
+synthetic-dividend backtest NVDA 2023-10-23 2024-10-23 sd-ath-only-9.05,50 --qty 10000
 ```
 
 📖 **[Deep dive into strategy theory →](INVESTING_THEORY.md)**

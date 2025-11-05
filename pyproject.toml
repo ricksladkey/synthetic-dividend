@@ -51,13 +51,11 @@ Issues = "https://github.com/ricksladkey/synthetic-dividend/issues"
 sd = "src.cli:main"
 
 # Direct access to core modules
-sd-backtest = "src.run_model:main"
 sd-compare = "src.compare.batch_comparison:main"
 sd-research = "src.research.optimal_rebalancing:main"
 sd-volatility-alpha = "src.research.volatility_alpha:main"
 
 # Convenience scripts for common operations (replacing batch files)
-sd-run-model = "src.run_model:main"
 sd-run-tests = "src.cli:test_command"
 sd-calc-orders = "src.tools.order_calculator:main"
 sd-compare-table = "src.compare.table:main"

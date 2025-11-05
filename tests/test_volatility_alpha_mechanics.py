@@ -9,7 +9,10 @@ from datetime import date, timedelta
 
 import pandas as pd
 
-from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
+from src.models.backtest import (
+    SyntheticDividendAlgorithm,
+    run_portfolio_backtest,
+)
 
 
 def create_price_data(price_path, ticker="TEST"):
@@ -86,7 +89,7 @@ def test_drawdown_recovery_generates_alpha():
     ]
 
     price_df = create_price_data(prices)
-    ref_df = create_flat_reference(len(prices))
+    # ref_df = create_flat_reference(len(prices))  # Not used in this test
 
     # Initial position: 1000 shares @ $100 = $100,000
     initial_shares = 1000
@@ -100,16 +103,43 @@ def test_drawdown_recovery_generates_alpha():
         buyback_enabled=True,
     )
 
-    txns, results = run_algorithm_backtest(
-        df=price_df,
-        ticker="TEST",
-        initial_qty=initial_shares,
-        start_date=start_date,
-        end_date=end_date,
-        algo=algo,
-        reference_asset_df=ref_df,
-        reference_asset_ticker="FLAT",
-    )
+    # Convert to portfolio format
+    allocations = {"TEST": 1.0}
+    portfolio_algo = "per-asset:sd-9.05,50"  # 9.05% trigger, 50% profit sharing, buybacks enabled
+
+    # Mock the fetcher to return our synthetic data
+    from unittest.mock import patch
+
+    import src.data.fetcher as fetcher_module
+
+    original_get_history = fetcher_module.HistoryFetcher.get_history
+
+    def mock_get_history(self, ticker, start_date, end_date):
+        if ticker == "TEST":
+            return price_df
+        return original_get_history(self, ticker, start_date, end_date)
+
+    with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
+        txns, portfolio_results = run_portfolio_backtest(
+            allocations=allocations,
+            start_date=start_date,
+            end_date=end_date,
+            portfolio_algo=portfolio_algo,
+            initial_investment=initial_shares * price_df.iloc[0]["Close"],
+        )
+
+        # Map portfolio results to single-ticker format for compatibility
+        from src.models.backtest import _map_portfolio_to_single_ticker_summary
+
+        results = _map_portfolio_to_single_ticker_summary(
+            portfolio_summary=portfolio_results,
+            ticker="TEST",
+            df_indexed=price_df,
+            start_date=start_date,
+            end_date=end_date,
+            algo_obj=algo,
+            transactions=txns,
+        )
 
     # Extract key metrics
     buy_and_hold_return = results["baseline"]["total_return"] * 100  # Convert to percentage

@@ -309,7 +309,7 @@ password = pypi-YOUR-TEST-API-TOKEN-HERE
 financial-modeling-app/
 ├── src/                    # Source code (importable package)
 │   ├── __init__.py
-│   ├── run_model.py       # Entry point: sd-backtest
+│   ├── synthetic_dividend_tool.py  # Unified CLI entry point
 │   ├── compare/
 │   │   └── batch_comparison.py  # Entry point: sd-compare
 │   └── research/
@@ -329,7 +329,7 @@ financial-modeling-app/
 ## 🔑 Key Benefits of This Structure
 
 1. **`pip install -e .`** - Editable install, changes immediately available
-2. **Entry points** - `sd-backtest`, `sd-compare`, `sd-research` work globally after install
+2. **Entry points** - `synthetic-dividend`, `sd-compare`, `sd-research` work globally after install
 3. **`pyproject.toml`** - Single source of truth for all config (PEP 517/518 compliant)
 4. **Cross-platform** - Makefile (Unix) + dev.ps1 (Windows) + WSL support
 5. **Professional** - Ready for PyPI, follows modern Python packaging standards

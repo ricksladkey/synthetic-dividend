@@ -7,7 +7,7 @@ credited to the bank, improving coverage ratio and reducing forced sales.
 from datetime import date
 
 from src.data.fetcher import HistoryFetcher
-from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
+from src.models.backtest import SyntheticDividendAlgorithm, run_portfolio_backtest
 
 
 def main():
@@ -34,61 +34,86 @@ def main():
         print(f"    {dt.strftime('%Y-%m-%d')}: ${amt:.4f}")
     print()
 
+    # Common parameters
+    allocations = {"AAPL": 1.0}
+    start_price = price_df.iloc[0]["Close"]
+    initial_investment = 100 * start_price
+    portfolio_algo = "per-asset:sd-9.15,50"
+
     # Run backtest WITHOUT dividends
     print("-" * 80)
     print("Backtest 1: WITHOUT dividend tracking")
     print("-" * 80)
-    algo1 = SyntheticDividendAlgorithm(rebalance_size_pct=9.15, profit_sharing_pct=50)
-    transactions1, summary1 = run_algorithm_backtest(
-        df=price_df,
-        ticker="AAPL",
-        initial_qty=100,
+    transactions1, summary1 = run_portfolio_backtest(
+        allocations=allocations,
         start_date=date(2024, 1, 1),
         end_date=date(2024, 12, 31),
-        algo=algo1,
-        dividend_series=None,  # Ignore dividends
-        simple_mode=True,
+        portfolio_algo=portfolio_algo,
+        initial_investment=initial_investment,
+        dividend_data=None,  # Ignore dividends
+        cash_interest_rate_pct=0.0,  # simple_mode equivalent
     )
 
-    print(f"Total return: {summary1['total_return'] * 100:.2f}%")
-    print(f"Bank balance: ${summary1['bank']:.2f}")
-    print(f"Total value: ${summary1['total']:.2f}")
-    print(f"Dividends tracked: ${summary1['total_dividends']:.2f}")
+    # Map to single-ticker format
+    from src.models.backtest import _map_portfolio_to_single_ticker_summary
+
+    summary1_mapped = _map_portfolio_to_single_ticker_summary(
+        portfolio_summary=summary1,
+        ticker="AAPL",
+        df_indexed=price_df,
+        start_date=date(2024, 1, 1),
+        end_date=date(2024, 12, 31),
+        algo_obj=None,
+        transactions=transactions1,
+    )
+
+    print(f"Total return: {summary1_mapped['total_return'] * 100:.2f}%")
+    print(f"Bank balance: ${summary1_mapped['bank']:.2f}")
+    print(f"Total value: ${summary1_mapped['total']:.2f}")
+    print(f"Dividends tracked: ${summary1_mapped['total_dividends']:.2f}")
     print()
 
     # Run backtest WITH dividends
     print("-" * 80)
     print("Backtest 2: WITH dividend tracking")
     print("-" * 80)
-    algo2 = SyntheticDividendAlgorithm(rebalance_size_pct=9.15, profit_sharing_pct=50)
-    transactions2, summary2 = run_algorithm_backtest(
-        df=price_df,
-        ticker="AAPL",
-        initial_qty=100,
+    transactions2, summary2 = run_portfolio_backtest(
+        allocations=allocations,
         start_date=date(2024, 1, 1),
         end_date=date(2024, 12, 31),
-        algo=algo2,
-        dividend_series=div_series,  # Include real dividends
-        simple_mode=True,
+        portfolio_algo=portfolio_algo,
+        initial_investment=initial_investment,
+        dividend_data={"AAPL": div_series},  # Include real dividends
+        cash_interest_rate_pct=0.0,  # simple_mode equivalent
     )
 
-    print(f"Total return: {summary2['total_return'] * 100:.2f}%")
-    print(f"Bank balance: ${summary2['bank']:.2f}")
-    print(f"Total value: ${summary2['total']:.2f}")
-    print(f"Dividends received: ${summary2['total_dividends']:.2f}")
-    print(f"Dividend payments: {summary2['dividend_payment_count']}")
+    summary2_mapped = _map_portfolio_to_single_ticker_summary(
+        portfolio_summary=summary2,
+        ticker="AAPL",
+        df_indexed=price_df,
+        start_date=date(2024, 1, 1),
+        end_date=date(2024, 12, 31),
+        algo_obj=None,
+        transactions=transactions2,
+    )
+
+    print(f"Total return: {summary2_mapped['total_return'] * 100:.2f}%")
+    print(f"Bank balance: ${summary2_mapped['bank']:.2f}")
+    print(f"Total value: ${summary2_mapped['total']:.2f}")
+    print(f"Dividends received: ${summary2_mapped['total_dividends']:.2f}")
+    print(f"Dividend payments: {summary2_mapped['dividend_payment_count']}")
     print()
 
     # Compare results
     print("=" * 80)
     print("COMPARISON")
     print("=" * 80)
-    bank_diff = summary2["bank"] - summary1["bank"]
-    total_diff = summary2["total"] - summary1["total"]
+    bank_diff = summary2_mapped["bank"] - summary1_mapped["bank"]
+    total_diff = summary2_mapped["total"] - summary1_mapped["total"]
 
     print(f"Bank balance increase: ${bank_diff:.2f}")
     print(f"Total value increase: ${total_diff:.2f}")
-    print(f"Total dividends captured: ${summary2['total_dividends']:.2f}")
+    print(f"Total dividends captured: ${summary2_mapped['total_dividends']:.2f}")
     print()
 
     # Show dividend transactions
