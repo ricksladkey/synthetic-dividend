@@ -72,7 +72,7 @@ class Stock:
 1. Create HistoryFetcher()
 2. Call get_history(ticker, start, end) -> DataFrame
 3. Call get_dividends(ticker, start, end) -> Series
-4. Pass both to run_algorithm_backtest()
+4. Pass both to run_portfolio_backtest()
 5. Handle empty DataFrames, cache invalidation, etc.
 ```
 

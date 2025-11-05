@@ -282,7 +282,7 @@ print(summary['income_coefficient_of_variation'])  # NOT IMPLEMENTED
 **Impact:** Experiments #28, #96, #97, #98, #99, #14, #29, #87 blocked
 
 **Implementation:**
-- Extend `run_algorithm_backtest()` return dict
+- Extend `run_portfolio_backtest()` return dict
 - Add drawdown tracking to daily loop
 - Calculate risk-adjusted metrics
 - Add income stability metrics

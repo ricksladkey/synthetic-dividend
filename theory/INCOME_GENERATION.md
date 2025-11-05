@@ -488,13 +488,19 @@ Cons:
 from src.data.fetcher import HistoryFetcher
 
 fetcher = HistoryFetcher()
-prices = fetcher.get_history("AAPL", "2024-01-01", "2024-12-31")
-dividends = fetcher.get_dividends("AAPL", "2024-01-01", "2024-12-31")
+ticker = "AAPL"
+start = "2024-01-01"
+end = "2024-12-31"
+prices = fetcher.get_history(ticker, start, end)
+dividends = fetcher.get_dividends(ticker, start, end)
 
 # Backtest automatically credits dividends to bank on ex-date
-result = run_algorithm_backtest(
-    df=prices,
-    dividend_series=dividends,  # Real dividends tracked here
+result = run_portfolio_backtest(
+    allocations={ticker: 1.0},
+    start_date=date(2024, 1, 1),
+    end_date=date(2024, 12, 31),
+    portfolio_algo="per-asset:sd8",
+    dividend_data={ticker: dividends},  # Real dividends tracked here
     # ... other parameters
 )
 ```

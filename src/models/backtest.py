@@ -342,6 +342,12 @@ def run_algorithm_backtest(
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Execute backtest of trading algorithm against historical price data.
 
+    .. deprecated::
+        Use :func:`run_portfolio_backtest` instead. This wrapper function is maintained for
+        backward compatibility but will be removed in a future version. For single-ticker
+        backtests, use ``run_portfolio_backtest(allocations={ticker: 1.0}, ...)`` with the
+        ``per-asset:`` algorithm prefix.
+
     **Unified Interface (Phase 3)**:
     This function provides a unified interface for both single-ticker and multi-asset backtesting.
     Use single-ticker parameters (df, ticker, algo) for traditional single-asset backtests,

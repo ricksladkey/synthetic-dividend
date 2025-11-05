@@ -64,7 +64,7 @@ df = load_data('BTC-USD', start_date, end_date)
 # df['Close'][0] == 100.0  (always!)
 
 # Run backtest with normalized prices
-result = run_algorithm_backtest(df, ...)
+result = run_portfolio_backtest(allocations={'BTC-USD': 1.0}, ...)
 ```
 
 ### In Order Calculator
