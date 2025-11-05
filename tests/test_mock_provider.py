@@ -173,31 +173,30 @@ class TestMockExtensibility:
 
     def test_no_special_casing_needed(self):
         """Backtest code doesn't need to know about mocks."""
-        from src.algorithms import BuyAndHoldAlgorithm
-        from src.models.backtest import run_algorithm_backtest
+        from src.models.backtest import run_portfolio_backtest
 
         # Use mock data for backtest - no code changes needed
         mock_ticker = create_flat_mock(100.0)
 
         # This would work identically with "NVDA" or any other ticker
         # The backtest algorithm has ZERO knowledge of mocks
-        asset = Asset(mock_ticker)
-        df = asset.get_prices(date(2024, 1, 1), date(2024, 12, 31))
+        initial_qty = 100
+        start_date = date(2024, 1, 1)
+        end_date = date(2024, 12, 31)
 
         # Run backtest (would work the same way)
-        algo = BuyAndHoldAlgorithm()
-        transactions, summary = run_algorithm_backtest(
-            df=df,
-            ticker=mock_ticker,
-            initial_qty=100,
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 12, 31),
-            algo=algo,
+        transactions, summary = run_portfolio_backtest(
+            allocations={mock_ticker: 1.0},
+            start_date=start_date,
+            end_date=end_date,
+            portfolio_algo="per-asset:buy-and-hold",
+            initial_investment=initial_qty * 100.0,  # 100 shares @ $100 each
             simple_mode=True,
         )
 
         # Backtest runs successfully with mock data
-        assert summary["holdings"] == 100
+        mock_asset_summary = summary["assets"][mock_ticker]
+        assert mock_asset_summary["final_holdings"] == 100
         assert len(transactions) == 1  # Initial purchase transaction
         assert transactions[0].action == "BUY"
 

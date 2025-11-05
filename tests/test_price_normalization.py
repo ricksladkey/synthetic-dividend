@@ -10,7 +10,7 @@ from datetime import date, timedelta
 
 import pandas as pd
 
-from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
+from src.models.backtest import run_portfolio_backtest
 
 
 class TestPriceNormalization:
@@ -42,22 +42,30 @@ class TestPriceNormalization:
             )
             df.set_index("Date", inplace=True)
 
-            algo = SyntheticDividendAlgorithm(
-                rebalance_size=9.05 / 100.0,
-                profit_sharing=50.0 / 100.0,
-                buyback_enabled=True,
-                bracket_seed=start_price,
-            )
-
-            txns, _ = run_algorithm_backtest(
-                df=df,
-                ticker="TEST",
-                initial_qty=1000,
-                start_date=dates[0],
-                end_date=dates[-1],
-                algo=algo,
-                simple_mode=True,
-            )
+            # Use portfolio backtest with per-asset algorithm
+            initial_qty = 1000
+            start_price_value = prices[0]
+            
+            # Mock the fetcher to return our synthetic data
+            from unittest.mock import patch
+            import src.data.fetcher as fetcher_module
+            
+            original_get_history = fetcher_module.HistoryFetcher.get_history
+            
+            def mock_get_history(self, ticker, start_date, end_date):
+                if ticker == "TEST":
+                    return df
+                return original_get_history(self, ticker, start_date, end_date)
+            
+            with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
+                txns, _ = run_portfolio_backtest(
+                    allocations={"TEST": 1.0},
+                    start_date=dates[0],
+                    end_date=dates[-1],
+                    portfolio_algo=f"per-asset:sd-9.05,50,{start_price}",
+                    initial_investment=initial_qty * start_price_value,
+                    simple_mode=True,
+                )
 
             transaction_counts.append(len(txns))
 
@@ -92,22 +100,30 @@ class TestPriceNormalization:
         )
         df.set_index("Date", inplace=True)
 
-        algo = SyntheticDividendAlgorithm(
-            rebalance_size=9.05 / 100.0,
-            profit_sharing=50.0 / 100.0,
-            buyback_enabled=True,
-            bracket_seed=100.0,
-        )
-
-        txns, _ = run_algorithm_backtest(
-            df=df,
-            ticker="TEST",
-            initial_qty=1000,
-            start_date=dates[0],
-            end_date=dates[-1],
-            algo=algo,
-            simple_mode=True,
-        )
+        # Use portfolio backtest with per-asset algorithm
+        initial_qty = 1000
+        bracket_seed = 100.0
+        
+        # Mock the fetcher to return our synthetic data
+        from unittest.mock import patch
+        import src.data.fetcher as fetcher_module
+        
+        original_get_history = fetcher_module.HistoryFetcher.get_history
+        
+        def mock_get_history(self, ticker, start_date, end_date):
+            if ticker == "TEST":
+                return df
+            return original_get_history(self, ticker, start_date, end_date)
+        
+        with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
+            txns, _ = run_portfolio_backtest(
+                allocations={"TEST": 1.0},
+                start_date=dates[0],
+                end_date=dates[-1],
+                portfolio_algo=f"per-asset:sd-9.05,50,{bracket_seed}",
+                initial_investment=initial_qty * start_price,
+                simple_mode=True,
+            )
 
         # Find the buy transaction
         buy_txns = [tx for tx in txns if tx.action == "BUY" and tx.limit_price is not None]
@@ -169,22 +185,29 @@ class TestPriceNormalization:
             )
             df.set_index("Date", inplace=True)
 
-            algo = SyntheticDividendAlgorithm(
-                rebalance_size=9.05 / 100.0,
-                profit_sharing=50.0 / 100.0,
-                buyback_enabled=True,
-                bracket_seed=start_price,
-            )
-
-            txns, _ = run_algorithm_backtest(
-                df=df,
-                ticker="TEST",
-                initial_qty=1000,
-                start_date=dates[0],
-                end_date=dates[-1],
-                algo=algo,
-                simple_mode=True,
-            )
+            # Use portfolio backtest with per-asset algorithm
+            initial_qty = 1000
+            
+            # Mock the fetcher to return our synthetic data
+            from unittest.mock import patch
+            import src.data.fetcher as fetcher_module
+            
+            original_get_history = fetcher_module.HistoryFetcher.get_history
+            
+            def mock_get_history(self, ticker, start_date, end_date):
+                if ticker == "TEST":
+                    return df
+                return original_get_history(self, ticker, start_date, end_date)
+            
+            with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
+                txns, _ = run_portfolio_backtest(
+                    allocations={"TEST": 1.0},
+                    start_date=dates[0],
+                    end_date=dates[-1],
+                    portfolio_algo=f"per-asset:sd-9.05,50,{start_price}",
+                    initial_investment=initial_qty * prices[0],
+                    simple_mode=True,
+                )
 
             # Get bracket sequence
             bracket_seq = extract_bracket_sequence(txns, trigger, start_price)
@@ -225,19 +248,29 @@ class TestPriceNormalization:
         )
         df.set_index("Date", inplace=True)
 
-        algo = SyntheticDividendAlgorithm(
-            rebalance_size=9.05 / 100.0, profit_sharing=50.0 / 100.0, buyback_enabled=True
-        )
-
-        txns, _ = run_algorithm_backtest(
-            df=df,
-            ticker="TEST",
-            initial_qty=1000,
-            start_date=dates[0],
-            end_date=dates[-1],
-            algo=algo,
-            simple_mode=True,
-        )
+        # Use portfolio backtest with per-asset algorithm (no bracket_seed)
+        initial_qty = 1000
+        
+        # Mock the fetcher to return our synthetic data
+        from unittest.mock import patch
+        import src.data.fetcher as fetcher_module
+        
+        original_get_history = fetcher_module.HistoryFetcher.get_history
+        
+        def mock_get_history(self, ticker, start_date, end_date):
+            if ticker == "TEST":
+                return df
+            return original_get_history(self, ticker, start_date, end_date)
+        
+        with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
+            txns, _ = run_portfolio_backtest(
+                allocations={"TEST": 1.0},
+                start_date=dates[0],
+                end_date=dates[-1],
+                portfolio_algo="per-asset:sd-9.05,50",  # No bracket_seed
+                initial_investment=initial_qty * start_price,
+                simple_mode=True,
+            )
 
         # Extract price from first transaction
         first_tx = txns[0]
@@ -274,22 +307,30 @@ class TestPriceNormalization:
             )
             df.set_index("Date", inplace=True)
 
-            algo = SyntheticDividendAlgorithm(
-                rebalance_size=trigger_pct / 100.0,
-                profit_sharing=50.0 / 100.0,
-                buyback_enabled=True,
-                bracket_seed=100.0,
-            )
-
-            txns, _ = run_algorithm_backtest(
-                df=df,
-                ticker="TEST",
-                initial_qty=1000,
-                start_date=dates[0],
-                end_date=dates[-1],
-                algo=algo,
-                simple_mode=True,
-            )
+            # Use portfolio backtest with per-asset algorithm
+            initial_qty = 1000
+            bracket_seed = 100.0
+            
+            # Mock the fetcher to return our synthetic data
+            from unittest.mock import patch
+            import src.data.fetcher as fetcher_module
+            
+            original_get_history = fetcher_module.HistoryFetcher.get_history
+            
+            def mock_get_history(self, ticker, start_date, end_date):
+                if ticker == "TEST":
+                    return df
+                return original_get_history(self, ticker, start_date, end_date)
+            
+            with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
+                txns, _ = run_portfolio_backtest(
+                    allocations={"TEST": 1.0},
+                    start_date=dates[0],
+                    end_date=dates[-1],
+                    portfolio_algo=f"per-asset:sd-{trigger_pct},50,{bracket_seed}",
+                    initial_investment=initial_qty * start_price,
+                    simple_mode=True,
+                )
 
             # Extract normalized price from the first limit order transaction (skip initial market order)
             limit_txns = [tx for tx in txns if tx.price > 0 and "limit" in str(tx.notes).lower()]
