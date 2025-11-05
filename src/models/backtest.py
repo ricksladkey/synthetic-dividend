@@ -5,9 +5,9 @@ for backtesting against historical OHLC price data.
 """
 
 import math
+import warnings
 from datetime import date
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
-import warnings
 
 import pandas as pd
 
@@ -426,10 +426,16 @@ def run_algorithm_backtest(
     """
     # Backwards-compatible aliases: accept older kwarg names used in tests/older code
     # (e.g., reference_asset_df -> reference_data, risk_free_asset_df -> risk_free_data)
-    if "reference_asset_df" in kwargs and reference_data is None:
-        reference_data = kwargs.pop("reference_asset_df")
-    if "risk_free_asset_df" in kwargs and risk_free_data is None:
-        risk_free_data = kwargs.pop("risk_free_asset_df")
+    # Note: reference_data and risk_free_data parameters removed - these are now ignored
+    if "reference_asset_df" in kwargs:
+        kwargs.pop("reference_asset_df")  # Remove deprecated parameter
+    if "risk_free_asset_df" in kwargs:
+        kwargs.pop("risk_free_asset_df")  # Remove deprecated parameter
+    # Handle deprecated parameter name aliases
+    if "reference_asset_ticker" in kwargs:
+        reference_rate_ticker = kwargs.pop("reference_asset_ticker")
+    if "risk_free_asset_ticker" in kwargs:
+        risk_free_rate_ticker = kwargs.pop("risk_free_asset_ticker")
     # Handle deprecated cpi_data parameter
     if "cpi_data" in kwargs:
         warnings.warn(
@@ -504,11 +510,8 @@ def run_algorithm_backtest(
             "end_date",
             "algo",
             "algo_params",
-            "risk_free_rate_pct",
-            "reference_data",
-            "risk_free_data",
-            "reference_asset_ticker",
-            "risk_free_asset_ticker",
+            "reference_rate_ticker",
+            "risk_free_rate_ticker",
             "dividend_series",
             "withdrawal_rate_pct",
             "withdrawal_frequency_days",
@@ -518,6 +521,8 @@ def run_algorithm_backtest(
             "initial_investment",
             "reference_asset_df",
             "risk_free_asset_df",  # Backwards-compatible aliases
+            "reference_asset_ticker",
+            "risk_free_asset_ticker",  # Backwards-compatible aliases
         ]
         raise TypeError(
             "run_algorithm_backtest() got unexpected keyword argument(s): "
@@ -574,6 +579,7 @@ def run_algorithm_backtest(
 
     # Mock the fetcher to return cached data for single-ticker mode
     from unittest.mock import patch
+
     import src.data.fetcher as fetcher_module
 
     def mock_get_history(self, ticker_arg, start_date_arg, end_date_arg):

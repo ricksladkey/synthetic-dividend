@@ -18,7 +18,6 @@ from typing import Any, Dict, List, Tuple
 import pandas as pd
 
 from src.algorithms.base import AlgorithmBase
-from src.data.cpi_fetcher import CPIFetcher, FredCPIProvider
 from src.models.backtest import Data, run_algorithm_backtest
 from src.models.model_types import Transaction
 
@@ -76,8 +75,7 @@ def run_retirement_backtest(
         >>> print(f"Total withdrawn: ${summary['total_withdrawn']:,.0f}")
     """
     # Get CPI data if adjusting for inflation
-    cpi_adjustment_df = None
-    cpi_adjustment_df = None  # No longer used - inflation handled by backtest
+    # No longer needed - inflation handled by backtest with inflation_rate_ticker
 
     # Convert withdrawal frequency to days
     if withdrawal_frequency == "monthly":

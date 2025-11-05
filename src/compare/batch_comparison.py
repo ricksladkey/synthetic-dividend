@@ -67,7 +67,7 @@ def run_single_backtest(
     try:
         # Convert single-ticker to portfolio format
         allocations = {ticker: 1.0}
-        
+
         # Convert algorithm name to portfolio format
         if algo_name == "buy-and-hold":
             portfolio_algo = "per-asset:buy-and-hold"
@@ -75,24 +75,24 @@ def run_single_backtest(
             portfolio_algo = f"per-asset:{algo_name}"
         else:
             portfolio_algo = algo_name
-        
+
         # Calculate initial investment from initial_qty and start price
         # We'll need to fetch the start price first
         fetcher = HistoryFetcher()
         df = fetcher.get_history(ticker, start_date, end_date)
         if df is None or df.empty:
             raise ValueError(f"No price data available for {ticker}")
-        
+
         # Get start price
         df_indexed = df.copy()
         df_indexed.index = df_indexed.index.date
-        
+
         # Find the actual start date (first available date >= requested start_date)
         available_dates = sorted([d for d in df_indexed.index if d >= start_date])
         if not available_dates:
             raise ValueError(f"No data available for {ticker} starting from {start_date}")
         actual_start_date = available_dates[0]
-        
+
         start_price = float(df_indexed.loc[actual_start_date, "Close"])
         initial_investment = initial_qty * start_price
 
@@ -101,7 +101,7 @@ def run_single_backtest(
         if not available_end_dates:
             raise ValueError(f"No data available for {ticker} ending at {end_date}")
         actual_end_date = available_end_dates[-1]
-        
+
         transactions, summary = run_portfolio_backtest(
             allocations=allocations,
             start_date=actual_start_date,
@@ -114,7 +114,7 @@ def run_single_backtest(
 
         # Extract key metrics from portfolio summary
         asset_results = summary["assets"][ticker]
-        
+
         return {
             "algorithm": algo_name,
             "start_date": summary["start_date"].isoformat(),
@@ -125,11 +125,28 @@ def run_single_backtest(
             "final_shares": asset_results["final_holdings"],
             "final_value": asset_results["final_value"],
             "bank": summary.get("final_bank", 0.0),
-            "bank_min": min(summary.get("daily_bank_values", {}).values()) if summary.get("daily_bank_values") else summary.get("final_bank", 0.0),
-            "bank_max": max(summary.get("daily_bank_values", {}).values()) if summary.get("daily_bank_values") else summary.get("final_bank", 0.0),
-            "bank_avg": sum(summary.get("daily_bank_values", {}).values()) / len(summary.get("daily_bank_values", {})) if summary.get("daily_bank_values") else summary.get("final_bank", 0.0),
-            "bank_negative_count": sum(1 for b in summary.get("daily_bank_values", {}).values() if b < 0),
-            "bank_positive_count": sum(1 for b in summary.get("daily_bank_values", {}).values() if b > 0),
+            "bank_min": (
+                min(summary.get("daily_bank_values", {}).values())
+                if summary.get("daily_bank_values")
+                else summary.get("final_bank", 0.0)
+            ),
+            "bank_max": (
+                max(summary.get("daily_bank_values", {}).values())
+                if summary.get("daily_bank_values")
+                else summary.get("final_bank", 0.0)
+            ),
+            "bank_avg": (
+                sum(summary.get("daily_bank_values", {}).values())
+                / len(summary.get("daily_bank_values", {}))
+                if summary.get("daily_bank_values")
+                else summary.get("final_bank", 0.0)
+            ),
+            "bank_negative_count": sum(
+                1 for b in summary.get("daily_bank_values", {}).values() if b < 0
+            ),
+            "bank_positive_count": sum(
+                1 for b in summary.get("daily_bank_values", {}).values() if b > 0
+            ),
             "opportunity_cost": summary.get("opportunity_cost", 0.0),
             "risk_free_gains": summary.get("cash_interest_earned", 0.0),
             "total": summary.get("total_final_value", asset_results["final_value"]),
