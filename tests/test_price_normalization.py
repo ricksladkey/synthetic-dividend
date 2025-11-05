@@ -45,18 +45,19 @@ class TestPriceNormalization:
             # Use portfolio backtest with per-asset algorithm
             initial_qty = 1000
             start_price_value = prices[0]
-            
+
             # Mock the fetcher to return our synthetic data
             from unittest.mock import patch
+
             import src.data.fetcher as fetcher_module
-            
+
             original_get_history = fetcher_module.HistoryFetcher.get_history
-            
+
             def mock_get_history(self, ticker, start_date, end_date):
                 if ticker == "TEST":
                     return df
                 return original_get_history(self, ticker, start_date, end_date)
-            
+
             with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
                 txns, _ = run_portfolio_backtest(
                     allocations={"TEST": 1.0},
@@ -103,18 +104,19 @@ class TestPriceNormalization:
         # Use portfolio backtest with per-asset algorithm
         initial_qty = 1000
         bracket_seed = 100.0
-        
+
         # Mock the fetcher to return our synthetic data
         from unittest.mock import patch
+
         import src.data.fetcher as fetcher_module
-        
+
         original_get_history = fetcher_module.HistoryFetcher.get_history
-        
+
         def mock_get_history(self, ticker, start_date, end_date):
             if ticker == "TEST":
                 return df
             return original_get_history(self, ticker, start_date, end_date)
-        
+
         with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
             txns, _ = run_portfolio_backtest(
                 allocations={"TEST": 1.0},
@@ -187,18 +189,19 @@ class TestPriceNormalization:
 
             # Use portfolio backtest with per-asset algorithm
             initial_qty = 1000
-            
+
             # Mock the fetcher to return our synthetic data
             from unittest.mock import patch
+
             import src.data.fetcher as fetcher_module
-            
+
             original_get_history = fetcher_module.HistoryFetcher.get_history
-            
+
             def mock_get_history(self, ticker, start_date, end_date):
                 if ticker == "TEST":
                     return df
                 return original_get_history(self, ticker, start_date, end_date)
-            
+
             with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
                 txns, _ = run_portfolio_backtest(
                     allocations={"TEST": 1.0},
@@ -250,18 +253,19 @@ class TestPriceNormalization:
 
         # Use portfolio backtest with per-asset algorithm (no bracket_seed)
         initial_qty = 1000
-        
+
         # Mock the fetcher to return our synthetic data
         from unittest.mock import patch
+
         import src.data.fetcher as fetcher_module
-        
+
         original_get_history = fetcher_module.HistoryFetcher.get_history
-        
+
         def mock_get_history(self, ticker, start_date, end_date):
             if ticker == "TEST":
                 return df
             return original_get_history(self, ticker, start_date, end_date)
-        
+
         with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
             txns, _ = run_portfolio_backtest(
                 allocations={"TEST": 1.0},
@@ -310,18 +314,19 @@ class TestPriceNormalization:
             # Use portfolio backtest with per-asset algorithm
             initial_qty = 1000
             bracket_seed = 100.0
-            
+
             # Mock the fetcher to return our synthetic data
             from unittest.mock import patch
+
             import src.data.fetcher as fetcher_module
-            
+
             original_get_history = fetcher_module.HistoryFetcher.get_history
-            
+
             def mock_get_history(self, ticker, start_date, end_date):
                 if ticker == "TEST":
                     return df
                 return original_get_history(self, ticker, start_date, end_date)
-            
+
             with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
                 txns, _ = run_portfolio_backtest(
                     allocations={"TEST": 1.0},
