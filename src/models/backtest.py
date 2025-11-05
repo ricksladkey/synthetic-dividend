@@ -318,15 +318,8 @@ def run_algorithm_backtest(
     portfolio_algo: Optional[Union[PortfolioAlgorithmBase, str]] = None,
     # Common parameters
     algo_params: Optional[Dict[str, Any]] = None,
-    reference_return_pct: float = 0.0,
-    risk_free_rate_pct: float = 0.0,
-    reference_data: Optional[pd.DataFrame] = None,
-    risk_free_data: Optional[pd.DataFrame] = None,
-    # Backward-compat legacy params (alias of *_data)
-    reference_asset_df: Optional[pd.DataFrame] = None,
-    risk_free_asset_df: Optional[pd.DataFrame] = None,
-    reference_asset_ticker: str = "",
-    risk_free_asset_ticker: str = "",
+    reference_rate_ticker: str = "",
+    risk_free_rate_ticker: str = "",
     # Dividend/interest payments
     dividend_series: Optional[pd.Series] = None,
     # Withdrawal policy parameters
@@ -389,20 +382,8 @@ def run_algorithm_backtest(
         portfolio_algo: Portfolio algorithm or string name - for portfolio mode
         # Common parameters
         algo_params: Optional parameters dict (for callable algos)
-        reference_return_pct: Annual return for opportunity cost calc (fallback if no asset data)
-                             Applied when bank balance is negative (borrowing cost)
-                             Ignored if simple_mode=True
-        risk_free_rate_pct: Annual return on cash (fallback if no asset data)
-                           Applied when bank balance is positive (interest earned)
-                           Ignored if simple_mode=True
-        reference_data: Historical price data for reference asset (e.g., VOO)
-                           If provided, uses actual daily returns instead of fixed rate
-                           Ignored if simple_mode=True
-        risk_free_data: Historical price data for risk-free asset (e.g., BIL)
-                           If provided, uses actual daily returns instead of fixed rate
-                           Ignored if simple_mode=True
-        reference_asset_ticker: Ticker symbol for reference asset (for reporting)
-        risk_free_asset_ticker: Ticker symbol for risk-free asset (for reporting)
+        reference_rate_ticker: Ticker symbol for reference asset (for reporting)
+        risk_free_rate_ticker: Ticker symbol for risk-free asset (for reporting)
         dividend_series: Historical dividend/interest payments (Series indexed by ex-date)
                         Each value is dividend amount per share on that date
                         Works for equity dividends (AAPL) and ETF distributions (BIL)
@@ -490,8 +471,8 @@ def run_algorithm_backtest(
             allow_margin=allow_margin,
             withdrawal_rate_pct=withdrawal_rate_pct,
             withdrawal_frequency_days=withdrawal_frequency_days,
-            cash_interest_rate_pct=risk_free_rate_pct if not simple_mode else 0.0,
-            simple_mode=simple_mode,
+            reference_rate_ticker=reference_rate_ticker,
+            risk_free_rate_ticker=risk_free_rate_ticker,
         )
 
     # ========================================================================
@@ -512,7 +493,6 @@ def run_algorithm_backtest(
             "end_date",
             "algo",
             "algo_params",
-            "reference_return_pct",
             "risk_free_rate_pct",
             "reference_data",
             "risk_free_data",
@@ -536,12 +516,6 @@ def run_algorithm_backtest(
 
     if df is None or df.empty:
         raise ValueError("Empty price data")
-
-    # Backward compatibility: map legacy args if provided
-    if reference_data is None and reference_asset_df is not None:
-        reference_data = reference_asset_df
-    if risk_free_data is None and risk_free_asset_df is not None:
-        risk_free_data = risk_free_asset_df
 
     # Use portfolio backtest for single-ticker backtest
     # Create single-asset portfolio (100% allocation to this ticker)
@@ -584,22 +558,18 @@ def run_algorithm_backtest(
     # Call portfolio backtest with single asset at 100% allocation
     allocations = {ticker: 1.0}
 
-    # Map risk_free_rate_pct to cash_interest_rate_pct (simple_mode ignores it anyway)
-    cash_interest_rate = 0.0 if simple_mode else risk_free_rate_pct
+    # Convert dividend_series to dividend_data format for portfolio backtest
+    dividend_data = {ticker: dividend_series} if dividend_series is not None else None
 
-    # Mock the fetcher to return our DataFrame
+    # Mock the fetcher to return cached data for single-ticker mode
     from unittest.mock import patch
-
     import src.data.fetcher as fetcher_module
 
-    original_get_history = fetcher_module.HistoryFetcher.get_history
-
-    def mock_get_history(self, ticker, start_date, end_date):
-        if ticker == ticker:  # Our single ticker
+    def mock_get_history(self, ticker_arg, start_date_arg, end_date_arg):
+        if ticker_arg == ticker:
             return df_indexed
-        return original_get_history(self, ticker, start_date, end_date)
+        return None
 
-    # Use patch to temporarily replace the method
     with patch.object(fetcher_module.HistoryFetcher, "get_history", mock_get_history):
         # Call portfolio backtest
         transactions, portfolio_summary = run_portfolio_backtest(
@@ -611,81 +581,29 @@ def run_algorithm_backtest(
             allow_margin=allow_margin,
             withdrawal_rate_pct=withdrawal_rate_pct,
             withdrawal_frequency_days=withdrawal_frequency_days,
-            cash_interest_rate_pct=cash_interest_rate,
-            dividend_data=({ticker: dividend_series} if dividend_series is not None else None),
-            reference_data=reference_data,
-            risk_free_data=risk_free_data,
+            reference_rate_ticker=reference_rate_ticker,
+            risk_free_rate_ticker=risk_free_rate_ticker,
             inflation_data=cpi_data,
-            simple_mode=simple_mode,
-            reference_return_pct=reference_return_pct,
+            dividend_data=dividend_data,
         )
 
-        # Map portfolio results to single-ticker format
-        summary = _map_portfolio_to_single_ticker_summary(
-            portfolio_summary=portfolio_summary,
-            ticker=ticker,
-            df_indexed=df_indexed,
-            start_date=start_date,
-            end_date=end_date,
-            algo_obj=(
-                portfolio_algo.strategies[ticker] if hasattr(portfolio_algo, "strategies") else None
-            ),
-            transactions=transactions,
-        )
+    # Map portfolio results to single-ticker format
+    summary = _map_portfolio_to_single_ticker_summary(
+        portfolio_summary=portfolio_summary,
+        ticker=ticker,
+        df_indexed=df_indexed,
+        start_date=start_date,
+        end_date=end_date,
+        algo_obj=(
+            portfolio_algo.strategies[ticker] if hasattr(portfolio_algo, "strategies") else None
+        ),
+        transactions=transactions,
+    )
 
-        # Update allow_margin in summary
-        summary["allow_margin"] = allow_margin
+    # Update allow_margin in summary
+    summary["allow_margin"] = allow_margin
 
-        return transactions, summary
-
-    # Check for any remaining unexpected kwargs
-    if kwargs:
-        # List all parameters that can be passed to this function, including
-        # backwards-compatible aliases (even though they're consumed above)
-        valid_params = [
-            "df",
-            "ticker",
-            "initial_qty",
-            "allocations",
-            "portfolio_algo",
-            "start_date",
-            "end_date",
-            "algo",
-            "algo_params",
-            "reference_return_pct",
-            "risk_free_rate_pct",
-            "reference_data",
-            "risk_free_data",
-            "reference_asset_ticker",
-            "risk_free_asset_ticker",
-            "dividend_series",
-            "withdrawal_rate_pct",
-            "withdrawal_frequency_days",
-            "cpi_data",
-            "simple_mode",
-            "allow_margin",
-            "initial_investment",
-            "reference_asset_df",
-            "risk_free_asset_df",  # Backwards-compatible aliases
-        ]
-        raise TypeError(
-            "run_algorithm_backtest() got unexpected keyword argument(s): "
-            f"{', '.join(repr(k) for k in kwargs.keys())}. "
-            f"Valid parameters are: {', '.join(valid_params)}"
-        )
-
-    if df is None or df.empty:
-        raise ValueError("Empty price data")
-
-    # Backward compatibility: map legacy args if provided
-    if reference_data is None and reference_asset_df is not None:
-        reference_data = reference_asset_df
-    if risk_free_data is None and risk_free_asset_df is not None:
-        risk_free_data = risk_free_asset_df
-
-    # ========================================================================
-    # PHASE 3: Single-ticker mode continues below
-    # ========================================================================
+    return transactions, summary
 
 
 def print_income_classification(summary: Dict[str, Any], verbose: bool = True) -> None:
@@ -761,7 +679,6 @@ def run_portfolio_backtest(
     # Legacy compatibility parameters (deprecated, ignored with warnings)
     algo: Optional[Union[AlgorithmBase, Callable, str]] = None,
     simple_mode: bool = False,
-    reference_return_pct: float = 0.0,
     **kwargs: Any,
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Execute portfolio backtest with shared cash pool and portfolio-level algorithm.
@@ -792,6 +709,7 @@ def run_portfolio_backtest(
         reference_rate_ticker: Optional ticker for reference benchmark (e.g., "VOO", "SPY")
             Used to calculate market-adjusted returns (alpha vs benchmark)
             If provided, fetches data and computes baseline buy-and-hold comparison
+            Also used for opportunity cost calculation on negative cash balances
         risk_free_rate_ticker: Optional ticker for risk-free asset (e.g., "BIL", "^IRX")
             Used to model opportunity cost on cash holdings
             Daily returns applied to positive cash balance (replaces cash_interest_rate_pct)
@@ -800,9 +718,6 @@ def run_portfolio_backtest(
             Used to calculate inflation-adjusted (real) returns
             Tracks cumulative inflation adjustment from start date
             Adds real_return and inflation_adjusted metrics to summary
-        reference_return_pct: Annual return for opportunity cost calc (fallback if no asset data)
-            Applied when bank balance is negative (borrowing cost)
-            Ignored if simple_mode=True
         algo: DEPRECATED - Use portfolio_algo instead
         simple_mode: DEPRECATED - No longer used
         **kwargs: DEPRECATED - Ignored legacy parameters
@@ -1031,9 +946,7 @@ def run_portfolio_backtest(
         (cash_interest_rate_pct / 100.0) / 365.25 if cash_interest_rate_pct > 0 else 0.0
     )
     # Fallback daily reference rate for opportunity cost (when bank is negative)
-    daily_reference_rate_fallback = (
-        (1 + reference_return_pct / 100.0) ** (1.0 / 365.25) - 1.0 if not simple_mode else 0.0
-    )
+    daily_reference_rate_fallback = 0.0
 
     # Dividend tracking (per-asset)
     total_dividends_by_asset: Dict[str, float] = {ticker: 0.0 for ticker in allocations.keys()}
