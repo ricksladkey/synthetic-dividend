@@ -94,12 +94,6 @@ def run_single_comparison(
             asset_class = cls
             break
 
-    # Get best sdN from Phase 1 results
-    best_sdn = BEST_SDN.get(ticker)
-    if best_sdn is None:
-        print(f"ERROR: No best sdN found for {ticker}")
-        return None
-
     # Fetch data once
     print(f"\nFetching {ticker} data from {start_date} to {end_date}...")
     fetcher = HistoryFetcher()
@@ -117,6 +111,35 @@ def run_single_comparison(
 
     print(f"  Data points: {len(df)}")
     print(f"  Price range: ${float(df['Close'].min()):.2f} - ${float(df['Close'].max()):.2f}")
+
+    # Get best sdN from Phase 1 results, or auto-suggest based on volatility
+    best_sdn = BEST_SDN.get(ticker)
+    if best_sdn is None:
+        # Auto-suggest based on volatility
+        import math
+
+        returns = df["Close"].pct_change().dropna()
+        if len(returns) >= 2:
+            daily_vol = float(returns.std())
+            annualized_vol = daily_vol * math.sqrt(252)
+            vol_pct = annualized_vol * 100
+
+            # Auto-suggestion logic (from volatility_alpha_table.py)
+            if vol_pct >= 50:
+                best_sdn = 6
+            elif vol_pct >= 30:
+                best_sdn = 8
+            elif vol_pct >= 20:
+                best_sdn = 10
+            elif vol_pct >= 10:
+                best_sdn = 16
+            else:
+                best_sdn = 20
+
+            print(f"\nAuto-suggestion: {vol_pct:.1f}% annualized volatility -> SD{best_sdn}")
+        else:
+            print(f"ERROR: Insufficient data to calculate volatility for {ticker}")
+            return None
 
     # Build enhanced algorithm (with buybacks)
     enhanced_name = f"sd{best_sdn}"
@@ -177,11 +200,11 @@ def run_single_comparison(
     print(f"    Alpha per Transaction: {alpha_per_txn:+.4f}%")
 
     if volatility_alpha > 0:
-        print(f"    ✓ Enhanced strategy OUTPERFORMS ATH-only by {volatility_alpha:.2f}%")
+        print(f"    [+] Enhanced strategy OUTPERFORMS ATH-only by {volatility_alpha:.2f}%")
     elif volatility_alpha < 0:
-        print(f"    ✗ Enhanced strategy UNDERPERFORMS ATH-only by {abs(volatility_alpha):.2f}%")
+        print(f"    [-] Enhanced strategy UNDERPERFORMS ATH-only by {abs(volatility_alpha):.2f}%")
     else:
-        print("    = No difference (unusual!)")
+        print("    [=] No difference (unusual!)")
 
     return {
         "ticker": ticker,
