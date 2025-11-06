@@ -4,10 +4,9 @@ Provides abstract base for strategy implementations and execution framework
 for backtesting against historical OHLC price data.
 """
 
-import math
 import warnings
 from datetime import date
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
@@ -765,4 +764,3 @@ def run_portfolio_backtest(
         simple_mode=simple_mode,
         **kwargs,
     )
-

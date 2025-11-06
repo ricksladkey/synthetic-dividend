@@ -331,9 +331,9 @@ class TestRateTickerParity:
             baseline = portfolio_summary["baseline"]
 
             # Verify baseline return is approximately 50% (150/100 - 1)
-            assert 45.0 < baseline["total_return"] * 100 < 55.0, (
-                f"Expected baseline return ~50%, got {baseline['total_return'] * 100:.2f}%"
-            )
+            assert (
+                45.0 < baseline["total_return"] * 100 < 55.0
+            ), f"Expected baseline return ~50%, got {baseline['total_return'] * 100:.2f}%"
 
             # Verify alpha calculation exists (portfolio return - benchmark return)
             assert "volatility_alpha" in portfolio_summary
@@ -341,9 +341,7 @@ class TestRateTickerParity:
 
             # Portfolio doubled (100% return), benchmark gained 50%
             # Alpha should be approximately 0.50 (50 percentage points)
-            assert 0.45 < alpha < 0.55, (
-                f"Expected alpha ~0.50, got {alpha:.4f}"
-            )
+            assert 0.45 < alpha < 0.55, f"Expected alpha ~0.50, got {alpha:.4f}"
 
             # Verify alpha_pct field
             assert "alpha_pct" in portfolio_summary
@@ -425,7 +423,7 @@ class TestRateTickerParity:
             print("\n[OK] Risk-free rate ticker parity test passed:")
             print(f"  Risk-free ticker: {portfolio_summary.get('risk_free_rate_ticker')}")
             print(f"  Portfolio interest (BIL ticker): ${portfolio_interest:.2f}")
-            print(f"  (Note: $0 interest is expected with 100% allocation - no cash balance)")
+            print("  (Note: $0 interest is expected with 100% allocation - no cash balance)")
 
         finally:
             fetcher_module.HistoryFetcher = original_fetcher
@@ -489,9 +487,9 @@ class TestRateTickerParity:
             cumulative_inflation = portfolio_summary["cumulative_inflation"]
 
             # Should be approximately 3%
-            assert 2.5 < cumulative_inflation < 3.5, (
-                f"Expected cumulative inflation ~3%, got {cumulative_inflation:.2f}%"
-            )
+            assert (
+                2.5 < cumulative_inflation < 3.5
+            ), f"Expected cumulative inflation ~3%, got {cumulative_inflation:.2f}%"
 
             # Verify real return calculation
             assert "real_final_value" in portfolio_summary

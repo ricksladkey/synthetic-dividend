@@ -64,7 +64,8 @@ def run_portfolio_simulation(
         withdrawal_rate_pct: Annual withdrawal rate (0-100)
         withdrawal_frequency_days: Days between withdrawals (default 30)
         cash_interest_rate_pct: Annual interest rate on cash reserves (default 0.0)
-        dividend_data: Optional dict mapping ticker → pandas Series of dividend payments
+        dividend_data: Optional dict mapping ticker → pandas Series of dividend payments.
+                      If None (default), dividends will be auto-fetched for each ticker.
         reference_rate_ticker: Optional ticker for reference benchmark
         risk_free_rate_ticker: Optional ticker for risk-free asset
         inflation_rate_ticker: Optional ticker for inflation data
@@ -100,6 +101,7 @@ def run_portfolio_simulation(
     # Handle string interface for portfolio_algo
     if isinstance(portfolio_algo, str):
         from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
+
         portfolio_algo = build_portfolio_algo_from_name(portfolio_algo, allocations)
 
     # Validate portfolio_algo type
@@ -110,6 +112,7 @@ def run_portfolio_simulation(
 
     # Fetch price data (same as backtest.py)
     from src.data.fetcher import HistoryFetcher
+
     fetcher = HistoryFetcher()
     price_data: Dict[str, pd.DataFrame] = {}
 
@@ -121,6 +124,30 @@ def run_portfolio_simulation(
             raise ValueError(f"No data available for {ticker}")
         price_data[ticker] = df
         print(f"OK ({len(df)} days)")
+
+    # Auto-fetch dividend data if not provided
+    if dividend_data is None:
+        print(f"Auto-fetching dividend data for {len(allocations)} assets...")
+        from src.data.asset import Asset
+
+        dividend_data_auto: Dict[str, pd.Series] = {}
+        for ticker in allocations.keys():
+            print(f"  - {ticker} dividends...", end=" ")
+            try:
+                asset = Asset(ticker)
+                div_series = asset.get_dividends(start_date, end_date)
+                if div_series is not None and not div_series.empty:
+                    # Normalize timezone-aware timestamps to naive dates
+                    div_series_copy = div_series.copy()
+                    div_series_copy.index = pd.to_datetime(div_series_copy.index).tz_localize(None)
+                    dividend_data_auto[ticker] = div_series_copy
+                    print(f"OK ({len(div_series_copy)} dividends)")
+                else:
+                    print("None")
+            except Exception as e:
+                print(f"ERROR: {e}")
+
+        dividend_data = dividend_data_auto if dividend_data_auto else None
 
     # Find common trading dates
     all_dates: set[date] = set()
@@ -252,24 +279,24 @@ class SimulationState:
 
     def __init__(self, env: simpy.Environment, **kwargs):
         self.env = env
-        self.allocations = kwargs['allocations']
-        self.price_data = kwargs['price_data']
-        self.common_dates = kwargs['common_dates']
-        self.initial_investment = kwargs['initial_investment']
-        self.allow_margin = kwargs['allow_margin']
-        self.withdrawal_rate_pct = kwargs['withdrawal_rate_pct']
-        self.withdrawal_frequency_days = kwargs['withdrawal_frequency_days']
-        self.cash_interest_rate_pct = kwargs['cash_interest_rate_pct']
-        self.dividend_data = kwargs['dividend_data']
-        self.reference_returns = kwargs['reference_returns']
-        self.risk_free_returns = kwargs['risk_free_returns']
-        self.reference_rate_ticker = kwargs['reference_rate_ticker']
-        self.risk_free_rate_ticker = kwargs['risk_free_rate_ticker']
-        self.simple_mode = kwargs['simple_mode']
-        self.portfolio_algo = kwargs.get('portfolio_algo', None)
-        self.reference_data = kwargs.get('reference_data', None)
-        self.cumulative_inflation = kwargs.get('cumulative_inflation', {})
-        self.inflation_rate_ticker = kwargs.get('inflation_rate_ticker', None)
+        self.allocations = kwargs["allocations"]
+        self.price_data = kwargs["price_data"]
+        self.common_dates = kwargs["common_dates"]
+        self.initial_investment = kwargs["initial_investment"]
+        self.allow_margin = kwargs["allow_margin"]
+        self.withdrawal_rate_pct = kwargs["withdrawal_rate_pct"]
+        self.withdrawal_frequency_days = kwargs["withdrawal_frequency_days"]
+        self.cash_interest_rate_pct = kwargs["cash_interest_rate_pct"]
+        self.dividend_data = kwargs["dividend_data"]
+        self.reference_returns = kwargs["reference_returns"]
+        self.risk_free_returns = kwargs["risk_free_returns"]
+        self.reference_rate_ticker = kwargs["reference_rate_ticker"]
+        self.risk_free_rate_ticker = kwargs["risk_free_rate_ticker"]
+        self.simple_mode = kwargs["simple_mode"]
+        self.portfolio_algo = kwargs.get("portfolio_algo", None)
+        self.reference_data = kwargs.get("reference_data", None)
+        self.cumulative_inflation = kwargs.get("cumulative_inflation", {})
+        self.inflation_rate_ticker = kwargs.get("inflation_rate_ticker", None)
 
         # Initialize portfolio state
         self.shared_bank = self.initial_investment
@@ -279,7 +306,9 @@ class SimulationState:
         # Track daily values
         self.daily_portfolio_values: Dict[date, float] = {}
         self.daily_bank_values: Dict[date, float] = {}
-        self.daily_asset_values: Dict[str, Dict[date, float]] = {ticker: {} for ticker in self.allocations.keys()}
+        self.daily_asset_values: Dict[str, Dict[date, float]] = {
+            ticker: {} for ticker in self.allocations.keys()
+        }
         self.daily_withdrawals: Dict[date, float] = {}
 
         # Withdrawal tracking
@@ -287,17 +316,21 @@ class SimulationState:
         self.withdrawal_count = 0
         self.last_withdrawal_date = None
         self.base_withdrawal_amount = 0.0
-        
+
         # Calculate withdrawal amounts if enabled
         if self.withdrawal_rate_pct > 0:
             annual_withdrawal = self.initial_investment * (self.withdrawal_rate_pct / 100.0)
-            self.base_withdrawal_amount = annual_withdrawal * (self.withdrawal_frequency_days / 365.25)
+            self.base_withdrawal_amount = annual_withdrawal * (
+                self.withdrawal_frequency_days / 365.25
+            )
 
         # Interest tracking
         self.total_interest_earned = 0.0
         self.opportunity_cost_total = 0.0
         self.daily_interest_rate = (
-            (self.cash_interest_rate_pct / 100.0) / 365.25 if self.cash_interest_rate_pct > 0 else 0.0
+            (self.cash_interest_rate_pct / 100.0) / 365.25
+            if self.cash_interest_rate_pct > 0
+            else 0.0
         )
         self.daily_reference_rate_fallback = 0.00027 if self.reference_rate_ticker else 0.0
 
@@ -396,7 +429,9 @@ class SimulationState:
 
         # Apply opportunity cost on negative balance
         if self.shared_bank < 0 and not self.simple_mode:
-            daily_return = self.reference_returns.get(current_date, self.daily_reference_rate_fallback)
+            daily_return = self.reference_returns.get(
+                current_date, self.daily_reference_rate_fallback
+            )
             opportunity_cost_today = abs(self.shared_bank) * daily_return
             self.shared_bank -= opportunity_cost_today
             self.opportunity_cost_total += opportunity_cost_today
@@ -441,11 +476,15 @@ class SimulationState:
         final_total_value = self.shared_bank + final_asset_value
 
         # Calculate returns
-        total_return_pct = ((final_total_value - self.initial_investment) / self.initial_investment) * 100
+        total_return_pct = (
+            (final_total_value - self.initial_investment) / self.initial_investment
+        ) * 100
         days = (final_date - self.common_dates[0]).days
         years = days / 365.25
         annualized_return_pct = (
-            (((final_total_value / self.initial_investment) ** (1 / years)) - 1) * 100 if years > 0 else 0
+            (((final_total_value / self.initial_investment) ** (1 / years)) - 1) * 100
+            if years > 0
+            else 0
         )
 
         # Build per-asset summaries
@@ -462,7 +501,9 @@ class SimulationState:
                 "final_price": final_price,
                 "final_value": final_value,
                 "total_return": (
-                    ((final_value - initial_value) / initial_value) * 100 if initial_value > 0 else 0
+                    ((final_value - initial_value) / initial_value) * 100
+                    if initial_value > 0
+                    else 0
                 ),
             }
 
@@ -484,7 +525,11 @@ class SimulationState:
             "daily_asset_values": self.daily_asset_values,
             "daily_withdrawals": self.daily_withdrawals,
             "transaction_count": len(
-                [tx for tx in self.all_transactions if "SKIP" not in tx.action and tx.action != "WITHDRAWAL"]
+                [
+                    tx
+                    for tx in self.all_transactions
+                    if "SKIP" not in tx.action and tx.action != "WITHDRAWAL"
+                ]
             ),
             "skipped_count": len([tx for tx in self.all_transactions if "SKIP" in tx.action]),
             "total_withdrawn": self.total_withdrawn,
@@ -529,7 +574,9 @@ class SimulationState:
             }
 
             # Alpha = portfolio return - benchmark return
-            volatility_alpha = (final_total_value - self.initial_investment) / self.initial_investment - ref_total_return
+            volatility_alpha = (
+                final_total_value - self.initial_investment
+            ) / self.initial_investment - ref_total_return
 
             portfolio_summary["baseline"] = baseline_summary
             portfolio_summary["volatility_alpha"] = volatility_alpha
@@ -542,10 +589,14 @@ class SimulationState:
         if self.cumulative_inflation and final_date in self.cumulative_inflation:
             inflation_multiplier = self.cumulative_inflation[final_date]
             real_final_value = final_total_value / inflation_multiplier
-            real_total_return_pct = (real_final_value - self.initial_investment) / self.initial_investment * 100.0
+            real_total_return_pct = (
+                (real_final_value - self.initial_investment) / self.initial_investment * 100.0
+            )
 
             if years > 0:
-                real_annualized_pct = (real_final_value / self.initial_investment) ** (1.0 / years) - 1.0
+                real_annualized_pct = (real_final_value / self.initial_investment) ** (
+                    1.0 / years
+                ) - 1.0
                 real_annualized_pct *= 100.0
             else:
                 real_annualized_pct = 0.0
@@ -588,17 +639,22 @@ class SimulationState:
         return self.all_transactions, portfolio_summary
 
 
-def market_process(env: simpy.Environment, state: SimulationState, portfolio_algo: PortfolioAlgorithmBase) -> simpy.events.Event:
+def market_process(
+    env: simpy.Environment, state: SimulationState, portfolio_algo: PortfolioAlgorithmBase
+) -> simpy.events.Event:
     """Main market process that advances through trading days."""
     # Initialize per-asset algorithms if needed
     from src.algorithms import PerAssetPortfolioAlgorithm
+
     if isinstance(portfolio_algo, PerAssetPortfolioAlgorithm):
         print("Initializing per-asset algorithms...")
         for ticker, algo in portfolio_algo.strategies.items():
             if hasattr(algo, "on_new_holdings"):
                 first_price = state.price_data[ticker].loc[state.common_dates[0], "Close"].item()
                 algo.on_new_holdings(state.holdings[ticker], first_price)
-                print(f"  {ticker}: initialized with {state.holdings[ticker]} shares @ ${first_price:.2f}")
+                print(
+                    f"  {ticker}: initialized with {state.holdings[ticker]} shares @ ${first_price:.2f}"
+                )
         print()
 
     # Process each trading day
@@ -653,9 +709,7 @@ def market_process(env: simpy.Environment, state: SimulationState, portfolio_alg
                     # Simple case: withdraw from cash
                     actual_withdrawal = withdrawal_amount
                     state.shared_bank -= actual_withdrawal
-                    withdrawal_notes = (
-                        f"${actual_withdrawal:.2f} withdrawn from cash, bank=${state.shared_bank:.2f}"
-                    )
+                    withdrawal_notes = f"${actual_withdrawal:.2f} withdrawn from cash, bank=${state.shared_bank:.2f}"
                 else:
                     # Need to sell assets to meet withdrawal
                     # First, withdraw all available cash
@@ -672,14 +726,23 @@ def market_process(env: simpy.Environment, state: SimulationState, portfolio_alg
                         # Sell proportionally from each asset
                         for ticker in state.allocations.keys():
                             if state.holdings[ticker] > 0:
-                                asset_value = state.holdings[ticker] * state.price_data[ticker].loc[current_date, "Close"].item()
+                                asset_value = (
+                                    state.holdings[ticker]
+                                    * state.price_data[ticker].loc[current_date, "Close"].item()
+                                )
                                 proportion = asset_value / total_asset_value
                                 amount_to_raise = shortfall * proportion
-                                shares_to_sell = math.ceil(amount_to_raise / state.price_data[ticker].loc[current_date, "Close"].item())
+                                shares_to_sell = math.ceil(
+                                    amount_to_raise
+                                    / state.price_data[ticker].loc[current_date, "Close"].item()
+                                )
 
                                 if shares_to_sell > 0:
                                     shares_to_sell = min(shares_to_sell, state.holdings[ticker])
-                                    proceeds = shares_to_sell * state.price_data[ticker].loc[current_date, "Close"].item()
+                                    proceeds = (
+                                        shares_to_sell
+                                        * state.price_data[ticker].loc[current_date, "Close"].item()
+                                    )
                                     state.holdings[ticker] -= shares_to_sell
                                     state.shared_bank += proceeds
 
@@ -689,7 +752,9 @@ def market_process(env: simpy.Environment, state: SimulationState, portfolio_alg
                                             transaction_date=current_date,
                                             action="SELL",
                                             qty=shares_to_sell,
-                                            price=state.price_data[ticker].loc[current_date, "Close"].item(),
+                                            price=state.price_data[ticker]
+                                            .loc[current_date, "Close"]
+                                            .item(),
                                             ticker=ticker,
                                             notes=f"Forced sale to fund withdrawal (raised ${proceeds:.2f})",
                                         )
@@ -730,21 +795,27 @@ def market_process(env: simpy.Environment, state: SimulationState, portfolio_alg
             yield env.timeout(1)
 
 
-def withdrawal_process(env: simpy.Environment, state: SimulationState, base_amount: float, frequency_days: int) -> simpy.events.Event:
+def withdrawal_process(
+    env: simpy.Environment, state: SimulationState, base_amount: float, frequency_days: int
+) -> simpy.events.Event:
     """Process that handles periodic withdrawals."""
     withdrawal_number = 1
     while True:
         # Find the next withdrawal day based on calendar days, not simulation time
         start_date = state.common_dates[0]
         current_day_index = int(env.now)
-        current_date = state.common_dates[current_day_index] if current_day_index < len(state.common_dates) else state.common_dates[-1]
-        
+        current_date = (
+            state.common_dates[current_day_index]
+            if current_day_index < len(state.common_dates)
+            else state.common_dates[-1]
+        )
+
         # Calculate days since start or last withdrawal
         if state.last_withdrawal_date is None:
             days_since_last = (current_date - start_date).days
         else:
             days_since_last = (current_date - state.last_withdrawal_date).days
-        
+
         # If withdrawal is due, do it now
         if days_since_last >= frequency_days:
             # Perform withdrawal
@@ -753,7 +824,9 @@ def withdrawal_process(env: simpy.Environment, state: SimulationState, base_amou
             if state.shared_bank >= withdrawal_amount:
                 actual_withdrawal = withdrawal_amount
                 state.shared_bank -= actual_withdrawal
-                notes = f"${actual_withdrawal:.2f} withdrawn from cash, bank=${state.shared_bank:.2f}"
+                notes = (
+                    f"${actual_withdrawal:.2f} withdrawn from cash, bank=${state.shared_bank:.2f}"
+                )
             else:
                 # Need to sell assets
                 cash_available = max(0, state.shared_bank)
@@ -767,14 +840,26 @@ def withdrawal_process(env: simpy.Environment, state: SimulationState, base_amou
                 if total_asset_value > 0:
                     for ticker in state.allocations.keys():
                         if state.holdings[ticker] > 0:
-                            asset_value = state.holdings[ticker] * state.price_data[ticker].loc[current_date, "Close"].item()
+                            asset_value = (
+                                state.holdings[ticker]
+                                * state.price_data[ticker].loc[current_date, "Close"].item()
+                            )
                             proportion = asset_value / total_asset_value
                             amount_to_raise = shortfall * proportion
-                            shares_to_sell = max(1, int(amount_to_raise / state.price_data[ticker].loc[current_date, "Close"].item()))
+                            shares_to_sell = max(
+                                1,
+                                int(
+                                    amount_to_raise
+                                    / state.price_data[ticker].loc[current_date, "Close"].item()
+                                ),
+                            )
 
                             if shares_to_sell > 0:
                                 shares_to_sell = min(shares_to_sell, state.holdings[ticker])
-                                proceeds = shares_to_sell * state.price_data[ticker].loc[current_date, "Close"].item()
+                                proceeds = (
+                                    shares_to_sell
+                                    * state.price_data[ticker].loc[current_date, "Close"].item()
+                                )
                                 state.holdings[ticker] -= shares_to_sell
                                 state.shared_bank += proceeds
 
@@ -783,7 +868,9 @@ def withdrawal_process(env: simpy.Environment, state: SimulationState, base_amou
                                         transaction_date=current_date,
                                         action="SELL",
                                         qty=shares_to_sell,
-                                        price=state.price_data[ticker].loc[current_date, "Close"].item(),
+                                        price=state.price_data[ticker]
+                                        .loc[current_date, "Close"]
+                                        .item(),
                                         ticker=ticker,
                                         notes=f"Forced sale to fund withdrawal (raised ${proceeds:.2f})",
                                     )
@@ -810,7 +897,7 @@ def withdrawal_process(env: simpy.Environment, state: SimulationState, base_amou
             )
 
             withdrawal_number += 1
-        
+
         # Wait for next day
         if current_day_index < len(state.common_dates) - 1:
             yield env.timeout(1)
