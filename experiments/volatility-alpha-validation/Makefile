@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-PYTHON = ../../.venv/Scripts/python.exe
+PYTHON = $(shell if [ -f ../../.venv/bin/python ]; then echo ../../.venv/bin/python; elif [ -f ../../.venv/Scripts/python.exe ]; then echo ../../.venv/Scripts/python.exe; else echo python; fi)
 OUTPUT_CSV = volatility_alpha_table.csv
 
 all: $(OUTPUT_CSV)
