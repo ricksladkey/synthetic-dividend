@@ -16,7 +16,7 @@ Key differences from loop-based approach:
 import math
 import warnings
 from datetime import date, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Generator, List, Optional, Tuple, Union, cast
 
 import pandas as pd
 import simpy
@@ -370,7 +370,7 @@ class SimulationState:
     def get_current_date(self) -> date:
         """Get current simulation date based on environment time."""
         day_index = int(self.env.now)
-        return self.common_dates[min(day_index, len(self.common_dates) - 1)]
+        return cast(date, self.common_dates[min(day_index, len(self.common_dates) - 1)])
 
     def execute_transaction(self, tx: Transaction, ticker: str) -> None:
         """Execute a transaction against the portfolio state."""
@@ -641,7 +641,7 @@ class SimulationState:
 
 def market_process(
     env: simpy.Environment, state: SimulationState, portfolio_algo: PortfolioAlgorithmBase
-) -> simpy.events.Event:
+) -> Generator[simpy.events.Event, Any, Any]:
     """Main market process that advances through trading days."""
     # Initialize per-asset algorithms if needed
     from src.algorithms import PerAssetPortfolioAlgorithm
@@ -797,7 +797,7 @@ def market_process(
 
 def withdrawal_process(
     env: simpy.Environment, state: SimulationState, base_amount: float, frequency_days: int
-) -> simpy.events.Event:
+) -> Generator[simpy.events.Event, Any, Any]:
     """Process that handles periodic withdrawals."""
     withdrawal_number = 1
     while True:
@@ -905,7 +905,7 @@ def withdrawal_process(
             break  # End of simulation
 
 
-def dividend_process(env: simpy.Environment, state: SimulationState) -> simpy.events.Event:
+def dividend_process(env: simpy.Environment, state: SimulationState) -> Generator[simpy.events.Event, Any, Any]:
     """Process that handles dividend payments."""
     # Collect all dividend events
     dividend_events = []
