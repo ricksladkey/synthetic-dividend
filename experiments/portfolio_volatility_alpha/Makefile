@@ -1,6 +1,18 @@
 .PHONY: all clean
 
-PYTHON = ../../.venv/Scripts/python.exe
+# PYTHON is exported from parent Makefile
+# Fallback for standalone execution
+ifndef PYTHON
+  PYTHON_CANDIDATES := \
+      ../../.venv/bin/python \
+      ../../.venv/Scripts/python \
+      ../../.venv/Scripts/python.exe
+  PYTHON := $(firstword $(wildcard $(PYTHON_CANDIDATES)))
+  ifeq ($(PYTHON),)
+    $(error Python not found. Run from root: make examples)
+  endif
+endif
+
 OUTPUT_CSV = results.csv
 OUTPUT_SUMMARY = SUMMARY.md
 

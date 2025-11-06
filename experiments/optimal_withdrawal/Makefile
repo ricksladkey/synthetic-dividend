@@ -1,6 +1,18 @@
 .PHONY: all clean
 
-PYTHON := $(shell if [ -x "../../.venv/bin/python" ]; then echo "../../.venv/bin/python"; elif [ -x "../../.venv/Scripts/python.exe" ]; then echo "../../.venv/Scripts/python.exe"; else echo "python"; fi)
+# PYTHON is exported from parent Makefile
+# Fallback for standalone execution
+ifndef PYTHON
+  PYTHON_CANDIDATES := \
+      ../../.venv/bin/python \
+      ../../.venv/Scripts/python \
+      ../../.venv/Scripts/python.exe
+  PYTHON := $(firstword $(wildcard $(PYTHON_CANDIDATES)))
+  ifeq ($(PYTHON),)
+    $(error Python not found. Run from root: make examples)
+  endif
+endif
+
 OUTPUTS = NVDA_2023_optimal_withdrawal.csv SPY_2022_optimal_withdrawal.csv VOO_2019_optimal_withdrawal.csv
 
 all: $(OUTPUTS)

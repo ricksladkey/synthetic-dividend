@@ -1,7 +1,20 @@
 .PHONY: help install install-dev test test-all lint check format clean build publish examples
 
-# Detect platform and set Python executable path accordingly
-PYTHON = $(shell if [ -x ".venv/bin/python" ]; then echo ".venv/bin/python"; elif [ -x ".venv/Scripts/python" ]; then echo ".venv/Scripts/python"; else echo "python"; fi)
+# Platform-independent Python executable detection
+ROOT_DIR := $(CURDIR)
+PYTHON_CANDIDATES := \
+    $(ROOT_DIR)/.venv/bin/python \
+    $(ROOT_DIR)/.venv/Scripts/python \
+    $(ROOT_DIR)/.venv/Scripts/python.exe
+
+PYTHON := $(firstword $(wildcard $(PYTHON_CANDIDATES)))
+
+ifeq ($(PYTHON),)
+  $(error Python executable not found in .venv. Please create virtual environment: python -m venv .venv)
+endif
+
+# Export for sub-Makefiles
+export PYTHON
 
 help:
 	@echo "Synthetic Dividend - Development Commands"

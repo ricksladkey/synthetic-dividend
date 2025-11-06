@@ -1,6 +1,18 @@
 .PHONY: all clean
 
-PYTHON = $(shell if [ -f ../../.venv/bin/python ]; then echo ../../.venv/bin/python; elif [ -f ../../.venv/Scripts/python.exe ]; then echo ../../.venv/Scripts/python.exe; else echo python; fi)
+# PYTHON is exported from parent Makefile
+# Fallback for standalone execution
+ifndef PYTHON
+  PYTHON_CANDIDATES := \
+      ../../.venv/bin/python \
+      ../../.venv/Scripts/python \
+      ../../.venv/Scripts/python.exe
+  PYTHON := $(firstword $(wildcard $(PYTHON_CANDIDATES)))
+  ifeq ($(PYTHON),)
+    $(error Python not found. Run from root: make examples)
+  endif
+endif
+
 OUTPUT_CSV = volatility_alpha_table.csv
 
 all: $(OUTPUT_CSV)
