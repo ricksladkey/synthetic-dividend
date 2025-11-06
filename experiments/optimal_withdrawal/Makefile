@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-PYTHON = ../../.venv/Scripts/python.exe
+PYTHON := $(shell if [ -x "../../.venv/bin/python" ]; then echo "../../.venv/bin/python"; elif [ -x "../../.venv/Scripts/python.exe" ]; then echo "../../.venv/Scripts/python.exe"; else echo "python"; fi)
 OUTPUTS = NVDA_2023_optimal_withdrawal.csv SPY_2022_optimal_withdrawal.csv VOO_2019_optimal_withdrawal.csv
 
 all: $(OUTPUTS)
