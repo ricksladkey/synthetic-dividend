@@ -67,24 +67,30 @@ def test_per_asset_portfolio_hybrid():
     assert summary["initial_investment"] == 100_000
     assert summary["total_final_value"] > 0
 
-    # VOO should have rebalancing transactions, BIL should not
+    # VOO should have rebalancing transactions (BUY/SELL), BIL should not
     voo_txns = [tx for tx in transactions if tx.ticker == "VOO" and "SKIP" not in tx.action]
-    bil_txns = [
+    bil_trade_txns = [
         tx
         for tx in transactions
-        if tx.ticker == "BIL" and "SKIP" not in tx.action and "Initial" not in tx.notes
+        if tx.ticker == "BIL" and tx.action in ["BUY", "SELL"] and "Initial" not in tx.notes
+    ]
+    bil_dividend_txns = [
+        tx for tx in transactions if tx.ticker == "BIL" and tx.action == "DIVIDEND"
     ]
 
     # VOO should have activity beyond initial purchase
     assert len(voo_txns) >= 1  # At least initial purchase
-    # BIL should only have initial purchase
-    assert len(bil_txns) == 0  # Buy-and-hold after initial
+    # BIL should have no trading activity after initial (buy-and-hold)
+    assert len(bil_trade_txns) == 0  # Buy-and-hold: no trades after initial
+    # BIL should have dividend transactions (BIL pays dividends)
+    assert len(bil_dividend_txns) > 0  # BIL pays monthly dividends
 
     print("\nHybrid Strategy Results:")
     print(f"  Final Value: ${summary['total_final_value']:,.2f}")
     print(f"  Total Return: {summary['total_return']:.2f}%")
     print(f"  VOO Transactions: {len(voo_txns)}")
-    print(f"  BIL Transactions: {len(bil_txns)}")
+    print(f"  BIL Trade Transactions: {len(bil_trade_txns)}")
+    print(f"  BIL Dividend Transactions: {len(bil_dividend_txns)}")
     print(f"  Final Bank: ${summary['final_bank']:,.2f}")
 
 

@@ -1,9 +1,67 @@
 """Utility functions for backtesting algorithms."""
 
 import math
-from typing import Any, Dict, Optional, Union
+from datetime import date
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
+
+
+def calculate_time_weighted_average_holdings(
+    holdings_history: List[Tuple[date, int]], period_start: date, period_end: date
+) -> float:
+    """Calculate time-weighted average holdings over a period.
+
+    This computes the IRS-approved average holdings by integrating daily holdings
+    over the time period, weighted by the number of days at each holding level.
+
+    Formula: ∑(holdings_i × days_i) / total_days
+
+    Args:
+        holdings_history: List of (date, holdings) tuples sorted by date
+        period_start: Start of accrual period (inclusive)
+        period_end: End of accrual period (inclusive, typically ex-dividend date)
+
+    Returns:
+        Time-weighted average holdings as float (can be fractional)
+
+    Example:
+        Holdings: 100 shares for 60 days, then 150 shares for 30 days
+        Average: (100×60 + 150×30) / 90 = 116.67 shares
+    """
+    if not holdings_history:
+        return 0.0
+
+    # Filter to holdings changes within or before the period
+    relevant_history = [(d, h) for d, h in holdings_history if d <= period_end]
+    if not relevant_history:
+        return 0.0
+
+    total_share_days = 0.0
+    total_days = (period_end - period_start).days + 1  # Inclusive
+
+    # Process each holdings level
+    for i, (change_date, holdings) in enumerate(relevant_history):
+        # Determine when this holdings level starts
+        level_start = max(change_date, period_start)
+
+        # Determine when this holdings level ends
+        if i + 1 < len(relevant_history):
+            next_change_date = relevant_history[i + 1][0]
+            level_end = min(next_change_date - pd.Timedelta(days=1).to_pytimedelta(), period_end)
+        else:
+            level_end = period_end
+
+        # Skip if this level doesn't overlap with our period
+        if level_start > period_end or level_end < period_start:
+            continue
+
+        # Calculate days at this level
+        days_at_level = (level_end - level_start).days + 1
+        if days_at_level > 0:
+            total_share_days += holdings * days_at_level
+
+    return total_share_days / total_days if total_days > 0 else 0.0
 
 
 def calculate_synthetic_dividend_orders(
