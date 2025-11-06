@@ -1,6 +1,7 @@
 .PHONY: help install install-dev test test-all lint check format clean build publish examples
 
-PYTHON = .venv/Scripts/python
+# Detect platform and set Python executable path accordingly
+PYTHON = $(shell if [ -x ".venv/bin/python" ]; then echo ".venv/bin/python"; elif [ -x ".venv/Scripts/python" ]; then echo ".venv/Scripts/python"; else echo "python"; fi)
 
 help:
 	@echo "Synthetic Dividend - Development Commands"
