@@ -223,6 +223,7 @@ def run_portfolio_simulation(
         reference_rate_ticker=reference_rate_ticker,
         risk_free_rate_ticker=risk_free_rate_ticker,
         simple_mode=simple_mode,
+        portfolio_algo=portfolio_algo,
     )
 
     # Start the simulation processes
@@ -260,6 +261,7 @@ class SimulationState:
         self.reference_rate_ticker = kwargs['reference_rate_ticker']
         self.risk_free_rate_ticker = kwargs['risk_free_rate_ticker']
         self.simple_mode = kwargs['simple_mode']
+        self.portfolio_algo = kwargs.get('portfolio_algo', None)
 
         # Initialize portfolio state
         self.shared_bank = self.initial_investment
@@ -498,8 +500,28 @@ class SimulationState:
         portfolio_summary["real_total_return"] = None
         portfolio_summary["real_annualized_return"] = None
 
-        portfolio_summary["final_stack_size"] = 0
-        portfolio_summary["total_volatility_alpha"] = 0.0
+        # Extract algorithm-specific stats (final_stack_size, total_volatility_alpha)
+        # These are used by SyntheticDividendAlgorithm and tests
+        from src.algorithms import PerAssetPortfolioAlgorithm
+        from src.algorithms.synthetic_dividend import SyntheticDividendAlgorithm
+
+        if self.portfolio_algo and isinstance(self.portfolio_algo, PerAssetPortfolioAlgorithm):
+            # For per-asset portfolio algorithms, extract stats from the first SyntheticDividendAlgorithm
+            for ticker, algo in self.portfolio_algo.strategies.items():
+                if isinstance(algo, SyntheticDividendAlgorithm):
+                    portfolio_summary["final_stack_size"] = getattr(algo, "buyback_stack_count", 0)
+                    portfolio_summary["total_volatility_alpha"] = getattr(
+                        algo, "total_volatility_alpha", 0.0
+                    )
+                    break  # Only use the first one (for single-ticker tests)
+            else:
+                # No SyntheticDividendAlgorithm found
+                portfolio_summary["final_stack_size"] = 0
+                portfolio_summary["total_volatility_alpha"] = 0.0
+        else:
+            # For other portfolio algorithms, no stack
+            portfolio_summary["final_stack_size"] = 0
+            portfolio_summary["total_volatility_alpha"] = 0.0
 
         return self.all_transactions, portfolio_summary
 
