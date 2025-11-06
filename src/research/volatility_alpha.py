@@ -73,7 +73,9 @@ def load_best_sdn_db() -> Dict[str, int]:
         return {}
 
 
-def save_best_sdn_entry(ticker: str, sd_n: int, volatility_pct: float, source: str = "auto-detected") -> None:
+def save_best_sdn_entry(
+    ticker: str, sd_n: int, volatility_pct: float, source: str = "auto-detected"
+) -> None:
     """Save or update a ticker's optimal SD parameter in the database.
 
     Args:
@@ -91,9 +93,9 @@ def save_best_sdn_entry(ticker: str, sd_n: int, volatility_pct: float, source: s
             "metadata": {
                 "description": "Optimal SD parameters for tickers based on volatility analysis",
                 "last_updated": datetime.now().strftime("%Y-%m-%d"),
-                "format_version": "1.0"
+                "format_version": "1.0",
             },
-            "tickers": {}
+            "tickers": {},
         }
 
     # Update or add ticker entry
@@ -101,7 +103,7 @@ def save_best_sdn_entry(ticker: str, sd_n: int, volatility_pct: float, source: s
         "sd_n": sd_n,
         "volatility_pct": round(volatility_pct, 2),
         "last_analyzed": datetime.now().strftime("%Y-%m-%d"),
-        "source": source
+        "source": source,
     }
     data["metadata"]["last_updated"] = datetime.now().strftime("%Y-%m-%d")
 
@@ -163,6 +165,7 @@ def run_single_comparison(
 
     # Calculate volatility (needed for both loading and auto-detection)
     import math
+
     returns = df["Close"].pct_change().dropna()
     if len(returns) < 2:
         print(f"ERROR: Insufficient data to calculate volatility for {ticker}")
