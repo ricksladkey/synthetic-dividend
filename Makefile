@@ -1,6 +1,7 @@
-.PHONY: help install install-dev test test-all lint check format clean build publish
+.PHONY: help install install-dev test test-all lint check format clean build publish examples
 
-PYTHON = .venv/Scripts/python
+# Detect platform and set Python executable path accordingly
+PYTHON = $(shell if [ -x ".venv/bin/python" ]; then echo ".venv/bin/python"; elif [ -x ".venv/Scripts/python" ]; then echo ".venv/Scripts/python"; else echo "python"; fi)
 
 help:
 	@echo "Synthetic Dividend - Development Commands"
@@ -16,6 +17,7 @@ help:
 	@echo "  make clean         Remove build artifacts and cache"
 	@echo "  make build         Build distribution packages"
 	@echo "  make publish       Publish to PyPI (requires credentials)"
+	@echo "  make examples      Re-generate all experiment data (volatility alpha, etc.)"
 
 install:
 	pip install -e .
@@ -60,3 +62,28 @@ build: clean
 
 publish: build
 	$(PYTHON) -m twine upload dist/*
+
+examples:
+	@echo "================================================================================"
+	@echo "Re-generating all experiment data"
+	@echo "================================================================================"
+	@echo ""
+	@echo "[1/3] Volatility Alpha Validation..."
+	@$(MAKE) -C experiments/volatility-alpha-validation
+	@echo ""
+	@echo "[2/3] Portfolio Volatility Alpha..."
+	@$(MAKE) -C experiments/portfolio_volatility_alpha
+	@echo ""
+	@echo "[3/3] Optimal Withdrawal Rate..."
+	@$(MAKE) -C experiments/optimal_withdrawal
+	@echo ""
+	@echo "================================================================================"
+	@echo "✅ All experiments complete!"
+	@echo "================================================================================"
+	@echo ""
+	@echo "Generated data:"
+	@echo "  - experiments/volatility-alpha-validation/volatility_alpha_table.csv"
+	@echo "  - experiments/portfolio_volatility_alpha/results.csv"
+	@echo "  - experiments/optimal_withdrawal/*.csv"
+	@echo ""
+	@echo "Review README.md to ensure documented numbers match generated results."
