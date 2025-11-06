@@ -905,7 +905,9 @@ def withdrawal_process(
             break  # End of simulation
 
 
-def dividend_process(env: simpy.Environment, state: SimulationState) -> Generator[simpy.events.Event, Any, Any]:
+def dividend_process(
+    env: simpy.Environment, state: SimulationState
+) -> Generator[simpy.events.Event, Any, Any]:
     """Process that handles dividend payments."""
     # Collect all dividend events
     dividend_events = []

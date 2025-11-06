@@ -125,7 +125,15 @@ class Asset:
                 except Exception:
                     pass
 
-            # Return empty result if no provider worked
+            # If all providers failed, try to load from cache as last resort (only for Yahoo provider)
+            from src.data.yahoo_provider import YahooAssetProvider
+
+            if isinstance(self._provider, YahooAssetProvider):
+                cached = self._load_price_cache()
+                if self._cache_covers_range(cached, start_date, end_date):
+                    return self._filter_range(cached, start_date, end_date)
+
+            # Return empty result if no provider or cache worked
             return result
 
         cached = self._load_price_cache()
@@ -178,7 +186,15 @@ class Asset:
                 except Exception:
                     pass
 
-            # Return empty result if no provider worked
+            # If all providers failed, try to load from cache as last resort (only for Yahoo provider)
+            from src.data.yahoo_provider import YahooAssetProvider
+
+            if isinstance(self._provider, YahooAssetProvider):
+                cached = self._load_dividend_cache()
+                if cached is not None and not cached.empty:
+                    return self._filter_dividends(cached, start_date, end_date)
+
+            # Return empty result if no provider or cache worked
             return result
 
         cached = self._load_dividend_cache()

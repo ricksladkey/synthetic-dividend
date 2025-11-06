@@ -29,9 +29,11 @@ Usage:
 
 import argparse
 import csv
+import json
 import sys
+from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -49,21 +51,70 @@ ASSET_CLASSES = {
     "indices": ["SPY", "QQQ", "DIA"],
 }
 
-# Best sdN values from Phase 1 research (research_phase1_1year_core.csv)
-BEST_SDN = {
-    "MSTR": 6,
-    "BTC-USD": 4,
-    "NVDA": 8,
-    "PLTR": 8,
-    "ETH-USD": 8,
-    "SHOP": 12,
-    "GOOG": 6,
-    "SLV": 16,
-    "GLD": 8,
-    "SPY": 10,
-    "QQQ": 10,
-    "DIA": 10,
-}
+# Path to persistent SD parameter database
+BEST_SDN_DB_PATH = Path(__file__).parent.parent.parent / "data" / "best_sdn.json"
+
+
+def load_best_sdn_db() -> Dict[str, int]:
+    """Load the best SD parameters from persistent JSON database.
+
+    Returns:
+        Dictionary mapping ticker -> sd_n value
+    """
+    if not BEST_SDN_DB_PATH.exists():
+        return {}
+
+    try:
+        with open(BEST_SDN_DB_PATH, "r") as f:
+            data = json.load(f)
+            return {ticker: info["sd_n"] for ticker, info in data.get("tickers", {}).items()}
+    except Exception as e:
+        print(f"Warning: Failed to load best_sdn.json: {e}")
+        return {}
+
+
+def save_best_sdn_entry(
+    ticker: str, sd_n: int, volatility_pct: float, source: str = "auto-detected"
+) -> None:
+    """Save or update a ticker's optimal SD parameter in the database.
+
+    Args:
+        ticker: Ticker symbol
+        sd_n: Optimal SD parameter
+        volatility_pct: Annualized volatility percentage
+        source: Source of the data (e.g., "auto-detected", "Phase 1 research")
+    """
+    # Load existing database
+    if BEST_SDN_DB_PATH.exists():
+        with open(BEST_SDN_DB_PATH, "r") as f:
+            data = json.load(f)
+    else:
+        data = {
+            "metadata": {
+                "description": "Optimal SD parameters for tickers based on volatility analysis",
+                "last_updated": datetime.now().strftime("%Y-%m-%d"),
+                "format_version": "1.0",
+            },
+            "tickers": {},
+        }
+
+    # Update or add ticker entry
+    data["tickers"][ticker] = {
+        "sd_n": sd_n,
+        "volatility_pct": round(volatility_pct, 2),
+        "last_analyzed": datetime.now().strftime("%Y-%m-%d"),
+        "source": source,
+    }
+    data["metadata"]["last_updated"] = datetime.now().strftime("%Y-%m-%d")
+
+    # Ensure directory exists
+    BEST_SDN_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    # Save back to file
+    with open(BEST_SDN_DB_PATH, "w") as f:
+        json.dump(data, f, indent=2)
+
+    print(f"  [Saved to database: {ticker} -> SD{sd_n}, volatility={volatility_pct:.1f}%]")
 
 
 def run_single_comparison(
@@ -94,12 +145,6 @@ def run_single_comparison(
             asset_class = cls
             break
 
-    # Get best sdN from Phase 1 results
-    best_sdn = BEST_SDN.get(ticker)
-    if best_sdn is None:
-        print(f"ERROR: No best sdN found for {ticker}")
-        return None
-
     # Fetch data once
     print(f"\nFetching {ticker} data from {start_date} to {end_date}...")
     fetcher = HistoryFetcher()
@@ -117,6 +162,41 @@ def run_single_comparison(
 
     print(f"  Data points: {len(df)}")
     print(f"  Price range: ${float(df['Close'].min()):.2f} - ${float(df['Close'].max()):.2f}")
+
+    # Calculate volatility (needed for both loading and auto-detection)
+    import math
+
+    returns = df["Close"].pct_change().dropna()
+    if len(returns) < 2:
+        print(f"ERROR: Insufficient data to calculate volatility for {ticker}")
+        return None
+
+    daily_vol = float(returns.std())
+    annualized_vol = daily_vol * math.sqrt(252)
+    vol_pct = annualized_vol * 100
+
+    # Load SD parameter database
+    best_sdn_db = load_best_sdn_db()
+    best_sdn = best_sdn_db.get(ticker)
+
+    if best_sdn is None:
+        # Auto-suggest based on volatility
+        if vol_pct >= 50:
+            best_sdn = 6
+        elif vol_pct >= 30:
+            best_sdn = 8
+        elif vol_pct >= 20:
+            best_sdn = 10
+        elif vol_pct >= 10:
+            best_sdn = 16
+        else:
+            best_sdn = 20
+
+        print(f"\nAuto-suggestion: {vol_pct:.1f}% annualized volatility -> SD{best_sdn}")
+        # Save to database for future use
+        save_best_sdn_entry(ticker, best_sdn, vol_pct, source="auto-detected")
+    else:
+        print(f"\nUsing saved parameter: SD{best_sdn} (from database)")
 
     # Build enhanced algorithm (with buybacks)
     enhanced_name = f"sd{best_sdn}"
@@ -177,11 +257,11 @@ def run_single_comparison(
     print(f"    Alpha per Transaction: {alpha_per_txn:+.4f}%")
 
     if volatility_alpha > 0:
-        print(f"    ✓ Enhanced strategy OUTPERFORMS ATH-only by {volatility_alpha:.2f}%")
+        print(f"    [+] Enhanced strategy OUTPERFORMS ATH-only by {volatility_alpha:.2f}%")
     elif volatility_alpha < 0:
-        print(f"    ✗ Enhanced strategy UNDERPERFORMS ATH-only by {abs(volatility_alpha):.2f}%")
+        print(f"    [-] Enhanced strategy UNDERPERFORMS ATH-only by {abs(volatility_alpha):.2f}%")
     else:
-        print("    = No difference (unusual!)")
+        print("    [=] No difference (unusual!)")
 
     return {
         "ticker": ticker,

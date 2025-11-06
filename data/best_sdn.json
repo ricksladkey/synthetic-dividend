@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "description": "Optimal SD parameters for tickers based on volatility analysis",
+    "last_updated": "2025-11-06",
+    "format_version": "1.0"
+  },
+  "tickers": {
+    "MSTR": {
+      "sd_n": 6,
+      "volatility_pct": 88.54,
+      "last_analyzed": "2025-01-26",
+      "source": "Phase 1 research"
+    },
+    "BTC-USD": {
+      "sd_n": 4,
+      "volatility_pct": 37.09,
+      "last_analyzed": "2025-01-26",
+      "source": "Phase 1 research"
+    },
+    "NVDA": {
+      "sd_n": 8,
+      "volatility_pct": 49.38,
+      "last_analyzed": "2025-01-26",
+      "source": "Phase 1 research"
+    },
+    "PLTR": {
+      "sd_n": 8,
+      "volatility_pct": 71.85,
+      "last_analyzed": "2025-01-26",
+      "source": "Phase 1 research"
+    },
+    "ETH-USD": {
+      "sd_n": 8,
+      "volatility_pct": 63.63,
+      "last_analyzed": "2025-01-26",
+      "source": "Phase 1 research"
+    },
+    "SHOP": {
+      "sd_n": 12,
+      "volatility_pct": 35.0,
+      "last_analyzed": "2025-01-26",
+      "source": "Phase 1 research"
+    },
+    "GOOG": {
+      "sd_n": 6,
+      "volatility_pct": 55.0,
+      "last_analyzed": "2025-01-26",
+      "source": "Phase 1 research"
+    },
+    "SLV": {
+      "sd_n": 16,
+      "volatility_pct": 15.0,
+      "last_analyzed": "2025-01-26",
+      "source": "Phase 1 research"
+    },
+    "GLD": {
+      "sd_n": 8,
+      "volatility_pct": 19.67,
+      "last_analyzed": "2025-01-26",
+      "source": "Phase 1 research"
+    },
+    "SPY": {
+      "sd_n": 10,
+      "volatility_pct": 22.0,
+      "last_analyzed": "2025-01-26",
+      "source": "Phase 1 research"
+    },
+    "QQQ": {
+      "sd_n": 10,
+      "volatility_pct": 25.0,
+      "last_analyzed": "2025-01-26",
+      "source": "Phase 1 research"
+    },
+    "DIA": {
+      "sd_n": 10,
+      "volatility_pct": 20.0,
+      "last_analyzed": "2025-01-26",
+      "source": "Phase 1 research"
+    },
+    "SOUN": {
+      "sd_n": 6,
+      "volatility_pct": 140.1,
+      "last_analyzed": "2025-11-06",
+      "source": "auto-detected"
+    },
+    "APP": {
+      "sd_n": 6,
+      "volatility_pct": 78.5,
+      "last_analyzed": "2025-11-06",
+      "source": "auto-detected"
+    }
+  }
+}
