@@ -16,7 +16,7 @@ Key differences from loop-based approach:
 import math
 import warnings
 from datetime import date, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
 import pandas as pd
 import simpy
@@ -279,24 +279,24 @@ class SimulationState:
 
     def __init__(self, env: simpy.Environment, **kwargs):
         self.env = env
-        self.allocations = kwargs["allocations"]
-        self.price_data = kwargs["price_data"]
-        self.common_dates = kwargs["common_dates"]
-        self.initial_investment = kwargs["initial_investment"]
-        self.allow_margin = kwargs["allow_margin"]
-        self.withdrawal_rate_pct = kwargs["withdrawal_rate_pct"]
-        self.withdrawal_frequency_days = kwargs["withdrawal_frequency_days"]
-        self.cash_interest_rate_pct = kwargs["cash_interest_rate_pct"]
-        self.dividend_data = kwargs["dividend_data"]
-        self.reference_returns = kwargs["reference_returns"]
-        self.risk_free_returns = kwargs["risk_free_returns"]
-        self.reference_rate_ticker = kwargs["reference_rate_ticker"]
-        self.risk_free_rate_ticker = kwargs["risk_free_rate_ticker"]
-        self.simple_mode = kwargs["simple_mode"]
-        self.portfolio_algo = kwargs.get("portfolio_algo", None)
-        self.reference_data = kwargs.get("reference_data", None)
-        self.cumulative_inflation = kwargs.get("cumulative_inflation", {})
-        self.inflation_rate_ticker = kwargs.get("inflation_rate_ticker", None)
+        self.allocations: Dict[str, float] = kwargs["allocations"]
+        self.price_data: Dict[str, pd.DataFrame] = kwargs["price_data"]
+        self.common_dates: List[date] = kwargs["common_dates"]
+        self.initial_investment: float = kwargs["initial_investment"]
+        self.allow_margin: bool = kwargs["allow_margin"]
+        self.withdrawal_rate_pct: float = kwargs["withdrawal_rate_pct"]
+        self.withdrawal_frequency_days: int = kwargs["withdrawal_frequency_days"]
+        self.cash_interest_rate_pct: float = kwargs["cash_interest_rate_pct"]
+        self.dividend_data: Optional[Dict[str, pd.Series]] = kwargs["dividend_data"]
+        self.reference_returns: Dict[date, float] = kwargs["reference_returns"]
+        self.risk_free_returns: Dict[date, float] = kwargs["risk_free_returns"]
+        self.reference_rate_ticker: Optional[str] = kwargs["reference_rate_ticker"]
+        self.risk_free_rate_ticker: Optional[str] = kwargs["risk_free_rate_ticker"]
+        self.simple_mode: bool = kwargs["simple_mode"]
+        self.portfolio_algo: Optional[PortfolioAlgorithmBase] = kwargs.get("portfolio_algo", None)
+        self.reference_data: Optional[pd.DataFrame] = kwargs.get("reference_data", None)
+        self.cumulative_inflation: Dict[date, float] = kwargs.get("cumulative_inflation", {})
+        self.inflation_rate_ticker: Optional[str] = kwargs.get("inflation_rate_ticker", None)
 
         # Initialize portfolio state
         self.shared_bank = self.initial_investment
@@ -314,7 +314,7 @@ class SimulationState:
         # Withdrawal tracking
         self.total_withdrawn = 0.0
         self.withdrawal_count = 0
-        self.last_withdrawal_date = None
+        self.last_withdrawal_date: Optional[date] = None
         self.base_withdrawal_amount = 0.0
 
         # Calculate withdrawal amounts if enabled
@@ -370,7 +370,8 @@ class SimulationState:
     def get_current_date(self) -> date:
         """Get current simulation date based on environment time."""
         day_index = int(self.env.now)
-        return self.common_dates[min(day_index, len(self.common_dates) - 1)]
+        index = min(day_index, len(self.common_dates) - 1)
+        return self.common_dates[index]
 
     def execute_transaction(self, tx: Transaction, ticker: str) -> None:
         """Execute a transaction against the portfolio state."""
@@ -641,7 +642,7 @@ class SimulationState:
 
 def market_process(
     env: simpy.Environment, state: SimulationState, portfolio_algo: PortfolioAlgorithmBase
-) -> simpy.events.Event:
+) -> Generator[simpy.events.Event, None, None]:
     """Main market process that advances through trading days."""
     # Initialize per-asset algorithms if needed
     from src.algorithms import PerAssetPortfolioAlgorithm
@@ -797,7 +798,7 @@ def market_process(
 
 def withdrawal_process(
     env: simpy.Environment, state: SimulationState, base_amount: float, frequency_days: int
-) -> simpy.events.Event:
+) -> Generator[simpy.events.Event, None, None]:
     """Process that handles periodic withdrawals."""
     withdrawal_number = 1
     while True:
@@ -905,13 +906,19 @@ def withdrawal_process(
             break  # End of simulation
 
 
-def dividend_process(env: simpy.Environment, state: SimulationState) -> simpy.events.Event:
+def dividend_process(
+    env: simpy.Environment, state: SimulationState
+) -> Generator[simpy.events.Event, None, None]:
     """Process that handles dividend payments."""
     # Collect all dividend events
     dividend_events = []
 
     for ticker in state.allocations.keys():
-        if ticker in state.dividend_data and state.dividend_data[ticker] is not None:
+        if (
+            state.dividend_data is not None
+            and ticker in state.dividend_data
+            and state.dividend_data[ticker] is not None
+        ):
             div_series = state.dividend_data[ticker]
             if not div_series.empty:
                 div_dates = pd.to_datetime(div_series.index).date
