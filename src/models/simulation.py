@@ -145,6 +145,7 @@ def run_portfolio_simulation(
     reference_returns: Dict[date, float] = {}
     risk_free_returns: Dict[date, float] = {}
     cumulative_inflation: Dict[date, float] = {}
+    reference_data: Optional[pd.DataFrame] = None
 
     if reference_rate_ticker:
         print(f"Fetching reference benchmark ({reference_rate_ticker})...", end=" ")
@@ -153,6 +154,7 @@ def run_portfolio_simulation(
             print(f"OK ({len(ref_data)} days)")
             ref_indexed = ref_data.copy()
             ref_indexed.index = pd.to_datetime(ref_indexed.index).date
+            reference_data = ref_indexed  # Store for baseline calculation
             if "Close" in ref_indexed.columns:
                 close_prices = ref_indexed["Close"].values
                 ref_dates = list(ref_indexed.index)
@@ -224,6 +226,9 @@ def run_portfolio_simulation(
         risk_free_rate_ticker=risk_free_rate_ticker,
         simple_mode=simple_mode,
         portfolio_algo=portfolio_algo,
+        reference_data=reference_data,
+        cumulative_inflation=cumulative_inflation,
+        inflation_rate_ticker=inflation_rate_ticker,
     )
 
     # Start the simulation processes
@@ -262,6 +267,9 @@ class SimulationState:
         self.risk_free_rate_ticker = kwargs['risk_free_rate_ticker']
         self.simple_mode = kwargs['simple_mode']
         self.portfolio_algo = kwargs.get('portfolio_algo', None)
+        self.reference_data = kwargs.get('reference_data', None)
+        self.cumulative_inflation = kwargs.get('cumulative_inflation', {})
+        self.inflation_rate_ticker = kwargs.get('inflation_rate_ticker', None)
 
         # Initialize portfolio state
         self.shared_bank = self.initial_investment
@@ -491,14 +499,68 @@ class SimulationState:
             "dividend_payment_count_by_asset": self.dividend_payment_count_by_asset,
         }
 
-        # Add baseline and inflation calculations (simplified for now)
-        portfolio_summary["baseline"] = None
-        portfolio_summary["volatility_alpha"] = None
-        portfolio_summary["inflation_rate_ticker"] = None
-        portfolio_summary["cumulative_inflation"] = None
-        portfolio_summary["real_final_value"] = None
-        portfolio_summary["real_total_return"] = None
-        portfolio_summary["real_annualized_return"] = None
+        # Compute baseline (buy-and-hold reference benchmark) if reference data provided
+        if self.reference_data is not None and not self.reference_data.empty:
+            first_date = self.common_dates[0]
+            ref_start_price = float(self.reference_data.loc[first_date, "Close"])
+            ref_end_price = float(self.reference_data.loc[final_date, "Close"])
+
+            # Calculate baseline buy-and-hold return for reference benchmark
+            ref_shares = self.initial_investment / ref_start_price
+            ref_end_value = ref_shares * ref_end_price
+            ref_total_return = (ref_end_value - self.initial_investment) / self.initial_investment
+
+            if years > 0:
+                ref_annualized = (ref_end_value / self.initial_investment) ** (1.0 / years) - 1.0
+            else:
+                ref_annualized = 0.0
+
+            baseline_summary = {
+                "ticker": self.reference_rate_ticker,
+                "start_date": first_date,
+                "end_date": final_date,
+                "start_price": ref_start_price,
+                "end_price": ref_end_price,
+                "start_value": self.initial_investment,
+                "end_value": ref_end_value,
+                "total": ref_end_value,
+                "total_return": ref_total_return,
+                "annualized": ref_annualized,
+            }
+
+            # Alpha = portfolio return - benchmark return
+            volatility_alpha = (final_total_value - self.initial_investment) / self.initial_investment - ref_total_return
+
+            portfolio_summary["baseline"] = baseline_summary
+            portfolio_summary["volatility_alpha"] = volatility_alpha
+            portfolio_summary["alpha_pct"] = volatility_alpha * 100.0
+        else:
+            portfolio_summary["baseline"] = None
+            portfolio_summary["volatility_alpha"] = None
+
+        # Compute inflation-adjusted (real) returns if inflation data provided
+        if self.cumulative_inflation and final_date in self.cumulative_inflation:
+            inflation_multiplier = self.cumulative_inflation[final_date]
+            real_final_value = final_total_value / inflation_multiplier
+            real_total_return_pct = (real_final_value - self.initial_investment) / self.initial_investment * 100.0
+
+            if years > 0:
+                real_annualized_pct = (real_final_value / self.initial_investment) ** (1.0 / years) - 1.0
+                real_annualized_pct *= 100.0
+            else:
+                real_annualized_pct = 0.0
+
+            portfolio_summary["inflation_rate_ticker"] = self.inflation_rate_ticker
+            portfolio_summary["cumulative_inflation"] = (inflation_multiplier - 1.0) * 100.0
+            portfolio_summary["real_final_value"] = real_final_value
+            portfolio_summary["real_total_return"] = real_total_return_pct
+            portfolio_summary["real_annualized_return"] = real_annualized_pct
+        else:
+            portfolio_summary["inflation_rate_ticker"] = None
+            portfolio_summary["cumulative_inflation"] = None
+            portfolio_summary["real_final_value"] = None
+            portfolio_summary["real_total_return"] = None
+            portfolio_summary["real_annualized_return"] = None
 
         # Extract algorithm-specific stats (final_stack_size, total_volatility_alpha)
         # These are used by SyntheticDividendAlgorithm and tests
