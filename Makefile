@@ -39,7 +39,7 @@ install-dev:
 	pip install -e ".[dev]"
 
 test-checks:
-	env CI=true $(PYTHON) -m pytest -q
+	env CI=true $(PYTHON) -m pytest -q -m "not slow"
 
 test-all:
 	$(PYTHON) -m pytest -q

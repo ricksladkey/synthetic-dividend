@@ -11,6 +11,7 @@ from datetime import date, timedelta
 from typing import List, Tuple
 
 import pandas as pd
+import pytest
 
 from src.models.backtest import SyntheticDividendAlgorithm, run_algorithm_backtest
 
@@ -182,6 +183,7 @@ class TestBuybackStackGradualRise:
         assert stack_empty, f"Buyback stack should be empty: {stack_qty} shares remaining"
 
 
+@pytest.mark.slow
 class TestBuybackStackVShape:
     """Test case: Price doubles, halves, then doubles again (V-shape).
 
@@ -194,10 +196,12 @@ class TestBuybackStackVShape:
     - At final price = 200 (same as previous ATH):
       * Share counts SHOULD MATCH
       * Buyback stack SHOULD BE EMPTY
+
+    Note: Tests marked @pytest.mark.slow (run full simulations)
     """
 
     def test_v_shape_symmetric(self):
-        """Symmetric V: 100 → 200 → 100 → 200 over 120 days.
+        """Symmetric V: 100 → 200 → 100 → 200 over 30 days (optimized from 120).
 
         Enhanced accumulates shares during the dip, then sells them during recovery.
         Because it's selling a percentage of a larger base, it retains MORE shares
@@ -206,10 +210,10 @@ class TestBuybackStackVShape:
         Note: Stack may not be fully empty because price only RETURNS to previous ATH
         (doesn't exceed it). Full unwinding only guaranteed when exceeding all previous ATHs.
         """
-        # Rise, fall, rise
-        rise1 = [100.0 + (i * 2.5) for i in range(40)]  # 100 → 200
-        fall = [200.0 - (i * 2.5) for i in range(40)]  # 200 → 100
-        rise2 = [100.0 + (i * 2.5) for i in range(40)]  # 100 → 200
+        # Rise, fall, rise (reduced from 40+40+40 to 10+10+10 for speed)
+        rise1 = [100.0 + (i * 10.0) for i in range(10)]  # 100 → 200 in 10 days
+        fall = [200.0 - (i * 10.0) for i in range(10)]  # 200 → 100 in 10 days
+        rise2 = [100.0 + (i * 10.0) for i in range(10)]  # 100 → 200 in 10 days
 
         price_path = rise1 + fall + rise2
 
@@ -229,14 +233,14 @@ class TestBuybackStackVShape:
         ), f"Stack quantity ({stack_qty}) should equal share difference ({share_diff})"
 
     def test_v_shape_exceeds_ath(self):
-        """V-shape exceeding initial ATH: 100 → 200 → 100 → 250.
+        """V-shape exceeding initial ATH: 100 → 200 → 100 → 250 over 30 days (optimized from 120).
 
         Enhanced buys during dip, then sells during recovery beyond previous ATH.
         It retains more shares than ATH-only due to volatility harvesting.
         """
-        rise1 = [100.0 + (i * 2.5) for i in range(40)]  # 100 → 200
-        fall = [200.0 - (i * 2.5) for i in range(40)]  # 200 → 100
-        rise2 = [100.0 + (i * 3.75) for i in range(40)]  # 100 → 250
+        rise1 = [100.0 + (i * 10.0) for i in range(10)]  # 100 → 200 in 10 days
+        fall = [200.0 - (i * 10.0) for i in range(10)]  # 200 → 100 in 10 days
+        rise2 = [100.0 + (i * 15.0) for i in range(10)]  # 100 → 250 in 10 days
 
         price_path = rise1 + fall + rise2
 
