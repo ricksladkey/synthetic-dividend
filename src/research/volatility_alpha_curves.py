@@ -19,10 +19,9 @@ import argparse
 import sys
 from datetime import date
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import matplotlib.pyplot as plt
-import pandas as pd
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -30,7 +29,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.algorithms.factory import build_algo_from_name  # noqa: E402
 from src.data.fetcher import HistoryFetcher  # noqa: E402
 from src.models.backtest import run_algorithm_backtest  # noqa: E402
-
 
 # SDN parameters to test (covering the full spectrum)
 SDN_RANGE = [4, 6, 8, 10, 12, 16, 20, 24, 32]
