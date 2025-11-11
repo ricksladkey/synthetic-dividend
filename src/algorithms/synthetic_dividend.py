@@ -294,7 +294,9 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         self.sell_at_new_ath: bool = sell_at_new_ath
 
         # Performance tracking: cumulative alpha from volatility harvesting
-        self.total_volatility_alpha: float = 0.0
+        self.total_volatility_alpha: float = 0.0  # Estimated (realized + unrealized)
+        self.realized_volatility_alpha: float = 0.0  # Actually banked from unwound cycles
+        self.unrealized_stack_alpha: float = 0.0  # Paper gains in current stack
 
         # ATH tracking for sell conditions
         self.all_time_high: float = 0.0
@@ -520,18 +522,28 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                         # Add to buyback stack count for symmetry tracking
                         self.buyback_stack_count += txn.qty
 
-                        # Accumulate volatility alpha (profit from mean reversion)
+                        # Accumulate volatility alpha (estimated profit from mean reversion)
                         alpha = self._calculate_volatility_alpha(holdings, fill_price, txn.qty)
-                        self.total_volatility_alpha += alpha
+                        self.total_volatility_alpha += alpha  # Keep for backwards compatibility
+                        self.unrealized_stack_alpha += alpha  # Track as unrealized
 
                     # Update position
                     holdings += txn.qty
 
                 elif txn.action == "SELL":
                     if self.buyback_enabled:
-                        # Track buyback stack unwinding (diagnostic only)
+                        # Track buyback stack unwinding and realize alpha
                         # Can only unwind shares that are actually in the stack
                         shares_to_unwind = min(txn.qty, self.buyback_stack_count)
+
+                        if shares_to_unwind > 0 and self.buyback_stack_count > 0:
+                            # Realize proportional alpha from unwound shares
+                            # Assume uniform alpha distribution across stack
+                            alpha_fraction = shares_to_unwind / self.buyback_stack_count
+                            realized_alpha = self.unrealized_stack_alpha * alpha_fraction
+                            self.realized_volatility_alpha += realized_alpha
+                            self.unrealized_stack_alpha -= realized_alpha
+
                         self.buyback_stack_count -= shares_to_unwind
 
                     # Update position
@@ -560,6 +572,8 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                 print(
                     f"Synthetic Dividend Algorithm total volatility alpha: {self.total_volatility_alpha:.2f}%"
                 )
+                print(f"  Realized alpha (banked): {self.realized_volatility_alpha:.2f}%")
+                print(f"  Unrealized alpha (in stack): {self.unrealized_stack_alpha:.2f}%")
             # Report buyback stack status (unwound shares indicate complete cycles)
             if self.buyback_stack_count > 0:
                 print(f"  Buyback stack: {self.buyback_stack_count} shares not yet unwound")

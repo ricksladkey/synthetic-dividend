@@ -61,10 +61,17 @@ def run_backtest_with_test_data(ticker: str, sd_n: int) -> dict:
         total_return_pct = summary.get("total_return", 0) * 100
         transaction_count = len([t for t in transactions if t.action in ["BUY", "SELL"]])
 
-        # Get volatility alpha from algorithm
-        estimated_vol_alpha = 0.0
+        # Get volatility alpha from algorithm (prefer realized over estimated)
+        realized_vol_alpha = 0.0
+        unrealized_vol_alpha = 0.0
+        total_vol_alpha = 0.0
+
+        if hasattr(algo, "realized_volatility_alpha"):
+            realized_vol_alpha = algo.realized_volatility_alpha
+        if hasattr(algo, "unrealized_stack_alpha"):
+            unrealized_vol_alpha = algo.unrealized_stack_alpha
         if hasattr(algo, "total_volatility_alpha"):
-            estimated_vol_alpha = algo.total_volatility_alpha
+            total_vol_alpha = algo.total_volatility_alpha
 
         stack_size = 0
         if hasattr(algo, "buyback_stack_count"):
@@ -72,7 +79,8 @@ def run_backtest_with_test_data(ticker: str, sd_n: int) -> dict:
 
         print(
             f"  sd{sd_n:2d}: return={total_return_pct:7.2f}%, "
-            f"vol_alpha={estimated_vol_alpha:6.2f}%, "
+            f"realized_alpha={realized_vol_alpha:6.2f}%, "
+            f"unrealized={unrealized_vol_alpha:6.2f}%, "
             f"txns={transaction_count:3d}, stack={stack_size}"
         )
 
@@ -80,7 +88,9 @@ def run_backtest_with_test_data(ticker: str, sd_n: int) -> dict:
             "ticker": ticker,
             "sd_n": sd_n,
             "total_return_pct": total_return_pct,
-            "estimated_vol_alpha_pct": estimated_vol_alpha,
+            "realized_vol_alpha_pct": realized_vol_alpha,
+            "unrealized_vol_alpha_pct": unrealized_vol_alpha,
+            "total_vol_alpha_pct": total_vol_alpha,
             "transaction_count": transaction_count,
             "buyback_stack_size": stack_size,
         }
@@ -108,10 +118,10 @@ def main():
 
         # Print best
         if all_results[ticker]:
-            best = max(all_results[ticker], key=lambda r: r["estimated_vol_alpha_pct"])
+            best = max(all_results[ticker], key=lambda r: r["realized_vol_alpha_pct"])
             print(
                 f"  ➜ Best: sd{best['sd_n']} with "
-                f"{best['estimated_vol_alpha_pct']:.2f}% volatility alpha"
+                f"{best['realized_vol_alpha_pct']:.2f}% REALIZED volatility alpha"
             )
 
     # Create plot
@@ -122,13 +132,13 @@ def main():
     fig, ax = plt.subplots(figsize=(12, 7))
     fig.suptitle(
         "Volatility Alpha vs SDN Parameter (2023 Test Data)\n"
-        "Estimated: Realized + Unrealized from Buyback Stack",
+        "REALIZED Alpha Only (Banked Profits from Completed Cycles)",
         fontsize=14,
         fontweight="bold",
     )
 
     ax.set_xlabel("SDN Parameter", fontsize=12)
-    ax.set_ylabel("Estimated Volatility Alpha (%)", fontsize=12)
+    ax.set_ylabel("Realized Volatility Alpha (%)", fontsize=12)
     ax.grid(True, alpha=0.3)
 
     # Color map
@@ -141,7 +151,7 @@ def main():
 
         results = all_results[ticker]
         sdn_values = [r["sd_n"] for r in results]
-        vol_alpha_values = [r["estimated_vol_alpha_pct"] for r in results]
+        vol_alpha_values = [r["realized_vol_alpha_pct"] for r in results]
 
         # Sort by sdN
         sorted_pairs = sorted(zip(sdn_values, vol_alpha_values))
@@ -191,8 +201,9 @@ def main():
     ax.text(
         0.02,
         0.98,
-        "Hump-shaped curves show optimal sdN for each ticker\n"
-        "Peak = best volatility alpha for that asset's volatility profile",
+        "REALIZED alpha = actual cash profits from completed buy-sell cycles\n"
+        "Hump-shaped curves show practical optimal sdN for each ticker\n"
+        "Peak = maximum bankable profits (not paper gains in stack)",
         transform=ax.transAxes,
         fontsize=9,
         verticalalignment="top",
