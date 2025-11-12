@@ -8,22 +8,23 @@ Focus on theoretical understanding:
 """
 
 import sys
-from pathlib import Path
 from datetime import date
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import pandas as pd
+
 from src.algorithms.factory import build_algo_from_name
 from src.models.backtest import run_algorithm_backtest
-import pandas as pd
 
 # Load NVDA 2023 data from testdata (cached in repo)
 testdata_path = Path(__file__).parent.parent / "testdata" / "NVDA.csv"
 prices = pd.read_csv(testdata_path, index_col=0, parse_dates=True)
 
 initial_shares = 10000
-initial_price = prices['Close'].iloc[0]
+initial_price = prices["Close"].iloc[0]
 initial_value = initial_shares * initial_price
 
 print(f"NVDA 2023 Price Action:")
@@ -38,14 +39,14 @@ print()
 # Compare SDN parameters (linear in log space: 2^2, 2^3, 2^4, 2^5)
 results = []
 for sdn in [4, 8, 16, 32]:
-    algo = build_algo_from_name(f'sd{sdn}')
+    algo = build_algo_from_name(f"sd{sdn}")
 
     start_date = prices.index[0].date()
     end_date = prices.index[-1].date()
 
     transactions, summary = run_algorithm_backtest(
         df=prices,
-        ticker='NVDA',
+        ticker="NVDA",
         initial_qty=initial_shares,
         start_date=start_date,
         end_date=end_date,
@@ -53,40 +54,46 @@ for sdn in [4, 8, 16, 32]:
     )
 
     # Count transactions
-    buys = [t for t in transactions if t.action == 'BUY']
-    sells = [t for t in transactions if t.action == 'SELL']
+    buys = [t for t in transactions if t.action == "BUY"]
+    sells = [t for t in transactions if t.action == "SELL"]
     total_txns = len(buys) + len(sells)
 
     # Extract key metrics
     stack_size = algo.buyback_stack_count
-    bank = summary['bank']
-    holdings = summary['holdings']
+    bank = summary["bank"]
+    holdings = summary["holdings"]
     margin_pct = (bank / initial_value) * 100 if bank < 0 else 0
 
-    results.append({
-        'sdn': sdn,
-        'txns': total_txns,
-        'buys': len(buys),
-        'sells': len(sells),
-        'stack': stack_size,
-        'holdings': holdings,
-        'bank': bank,
-        'margin_pct': margin_pct,
-        'realized_alpha': algo.realized_volatility_alpha,
-        'unrealized_alpha': algo.unrealized_stack_alpha,
-    })
+    results.append(
+        {
+            "sdn": sdn,
+            "txns": total_txns,
+            "buys": len(buys),
+            "sells": len(sells),
+            "stack": stack_size,
+            "holdings": holdings,
+            "bank": bank,
+            "margin_pct": margin_pct,
+            "realized_alpha": algo.realized_volatility_alpha,
+            "unrealized_alpha": algo.unrealized_stack_alpha,
+        }
+    )
 
 # Display results table
 print(f"{'='*90}")
 print(f"SDN Parameter Analysis (Linear in Log Space: 2^2, 2^3, 2^4, 2^5)")
 print(f"{'='*90}")
-print(f"{'SDN':>4} {'Txns':>6} {'Buys':>6} {'Sells':>6} {'Stack':>8} {'Holdings':>9} {'Bank':>12} {'Margin%':>8} {'Real α':>7} {'Unreal α':>8}")
+print(
+    f"{'SDN':>4} {'Txns':>6} {'Buys':>6} {'Sells':>6} {'Stack':>8} {'Holdings':>9} {'Bank':>12} {'Margin%':>8} {'Real α':>7} {'Unreal α':>8}"
+)
 print(f"{'-'*90}")
 
 for r in results:
-    print(f"{r['sdn']:>4} {r['txns']:>6} {r['buys']:>6} {r['sells']:>6} "
-          f"{r['stack']:>8,} {r['holdings']:>9,} {r['bank']:>12,.0f} "
-          f"{r['margin_pct']:>7.1f}% {r['realized_alpha']:>6.2f}% {r['unrealized_alpha']:>7.2f}%")
+    print(
+        f"{r['sdn']:>4} {r['txns']:>6} {r['buys']:>6} {r['sells']:>6} "
+        f"{r['stack']:>8,} {r['holdings']:>9,} {r['bank']:>12,.0f} "
+        f"{r['margin_pct']:>7.1f}% {r['realized_alpha']:>6.2f}% {r['unrealized_alpha']:>7.2f}%"
+    )
 
 print()
 
@@ -98,7 +105,7 @@ print(f"{'='*90}")
 # Transaction count scaling
 print(f"\nTransaction Count vs SDN:")
 for r in results:
-    ratio = r['txns'] / (r['sdn'] ** 2) if r['sdn'] > 0 else 0
+    ratio = r["txns"] / (r["sdn"] ** 2) if r["sdn"] > 0 else 0
     print(f"  sd{r['sdn']:2d}: {r['txns']:4d} txns  →  txns/(SDN²) = {ratio:.2f}")
 
 # Stack size scaling
@@ -111,8 +118,8 @@ print(f"\nMargin Usage vs Initial Value:")
 print(f"  Initial value: ${initial_value:,.0f}")
 print(f"  Hypothesis: Margin never exceeds 50% of initial position")
 for r in results:
-    if r['bank'] < 0:
-        margin_pct = abs(r['bank']) / initial_value * 100
+    if r["bank"] < 0:
+        margin_pct = abs(r["bank"]) / initial_value * 100
         status = "✓ PASS" if margin_pct <= 50 else "✗ FAIL"
         print(f"  sd{r['sdn']:2d}: ${r['bank']:12,.0f}  ({margin_pct:5.1f}%)  {status}")
     else:

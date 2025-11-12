@@ -62,12 +62,15 @@ def create_synthetic_data(prices: list, days_per_level: int = 30) -> pd.DataFram
             closes.append(price)
             current_date += timedelta(days=1)
 
-    df = pd.DataFrame({
-        "Open": opens,
-        "High": highs,
-        "Low": lows,
-        "Close": closes,
-    }, index=pd.DatetimeIndex(dates))
+    df = pd.DataFrame(
+        {
+            "Open": opens,
+            "High": highs,
+            "Low": lows,
+            "Close": closes,
+        },
+        index=pd.DatetimeIndex(dates),
+    )
 
     return df
 
@@ -126,7 +129,7 @@ def test_pattern(name: str, prices: list, sdn_values: list = [4, 6, 8, 12, 16, 2
                 stack_size = algo.buyback_stack_count
 
             # Calculate trigger percentage
-            trigger_pct = (2 ** (1/sd_n) - 1) * 100
+            trigger_pct = (2 ** (1 / sd_n) - 1) * 100
 
             print(
                 f"  sd{sd_n:2d} (trigger={trigger_pct:5.2f}%): "
@@ -137,16 +140,18 @@ def test_pattern(name: str, prices: list, sdn_values: list = [4, 6, 8, 12, 16, 2
                 f"stack={stack_size:5d}"
             )
 
-            results.append({
-                "sd_n": sd_n,
-                "trigger_pct": trigger_pct,
-                "total_return_pct": total_return_pct,
-                "realized_alpha": realized_alpha,
-                "unrealized_alpha": unrealized_alpha,
-                "total_alpha": total_alpha,
-                "transaction_count": transaction_count,
-                "stack_size": stack_size,
-            })
+            results.append(
+                {
+                    "sd_n": sd_n,
+                    "trigger_pct": trigger_pct,
+                    "total_return_pct": total_return_pct,
+                    "realized_alpha": realized_alpha,
+                    "unrealized_alpha": unrealized_alpha,
+                    "total_alpha": total_alpha,
+                    "transaction_count": transaction_count,
+                    "stack_size": stack_size,
+                }
+            )
 
         except Exception as e:
             print(f"  sd{sd_n:2d}: ERROR - {e}")
@@ -155,15 +160,17 @@ def test_pattern(name: str, prices: list, sdn_values: list = [4, 6, 8, 12, 16, 2
     if results:
         best = max(results, key=lambda r: r["realized_alpha"])
         print(f"\n  ➜ Best REALIZED alpha: sd{best['sd_n']} with {best['realized_alpha']:.2f}%")
-        print(f"     Trigger: {best['trigger_pct']:.2f}%, Transactions: {best['transaction_count']}")
+        print(
+            f"     Trigger: {best['trigger_pct']:.2f}%, Transactions: {best['transaction_count']}"
+        )
 
     return results
 
 
 def main():
-    print("="*70)
+    print("=" * 70)
     print("FIRST PRINCIPLES TEST: Synthetic Price Patterns")
-    print("="*70)
+    print("=" * 70)
 
     # Test 1: Choppy uptrend
     choppy_up_results = test_pattern(
