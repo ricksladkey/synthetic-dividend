@@ -105,9 +105,7 @@ def run_backtest_with_test_data(ticker: str, sd_n: int) -> dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Generate volatility alpha curves from test data"
-    )
+    parser = argparse.ArgumentParser(description="Generate volatility alpha curves from test data")
     parser.add_argument(
         "--realized-only",
         action="store_true",

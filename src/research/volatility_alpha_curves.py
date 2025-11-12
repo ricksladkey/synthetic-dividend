@@ -219,8 +219,13 @@ def create_volatility_alpha_plot(
 
             # Extract data for plotting
             sdn_values = [r["sd_n"] for r in results]
-            realized_values = [r.get("realized_vol_alpha_pct", r.get("estimated_vol_alpha_pct", 0)) for r in results]
-            total_values = [r.get("total_vol_alpha_pct", r.get("estimated_vol_alpha_pct", 0)) for r in results]
+            realized_values = [
+                r.get("realized_vol_alpha_pct", r.get("estimated_vol_alpha_pct", 0))
+                for r in results
+            ]
+            total_values = [
+                r.get("total_vol_alpha_pct", r.get("estimated_vol_alpha_pct", 0)) for r in results
+            ]
 
             # Sort by sdN for clean lines
             sorted_data = sorted(zip(sdn_values, realized_values, total_values))

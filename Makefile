@@ -60,9 +60,9 @@ check: format lint test-checks test-all
 
 format:
 	@echo "Running isort..."
-	$(PYTHON) -m isort src tests
+	$(PYTHON) -m isort .
 	@echo "Running black..."
-	$(PYTHON) -m black src tests
+	$(PYTHON) -m black .
 
 clean:
 	rm -rf build/ dist/ *.egg-info .pytest_cache .mypy_cache .coverage htmlcov/

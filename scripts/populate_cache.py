@@ -28,35 +28,29 @@ COMMON_TICKERS = [
     "PLTR",  # Palantir - Data analytics
     "SHOP",  # Shopify - E-commerce
     "GOOG",  # Google - Tech giant
-
     # Small cap growth (very high volatility)
     "SOUN",  # SoundHound AI - Voice AI
-    "APP",   # AppLovin - Mobile advertising
-
+    "APP",  # AppLovin - Mobile advertising
     # Crypto (extreme volatility)
     "BTC-USD",  # Bitcoin
     "ETH-USD",  # Ethereum
-
     # Index ETFs (moderate volatility)
-    "SPY",   # S&P 500
-    "VOO",   # Vanguard S&P 500
-    "QQQ",   # NASDAQ-100
-    "DIA",   # Dow Jones
-    "IWM",   # Russell 2000 Small Cap
-
+    "SPY",  # S&P 500
+    "VOO",  # Vanguard S&P 500
+    "QQQ",  # NASDAQ-100
+    "DIA",  # Dow Jones
+    "IWM",  # Russell 2000 Small Cap
     # Gold/Commodities (low-moderate volatility)
-    "GLD",   # SPDR Gold Trust
+    "GLD",  # SPDR Gold Trust
     "GLDM",  # SPDR Gold Shares (lower expense)
-    "SLV",   # Silver ETF
-
+    "SLV",  # Silver ETF
     # Risk-free/Cash equivalents
-    "BIL",   # 1-3 Month T-Bills
+    "BIL",  # 1-3 Month T-Bills
     "^IRX",  # 13-week Treasury Bill yield
-
     # Sector ETFs
-    "XLK",   # Technology sector
-    "XLF",   # Financial sector
-    "XLE",   # Energy sector
+    "XLK",  # Technology sector
+    "XLF",  # Financial sector
+    "XLE",  # Energy sector
 ]
 
 
