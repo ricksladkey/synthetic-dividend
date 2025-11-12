@@ -13,6 +13,7 @@ time frames.
 Usage:
     python -m src.research.volatility_alpha_curves --output volatility_alpha_curves.png
     python -m src.research.volatility_alpha_curves --tickers NVDA BTC-USD GLDM --year 2024
+    python -m src.research.volatility_alpha_curves --realized-only  # Plot only realized alpha
 """
 
 import argparse
@@ -91,11 +92,17 @@ def run_backtest_for_sdn(
         total_return_pct = summary.get("total_return", 0) * 100
         transaction_count = len([t for t in transactions if t.action in ["BUY", "SELL"]])
 
-        # Get volatility alpha from algorithm
-        # This includes both realized (sold buybacks) and unrealized (stack value)
-        estimated_vol_alpha = 0.0
+        # Get volatility alpha metrics from algorithm
+        realized_alpha = 0.0
+        unrealized_alpha = 0.0
+        total_alpha = 0.0
+
+        if hasattr(algo, "realized_volatility_alpha"):
+            realized_alpha = algo.realized_volatility_alpha
+        if hasattr(algo, "unrealized_stack_alpha"):
+            unrealized_alpha = algo.unrealized_stack_alpha
         if hasattr(algo, "total_volatility_alpha"):
-            estimated_vol_alpha = algo.total_volatility_alpha
+            total_alpha = algo.total_volatility_alpha
 
         # Get buyback stack count (for diagnostics)
         stack_size = 0
@@ -104,7 +111,8 @@ def run_backtest_for_sdn(
 
         print(
             f"    sd{sd_n:2d}: return={total_return_pct:7.2f}%, "
-            f"vol_alpha={estimated_vol_alpha:6.2f}%, "
+            f"realized={realized_alpha:6.2f}%, "
+            f"unrealized={unrealized_alpha:6.2f}%, "
             f"txns={transaction_count:3d}, stack={stack_size}"
         )
 
@@ -112,7 +120,10 @@ def run_backtest_for_sdn(
             "ticker": ticker,
             "sd_n": sd_n,
             "total_return_pct": total_return_pct,
-            "estimated_vol_alpha_pct": estimated_vol_alpha,
+            "realized_vol_alpha_pct": realized_alpha,
+            "unrealized_vol_alpha_pct": unrealized_alpha,
+            "total_vol_alpha_pct": total_alpha,
+            "estimated_vol_alpha_pct": total_alpha,  # Backwards compatibility
             "transaction_count": transaction_count,
             "buyback_stack_size": stack_size,
         }
@@ -155,6 +166,7 @@ def sweep_sdn_parameters(
 def create_volatility_alpha_plot(
     all_results: Dict[str, Dict[str, List[Dict]]],
     output_path: str = "volatility_alpha_curves.png",
+    realized_only: bool = False,
 ):
     """
     Create matplotlib figure with volatility alpha curves.
@@ -163,15 +175,23 @@ def create_volatility_alpha_plot(
         all_results: Nested dict structure:
             {ticker: {period: [result_dicts]}}
         output_path: Path to save the figure
+        realized_only: If True, plot only realized alpha; otherwise show both
     """
     # Create figure with 3 subplots (one per time period)
     fig, axes = plt.subplots(1, 3, figsize=(18, 6))
-    fig.suptitle(
-        "Volatility Alpha vs SDN Parameter\n"
-        "(Estimated: Realized + Unrealized from Buyback Stack)",
-        fontsize=16,
-        fontweight="bold",
-    )
+
+    if realized_only:
+        title = (
+            "Volatility Alpha vs SDN Parameter\n"
+            "REALIZED Alpha Only (Banked Profits from Completed Cycles)"
+        )
+    else:
+        title = (
+            "Volatility Alpha vs SDN Parameter\n"
+            "Solid = Realized (Banked) | Dashed = Total (Realized + Unrealized Stack)"
+        )
+
+    fig.suptitle(title, fontsize=16, fontweight="bold")
 
     periods = ["2023", "2024", "2025_YTD"]
     period_labels = ["2023 Calendar", "2024 Calendar", "2025 YTD"]
@@ -184,7 +204,8 @@ def create_volatility_alpha_plot(
         ax = axes[idx]
         ax.set_title(period_label, fontsize=14, fontweight="bold")
         ax.set_xlabel("SDN Parameter", fontsize=12)
-        ax.set_ylabel("Estimated Volatility Alpha (%)", fontsize=12)
+        ylabel = "Realized Volatility Alpha (%)" if realized_only else "Volatility Alpha (%)"
+        ax.set_ylabel(ylabel, fontsize=12)
         ax.grid(True, alpha=0.3)
 
         # Plot each ticker
@@ -198,29 +219,32 @@ def create_volatility_alpha_plot(
 
             # Extract data for plotting
             sdn_values = [r["sd_n"] for r in results]
-            vol_alpha_values = [r["estimated_vol_alpha_pct"] for r in results]
+            realized_values = [r.get("realized_vol_alpha_pct", r.get("estimated_vol_alpha_pct", 0)) for r in results]
+            total_values = [r.get("total_vol_alpha_pct", r.get("estimated_vol_alpha_pct", 0)) for r in results]
 
             # Sort by sdN for clean lines
-            sorted_pairs = sorted(zip(sdn_values, vol_alpha_values))
-            sdn_values, vol_alpha_values = zip(*sorted_pairs)
+            sorted_data = sorted(zip(sdn_values, realized_values, total_values))
+            sdn_values, realized_values, total_values = zip(*sorted_data)
 
-            # Plot line with markers
             color = ticker_colors.get(ticker, "gray")
+
+            # Plot realized alpha (solid line)
             ax.plot(
                 sdn_values,
-                vol_alpha_values,
+                realized_values,
                 marker="o",
                 linewidth=2,
                 markersize=6,
-                label=ticker,
+                label=f"{ticker}" if realized_only else f"{ticker} (R)",
                 color=color,
+                linestyle="-",
             )
 
-            # Find and mark the peak (optimal sdN)
-            max_idx = vol_alpha_values.index(max(vol_alpha_values))
+            # Find and mark the realized peak
+            max_realized_idx = realized_values.index(max(realized_values))
             ax.plot(
-                sdn_values[max_idx],
-                vol_alpha_values[max_idx],
+                sdn_values[max_realized_idx],
+                realized_values[max_realized_idx],
                 marker="*",
                 markersize=15,
                 color=color,
@@ -228,6 +252,20 @@ def create_volatility_alpha_plot(
                 markeredgewidth=1.5,
                 zorder=10,
             )
+
+            # Plot total alpha (dashed line) if not realized-only mode
+            if not realized_only:
+                ax.plot(
+                    sdn_values,
+                    total_values,
+                    marker="s",
+                    linewidth=1.5,
+                    markersize=4,
+                    label=f"{ticker} (T)",
+                    color=color,
+                    linestyle="--",
+                    alpha=0.6,
+                )
 
         # Customize x-axis to show our specific SDN values
         ax.set_xticks(SDN_RANGE)
@@ -276,6 +314,11 @@ def main():
         default=["2023", "2024", "2025_YTD"],
         help="Time periods to analyze",
     )
+    parser.add_argument(
+        "--realized-only",
+        action="store_true",
+        help="Plot only realized alpha (default: show both realized and total)",
+    )
 
     args = parser.parse_args()
 
@@ -318,7 +361,7 @@ def main():
     print(f"\n{'=' * 70}")
     print("Generating plot...")
     print(f"{'=' * 70}")
-    create_volatility_alpha_plot(all_results, args.output)
+    create_volatility_alpha_plot(all_results, args.output, realized_only=args.realized_only)
 
 
 if __name__ == "__main__":
