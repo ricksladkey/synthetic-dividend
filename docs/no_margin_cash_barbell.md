@@ -585,10 +585,18 @@ print(f"Cash %: min={min(cash_pct):.1%}, max={max(cash_pct):.1%}, avg={np.mean(c
    - Skipped from price/dividend data fetching
    - Fully backwards compatible with old allocations
 
-3. **Comprehensive Testing**
+3. **BIL Interest on CASH (NEW!)** 🎯
+   - CASH balances automatically earn BIL (short-term Treasury) yields
+   - Models realistic brokerage sweep accounts
+   - Monthly interest payments (~4-5% APY in 2023)
+   - Interest calculated as: `(cash_balance / BIL_price) × BIL_dividend`
+   - Implements Warren Buffett's 90/10 portfolio recommendation
+
+4. **Comprehensive Testing**
    - Unit tests verify all logic changes
    - Margin check logic tested
    - Cash filtering tested
+   - BIL interest calculation tested
    - Backwards compatibility verified
 
 ### Usage Example

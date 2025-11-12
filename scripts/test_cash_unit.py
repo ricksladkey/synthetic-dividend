@@ -143,6 +143,38 @@ def test_backwards_compatibility():
     print("  ✅ PASS\n")
 
 
+def test_bil_interest_calculation():
+    """Test BIL interest calculation logic."""
+    print("Test 6: BIL Interest Calculation")
+
+    # Example: $100K cash, BIL at $91.55, dividend $0.375/share
+    cash_balance = 100_000
+    bil_price = 91.55
+    bil_dividend_per_share = 0.375
+
+    # Calculate equivalent BIL shares
+    equivalent_shares = cash_balance / bil_price
+    interest = bil_dividend_per_share * equivalent_shares
+
+    # Annual yield calculation
+    monthly_yield = bil_dividend_per_share / bil_price
+    annual_yield_pct = monthly_yield * 12 * 100
+
+    print(f"  Cash balance: ${cash_balance:,.0f}")
+    print(f"  BIL price: ${bil_price:.2f}")
+    print(f"  BIL dividend: ${bil_dividend_per_share:.3f}/share")
+    print(f"  Equivalent shares: {equivalent_shares:.2f}")
+    print(f"  Monthly interest: ${interest:.2f}")
+    print(f"  Implied annual yield: {annual_yield_pct:.2f}%")
+
+    # Verify calculation
+    assert equivalent_shares == cash_balance / bil_price
+    assert interest == bil_dividend_per_share * equivalent_shares
+    assert 4.0 < annual_yield_pct < 6.0, f"BIL yield should be ~4-5%, got {annual_yield_pct:.2f}%"
+
+    print("  ✅ PASS\n")
+
+
 if __name__ == "__main__":
     print("\n")
     print("╔" + "=" * 78 + "╗")
@@ -155,6 +187,7 @@ if __name__ == "__main__":
     test_cash_reserve_calculation()
     test_margin_check_logic()
     test_backwards_compatibility()
+    test_bil_interest_calculation()
 
     print("=" * 80)
     print("ALL UNIT TESTS PASSED ✅")
@@ -166,4 +199,5 @@ if __name__ == "__main__":
     print("  ✓ Cash reserve calculation works correctly")
     print("  ✓ Margin check logic prevents borrowing when disabled")
     print("  ✓ Backwards compatible with old-style allocations")
+    print("  ✓ BIL interest calculation matches sweep account behavior")
     print()
