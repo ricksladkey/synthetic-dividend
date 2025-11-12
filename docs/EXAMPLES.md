@@ -281,6 +281,67 @@ This experiment demonstrates threshold miscalibration. When forcing GLD to use S
 
 ---
 
+## Market Regime Framework (January 2025)
+
+**New Research Finding**: SD8 performance follows predictable patterns across market conditions, with moderate bull markets emerging as the "sweet spot" for income generation.
+
+### Market Regimes Identified
+
+| Regime | Example | Total Return | Ann. Return | SD8 vs Buy-and-Hold | Cash Generation |
+|--------|---------|--------------|-------------|-------------------|-----------------|
+| **Extreme Bull** | NVDA 2020-25 | +2139% | 86% | -27.16% alpha | 6.6% of position |
+| **Moderate Bull** | SPY 2020-25 | +81% | 12.5% | **-0.66% alpha** | **36-38% of position** ⭐ |
+| **Choppy/Sideways** | SPY 2015-19 | +21% | 5% | **+0.23% alpha** ✅ | 10-19% of position |
+
+**Key Insight**: Moderate bull markets (SPY 2020-2025) represent the optimal environment for SD8, sacrificing only 0.66-1.27% annualized returns while generating nearly 5x the cash needed for $50K/year withdrawals.
+
+### Strategic Implications
+
+**For Income-Focused Investors**:
+1. **Use SD8 ATH-Only on moderate-volatility positions** (SPY, QQQ, diversified ETFs)
+2. **Consider buy-and-hold for extreme growth assets** (NVDA, high-conviction individual stocks)
+3. **Size SD8 positions to generate needed cash** (moderate bull: ~7-10%/year cash generation)
+
+**For Taxable Accounts**: SD8 ATH-Only superior due to lower transaction frequency and LTCG-only tax treatment.
+
+**For Tax-Deferred Accounts**: SD8 Full may outperform due to buyback premium (0.61-4.53%/year observed).
+
+📄 **[Read the complete market regime framework →](experiments/EXPERIMENTS_SUMMARY.md)**
+
+---
+
+## Optimal Withdrawal Rate Discovery (October 2025)
+
+**Eureka Finding**: Withdrawal rates can be optimized by minimizing `abs(mean(bank))`, revealing maximum sustainable rates across market conditions.
+
+### Key Discovery: 10% Sustainable in Bear Markets
+
+| Market | Return | Optimal Rate | Mean Bank | Margin % | Interpretation |
+|--------|--------|--------------|-----------|----------|----------------|
+| NVDA Bull | +245.9% | 30.0% | $61,193 | 0.0% | Massive excess alpha |
+| VOO Moderate | +28.6% | 15.0% | $3,665 | 0.0% | Nearly balanced |
+| **SPY Bear** | **-19.5%** | **10.0%** | **$701** ⭐ | **30.8%** | **Perfect balance** |
+
+**Critical Insight**: Even in bear markets, volatility harvesting enables **10% sustainable withdrawals** with near-zero mean bank balance. With 10 uncorrelated assets, margin usage drops to **9.7%**, enabling **95% confidence of no margin** needed!
+
+### Diversification Benefits
+
+**Single Asset (SPY 2022)**: 30.8% margin usage
+**10 Uncorrelated Assets**: **9.7% margin usage** (√10 reduction via Central Limit Theorem)
+**Result**: 95% confidence of no margin needed while maintaining 10% annual withdrawals
+
+### Practical Application
+
+**Command for Retirement Planning**:
+```bash
+# Test 10% withdrawal rate sustainability
+sd backtest --ticker SPY --start 01/01/2022 --end 12/31/2022 --algorithm sd9 --initial-investment 100000 --withdrawal-rate 10.0 --cpi-adjust
+```
+
+**Expected Result**: Mean bank balance ≈ $0, margin usage ~30%, demonstrating self-sustaining portfolio where withdrawals match harvested volatility alpha.
+
+📄 **[Read the complete optimal withdrawal analysis →](experiments/EXPERIMENT_004_OPTIMAL_WITHDRAWAL_RATE.md)**
+
 ## Transaction History Export
 
 The **Transaction History Export** feature allows you to export detailed transaction logs from any backtest or analysis run. This is useful for tax reporting, performance analysis, or integrating with other financial tools.
