@@ -55,8 +55,11 @@ pip-delete-this-directory.txt
 *.bat
 
 # Data and caches
-cache/
-*.pkl
+# Root cache/ contains canonical 5-year dataset (tracked in git)
+# Subdirectory caches are ephemeral (ignored)
+data/cache/
+src/cache/
+experiments/**/cache/
 *.db
 *.sqlite3
 
