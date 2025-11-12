@@ -319,11 +319,13 @@ result = run_portfolio_simulation(
 
 ## Implementation Checklist
 
-### Phase 1: Enable No-Margin Mode ✅
+### Phase 1: Enable No-Margin Mode ✅ COMPLETED
 
-**Already works!** Just set parameter:
+**IMPLEMENTED**: Changed default to `allow_margin=False`
+
+In `src/models/simulation.py` line 36:
 ```python
-allow_margin=False
+allow_margin: bool = False,  # Default: no margin (realistic retail mode)
 ```
 
 Existing logic handles this:
@@ -331,32 +333,72 @@ Existing logic handles this:
 - Skips buy if insufficient cash
 - Logs as `skipped_buys`
 
-### Phase 2: Add Cash Allocation ⚠️
+### Phase 2: Add Cash Allocation ✅ COMPLETED
 
-**Option A**: User specifies cash explicitly:
+**IMPLEMENTED**: Option A (explicit cash allocation)
+
+Changes made to `src/models/simulation.py`:
+
+1. **Filter CASH from data fetching** (lines 119-134):
 ```python
-allocations = {"NVDA": 0.90, "CASH": 0.10}
-```
-Needs small code change to skip "CASH" ticker in purchase loop.
+# Separate actual tickers from CASH reserve
+real_tickers = [t for t in allocations.keys() if t != "CASH"]
 
-**Option B**: Add `initial_cash_pct` parameter:
+# Only fetch price data for real tickers
+for ticker in real_tickers:
+    df = fetcher.get_history(ticker, start_date, end_date)
+    price_data[ticker] = df
+
+# Note CASH allocation if present
+if "CASH" in allocations:
+    cash_pct = allocations["CASH"] * 100
+    print(f"  - CASH: {cash_pct:.1f}% reserve (no data needed)")
+```
+
+2. **Skip CASH in dividend fetching** (line 142):
 ```python
-initial_cash_pct = 0.10  # Reserve 10%
+for ticker in real_tickers:  # Skip CASH
+    div_series = asset.get_dividends(start_date, end_date)
 ```
-Needs more code changes to scale allocations.
 
-**Recommendation**: **Option A** (explicit cash allocation)
-- Clearer intent
-- User controls exact percentages
-- Simpler implementation
+3. **Skip CASH in initial purchase** (lines 354-359):
+```python
+for ticker, alloc_pct in self.allocations.items():
+    # Skip CASH - it stays in the bank
+    if ticker == "CASH":
+        cash_reserve = self.initial_investment * alloc_pct
+        print(f"  {ticker}: ${cash_reserve:,.2f} reserve (kept in bank)")
+        continue
+    # ... rest of purchase logic
+```
 
-### Phase 3: Multi-Asset Testing
+**Benefits of this approach**:
+- ✅ Clearer intent (explicit allocation)
+- ✅ User controls exact percentages
+- ✅ Simpler implementation
+- ✅ Backwards compatible (old allocations still work)
 
-Test with:
-- 2 assets + cash
+### Phase 3: Testing ✅ COMPLETED
+
+**Unit tests created**: `scripts/test_cash_unit.py`
+
+Tests verify:
+- ✅ CASH ticker filtering from data fetching
+- ✅ `allow_margin=False` is default
+- ✅ Cash reserve calculation
+- ✅ Margin check logic (skips buys when cash insufficient)
+- ✅ Backwards compatibility (old allocations work)
+
+All unit tests pass!
+
+### Phase 4: Multi-Asset Integration Testing ⏳ PENDING
+
+Test with full backtests:
+- 2 assets + cash (e.g., NVDA 60%, PLTR 30%, CASH 10%)
 - 3 assets + cash
 - Different volatilities
 - Correlated vs uncorrelated assets
+- Verify cash accumulation dynamics (barbell effect)
 
 ---
 
@@ -524,6 +566,68 @@ print(f"Cash %: min={min(cash_pct):.1%}, max={max(cash_pct):.1%}, avg={np.mean(c
 2. ⚠️ Cash allocation needs small enhancement (support "CASH" ticker)
 3. ⏳ Testing multi-asset dynamics
 
-**Next steps**: Implement "CASH" ticker support, test barbell dynamics.
+---
 
-The infrastructure is 90% there. Just needs final touches! 🎯
+## Implementation Complete! ✅
+
+**Status**: All core infrastructure implemented and tested.
+
+### What Was Implemented
+
+1. **Default No-Margin Mode**
+   - Changed `allow_margin` default from `True` to `False`
+   - Retail-friendly: can't borrow more than you have
+   - Explicit opt-in required for margin trading
+
+2. **CASH Ticker Support**
+   - Can specify `"CASH": 0.10` in allocations dict
+   - Cash reserve automatically kept in bank (not "purchased")
+   - Skipped from price/dividend data fetching
+   - Fully backwards compatible with old allocations
+
+3. **Comprehensive Testing**
+   - Unit tests verify all logic changes
+   - Margin check logic tested
+   - Cash filtering tested
+   - Backwards compatibility verified
+
+### Usage Example
+
+```python
+from src.models.simulation import run_portfolio_simulation
+from datetime import date
+
+# New retail-friendly mode (no margin, cash reserve)
+result = run_portfolio_simulation(
+    allocations={
+        "NVDA": 0.60,
+        "PLTR": 0.30,
+        "CASH": 0.10,  # Keep 10% in cash
+    },
+    initial_investment=1_000_000,
+    # allow_margin defaults to False now!
+    start_date=date(2023, 1, 1),
+    end_date=date(2023, 12, 31),
+    portfolio_algo="per-asset:sd8",
+)
+
+# Old style still works (but now safer by default)
+result = run_portfolio_simulation(
+    allocations={"NVDA": 1.0},
+    initial_investment=1_000_000,
+    allow_margin=True,  # Must explicitly enable margin
+    start_date=date(2023, 1, 1),
+    end_date=date(2023, 12, 31),
+    portfolio_algo="per-asset:sd8",
+)
+```
+
+### Next Steps
+
+While core infrastructure is complete, future enhancements could include:
+- Full integration tests with real backtests
+- Multi-asset cash competition analysis
+- Dynamic cash rebalancing strategies
+- Optimal initial cash percentage by market regime
+
+**The infrastructure is now complete and ready for realistic retail use! 🎯**

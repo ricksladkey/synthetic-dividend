@@ -33,7 +33,7 @@ def run_portfolio_simulation(
     end_date: date,
     portfolio_algo: Union[PortfolioAlgorithmBase, str],
     initial_investment: float = 1_000_000.0,
-    allow_margin: bool = True,
+    allow_margin: bool = False,  # Default: no margin (realistic retail mode)
     withdrawal_rate_pct: float = 0.0,
     withdrawal_frequency_days: int = 30,
     cash_interest_rate_pct: float = 0.0,
@@ -116,8 +116,11 @@ def run_portfolio_simulation(
     fetcher = HistoryFetcher()
     price_data: Dict[str, pd.DataFrame] = {}
 
-    print(f"Fetching data for {len(allocations)} assets...")
-    for ticker in allocations.keys():
+    # Separate actual tickers from CASH reserve
+    real_tickers = [t for t in allocations.keys() if t != "CASH"]
+
+    print(f"Fetching data for {len(real_tickers)} assets...")
+    for ticker in real_tickers:
         print(f"  - {ticker}...", end=" ")
         df = fetcher.get_history(ticker, start_date, end_date)
         if df is None or df.empty:
@@ -125,13 +128,18 @@ def run_portfolio_simulation(
         price_data[ticker] = df
         print(f"OK ({len(df)} days)")
 
+    # If CASH allocation exists, note it
+    if "CASH" in allocations:
+        cash_pct = allocations["CASH"] * 100
+        print(f"  - CASH: {cash_pct:.1f}% reserve (no data needed)")
+
     # Auto-fetch dividend data if not provided
     if dividend_data is None:
-        print(f"Auto-fetching dividend data for {len(allocations)} assets...")
+        print(f"Auto-fetching dividend data for {len(real_tickers)} assets...")
         from src.data.asset import Asset
 
         dividend_data_auto: Dict[str, pd.Series] = {}
-        for ticker in allocations.keys():
+        for ticker in real_tickers:  # Skip CASH
             print(f"  - {ticker} dividends...", end=" ")
             try:
                 asset = Asset(ticker)
@@ -344,6 +352,12 @@ class SimulationState:
         # Initial purchase
         print("\nInitial purchase:")
         for ticker, alloc_pct in self.allocations.items():
+            # Skip CASH - it stays in the bank
+            if ticker == "CASH":
+                cash_reserve = self.initial_investment * alloc_pct
+                print(f"  {ticker}: ${cash_reserve:,.2f} reserve (kept in bank)")
+                continue
+
             first_price = self.price_data[ticker].loc[self.common_dates[0], "Close"].item()
             qty = int((self.initial_investment * alloc_pct) / first_price)
             cost = qty * first_price
