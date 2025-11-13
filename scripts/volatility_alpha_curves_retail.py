@@ -32,6 +32,7 @@ NOTE: This script requires network access to fetch BIL data.
 """
 
 import sys
+import traceback
 from datetime import date
 from pathlib import Path
 
@@ -43,7 +44,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.models.simulation import run_portfolio_simulation
 
 # SDN parameters to test
-SDN_RANGE = [4, 6, 8, 10, 12, 16, 20, 24, 32]
+SDN_RANGE = [8, 9, 10, 11, 12, 13, 14, 15, 16]
 
 # Test ticker (using cached 2023 data)
 TEST_TICKER = "NVDA"
@@ -73,17 +74,17 @@ def run_retail_backtest(ticker: str, sd_n: int, cash_pct: float = 0.10) -> dict:
             initial_investment=1_000_000,
             # allow_margin defaults to False (retail mode)
             start_date=date(2023, 1, 3),
-            end_date=date(2023, 12, 29),
+            end_date=date(2025, 11, 12),
             portfolio_algo=f"per-asset:sd{sd_n}",
         )
 
         txns, stats = result
 
         # Calculate metrics
-        total_return_pct = ((stats['final_value'] / 1_000_000) - 1) * 100
+        total_return_pct = ((stats['total_final_value'] / 1_000_000) - 1) * 100
         bank_min = stats.get('bank_min', 0)
         bank_max = stats.get('bank_max', 0)
-        skipped_buys = stats.get('skipped_buys', 0)
+        skipped_buys = stats.get('skipped_count', 0)
 
         # Count transactions by ticker
         stock_txns = [t for t in txns if t.ticker == ticker and t.action in ["BUY", "SELL"]]
@@ -97,7 +98,7 @@ def run_retail_backtest(ticker: str, sd_n: int, cash_pct: float = 0.10) -> dict:
         return {
             "sd_n": sd_n,
             "total_return_pct": total_return_pct,
-            "final_value": stats['final_value'],
+            "final_value": stats['total_final_value'],
             "final_bank": stats['final_bank'],
             "bank_min": bank_min,
             "bank_max": bank_max,
@@ -109,6 +110,7 @@ def run_retail_backtest(ticker: str, sd_n: int, cash_pct: float = 0.10) -> dict:
 
     except Exception as e:
         print(f"✗ ERROR: {e}")
+        traceback.print_exc()
         return {
             "sd_n": sd_n,
             "total_return_pct": None,
@@ -134,7 +136,7 @@ def plot_retail_curves(results: list, ticker: str, cash_pct: float):
 
     # Create figure with subplots
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(14, 10))
-    fig.suptitle(f"Volatility Alpha Curves - {ticker} (2023)\n"
+    fig.suptitle(f"Volatility Alpha Curves - {ticker} (2023-2025)\n"
                  f"Retail Mode: No Margin + {cash_pct*100:.0f}% CASH earning BIL interest",
                  fontsize=14, fontweight='bold')
 
@@ -193,7 +195,7 @@ def plot_retail_curves(results: list, ticker: str, cash_pct: float):
     plt.tight_layout()
 
     # Save figure
-    output_path = Path(__file__).parent.parent / f"volatility_alpha_curves_retail_{ticker.lower()}_2023.png"
+    output_path = Path(__file__).parent.parent / f"volatility_alpha_curves_retail_{ticker.lower()}_2023_2025.png"
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     print(f"\n✓ Saved plot to: {output_path}")
 
@@ -225,7 +227,7 @@ def main():
     print()
 
     print(f"Testing {len(SDN_RANGE)} different sdN parameters: {SDN_RANGE}")
-    print(f"Ticker: {TEST_TICKER} (2023 cached data)")
+    print(f"Ticker: {TEST_TICKER} (2023-2025 data)")
     print(f"Allocations: {(1-CASH_ALLOCATION)*100:.0f}% {TEST_TICKER}, {CASH_ALLOCATION*100:.0f}% CASH")
     print(f"Constraints: allow_margin=False (retail mode)")
     print()

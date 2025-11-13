@@ -336,6 +336,9 @@ class SimulationState:
         self.inflation_rate_ticker = kwargs.get("inflation_rate_ticker", None)
         self.bil_price_data = kwargs.get("bil_price_data", None)
 
+        # Separate real tickers from CASH
+        self.real_tickers = [t for t in self.allocations.keys() if t != "CASH"]
+
         # Initialize portfolio state
         self.shared_bank = self.initial_investment
         self.holdings: Dict[str, int] = {}
@@ -376,8 +379,12 @@ class SimulationState:
         self.total_dividends_by_asset = {ticker: 0.0 for ticker in self.allocations}
         self.dividend_payment_count_by_asset = {ticker: 0 for ticker in self.allocations}
         self.holdings_history = {
-            ticker: [(self.common_dates[0], 0)] for ticker in self.allocations.keys()
+            ticker: [(self.common_dates[0], 0)] for ticker in self.real_tickers
         }
+
+        # Bank balance tracking
+        self.bank_min = self.shared_bank
+        self.bank_max = self.shared_bank
 
         # Initial purchase
         print("\nInitial purchase:")
@@ -500,7 +507,7 @@ class SimulationState:
 
         # Calculate current asset values
         total_asset_value = 0.0
-        for ticker in self.allocations.keys():
+        for ticker in self.real_tickers:
             current_price = self.price_data[ticker].loc[current_date, "Close"].item()
             asset_value = self.holdings[ticker] * current_price
             self.daily_asset_values[ticker][current_date] = asset_value
@@ -510,12 +517,16 @@ class SimulationState:
         self.daily_portfolio_values[current_date] = self.shared_bank + total_asset_value
         self.daily_bank_values[current_date] = self.shared_bank
 
+        # Update bank min/max
+        self.bank_min = min(self.bank_min, self.shared_bank)
+        self.bank_max = max(self.bank_max, self.shared_bank)
+
     def build_results(self) -> Tuple[List[Transaction], Dict[str, Any]]:
         """Build final results in the same format as backtest.py."""
         final_date = self.common_dates[-1]
         final_asset_value = sum(
             self.holdings[ticker] * self.price_data[ticker].loc[final_date, "Close"].item()
-            for ticker in self.allocations.keys()
+            for ticker in self.real_tickers
         )
         final_total_value = self.shared_bank + final_asset_value
 
@@ -534,22 +545,33 @@ class SimulationState:
         # Build per-asset summaries
         asset_results = {}
         for ticker, alloc_pct in self.allocations.items():
-            final_price = self.price_data[ticker].loc[final_date, "Close"].item()
-            final_value = self.holdings[ticker] * final_price
-            initial_value = self.initial_investment * alloc_pct
+            if ticker == "CASH":
+                # CASH is held in bank, not as asset holdings
+                asset_results[ticker] = {
+                    "allocation": alloc_pct,
+                    "initial_investment": self.initial_investment * alloc_pct,
+                    "final_holdings": 0,
+                    "final_price": 1.0,
+                    "final_value": 0.0,
+                    "total_return": 0.0,  # Bank balance is tracked separately
+                }
+            else:
+                final_price = self.price_data[ticker].loc[final_date, "Close"].item()
+                final_value = self.holdings[ticker] * final_price
+                initial_value = self.initial_investment * alloc_pct
 
-            asset_results[ticker] = {
-                "allocation": alloc_pct,
-                "initial_investment": initial_value,
-                "final_holdings": self.holdings[ticker],
-                "final_price": final_price,
-                "final_value": final_value,
-                "total_return": (
-                    ((final_value - initial_value) / initial_value) * 100
-                    if initial_value > 0
-                    else 0
-                ),
-            }
+                asset_results[ticker] = {
+                    "allocation": alloc_pct,
+                    "initial_investment": initial_value,
+                    "final_holdings": self.holdings[ticker],
+                    "final_price": final_price,
+                    "final_value": final_value,
+                    "total_return": (
+                        ((final_value - initial_value) / initial_value) * 100
+                        if initial_value > 0
+                        else 0
+                    ),
+                }
 
         # Build portfolio summary
         portfolio_summary = {
@@ -586,6 +608,8 @@ class SimulationState:
             "total_dividends_by_asset": self.total_dividends_by_asset,
             "total_dividends": sum(self.total_dividends_by_asset.values()),
             "dividend_payment_count_by_asset": self.dividend_payment_count_by_asset,
+            "bank_min": self.bank_min,
+            "bank_max": self.bank_max,
         }
 
         # Compute baseline (buy-and-hold reference benchmark) if reference data provided
@@ -710,7 +734,7 @@ def market_process(
         prices = {}
         history = {}
 
-        for ticker in state.allocations.keys():
+        for ticker in state.real_tickers:
             current_price = state.price_data[ticker].loc[current_date, "Close"].item()
             assets[ticker] = AssetState(
                 ticker=ticker, holdings=state.holdings[ticker], price=current_price
@@ -763,12 +787,12 @@ def market_process(
                     # Sell assets proportionally to raise cash for shortfall
                     total_asset_value = sum(
                         state.holdings[t] * state.price_data[t].loc[current_date, "Close"].item()
-                        for t in state.allocations.keys()
+                        for t in state.real_tickers
                     )
 
                     if total_asset_value > 0:
                         # Sell proportionally from each asset
-                        for ticker in state.allocations.keys():
+                        for ticker in state.real_tickers:
                             if state.holdings[ticker] > 0:
                                 asset_value = (
                                     state.holdings[ticker]
@@ -878,11 +902,11 @@ def withdrawal_process(
 
                 total_asset_value = sum(
                     state.holdings[t] * state.price_data[t].loc[current_date, "Close"].item()
-                    for t in state.allocations.keys()
+                    for t in state.real_tickers
                 )
 
                 if total_asset_value > 0:
-                    for ticker in state.allocations.keys():
+                    for ticker in state.real_tickers:
                         if state.holdings[ticker] > 0:
                             asset_value = (
                                 state.holdings[ticker]
