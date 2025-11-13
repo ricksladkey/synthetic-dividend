@@ -120,6 +120,23 @@ class OrderCalculatorGUI:
         status_bar = ttk.Label(main_frame, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W)
         status_bar.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E))
 
+    @staticmethod
+    def parse_price(s: str) -> float:
+        """Parse a price string, handling currency symbols and commas."""
+        s = s.strip()
+        if not s:
+            raise ValueError("Price cannot be empty")
+        # Remove common currency symbols
+        s = s.replace('$', '').replace('€', '').replace('£', '').replace('¥', '').replace('₹', '')
+        # Remove commas
+        s = s.replace(',', '')
+        return float(s)
+
+    @staticmethod
+    def format_price(price: float) -> str:
+        """Format a price to canonical accounting format."""
+        return f"{price:,.2f}"
+
     def load_history(self) -> Dict[str, Dict]:
         """Load calculation history from JSON file."""
         if os.path.exists(self.history_file):
@@ -144,12 +161,16 @@ class OrderCalculatorGUI:
         if ticker in self.history:
             params = self.history[ticker]
             self.holdings_var.set(params.get('holdings', ''))
-            self.last_price_var.set(params.get('last_price', ''))
+            self.last_price_var.set(self.format_price(params.get('last_price', 0)) if params.get('last_price') else '')
             # Current price defaults to last transaction price
-            self.current_price_var.set(params.get('last_price', ''))
+            self.current_price_var.set(self.format_price(params.get('last_price', 0)) if params.get('last_price') else '')
             self.sdn_var.set(params.get('sdn', ''))
             self.profit_var.set(params.get('profit', ''))
-            self.bracket_seed_var.set(params.get('bracket_seed', ''))
+            bracket_seed = params.get('bracket_seed')
+            if bracket_seed is not None:
+                self.bracket_seed_var.set(self.format_price(bracket_seed))
+            else:
+                self.bracket_seed_var.set('')
 
     def calculate_orders(self):
         """Calculate and display orders."""
@@ -157,12 +178,15 @@ class OrderCalculatorGUI:
             # Get inputs
             ticker = self.ticker_var.get().strip()
             holdings = float(self.holdings_var.get())
-            last_price = float(self.last_price_var.get())
-            current_price = float(self.current_price_var.get())
+            last_price = self.parse_price(self.last_price_var.get())
+            current_price = self.parse_price(self.current_price_var.get())
             sdn = int(self.sdn_var.get())
             profit = float(self.profit_var.get())
             bracket_seed_str = self.bracket_seed_var.get().strip()
-            bracket_seed = float(bracket_seed_str) if bracket_seed_str else None
+            if bracket_seed_str.lower() in ('', 'none', 'nil'):
+                bracket_seed = None
+            else:
+                bracket_seed = self.parse_price(bracket_seed_str)
 
             # Validate
             if not ticker:
@@ -175,6 +199,12 @@ class OrderCalculatorGUI:
                 raise ValueError("SDN must be between 2 and 20")
             if profit < 0 or profit > 200:
                 raise ValueError("Profit must be between 0 and 200")
+
+            # Update fields to canonical format
+            self.last_price_var.set(self.format_price(last_price))
+            self.current_price_var.set(self.format_price(current_price))
+            if bracket_seed is not None:
+                self.bracket_seed_var.set(self.format_price(bracket_seed))
 
             # Calculate orders
             buy_price, buy_qty, sell_price, sell_qty = calculate_orders_for_manual_entry(
