@@ -33,7 +33,7 @@ def run_portfolio_simulation(
     end_date: date,
     portfolio_algo: Union[PortfolioAlgorithmBase, str],
     initial_investment: float = 1_000_000.0,
-    allow_margin: bool = True,
+    allow_margin: bool = False,  # Default: no margin (realistic retail mode)
     withdrawal_rate_pct: float = 0.0,
     withdrawal_frequency_days: int = 30,
     cash_interest_rate_pct: float = 0.0,
@@ -116,8 +116,11 @@ def run_portfolio_simulation(
     fetcher = HistoryFetcher()
     price_data: Dict[str, pd.DataFrame] = {}
 
-    print(f"Fetching data for {len(allocations)} assets...")
-    for ticker in allocations.keys():
+    # Separate actual tickers from CASH reserve
+    real_tickers = [t for t in allocations.keys() if t != "CASH"]
+
+    print(f"Fetching data for {len(real_tickers)} assets...")
+    for ticker in real_tickers:
         print(f"  - {ticker}...", end=" ")
         df = fetcher.get_history(ticker, start_date, end_date)
         if df is None or df.empty:
@@ -125,13 +128,30 @@ def run_portfolio_simulation(
         price_data[ticker] = df
         print(f"OK ({len(df)} days)")
 
+    # If CASH allocation exists, fetch BIL data for sweep account interest
+    has_cash_allocation = "CASH" in allocations
+    bil_price_data = None
+
+    if has_cash_allocation:
+        cash_pct = allocations["CASH"] * 100
+        print(f"  - CASH: {cash_pct:.1f}% reserve (sweep account earning BIL yields)")
+
+        # Fetch BIL price data for interest calculations
+        print(f"  - BIL (sweep account yields)...", end=" ")
+        bil_df = fetcher.get_history("BIL", start_date, end_date)
+        if bil_df is not None and not bil_df.empty:
+            bil_price_data = bil_df
+            print(f"OK ({len(bil_df)} days)")
+        else:
+            print("WARNING: No BIL data, CASH will earn 0% interest")
+
     # Auto-fetch dividend data if not provided
     if dividend_data is None:
-        print(f"Auto-fetching dividend data for {len(allocations)} assets...")
+        print(f"Auto-fetching dividend data for {len(real_tickers)} assets...")
         from src.data.asset import Asset
 
         dividend_data_auto: Dict[str, pd.Series] = {}
-        for ticker in allocations.keys():
+        for ticker in real_tickers:  # Skip CASH
             print(f"  - {ticker} dividends...", end=" ")
             try:
                 asset = Asset(ticker)
@@ -142,6 +162,22 @@ def run_portfolio_simulation(
                     div_series_copy.index = pd.to_datetime(div_series_copy.index).tz_localize(None)
                     dividend_data_auto[ticker] = div_series_copy
                     print(f"OK ({len(div_series_copy)} dividends)")
+                else:
+                    print("None")
+            except Exception as e:
+                print(f"ERROR: {e}")
+
+        # If CASH allocation exists, fetch BIL dividends for interest
+        if has_cash_allocation:
+            print(f"  - BIL (CASH interest) dividends...", end=" ")
+            try:
+                asset = Asset("BIL")
+                div_series = asset.get_dividends(start_date, end_date)
+                if div_series is not None and not div_series.empty:
+                    div_series_copy = div_series.copy()
+                    div_series_copy.index = pd.to_datetime(div_series_copy.index).tz_localize(None)
+                    dividend_data_auto["CASH"] = div_series_copy  # Store as CASH dividends
+                    print(f"OK ({len(div_series_copy)} payments, ~{div_series.sum():.2f}% annual yield)")
                 else:
                     print("None")
             except Exception as e:
@@ -256,6 +292,7 @@ def run_portfolio_simulation(
         reference_data=reference_data,
         cumulative_inflation=cumulative_inflation,
         inflation_rate_ticker=inflation_rate_ticker,
+        bil_price_data=bil_price_data,
     )
 
     # Start the simulation processes
@@ -297,6 +334,7 @@ class SimulationState:
         self.reference_data = kwargs.get("reference_data", None)
         self.cumulative_inflation = kwargs.get("cumulative_inflation", {})
         self.inflation_rate_ticker = kwargs.get("inflation_rate_ticker", None)
+        self.bil_price_data = kwargs.get("bil_price_data", None)
 
         # Initialize portfolio state
         self.shared_bank = self.initial_investment
@@ -344,6 +382,12 @@ class SimulationState:
         # Initial purchase
         print("\nInitial purchase:")
         for ticker, alloc_pct in self.allocations.items():
+            # Skip CASH - it stays in the bank
+            if ticker == "CASH":
+                cash_reserve = self.initial_investment * alloc_pct
+                print(f"  {ticker}: ${cash_reserve:,.2f} reserve (kept in bank)")
+                continue
+
             first_price = self.price_data[ticker].loc[self.common_dates[0], "Close"].item()
             qty = int((self.initial_investment * alloc_pct) / first_price)
             cost = qty * first_price
@@ -932,7 +976,49 @@ def dividend_process(
         if day_index > env.now:
             yield env.timeout(day_index - int(env.now))
 
-        # Calculate dividend payment
+        # Special handling for CASH (sweep account interest from BIL)
+        if ticker == "CASH":
+            # Calculate interest based on cash balance (not holdings)
+            # Bank balance earns BIL yield as if invested in BIL shares
+            if state.bil_price_data is not None:
+                try:
+                    # Get BIL price on dividend date
+                    bil_price = state.bil_price_data.loc[pd.Timestamp(div_date), "Close"].item()
+
+                    # Calculate equivalent BIL shares from current bank balance
+                    # Use time-weighted average bank balance over accrual period
+                    accrual_period_days = 30  # Monthly for BIL
+                    period_start = div_date - timedelta(days=accrual_period_days)
+
+                    # Calculate average bank balance over period
+                    # (Simple approximation: just use current balance)
+                    avg_cash_balance = state.shared_bank
+
+                    # Equivalent BIL shares
+                    equivalent_shares = avg_cash_balance / bil_price
+
+                    # Interest payment
+                    div_payment = div_per_share * equivalent_shares
+                    state.shared_bank += div_payment
+                    state.total_dividends_by_asset[ticker] += div_payment
+                    state.dividend_payment_count_by_asset[ticker] += 1
+
+                    state.all_transactions.append(
+                        Transaction(
+                            transaction_date=div_date,
+                            action="INTEREST",
+                            qty=0,  # CASH doesn't have shares
+                            price=div_per_share,
+                            ticker=ticker,
+                            notes=f"${div_payment:.2f} (${avg_cash_balance:,.0f} @ {(div_per_share/bil_price)*12*100:.2f}% APY via BIL), bank = {state.shared_bank:.2f}",
+                        )
+                    )
+                except (KeyError, IndexError):
+                    # No BIL price data for this date, skip interest payment
+                    pass
+            continue
+
+        # Standard dividend payment for regular tickers
         accrual_period_days = 90
         period_start = div_date - timedelta(days=accrual_period_days)
         avg_holdings = calculate_time_weighted_average_holdings(
