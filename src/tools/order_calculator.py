@@ -22,13 +22,13 @@ from src.models.backtest import calculate_synthetic_dividend_orders
 
 def calculate_orders_for_manual_entry(
     ticker: str,
-    holdings: int,
+    holdings: float,
     last_transaction_price: float,
     current_price: float,
     sdn: int,
     profit_sharing_pct: float,
     bracket_seed: Optional[float] = None,
-) -> Tuple[float, int, float, int]:
+) -> Tuple[float, float, float, float]:
     """Calculate buy/sell orders for manual placement.
 
     Args:
@@ -59,21 +59,21 @@ def calculate_orders_for_manual_entry(
 
     return (
         orders["next_buy_price"],
-        int(orders["next_buy_qty"]),
+        orders["next_buy_qty"],
         orders["next_sell_price"],
-        int(orders["next_sell_qty"]),
+        orders["next_sell_qty"],
     )
 
 
 def format_order_display(
     ticker: str,
-    holdings: int,
+    holdings: float,
     last_price: float,
     current_price: float,
     buy_price: float,
-    buy_qty: int,
+    buy_qty: float,
     sell_price: float,
-    sell_qty: int,
+    sell_qty: float,
     sdn: int,
     profit_pct: float,
     bracket_seed: Optional[float] = None,
@@ -123,7 +123,7 @@ def format_order_display(
 
     empty_line = f"  |{'':<{content_width}}|"
     buy_price_line = f"  |{f'  Price:     ${buy_price:.2f}':<{content_width}}|"
-    buy_qty_line = f"  |{f'  Quantity:  {buy_qty:,} shares':<{content_width}}|"
+    buy_qty_line = f"  |{f'  Quantity:  {buy_qty:,.2f} shares':<{content_width}}|"
     buy_total_line = f"  |{f'  Total:     ${buy_price * buy_qty:,.2f}':<{content_width}}|"
     buy_trigger_line = (
         f"  |{f'  Trigger:   {buy_trigger_pct:.2f}% below last transaction':<{content_width}}|"
@@ -133,7 +133,7 @@ def format_order_display(
     )
 
     sell_price_line = f"  |{f'  Price:     ${sell_price:.2f}':<{content_width}}|"
-    sell_qty_line = f"  |{f'  Quantity:  {sell_qty:,} shares':<{content_width}}|"
+    sell_qty_line = f"  |{f'  Quantity:  {sell_qty:,.2f} shares':<{content_width}}|"
     sell_total_line = f"  |{f'  Total:     ${sell_price * sell_qty:,.2f}':<{content_width}}|"
     sell_trigger_line = (
         f"  |{f'  Trigger:   {sell_trigger_pct:.2f}% above last transaction':<{content_width}}|"
@@ -149,7 +149,7 @@ def format_order_display(
 
 * CURRENT POSITION - {ticker}
 ==============================================================================
-  Holdings:              {holdings:,} shares
+  Holdings:              {holdings:,.2f} shares
   Last Transaction:      ${last_price:.2f}  (bracket n={round(current_bracket_n)}, normalized=${current_bracket_normalized:.2f}){seed_info}
   Current Price:         ${current_price:.2f}
   Price Change:          ${price_change:+.2f} ({price_change_pct:+.2f}%)
@@ -196,8 +196,8 @@ def format_order_display(
 * BROKER ENTRY (Copy/Paste)
 ==============================================================================
 
-  BUY  {ticker:5} {buy_qty:5} @ ${buy_price:.2f}  (LIMIT GTC)
-  SELL {ticker:5} {sell_qty:5} @ ${sell_price:.2f}  (LIMIT GTC)
+  BUY  {ticker:5} {buy_qty:8.2f} @ ${buy_price:.2f}  (LIMIT GTC)
+  SELL {ticker:5} {sell_qty:8.2f} @ ${sell_price:.2f}  (LIMIT GTC)
 
 ==============================================================================
 * TIP: Set both orders as "Good Till Canceled" (GTC) limit orders
@@ -230,7 +230,7 @@ Examples:
 
     parser.add_argument("--ticker", required=True, help="Asset ticker symbol (e.g., NVDA, BTC-USD)")
     parser.add_argument(
-        "--holdings", type=int, required=True, help="Current number of shares/units"
+        "--holdings", type=float, required=True, help="Current number of shares/units"
     )
     parser.add_argument(
         "--last-price", type=float, required=True, help="Price of last transaction (buy or sell)"

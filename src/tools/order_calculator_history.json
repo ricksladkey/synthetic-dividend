@@ -1,0 +1,10 @@
+{
+  "NVDA": {
+    "holdings": 1000.0,
+    "last_price": 120.5,
+    "current_price": 125.3,
+    "sdn": 8,
+    "profit": 50.0,
+    "bracket_seed": null
+  }
+}
