@@ -76,7 +76,7 @@ class StaticAssetProvider(AssetProvider):
         df = pd.read_csv(self.csv_path, index_col=0, parse_dates=True)
 
         # Ensure index is DatetimeIndex (convert date objects to datetime)
-        if df.index.dtype == 'object':
+        if df.index.dtype == "object":
             df.index = pd.to_datetime(df.index)
 
         # Filter to requested date range
@@ -124,7 +124,7 @@ class StaticAssetProvider(AssetProvider):
         df = pd.read_csv(div_path, index_col=0, parse_dates=True)
 
         # Ensure index is DatetimeIndex (convert date objects to datetime)
-        if df.index.dtype == 'object':
+        if df.index.dtype == "object":
             df.index = pd.to_datetime(df.index)
 
         # Filter to requested date range

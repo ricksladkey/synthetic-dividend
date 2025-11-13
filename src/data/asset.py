@@ -244,7 +244,7 @@ class Asset:
                 # Convert both to datetime for consistent comparison
                 existing_dates = pd.to_datetime(existing_df.index)
                 new_dates = pd.to_datetime(df.index)
-                
+
                 # Reset indices to datetime objects for consistent merging
                 existing_df = existing_df.copy()
                 existing_df.index = existing_dates
@@ -286,7 +286,7 @@ class Asset:
                 # Convert both to datetime for consistent comparison
                 existing_dates = pd.to_datetime(existing_series.index)
                 new_dates = pd.to_datetime(series.index)
-                
+
                 # Reset indices to datetime objects for consistent merging
                 existing_series = existing_series.copy()
                 existing_series.index = existing_dates
