@@ -137,7 +137,7 @@ def run_portfolio_simulation(
         print(f"  - CASH: {cash_pct:.1f}% reserve (sweep account earning BIL yields)")
 
         # Fetch BIL price data for interest calculations
-        print(f"  - BIL (sweep account yields)...", end=" ")
+        print("  - BIL (sweep account yields)...", end=" ")
         bil_df = fetcher.get_history("BIL", start_date, end_date)
         if bil_df is not None and not bil_df.empty:
             bil_price_data = bil_df
@@ -169,7 +169,7 @@ def run_portfolio_simulation(
 
         # If CASH allocation exists, fetch BIL dividends for interest
         if has_cash_allocation:
-            print(f"  - BIL (CASH interest) dividends...", end=" ")
+            print("  - BIL (CASH interest) dividends...", end=" ")
             try:
                 asset = Asset("BIL")
                 div_series = asset.get_dividends(start_date, end_date)
@@ -432,8 +432,6 @@ class SimulationState:
         # Fill in execution details
         tx.transaction_date = current_date
         tx.ticker = ticker  # Ensure ticker is set correctly
-        if tx.price == 0.0:
-            tx.price = self.price_data[tx.ticker].loc[current_date, "Close"].item()
 
         ticker = tx.ticker
         if tx.action.upper() == "BUY":
@@ -844,8 +842,8 @@ def market_process(
                     Transaction(
                         transaction_date=current_date,
                         action="WITHDRAWAL",
-                        qty=0,
-                        price=0.0,
+                        qty=int(actual_withdrawal),  # Number of dollars withdrawn
+                        price=1.0,  # $1 per dollar withdrawn
                         ticker="CASH",
                         notes=withdrawal_notes,
                     )
@@ -959,8 +957,8 @@ def withdrawal_process(
                 Transaction(
                     transaction_date=current_date,
                     action="WITHDRAWAL",
-                    qty=0,
-                    price=0.0,
+                    qty=int(actual_withdrawal),  # Number of dollars withdrawn
+                    price=1.0,  # $1 per dollar withdrawn
                     ticker="CASH",
                     notes=notes,
                 )

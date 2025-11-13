@@ -514,40 +514,40 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         for txn in executed:
             price = self._extract_fill_price(txn)
 
-                if txn.action == "BUY":
-                    if self.buyback_enabled:
-                        # Add to buyback stack count for symmetry tracking
-                        self.buyback_stack_count += txn.qty
+            if txn.action == "BUY":
+                if self.buyback_enabled:
+                    # Add to buyback stack count for symmetry tracking
+                    self.buyback_stack_count += txn.qty
 
-                    # Accumulate volatility alpha (estimated profit from mean reversion)
-                    alpha = self._calculate_volatility_alpha(holdings, price, txn.qty)
-                    self.total_volatility_alpha += alpha  # Keep for backwards compatibility
-                    self.unrealized_stack_alpha += alpha  # Track as unrealized
+                # Accumulate volatility alpha (estimated profit from mean reversion)
+                alpha = self._calculate_volatility_alpha(holdings, price, txn.qty)
+                self.total_volatility_alpha += alpha  # Keep for backwards compatibility
+                self.unrealized_stack_alpha += alpha  # Track as unrealized
 
-                    # Update position
-                    holdings += txn.qty
+                # Update position
+                holdings += txn.qty
 
-                elif txn.action == "SELL":
-                    if self.buyback_enabled:
-                        # Track buyback stack unwinding and realize alpha
-                        # Can only unwind shares that are actually in the stack
-                        shares_to_unwind = min(txn.qty, self.buyback_stack_count)
+            elif txn.action == "SELL":
+                if self.buyback_enabled:
+                    # Track buyback stack unwinding and realize alpha
+                    # Can only unwind shares that are actually in the stack
+                    shares_to_unwind = min(txn.qty, self.buyback_stack_count)
 
-                        if shares_to_unwind > 0 and self.buyback_stack_count > 0:
-                            # Realize proportional alpha from unwound shares
-                            # Assume uniform alpha distribution across stack
-                            alpha_fraction = shares_to_unwind / self.buyback_stack_count
-                            realized_alpha = self.unrealized_stack_alpha * alpha_fraction
-                            self.realized_volatility_alpha += realized_alpha
-                            self.unrealized_stack_alpha -= realized_alpha
+                    if shares_to_unwind > 0 and self.buyback_stack_count > 0:
+                        # Realize proportional alpha from unwound shares
+                        # Assume uniform alpha distribution across stack
+                        alpha_fraction = shares_to_unwind / self.buyback_stack_count
+                        realized_alpha = self.unrealized_stack_alpha * alpha_fraction
+                        self.realized_volatility_alpha += realized_alpha
+                        self.unrealized_stack_alpha -= realized_alpha
 
-                        self.buyback_stack_count -= shares_to_unwind
+                    self.buyback_stack_count -= shares_to_unwind
 
-                    # Update position
-                    holdings -= txn.qty
+                # Update position
+                holdings -= txn.qty
 
-                # Place fresh orders based on new position and fill price
-                self.place_orders(holdings, price)
+            # Place fresh orders based on new position and fill price
+            self.place_orders(holdings, price)
 
         # All transactions for this day
         transactions.extend(executed)
