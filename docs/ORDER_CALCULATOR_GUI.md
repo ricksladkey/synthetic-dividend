@@ -316,14 +316,7 @@ if os.path.exists(cache_file):
 
 ```
 src/tools/order_calculator_gui.py
-├── GUI Construction: ✅ 95% coverage
-├── Input Validation: ✅ 100% coverage  
-├── Calculation Logic: ✅ 100% coverage
-├── Chart Rendering: ✅ 85% coverage
-├── Persistence: ✅ 100% coverage
-└── Error Handling: ✅ 90% coverage
-
-Overall: 92% coverage (135 tests passing)
+└── Automated test coverage for the GUI is not yet implemented.
 ```
 
 ### Key Test Scenarios
