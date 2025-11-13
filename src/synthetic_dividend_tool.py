@@ -238,6 +238,9 @@ Examples:
     # Run portfolio backtest with auto algorithm (recommended)
     synthetic-dividend-tool run portfolio --allocations '{"VOO": 0.6, "BIL": 0.3, "BTC-USD": 0.1}' --algo auto --start 2019-01-01 --end 2024-12-31
 
+    # Portfolio with explicit risk-free rate ticker for cash interest
+    synthetic-dividend-tool run portfolio --allocations '{"VOO": 0.7, "QQQ": 0.3}' --risk-free-rate-ticker BIL --start 2020-01-01 --end 2024-12-31
+
     # Backtest with market adjustment (vs VOO)
     synthetic-dividend-tool run backtest --ticker GLD --start 2024-01-01 --end 2024-12-31 --adjust-market --verbose
 
@@ -387,6 +390,15 @@ For detailed help on any command:
         type=float,
         default=0.0,
         help="Annual interest rate on cash reserves (default: 0.0, typical: 5.0 for money market)",
+    )
+    run_portfolio_parser.add_argument(
+        "--risk-free-rate-ticker",
+        help="Ticker for risk-free asset (e.g., BIL, SGOV) to earn returns on cash balance. "
+        "If not specified and a cash ticker is in allocations, auto-detects from portfolio.",
+    )
+    run_portfolio_parser.add_argument(
+        "--reference-rate-ticker",
+        help="Ticker for reference benchmark (e.g., VOO, SPY) for opportunity cost calculation",
     )
     run_portfolio_parser.add_argument("--output", help="Output file for detailed results (JSON)")
     run_portfolio_parser.add_argument("--verbose", action="store_true", help="Verbose output")
@@ -749,6 +761,23 @@ def run_portfolio(args) -> int:
         start_date = datetime.strptime(args.start, "%Y-%m-%d").date()
         end_date = datetime.strptime(args.end, "%Y-%m-%d").date()
 
+        # Auto-detect risk-free rate ticker if not specified
+        risk_free_rate_ticker = args.risk_free_rate_ticker
+        if not risk_free_rate_ticker:
+            # Known cash/bond tickers that can serve as risk-free rate proxies
+            CASH_TICKERS = {"BIL", "SGOV", "SHY", "AGG", "BND"}
+            cash_tickers_in_portfolio = [t for t in allocations.keys() if t in CASH_TICKERS]
+            if cash_tickers_in_portfolio:
+                # Use the first cash ticker found in the portfolio
+                risk_free_rate_ticker = cash_tickers_in_portfolio[0]
+                print(
+                    f"Auto-detected risk-free rate ticker: {risk_free_rate_ticker} "
+                    f"(from portfolio allocations)"
+                )
+
+        # Get reference rate ticker
+        reference_rate_ticker = args.reference_rate_ticker
+
         print("Running portfolio backtest...")
         print(f"Period: {start_date} to {end_date}")
         print(f"Initial investment: ${args.initial_investment:,.0f}")
@@ -756,6 +785,10 @@ def run_portfolio(args) -> int:
         print("Allocations:")
         for ticker, alloc in allocations.items():
             print(f"  {ticker}: {alloc*100:.1f}%")
+        if risk_free_rate_ticker:
+            print(f"Risk-free rate: {risk_free_rate_ticker}")
+        if reference_rate_ticker:
+            print(f"Reference benchmark: {reference_rate_ticker}")
         print()
 
         # Build portfolio algorithm
@@ -769,6 +802,8 @@ def run_portfolio(args) -> int:
             portfolio_algo=portfolio_algo,
             initial_investment=args.initial_investment,
             cash_interest_rate_pct=args.cash_interest_rate,
+            risk_free_rate_ticker=risk_free_rate_ticker,
+            reference_rate_ticker=reference_rate_ticker,
         )
 
         # Print results
