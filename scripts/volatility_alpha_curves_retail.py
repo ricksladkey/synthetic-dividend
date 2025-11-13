@@ -44,11 +44,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.models.simulation import run_portfolio_simulation
 
 # SDN parameters to test
-SDN_RANGE = [8, 9, 10, 11, 12, 13, 14, 15, 16]
+SDN_RANGE = [0, 8]
 
 # Test ticker (using cached 2023 data)
-TEST_TICKER = "NVDA"
-CASH_ALLOCATION = 0.10  # 10% cash reserve (Warren Buffett's 90/10)
+TEST_TICKER = "SOUN"
+CASH_ALLOCATION = 0.25  # 25% cash reserve (Warren Buffett's 90/10)
 
 
 def run_retail_backtest(ticker: str, sd_n: int, cash_pct: float = 0.10) -> dict:
