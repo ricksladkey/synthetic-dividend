@@ -9,7 +9,7 @@ import math
 import os
 import tkinter as tk
 from tkinter import messagebox, scrolledtext, ttk
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -27,11 +27,13 @@ class OrderCalculatorGUI:
 
         # History file path
         self.history_file = os.path.join(os.path.dirname(__file__), "order_calculator_history.json")
-        self.history: Dict[str, Dict] = self.load_history()
+        self.history: Dict[str, Dict] = {}
+        self.last_ticker: Optional[str] = None
+        self.load_history()
 
         # Create main frame
         main_frame = ttk.Frame(self.root, padding="10")
-        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        main_frame.grid(row=0, column=0, sticky="wens")
 
         # Configure grid weights
         self.root.columnconfigure(0, weight=1)
@@ -41,21 +43,21 @@ class OrderCalculatorGUI:
 
         # Input frame
         input_frame = ttk.LabelFrame(main_frame, text="Order Parameters", padding="5")
-        input_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        input_frame.grid(row=0, column=0, sticky="we", pady=(0, 10))
 
         # Ticker selection
         ttk.Label(input_frame, text="Ticker:").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
         self.ticker_var = tk.StringVar()
         self.ticker_combo = ttk.Combobox(input_frame, textvariable=self.ticker_var, width=10)
-        self.ticker_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(0, 10))
-        self.ticker_combo['values'] = [t for t in self.history.keys() if t != "last_ticker"]
+        self.ticker_combo.grid(row=0, column=1, sticky="we", padx=(0, 10))
+        self.ticker_combo["values"] = [t for t in self.history.keys() if t != "last_ticker"]
         self.ticker_combo.bind("<<ComboboxSelected>>", self.on_ticker_selected)
 
         # Holdings
         ttk.Label(input_frame, text="Holdings:").grid(row=0, column=2, sticky=tk.W, padx=(0, 5))
         self.holdings_var = tk.StringVar()
         self.holdings_entry = ttk.Entry(input_frame, textvariable=self.holdings_var, width=12)
-        self.holdings_entry.grid(row=0, column=3, sticky=(tk.W, tk.E), padx=(0, 10))
+        self.holdings_entry.grid(row=0, column=3, sticky="we", padx=(0, 10))
 
         # Last Price
         ttk.Label(input_frame, text="Last Price:").grid(
@@ -63,7 +65,7 @@ class OrderCalculatorGUI:
         )
         self.last_price_var = tk.StringVar()
         self.last_price_entry = ttk.Entry(input_frame, textvariable=self.last_price_var, width=12)
-        self.last_price_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(0, 10), pady=(5, 0))
+        self.last_price_entry.grid(row=1, column=1, sticky="we", padx=(0, 10), pady=(5, 0))
 
         # Current Price
         ttk.Label(input_frame, text="Current Price:").grid(
@@ -73,9 +75,7 @@ class OrderCalculatorGUI:
         self.current_price_entry = ttk.Entry(
             input_frame, textvariable=self.current_price_var, width=12
         )
-        self.current_price_entry.grid(
-            row=1, column=3, sticky=(tk.W, tk.E), padx=(0, 10), pady=(5, 0)
-        )
+        self.current_price_entry.grid(row=1, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
 
         # SDN
         ttk.Label(input_frame, text="SDN:").grid(
@@ -83,7 +83,7 @@ class OrderCalculatorGUI:
         )
         self.sdn_var = tk.StringVar()
         self.sdn_entry = ttk.Entry(input_frame, textvariable=self.sdn_var, width=12)
-        self.sdn_entry.grid(row=2, column=1, sticky=(tk.W, tk.E), padx=(0, 10), pady=(5, 0))
+        self.sdn_entry.grid(row=2, column=1, sticky="we", padx=(0, 10), pady=(5, 0))
 
         # Profit
         ttk.Label(input_frame, text="Profit %:").grid(
@@ -91,7 +91,7 @@ class OrderCalculatorGUI:
         )
         self.profit_var = tk.StringVar()
         self.profit_entry = ttk.Entry(input_frame, textvariable=self.profit_var, width=12)
-        self.profit_entry.grid(row=2, column=3, sticky=(tk.W, tk.E), padx=(0, 10), pady=(5, 0))
+        self.profit_entry.grid(row=2, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
 
         # Bracket Seed
         ttk.Label(input_frame, text="Bracket Seed:").grid(
@@ -101,9 +101,7 @@ class OrderCalculatorGUI:
         self.bracket_seed_entry = ttk.Entry(
             input_frame, textvariable=self.bracket_seed_var, width=12
         )
-        self.bracket_seed_entry.grid(
-            row=3, column=1, sticky=(tk.W, tk.E), padx=(0, 10), pady=(5, 10)
-        )
+        self.bracket_seed_entry.grid(row=3, column=1, sticky="we", padx=(0, 10), pady=(5, 10))
 
         # Calculate button
         self.calc_button = ttk.Button(
@@ -113,7 +111,7 @@ class OrderCalculatorGUI:
 
         # Tab control
         self.tab_control = ttk.Notebook(main_frame)
-        self.tab_control.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        self.tab_control.grid(row=1, column=0, sticky="wens", pady=(0, 10))
 
         # Order Details tab
         order_tab = ttk.Frame(self.tab_control)
@@ -122,7 +120,7 @@ class OrderCalculatorGUI:
         order_tab.rowconfigure(0, weight=1)
 
         self.output_text = scrolledtext.ScrolledText(order_tab, wrap=tk.WORD, height=20)
-        self.output_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=5, pady=5)
+        self.output_text.grid(row=0, column=0, sticky="wens", padx=5, pady=5)
 
         # Chart tab
         chart_tab = ttk.Frame(self.tab_control)
@@ -134,7 +132,7 @@ class OrderCalculatorGUI:
         self.figure = Figure(figsize=(8, 6), dpi=100)
         self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvasTkAgg(self.figure, master=chart_tab)
-        self.canvas.get_tk_widget().grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=5, pady=5)
+        self.canvas.get_tk_widget().grid(row=0, column=0, sticky="wens", padx=5, pady=5)
 
         # Status bar
         self.status_var = tk.StringVar()
@@ -142,12 +140,11 @@ class OrderCalculatorGUI:
         status_bar = ttk.Label(
             main_frame, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W
         )
-        status_bar.grid(row=2, column=0, sticky=(tk.W, tk.E))
+        status_bar.grid(row=2, column=0, sticky="we")
 
         # Load last ticker and pre-fill if available (after UI is created)
-        last_ticker = self.history.get("last_ticker")
-        if last_ticker and last_ticker in self.history:
-            self.pre_fill_with_ticker(last_ticker)
+        if self.last_ticker and self.last_ticker in self.history:
+            self.pre_fill_with_ticker(self.last_ticker)
 
     @staticmethod
     def parse_price(s: str) -> float:
@@ -181,27 +178,26 @@ class OrderCalculatorGUI:
         """Format holdings with commas for readability."""
         return f"{holdings:,.0f}"
 
-    def load_history(self) -> Dict[str, Dict]:
+    def load_history(self) -> None:
         """Load calculation history from JSON file."""
         if os.path.exists(self.history_file):
             try:
                 with open(self.history_file, "r") as f:
                     data = json.load(f)
                     # Extract ticker data (exclude last_ticker)
-                    history = {k: v for k, v in data.items() if k != "last_ticker"}
+                    self.history = {k: v for k, v in data.items() if k != "last_ticker"}
                     # Store last_ticker separately
-                    if "last_ticker" in data:
-                        history["last_ticker"] = data["last_ticker"]
-                    return history
+                    self.last_ticker = data.get("last_ticker")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to load history: {e}")
-        return {}
 
     def save_history(self):
         """Save calculation history to JSON file."""
         try:
             # Prepare data with last_ticker
-            data_to_save = dict(self.history)
+            data_to_save: Dict[str, Any] = dict(self.history)
+            if self.last_ticker:
+                data_to_save["last_ticker"] = self.last_ticker
             with open(self.history_file, "w") as f:
                 json.dump(data_to_save, f, indent=2)
         except Exception as e:
@@ -328,7 +324,7 @@ class OrderCalculatorGUI:
                 "bracket_seed": bracket_seed,
             }
             # Update last ticker
-            self.history["last_ticker"] = ticker
+            self.last_ticker = ticker
             self.save_history()
 
             # Update ticker list
@@ -362,8 +358,9 @@ class OrderCalculatorGUI:
 
             # Try to load asset data
             try:
-                from src.data.asset import Asset
                 from datetime import date, timedelta
+
+                from src.data.asset import Asset
 
                 asset = Asset(ticker)
                 # Get data for the last 2 years for chart visualization
@@ -456,12 +453,13 @@ class OrderCalculatorGUI:
                 if bracket_price > 0:
                     color = "purple" if i == 0 else "gray"
                     alpha = 0.5 if abs(i) > 1 else 0.3
+                    label = f"Bracket {i}" if i != 0 else "Current Bracket"
                     self.ax.axhline(
                         y=bracket_price,
                         color=color,
                         linestyle=":",
                         alpha=alpha,
-                        label=f"Bracket {i}" if i != 0 else f"Current Bracket",
+                        label=label,
                     )
 
         except Exception:
@@ -471,7 +469,7 @@ class OrderCalculatorGUI:
 def main():
     """Main entry point for the GUI."""
     root = tk.Tk()
-    app = OrderCalculatorGUI(root)
+    OrderCalculatorGUI(root)
     root.mainloop()
 
 
