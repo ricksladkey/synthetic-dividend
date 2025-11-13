@@ -236,10 +236,37 @@ class Asset:
 
     def _save_price_cache(self, df: pd.DataFrame) -> None:
         try:
+            # Load existing cache if it exists
+            existing_df = self._load_price_cache()
+
+            if existing_df is not None and not existing_df.empty:
+                # Normalize indices to ensure compatibility
+                # Convert both to datetime for consistent comparison
+                existing_dates = pd.to_datetime(existing_df.index)
+                new_dates = pd.to_datetime(df.index)
+
+                # Reset indices to datetime objects for consistent merging
+                existing_df = existing_df.copy()
+                existing_df.index = existing_dates
+                df = df.copy()
+                df.index = new_dates
+
+                # Combine existing cache with new data (union operation)
+                combined_df = pd.concat([existing_df, df], axis=0)
+                # Remove duplicates based on index (date), keeping the last occurrence
+                combined_df = combined_df[~combined_df.index.duplicated(keep="last")]
+                # Sort by index to maintain chronological order
+                combined_df = combined_df.sort_index()
+                df = combined_df
+
+            # Save the (possibly extended) cache
             if self.pkl_path is not None:
                 df.to_pickle(self.pkl_path)
             if self.csv_path is not None:
-                df.to_csv(self.csv_path, index=True)
+                # Ensure the index has a proper name for CSV header
+                df_copy = df.copy()
+                df_copy.index.name = "Date"
+                df_copy.to_csv(self.csv_path, index=True)
         except Exception:
             # Ignore cache write errors: cache is non-critical and failures should not interrupt main flow
             pass
@@ -254,6 +281,30 @@ class Asset:
 
     def _save_dividend_cache(self, series: pd.Series) -> None:
         try:
+            # Load existing cache if it exists
+            existing_series = self._load_dividend_cache()
+
+            if existing_series is not None and not existing_series.empty:
+                # Normalize indices to ensure compatibility
+                # Convert both to datetime for consistent comparison
+                existing_dates = pd.to_datetime(existing_series.index)
+                new_dates = pd.to_datetime(series.index)
+
+                # Reset indices to datetime objects for consistent merging
+                existing_series = existing_series.copy()
+                existing_series.index = existing_dates
+                series = series.copy()
+                series.index = new_dates
+
+                # Combine existing cache with new data (union operation)
+                combined_series = pd.concat([existing_series, series], axis=0)
+                # Remove duplicates based on index (date), keeping the last occurrence
+                combined_series = combined_series[~combined_series.index.duplicated(keep="last")]
+                # Sort by index to maintain chronological order
+                combined_series = combined_series.sort_index()
+                series = combined_series
+
+            # Save the (possibly extended) cache
             if self.div_pkl_path is not None:
                 series.to_pickle(self.div_pkl_path)
             if self.div_csv_path is not None:

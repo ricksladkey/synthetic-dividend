@@ -75,6 +75,10 @@ class StaticAssetProvider(AssetProvider):
         # Load CSV file
         df = pd.read_csv(self.csv_path, index_col=0, parse_dates=True)
 
+        # Ensure index is DatetimeIndex (convert date objects to datetime)
+        if df.index.dtype == "object":
+            df.index = pd.to_datetime(df.index)
+
         # Filter to requested date range
         mask = (df.index >= pd.Timestamp(start_date)) & (df.index <= pd.Timestamp(end_date))
         result = df.loc[mask, ["Open", "High", "Low", "Close"]].copy()
@@ -118,6 +122,10 @@ class StaticAssetProvider(AssetProvider):
 
         # Load dividend CSV
         df = pd.read_csv(div_path, index_col=0, parse_dates=True)
+
+        # Ensure index is DatetimeIndex (convert date objects to datetime)
+        if df.index.dtype == "object":
+            df.index = pd.to_datetime(df.index)
 
         # Filter to requested date range
         mask = (df.index >= pd.Timestamp(start_date)) & (df.index <= pd.Timestamp(end_date))

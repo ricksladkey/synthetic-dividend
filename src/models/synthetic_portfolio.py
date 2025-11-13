@@ -23,7 +23,7 @@ class SyntheticAsset:
     """Single asset within a synthetic portfolio with NAV and algorithm."""
 
     ticker: str
-    holdings: int = 0
+    holdings: float = 0
     nav: float = 0.0  # All-time high (internal valuation)
     algorithm: Any = None  # SyntheticDividendAlgorithm
     buyback_stack: List[Dict] = field(default_factory=list)
@@ -60,7 +60,7 @@ class PortfolioTransaction:
     date: date
     ticker: str
     action: str  # 'BUY', 'SELL', 'INITIAL_BUY', 'WITHDRAWAL'
-    quantity: int
+    quantity: float
     price: float
     total: float
     bank_after: float
@@ -76,7 +76,7 @@ class PortfolioSnapshot:
     bank: float
     asset_values: Dict[str, float] = field(default_factory=dict)
     asset_navs: Dict[str, float] = field(default_factory=dict)
-    holdings: Dict[str, int] = field(default_factory=dict)
+    holdings: Dict[str, float] = field(default_factory=dict)
 
 
 class SyntheticPortfolio:
@@ -221,7 +221,7 @@ class SyntheticPortfolio:
         del self.assets[ticker]
 
     # Portfolio state queries
-    def get_holdings(self) -> Dict[str, int]:
+    def get_holdings(self) -> Dict[str, float]:
         """Get current holdings for all assets."""
         return {ticker: asset.holdings for ticker, asset in self.assets.items()}
 

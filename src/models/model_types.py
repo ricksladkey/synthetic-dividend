@@ -15,7 +15,7 @@ class Transaction:
     """Represents a single buy or sell transaction."""
 
     action: str  # 'BUY' or 'SELL'
-    qty: int  # Number of shares
+    qty: float  # Number of shares (changed from int to float for fractional shares)
     notes: str = ""  # Optional explanation or metadata
     transaction_date: Optional[date] = None  # Transaction date (filled by backtest engine)
     price: float = 0.0  # Execution price per share (filled by backtest engine)
@@ -26,10 +26,19 @@ class Transaction:
         """Format transaction as human-readable string."""
         if self.transaction_date and self.price > 0:
             value = self.qty * self.price
-            return (
-                f"{self.transaction_date.isoformat()} {self.action} {self.qty} {self.ticker} "
-                f"@ {self.price:.2f} = {value:.2f}  # {self.notes}"
-            )
+            if self.ticker == "CASH":
+                # For CASH transactions, qty is in cents, price is $0.01 per cent
+                dollar_amount = value
+                return (
+                    f"{self.transaction_date.isoformat()} {self.action} ${dollar_amount:.2f} {self.ticker} "
+                    f"# {self.notes}"
+                )
+            else:
+                # Regular stock transactions
+                return (
+                    f"{self.transaction_date.isoformat()} {self.action} {self.qty} {self.ticker} "
+                    f"@ {self.price:.2f} = {value:.2f}  # {self.notes}"
+                )
         else:
             # Fallback for transactions without date/price
             return f"{self.action} {self.qty}  # {self.notes}"
@@ -45,7 +54,7 @@ class WithdrawalResult:
     - notes: Optional explanation of the withdrawal strategy
     """
 
-    shares_to_sell: int = 0  # Number of shares to liquidate
+    shares_to_sell: float = 0  # Number of shares to liquidate (allow fractional)
     cash_from_bank: float = 0.0  # Amount to withdraw from cash balance
     notes: str = ""  # Optional explanation
 
@@ -55,5 +64,5 @@ class AssetState:
     """Snapshot of single asset position. Pure data, no behavior."""
 
     ticker: str
-    holdings: int  # Share count
+    holdings: float  # Share count (changed from int to float for fractional shares)
     price: float  # Current price

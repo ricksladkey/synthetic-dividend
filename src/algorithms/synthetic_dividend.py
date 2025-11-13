@@ -304,7 +304,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         # Buyback stack: simple count of shares purchased for volatility harvesting
         # We don't track individual lots since tax consequences (LTCG) don't matter here
         # Just need to know how many shares are in the stack for symmetry tracking
-        self.buyback_stack_count: int = 0
+        self.buyback_stack_count: float = 0
 
         # Market interface: handles order placement, triggering, and execution
         self.market: Market = Market()
@@ -328,7 +328,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         fill_price_str = transaction.notes.split("filled=$")[1].split()[0]
         return float(fill_price_str)
 
-    def _calculate_volatility_alpha(self, holdings: int, price: float, quantity: int) -> float:
+    def _calculate_volatility_alpha(self, holdings: float, price: float, quantity: float) -> float:
         """Calculate volatility alpha from a buy transaction.
 
         Volatility alpha measures the profit from mean reversion as a percentage
@@ -349,7 +349,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         profit = (self.last_transaction_price - price) * quantity
         return (profit / current_value) * 100 if current_value != 0 else 0.0
 
-    def place_orders(self, holdings: int, current_price: float) -> None:
+    def place_orders(self, holdings: float, current_price: float) -> None:
         """Calculate and place symmetric buy/sell orders with the market.
 
         This is the core strategy logic: place limit orders at geometrically
@@ -394,7 +394,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             if orders["next_buy_qty"] > 0:
                 buy_order = Order(
                     action=OrderAction.BUY,
-                    quantity=int(orders["next_buy_qty"]),
+                    quantity=orders["next_buy_qty"],  # Allow fractional shares
                     order_type=OrderType.LIMIT,
                     limit_price=orders["next_buy_price"],
                     notes="Buying back",
@@ -408,7 +408,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     if current_price > self.all_time_high:
                         sell_order = Order(
                             action=OrderAction.SELL,
-                            quantity=int(orders["next_sell_qty"]),
+                            quantity=orders["next_sell_qty"],  # Allow fractional shares
                             order_type=OrderType.LIMIT,
                             limit_price=orders["next_sell_price"],
                             notes=f"ATH-sell at new ATH ${self.all_time_high:.2f}",
@@ -418,7 +418,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     # Standard sell logic
                     sell_order = Order(
                         action=OrderAction.SELL,
-                        quantity=int(orders["next_sell_qty"]),
+                        quantity=orders["next_sell_qty"],  # Allow fractional shares
                         order_type=OrderType.LIMIT,
                         limit_price=orders["next_sell_price"],
                         notes="Taking profits",
@@ -429,21 +429,21 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
             if orders["next_sell_qty"] > 0:
                 sell_order = Order(
                     action=OrderAction.SELL,
-                    quantity=int(orders["next_sell_qty"]),
+                    quantity=orders["next_sell_qty"],  # Allow fractional shares
                     order_type=OrderType.LIMIT,
                     limit_price=orders["next_sell_price"],
                     notes=f"ATH-only sell, ATH=${self.ath_price:.2f}",
                 )
                 self.market.place_order(sell_order)
 
-    def on_new_holdings(self, holdings: int, current_price: float) -> None:
+    def on_new_holdings(self, holdings: float, current_price: float) -> None:
         """Initialize algorithm state after initial purchase.
 
         Called once at backtest start to set up initial conditions and place
         the first set of orders.
 
         Args:
-            holdings: Initial share quantity
+            holdings: Initial share quantity (changed from int to float for fractional shares)
             current_price: Initial purchase price
         """
         # Initialize ATH tracking
@@ -457,7 +457,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         self.place_orders(holdings, current_price)
 
     def on_day(
-        self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame
+        self, date_: date, price_row: pd.Series, holdings: float, bank: float, history: pd.DataFrame
     ) -> List[Transaction]:
         """Evaluate day's price action and execute triggered orders.
 
@@ -480,7 +480,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         Args:
             date_: Current date
             price_row: OHLC price data for the day
-            holdings: Current share count
+            holdings: Current share count (changed from int to float for fractional shares)
             bank: Available cash (unused in this algorithm)
             history: Historical price data (unused in this algorithm)
 
@@ -514,40 +514,42 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         for txn in executed:
             price = self._extract_fill_price(txn)
 
-                if txn.action == "BUY":
-                    if self.buyback_enabled:
-                        # Add to buyback stack count for symmetry tracking
-                        self.buyback_stack_count += txn.qty
+            if txn.action == "BUY":
+                if self.buyback_enabled:
+                    # Add to buyback stack count for symmetry tracking
+                    self.buyback_stack_count += txn.qty
 
                     # Accumulate volatility alpha (estimated profit from mean reversion)
                     alpha = self._calculate_volatility_alpha(holdings, price, txn.qty)
                     self.total_volatility_alpha += alpha  # Keep for backwards compatibility
                     self.unrealized_stack_alpha += alpha  # Track as unrealized
 
-                    # Update position
-                    holdings += txn.qty
+                # Update position
+                holdings += txn.qty
 
-                elif txn.action == "SELL":
-                    if self.buyback_enabled:
-                        # Track buyback stack unwinding and realize alpha
-                        # Can only unwind shares that are actually in the stack
-                        shares_to_unwind = min(txn.qty, self.buyback_stack_count)
+            elif txn.action == "SELL":
+                if self.buyback_enabled:
+                    # Track buyback stack unwinding and realize alpha
+                    # Can only unwind shares that are actually in the stack
+                    shares_to_unwind = min(txn.qty, self.buyback_stack_count)
 
-                        if shares_to_unwind > 0 and self.buyback_stack_count > 0:
-                            # Realize proportional alpha from unwound shares
-                            # Assume uniform alpha distribution across stack
-                            alpha_fraction = shares_to_unwind / self.buyback_stack_count
-                            realized_alpha = self.unrealized_stack_alpha * alpha_fraction
-                            self.realized_volatility_alpha += realized_alpha
-                            self.unrealized_stack_alpha -= realized_alpha
+                    if shares_to_unwind > 0 and self.buyback_stack_count > 0:
+                        # Realize proportional alpha from unwound shares
+                        # Assume uniform alpha distribution across stack
+                        alpha_fraction = shares_to_unwind / self.buyback_stack_count
+                        realized_alpha = self.unrealized_stack_alpha * alpha_fraction
+                        self.realized_volatility_alpha += realized_alpha
+                        self.unrealized_stack_alpha -= realized_alpha
 
-                        self.buyback_stack_count -= shares_to_unwind
+                    self.buyback_stack_count -= shares_to_unwind
 
-                    # Update position
-                    holdings -= txn.qty
+                # Update position
+                holdings -= txn.qty
 
-                # Place fresh orders based on new position and fill price
-                self.place_orders(holdings, price)
+        # Place fresh orders based on final position and last fill price
+        if executed:
+            last_price = self._extract_fill_price(executed[-1])
+            self.place_orders(holdings, last_price)
 
         # All transactions for this day
         transactions.extend(executed)

@@ -38,7 +38,7 @@ class Order:
     """
 
     action: OrderAction
-    quantity: int
+    quantity: float  # Changed from int to float to support fractional shares
     order_type: OrderType = OrderType.LIMIT
     limit_price: Optional[float] = None
     notes: str = ""
@@ -208,6 +208,7 @@ class Market:
                     transaction = Transaction(
                         action=order.action.value,
                         qty=order.quantity,
+                        price=actual_price,
                         notes=notes.strip(),
                         limit_price=limit_price,
                     )
