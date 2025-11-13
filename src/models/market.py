@@ -208,6 +208,7 @@ class Market:
                     transaction = Transaction(
                         action=order.action.value,
                         qty=order.quantity,
+                        price=actual_price,
                         notes=notes.strip(),
                         limit_price=limit_price,
                     )

@@ -546,8 +546,10 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                 # Update position
                 holdings -= txn.qty
 
-            # Place fresh orders based on new position and fill price
-            self.place_orders(holdings, price)
+        # Place fresh orders based on final position and last fill price
+        if executed:
+            last_price = self._extract_fill_price(executed[-1])
+            self.place_orders(holdings, last_price)
 
         # All transactions for this day
         transactions.extend(executed)
