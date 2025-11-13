@@ -519,10 +519,10 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     # Add to buyback stack count for symmetry tracking
                     self.buyback_stack_count += txn.qty
 
-                # Accumulate volatility alpha (estimated profit from mean reversion)
-                alpha = self._calculate_volatility_alpha(holdings, price, txn.qty)
-                self.total_volatility_alpha += alpha  # Keep for backwards compatibility
-                self.unrealized_stack_alpha += alpha  # Track as unrealized
+                    # Accumulate volatility alpha (estimated profit from mean reversion)
+                    alpha = self._calculate_volatility_alpha(holdings, price, txn.qty)
+                    self.total_volatility_alpha += alpha  # Keep for backwards compatibility
+                    self.unrealized_stack_alpha += alpha  # Track as unrealized
 
                 # Update position
                 holdings += txn.qty
