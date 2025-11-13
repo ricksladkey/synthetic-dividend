@@ -7,7 +7,9 @@ just like a brokerage sweep account.
 """
 
 from datetime import date
+
 from src.models.simulation import run_portfolio_simulation
+
 
 def test_bil_interest_on_cash():
     """Test that CASH earns BIL interest automatically."""
@@ -44,7 +46,9 @@ def test_bil_interest_on_cash():
     print(f"\nCASH Interest Payments:")
     print(f"  Total payments: {len(cash_interest_txns)}")
 
-    total_interest = sum(float(t.notes.split('$')[1].split()[0]) for t in cash_interest_txns if '$' in t.notes)
+    total_interest = sum(
+        float(t.notes.split("$")[1].split()[0]) for t in cash_interest_txns if "$" in t.notes
+    )
     initial_cash = 100_000  # 10% of $1M
 
     print(f"  Total interest earned: ${total_interest:,.2f}")

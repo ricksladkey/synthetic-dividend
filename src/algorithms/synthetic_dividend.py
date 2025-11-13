@@ -328,7 +328,7 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
         fill_price_str = transaction.notes.split("filled=$")[1].split()[0]
         return float(fill_price_str)
 
-    def _calculate_volatility_alpha(self, holdings: int, fill_price: float, quantity: int) -> float:
+    def _calculate_volatility_alpha(self, holdings: int, price: float, quantity: int) -> float:
         """Calculate volatility alpha from a buy transaction.
 
         Volatility alpha measures the profit from mean reversion as a percentage
@@ -339,14 +339,14 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
         Args:
             holdings: Current holdings before this buy
-            fill_price: Price at which shares were bought
+            price: Price at which shares were bought
             quantity: Number of shares bought
 
         Returns:
             Alpha as percentage of portfolio value
         """
-        current_value = holdings * fill_price
-        profit = (self.last_transaction_price - fill_price) * quantity
+        current_value = holdings * price
+        profit = (self.last_transaction_price - price) * quantity
         return (profit / current_value) * 100 if current_value != 0 else 0.0
 
     def place_orders(self, holdings: int, current_price: float) -> None:
@@ -504,28 +504,25 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                 if high_val > self.ath_price:
                     self.ath_price = high_val
 
-        # Iterate to handle multi-bracket gaps (each iteration = one bracket crossing)
-        for iteration in range(1, self.MAX_ITERATIONS_PER_DAY + 1):
-            # Let market evaluate orders against this day's price action
-            executed = self.market.evaluate_day(date_, price_row, max_iterations=1)
+        # Evaluate all orders against this day's price action
+        # The market handles cascading triggers (multi-bracket gaps) internally
+        executed = self.market.evaluate_day(
+            date_, price_row, max_iterations=self.MAX_ITERATIONS_PER_DAY
+        )
 
-            if not executed:
-                # No orders triggered - we're done for today
-                break
-
-            # Process each executed transaction
-            for txn in executed:
-                fill_price = self._extract_fill_price(txn)
+        # Process all executed transactions
+        for txn in executed:
+            price = self._extract_fill_price(txn)
 
                 if txn.action == "BUY":
                     if self.buyback_enabled:
                         # Add to buyback stack count for symmetry tracking
                         self.buyback_stack_count += txn.qty
 
-                        # Accumulate volatility alpha (estimated profit from mean reversion)
-                        alpha = self._calculate_volatility_alpha(holdings, fill_price, txn.qty)
-                        self.total_volatility_alpha += alpha  # Keep for backwards compatibility
-                        self.unrealized_stack_alpha += alpha  # Track as unrealized
+                    # Accumulate volatility alpha (estimated profit from mean reversion)
+                    alpha = self._calculate_volatility_alpha(holdings, price, txn.qty)
+                    self.total_volatility_alpha += alpha  # Keep for backwards compatibility
+                    self.unrealized_stack_alpha += alpha  # Track as unrealized
 
                     # Update position
                     holdings += txn.qty
@@ -550,10 +547,10 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
                     holdings -= txn.qty
 
                 # Place fresh orders based on new position and fill price
-                self.place_orders(holdings, fill_price)
+                self.place_orders(holdings, price)
 
-            # Accumulate all transactions for this day
-            transactions.extend(executed)
+        # All transactions for this day
+        transactions.extend(executed)
 
         return transactions
 

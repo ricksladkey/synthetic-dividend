@@ -10,7 +10,9 @@ Verifies:
 """
 
 from datetime import date
+
 from src.models.simulation import run_portfolio_simulation
+
 
 def test_cash_allocation():
     """Test that CASH ticker is properly reserved."""
@@ -20,9 +22,9 @@ def test_cash_allocation():
 
     result = run_portfolio_simulation(
         allocations={
-            "NVDA": 0.60,   # 60% in NVDA
-            "PLTR": 0.30,   # 30% in PLTR
-            "CASH": 0.10,   # 10% cash reserve
+            "NVDA": 0.60,  # 60% in NVDA
+            "PLTR": 0.30,  # 30% in PLTR
+            "CASH": 0.10,  # 10% cash reserve
         },
         initial_investment=1_000_000,
         # Note: allow_margin not specified, should default to False
@@ -44,11 +46,11 @@ def test_cash_allocation():
     print(f"Total transactions: {len(txns)}")
 
     # Verify cash reserve
-    assert stats['bank_min'] >= 0, f"Bank went negative! Min: ${stats.get('bank_min', 0):,.0f}"
+    assert stats["bank_min"] >= 0, f"Bank went negative! Min: ${stats.get('bank_min', 0):,.0f}"
     print("\n✅ PASS: Bank never went negative (no margin used)")
 
     # Should have some skipped buys in no-margin mode
-    if stats.get('skipped_buys', 0) > 0:
+    if stats.get("skipped_buys", 0) > 0:
         print(f"✅ PASS: {stats['skipped_buys']} buys skipped due to insufficient cash")
     else:
         print("⚠️  WARNING: No skipped buys (cash reserve may have been too large)")
@@ -64,8 +66,8 @@ def test_explicit_margin_enabled():
 
     result = run_portfolio_simulation(
         allocations={
-            "NVDA": 0.90,   # 90% in NVDA
-            "CASH": 0.10,   # 10% cash reserve
+            "NVDA": 0.90,  # 90% in NVDA
+            "CASH": 0.10,  # 10% cash reserve
         },
         initial_investment=1_000_000,
         allow_margin=True,  # Explicitly enable margin
@@ -85,7 +87,7 @@ def test_explicit_margin_enabled():
     print(f"Max bank balance: ${stats.get('bank_max', 0):,.0f}")
     print(f"Skipped buys: {stats.get('skipped_buys', 0)}")
 
-    if stats.get('bank_min', 0) < 0:
+    if stats.get("bank_min", 0) < 0:
         print(f"✅ PASS: Margin was used (min bank: ${stats['bank_min']:,.0f})")
 
     return stats
@@ -129,8 +131,8 @@ def test_barbell_dynamics():
 
     result = run_portfolio_simulation(
         allocations={
-            "NVDA": 0.90,   # 90% in NVDA
-            "CASH": 0.10,   # 10% starting cash
+            "NVDA": 0.90,  # 90% in NVDA
+            "CASH": 0.10,  # 10% starting cash
         },
         initial_investment=1_000_000,
         allow_margin=False,
@@ -142,8 +144,8 @@ def test_barbell_dynamics():
     txns, stats = result
 
     initial_cash = 100_000  # 10% of $1M
-    final_cash = stats['final_bank']
-    max_cash = stats.get('bank_max', final_cash)
+    final_cash = stats["final_bank"]
+    max_cash = stats.get("bank_max", final_cash)
 
     print("\n" + "=" * 80)
     print("CASH DYNAMICS")
@@ -151,7 +153,9 @@ def test_barbell_dynamics():
     print(f"Initial cash reserve: ${initial_cash:,.0f}")
     print(f"Final cash: ${final_cash:,.0f}")
     print(f"Max cash during year: ${max_cash:,.0f}")
-    print(f"Cash growth: ${final_cash - initial_cash:,.0f} ({(final_cash/initial_cash - 1)*100:.1f}%)")
+    print(
+        f"Cash growth: ${final_cash - initial_cash:,.0f} ({(final_cash/initial_cash - 1)*100:.1f}%)"
+    )
 
     # In a strong uptrend (NVDA 2023), cash should accumulate from selling
     if max_cash > initial_cash * 1.5:
@@ -178,10 +182,18 @@ if __name__ == "__main__":
     print("=" * 80)
     print(f"{'Mode':<30} {'Final Value':<15} {'Final Bank':<15} {'Min Bank':<15}")
     print("-" * 80)
-    print(f"{'No margin + 10% cash':<30} ${stats1['final_value']:>13,.0f} ${stats1['final_bank']:>13,.0f} ${stats1.get('bank_min', 0):>13,.0f}")
-    print(f"{'Margin enabled + 10% cash':<30} ${stats2['final_value']:>13,.0f} ${stats2['final_bank']:>13,.0f} ${stats2.get('bank_min', 0):>13,.0f}")
-    print(f"{'Old style (100% NVDA + margin)':<30} ${stats3['final_value']:>13,.0f} ${stats3['final_bank']:>13,.0f} ${stats3.get('bank_min', 0):>13,.0f}")
-    print(f"{'Barbell test':<30} ${stats4['final_value']:>13,.0f} ${stats4['final_bank']:>13,.0f} ${stats4.get('bank_min', 0):>13,.0f}")
+    print(
+        f"{'No margin + 10% cash':<30} ${stats1['final_value']:>13,.0f} ${stats1['final_bank']:>13,.0f} ${stats1.get('bank_min', 0):>13,.0f}"
+    )
+    print(
+        f"{'Margin enabled + 10% cash':<30} ${stats2['final_value']:>13,.0f} ${stats2['final_bank']:>13,.0f} ${stats2.get('bank_min', 0):>13,.0f}"
+    )
+    print(
+        f"{'Old style (100% NVDA + margin)':<30} ${stats3['final_value']:>13,.0f} ${stats3['final_bank']:>13,.0f} ${stats3.get('bank_min', 0):>13,.0f}"
+    )
+    print(
+        f"{'Barbell test':<30} ${stats4['final_value']:>13,.0f} ${stats4['final_bank']:>13,.0f} ${stats4.get('bank_min', 0):>13,.0f}"
+    )
 
     print("\n" + "=" * 80)
     print("ALL TESTS COMPLETED")

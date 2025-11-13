@@ -80,11 +80,17 @@ def run_retail_backtest(ticker: str, sd_n: int, cash_pct: float = 0.10) -> dict:
 
         txns, stats = result
 
+        # Debug print transactions
+        for t in txns:
+            print(
+                f"{t.transaction_date} {t.action:4s} {t.qty:4d} of {t.ticker:8s} @ ${t.price:8.2f}"
+            )
+
         # Calculate metrics
-        total_return_pct = ((stats['total_final_value'] / 1_000_000) - 1) * 100
-        bank_min = stats.get('bank_min', 0)
-        bank_max = stats.get('bank_max', 0)
-        skipped_buys = stats.get('skipped_count', 0)
+        total_return_pct = ((stats["total_final_value"] / 1_000_000) - 1) * 100
+        bank_min = stats.get("bank_min", 0)
+        bank_max = stats.get("bank_max", 0)
+        skipped_buys = stats.get("skipped_count", 0)
 
         # Count transactions by ticker
         stock_txns = [t for t in txns if t.ticker == ticker and t.action in ["BUY", "SELL"]]
@@ -93,13 +99,20 @@ def run_retail_backtest(ticker: str, sd_n: int, cash_pct: float = 0.10) -> dict:
         # Get CASH interest earned
         cash_interest_total = stats.get("total_dividends_by_asset", {}).get("CASH", 0)
 
-        print(f"✓ Return: {total_return_pct:+.1f}%, {len(stock_txns)} txns, {skipped_buys} skipped")
+        final_combined_total = stats["final_bank"] + stats["total_final_value"]
+        print(f"[OK] Bank: {stats['final_bank']:,.2f}, Ticker: {stats['total_final_value']:,.2f}")
+        print(
+            f"[OK] Total: {final_combined_total:,.2f}, Concentration: {stats['total_final_value']/final_combined_total*100:.1f}%"
+        )
+        print(
+            f"[OK] Return: {total_return_pct:+.1f}%, {len(stock_txns)} txns, {skipped_buys} skipped"
+        )
 
         return {
             "sd_n": sd_n,
             "total_return_pct": total_return_pct,
-            "final_value": stats['total_final_value'],
-            "final_bank": stats['final_bank'],
+            "final_value": stats["total_final_value"],
+            "final_bank": stats["final_bank"],
             "bank_min": bank_min,
             "bank_max": bank_max,
             "transaction_count": len(stock_txns),
@@ -136,73 +149,96 @@ def plot_retail_curves(results: list, ticker: str, cash_pct: float):
 
     # Create figure with subplots
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(14, 10))
-    fig.suptitle(f"Volatility Alpha Curves - {ticker} (2023-2025)\n"
-                 f"Retail Mode: No Margin + {cash_pct*100:.0f}% CASH earning BIL interest",
-                 fontsize=14, fontweight='bold')
+    fig.suptitle(
+        f"Volatility Alpha Curves - {ticker} (2023-2025)\n"
+        f"Retail Mode: No Margin + {cash_pct*100:.0f}% CASH earning BIL interest",
+        fontsize=14,
+        fontweight="bold",
+    )
 
     # Plot 1: Total Returns
-    ax1.plot(sdn_values, returns, 'o-', linewidth=2, markersize=8, color='darkgreen')
-    ax1.axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+    ax1.plot(sdn_values, returns, "o-", linewidth=2, markersize=8, color="darkgreen")
+    ax1.axhline(y=0, color="gray", linestyle="--", alpha=0.5)
     ax1.set_xlabel("sdN Parameter", fontsize=11)
     ax1.set_ylabel("Total Return (%)", fontsize=11)
-    ax1.set_title("Portfolio Returns by sdN", fontsize=12, fontweight='bold')
+    ax1.set_title("Portfolio Returns by sdN", fontsize=12, fontweight="bold")
     ax1.grid(True, alpha=0.3)
 
     # Highlight best performer
     best_idx = returns.index(max(returns))
     best_sdn = sdn_values[best_idx]
-    ax1.scatter([best_sdn], [returns[best_idx]], color='gold', s=200, zorder=5,
-                edgecolors='black', linewidths=2)
-    ax1.annotate(f'Best: sd{best_sdn}\n{returns[best_idx]:.1f}%',
-                 xy=(best_sdn, returns[best_idx]),
-                 xytext=(10, 20), textcoords='offset points',
-                 bbox=dict(boxstyle='round,pad=0.5', fc='yellow', alpha=0.7),
-                 arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0'))
+    ax1.scatter(
+        [best_sdn],
+        [returns[best_idx]],
+        color="gold",
+        s=200,
+        zorder=5,
+        edgecolors="black",
+        linewidths=2,
+    )
+    ax1.annotate(
+        f"Best: sd{best_sdn}\n{returns[best_idx]:.1f}%",
+        xy=(best_sdn, returns[best_idx]),
+        xytext=(10, 20),
+        textcoords="offset points",
+        bbox=dict(boxstyle="round,pad=0.5", fc="yellow", alpha=0.7),
+        arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0"),
+    )
 
     # Plot 2: Transaction Count
-    ax2.bar(sdn_values, txn_counts, color='steelblue', alpha=0.7, edgecolor='black')
+    ax2.bar(sdn_values, txn_counts, color="steelblue", alpha=0.7, edgecolor="black")
     ax2.set_xlabel("sdN Parameter", fontsize=11)
     ax2.set_ylabel("Transaction Count", fontsize=11)
-    ax2.set_title("Trading Activity (Busywork)", fontsize=12, fontweight='bold')
-    ax2.grid(True, alpha=0.3, axis='y')
+    ax2.set_title("Trading Activity (Busywork)", fontsize=12, fontweight="bold")
+    ax2.grid(True, alpha=0.3, axis="y")
 
     # Plot 3: Skipped Buys (Cash Constraints)
-    ax3.bar(sdn_values, skipped_buys, color='crimson', alpha=0.7, edgecolor='black')
+    ax3.bar(sdn_values, skipped_buys, color="crimson", alpha=0.7, edgecolor="black")
     ax3.set_xlabel("sdN Parameter", fontsize=11)
     ax3.set_ylabel("Skipped Buys", fontsize=11)
-    ax3.set_title("Buys Skipped Due to Insufficient Cash", fontsize=12, fontweight='bold')
-    ax3.grid(True, alpha=0.3, axis='y')
+    ax3.set_title("Buys Skipped Due to Insufficient Cash", fontsize=12, fontweight="bold")
+    ax3.grid(True, alpha=0.3, axis="y")
 
     if max(skipped_buys) > 0:
-        ax3.annotate('Cash constraint\nbinding!',
-                     xy=(sdn_values[skipped_buys.index(max(skipped_buys))], max(skipped_buys)),
-                     xytext=(10, 10), textcoords='offset points',
-                     bbox=dict(boxstyle='round,pad=0.5', fc='yellow', alpha=0.7),
-                     arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0'))
+        ax3.annotate(
+            "Cash constraint\nbinding!",
+            xy=(sdn_values[skipped_buys.index(max(skipped_buys))], max(skipped_buys)),
+            xytext=(10, 10),
+            textcoords="offset points",
+            bbox=dict(boxstyle="round,pad=0.5", fc="yellow", alpha=0.7),
+            arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0"),
+        )
 
     # Plot 4: CASH Interest Earned
-    ax4.bar(sdn_values, cash_interest, color='darkgoldenrod', alpha=0.7, edgecolor='black')
+    ax4.bar(sdn_values, cash_interest, color="darkgoldenrod", alpha=0.7, edgecolor="black")
     ax4.set_xlabel("sdN Parameter", fontsize=11)
     ax4.set_ylabel("BIL Interest Earned ($)", fontsize=11)
-    ax4.set_title(f"CASH Interest from {cash_pct*100:.0f}% BIL Allocation", fontsize=12, fontweight='bold')
-    ax4.grid(True, alpha=0.3, axis='y')
+    ax4.set_title(
+        f"CASH Interest from {cash_pct*100:.0f}% BIL Allocation", fontsize=12, fontweight="bold"
+    )
+    ax4.grid(True, alpha=0.3, axis="y")
 
     # Add average interest annotation
     avg_interest = sum(cash_interest) / len(cash_interest)
-    ax4.axhline(y=avg_interest, color='red', linestyle='--', alpha=0.7, label=f'Avg: ${avg_interest:,.0f}')
+    ax4.axhline(
+        y=avg_interest, color="red", linestyle="--", alpha=0.7, label=f"Avg: ${avg_interest:,.0f}"
+    )
     ax4.legend()
 
     plt.tight_layout()
 
     # Save figure
-    output_path = Path(__file__).parent.parent / f"volatility_alpha_curves_retail_{ticker.lower()}_2023_2025.png"
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"\n✓ Saved plot to: {output_path}")
+    output_path = (
+        Path(__file__).parent.parent
+        / f"volatility_alpha_curves_retail_{ticker.lower()}_2023_2025.png"
+    )
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    print(f"\n[OK] Saved plot to: {output_path}")
 
     # Also save PDF
-    pdf_path = output_path.with_suffix('.pdf')
-    plt.savefig(pdf_path, bbox_inches='tight')
-    print(f"✓ Saved PDF to: {pdf_path}")
+    pdf_path = output_path.with_suffix(".pdf")
+    plt.savefig(pdf_path, bbox_inches="tight")
+    print(f"[OK] Saved PDF to: {pdf_path}")
 
     plt.show()
 
@@ -212,9 +248,11 @@ def plot_retail_curves(results: list, ticker: str, cash_pct: float):
     print("=" * 90)
     for r in valid_results:
         margin_str = "YES!" if r.get("used_margin", False) else "No"
-        print(f"sd{r['sd_n']:<4} {r['total_return_pct']:>+7.1f}%  "
-              f"{r['transaction_count']:>6}   {r['skipped_buys']:>6}     "
-              f"${r['cash_interest']:>9,.0f}  {margin_str:<6}")
+        print(
+            f"sd{r['sd_n']:<4} {r['total_return_pct']:>+7.1f}%  "
+            f"{r['transaction_count']:>6}   {r['skipped_buys']:>6}     "
+            f"${r['cash_interest']:>9,.0f}  {margin_str:<6}"
+        )
     print("=" * 90)
 
 
@@ -228,7 +266,9 @@ def main():
 
     print(f"Testing {len(SDN_RANGE)} different sdN parameters: {SDN_RANGE}")
     print(f"Ticker: {TEST_TICKER} (2023-2025 data)")
-    print(f"Allocations: {(1-CASH_ALLOCATION)*100:.0f}% {TEST_TICKER}, {CASH_ALLOCATION*100:.0f}% CASH")
+    print(
+        f"Allocations: {(1-CASH_ALLOCATION)*100:.0f}% {TEST_TICKER}, {CASH_ALLOCATION*100:.0f}% CASH"
+    )
     print(f"Constraints: allow_margin=False (retail mode)")
     print()
 

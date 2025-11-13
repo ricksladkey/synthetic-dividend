@@ -177,7 +177,9 @@ def run_portfolio_simulation(
                     div_series_copy = div_series.copy()
                     div_series_copy.index = pd.to_datetime(div_series_copy.index).tz_localize(None)
                     dividend_data_auto["CASH"] = div_series_copy  # Store as CASH dividends
-                    print(f"OK ({len(div_series_copy)} payments, ~{div_series.sum():.2f}% annual yield)")
+                    print(
+                        f"OK ({len(div_series_copy)} payments, ~{div_series.sum():.2f}% annual yield)"
+                    )
                 else:
                     print("None")
             except Exception as e:

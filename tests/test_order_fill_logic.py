@@ -91,9 +91,9 @@ class TestBuyLimitOrderExecutionPrice:
         open_price = 51.0  # Opened above our limit
         high = 52.0
         low = 48.0
-        fill_price = order.get_execution_price(open_price, low, high)
+        price = order.get_execution_price(open_price, low, high)
 
-        assert fill_price == 50.0, "BUY limit within range should fill at limit price"
+        assert price == 50.0, "BUY limit within range should fill at limit price"
 
     def test_buy_limit_gapped_through_fills_at_open(self):
         """BUY limit gapped through fills at open price - REALISTIC BEHAVIOR!
@@ -109,10 +109,10 @@ class TestBuyLimitOrderExecutionPrice:
         open_price = 46.0  # Opened below our limit (gapped through)
         high = 48.0
         low = 45.0
-        fill_price = order.get_execution_price(open_price, low, high)
+        price = order.get_execution_price(open_price, low, high)
 
         assert (
-            fill_price == 46.0
+            price == 46.0
         ), "BUY limit gapped through should fill at open (realistic market behavior)"
 
 
@@ -199,9 +199,9 @@ class TestSellLimitOrderExecutionPrice:
         open_price = 49.0  # Opened below our limit
         high = 52.0
         low = 48.0
-        fill_price = order.get_execution_price(open_price, low, high)
+        price = order.get_execution_price(open_price, low, high)
 
-        assert fill_price == 50.0, "SELL limit within range should fill at limit price"
+        assert price == 50.0, "SELL limit within range should fill at limit price"
 
     def test_sell_limit_gapped_through_fills_at_open(self):
         """SELL limit gapped through fills at open price - REALISTIC BEHAVIOR!
@@ -217,10 +217,10 @@ class TestSellLimitOrderExecutionPrice:
         open_price = 54.0  # Opened above our limit (gapped through)
         high = 55.0
         low = 52.0
-        fill_price = order.get_execution_price(open_price, low, high)
+        price = order.get_execution_price(open_price, low, high)
 
         assert (
-            fill_price == 54.0
+            price == 54.0
         ), "SELL limit gapped through should fill at open (realistic market behavior)"
 
 
@@ -234,9 +234,9 @@ class TestMarketOrderExecutionPrice:
         open_price = 51.23
         high = 52.0
         low = 50.0
-        fill_price = order.get_execution_price(open_price, low, high)
+        price = order.get_execution_price(open_price, low, high)
 
-        assert fill_price == 51.23, "Market order should fill at open price"
+        assert price == 51.23, "Market order should fill at open price"
 
     def test_market_sell_fills_at_open(self):
         """Market SELL order should fill at open price."""
@@ -245,6 +245,6 @@ class TestMarketOrderExecutionPrice:
         open_price = 51.23
         high = 52.0
         low = 50.0
-        fill_price = order.get_execution_price(open_price, low, high)
+        price = order.get_execution_price(open_price, low, high)
 
-        assert fill_price == 51.23, "Market order should fill at open price"
+        assert price == 51.23, "Market order should fill at open price"

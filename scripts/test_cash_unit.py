@@ -5,6 +5,7 @@ Unit tests for CASH ticker support (no market data required).
 Tests the logic changes without running full backtests.
 """
 
+
 def test_cash_filtering():
     """Test that CASH is properly filtered from ticker lists."""
     allocations = {
@@ -31,10 +32,11 @@ def test_cash_filtering():
 def test_allow_margin_default():
     """Test that allow_margin defaults to False."""
     import inspect
+
     from src.models.simulation import run_portfolio_simulation
 
     sig = inspect.signature(run_portfolio_simulation)
-    allow_margin_param = sig.parameters['allow_margin']
+    allow_margin_param = sig.parameters["allow_margin"]
 
     print("Test 2: allow_margin Default Value")
     print(f"  Parameter: allow_margin")
