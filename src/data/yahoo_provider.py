@@ -158,8 +158,25 @@ class YahooAssetProvider(AssetProvider):
         return None
 
     def _save_price_cache(self, df: pd.DataFrame) -> None:
-        """Save OHLC cache in both formats: pickle (fast) + CSV (readable)."""
+        """Save OHLC cache in both formats: pickle (fast) + CSV (readable).
+        
+        Extends existing cache with new data rather than overwriting.
+        """
         try:
+            # Load existing cache if it exists
+            existing_df = self._load_price_cache()
+            
+            if existing_df is not None and not existing_df.empty:
+                # Combine existing cache with new data (union operation)
+                # Use pandas concat with outer join to preserve all data
+                combined_df = pd.concat([existing_df, df], axis=0)
+                # Remove duplicates based on index (date), keeping the last occurrence
+                combined_df = combined_df[~combined_df.index.duplicated(keep='last')]
+                # Sort by index to maintain chronological order
+                combined_df = combined_df.sort_index()
+                df = combined_df
+            
+            # Save the (possibly extended) cache
             df.to_pickle(self.pkl_path)
             df.to_csv(self.csv_path, index=True)
         except Exception:
@@ -176,8 +193,25 @@ class YahooAssetProvider(AssetProvider):
         return None
 
     def _save_dividend_cache(self, series: pd.Series) -> None:
-        """Save dividend cache in both formats: pickle (fast) + CSV (readable)."""
+        """Save dividend cache in both formats: pickle (fast) + CSV (readable).
+        
+        Extends existing cache with new data rather than overwriting.
+        """
         try:
+            # Load existing cache if it exists
+            existing_series = self._load_dividend_cache()
+            
+            if existing_series is not None and not existing_series.empty:
+                # Combine existing cache with new data (union operation)
+                # Use pandas concat to preserve all data
+                combined_series = pd.concat([existing_series, series], axis=0)
+                # Remove duplicates based on index (date), keeping the last occurrence
+                combined_series = combined_series[~combined_series.index.duplicated(keep='last')]
+                # Sort by index to maintain chronological order
+                combined_series = combined_series.sort_index()
+                series = combined_series
+            
+            # Save the (possibly extended) cache
             series.to_pickle(self.div_pkl_path)
             df = series.to_frame(name="Dividend")
             df.index.name = "Date"
