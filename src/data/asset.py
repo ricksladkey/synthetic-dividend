@@ -238,34 +238,27 @@ class Asset:
         try:
             # Load existing cache if it exists
             existing_df = self._load_price_cache()
-            
+
             if existing_df is not None and not existing_df.empty:
                 # Normalize indices to ensure compatibility
-                # Convert both to datetime.date for consistent comparison
-                if hasattr(existing_df.index, 'date'):
-                    existing_dates = pd.to_datetime(existing_df.index).date
-                else:
-                    existing_dates = pd.to_datetime(existing_df.index).date
+                # Convert both to datetime for consistent comparison
+                existing_dates = pd.to_datetime(existing_df.index)
+                new_dates = pd.to_datetime(df.index)
                 
-                if hasattr(df.index, 'date'):
-                    new_dates = pd.to_datetime(df.index).date
-                else:
-                    new_dates = pd.to_datetime(df.index).date
-                
-                # Reset indices to date objects for consistent merging
+                # Reset indices to datetime objects for consistent merging
                 existing_df = existing_df.copy()
                 existing_df.index = existing_dates
                 df = df.copy()
                 df.index = new_dates
-                
+
                 # Combine existing cache with new data (union operation)
                 combined_df = pd.concat([existing_df, df], axis=0)
                 # Remove duplicates based on index (date), keeping the last occurrence
-                combined_df = combined_df[~combined_df.index.duplicated(keep='last')]
+                combined_df = combined_df[~combined_df.index.duplicated(keep="last")]
                 # Sort by index to maintain chronological order
                 combined_df = combined_df.sort_index()
                 df = combined_df
-            
+
             # Save the (possibly extended) cache
             if self.pkl_path is not None:
                 df.to_pickle(self.pkl_path)
@@ -287,34 +280,27 @@ class Asset:
         try:
             # Load existing cache if it exists
             existing_series = self._load_dividend_cache()
-            
+
             if existing_series is not None and not existing_series.empty:
                 # Normalize indices to ensure compatibility
-                # Convert both to datetime.date for consistent comparison
-                if hasattr(existing_series.index, 'date'):
-                    existing_dates = pd.to_datetime(existing_series.index).date
-                else:
-                    existing_dates = pd.to_datetime(existing_series.index).date
+                # Convert both to datetime for consistent comparison
+                existing_dates = pd.to_datetime(existing_series.index)
+                new_dates = pd.to_datetime(series.index)
                 
-                if hasattr(series.index, 'date'):
-                    new_dates = pd.to_datetime(series.index).date
-                else:
-                    new_dates = pd.to_datetime(series.index).date
-                
-                # Reset indices to date objects for consistent merging
+                # Reset indices to datetime objects for consistent merging
                 existing_series = existing_series.copy()
                 existing_series.index = existing_dates
                 series = series.copy()
                 series.index = new_dates
-                
+
                 # Combine existing cache with new data (union operation)
                 combined_series = pd.concat([existing_series, series], axis=0)
                 # Remove duplicates based on index (date), keeping the last occurrence
-                combined_series = combined_series[~combined_series.index.duplicated(keep='last')]
+                combined_series = combined_series[~combined_series.index.duplicated(keep="last")]
                 # Sort by index to maintain chronological order
                 combined_series = combined_series.sort_index()
                 series = combined_series
-            
+
             # Save the (possibly extended) cache
             if self.div_pkl_path is not None:
                 series.to_pickle(self.div_pkl_path)
