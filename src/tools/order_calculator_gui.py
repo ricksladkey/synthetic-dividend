@@ -29,11 +29,6 @@ class OrderCalculatorGUI:
         self.history_file = os.path.join(os.path.dirname(__file__), "order_calculator_history.json")
         self.history: Dict[str, Dict] = self.load_history()
 
-        # Load last ticker and pre-fill if available
-        last_ticker = self.history.get("last_ticker")
-        if last_ticker and last_ticker in self.history:
-            self.pre_fill_with_ticker(last_ticker)
-
         # Create main frame
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -148,6 +143,11 @@ class OrderCalculatorGUI:
             main_frame, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W
         )
         status_bar.grid(row=2, column=0, sticky=(tk.W, tk.E))
+
+        # Load last ticker and pre-fill if available (after UI is created)
+        last_ticker = self.history.get("last_ticker")
+        if last_ticker and last_ticker in self.history:
+            self.pre_fill_with_ticker(last_ticker)
 
     @staticmethod
     def parse_price(s: str) -> float:
