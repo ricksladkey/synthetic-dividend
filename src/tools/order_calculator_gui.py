@@ -452,7 +452,7 @@ class OrderCalculatorGUI:
                 bracket_price = anchor_price * math.pow(1 + rebalance_size, i)
                 if bracket_price > 0:
                     color = "purple" if i == 0 else "gray"
-                    alpha = 0.5 if abs(i) > 1 else 0.3
+                    alpha = 0.3 if abs(i) > 1 else 0.5
                     label = f"Bracket {i}" if i != 0 else "Current Bracket"
                     self.ax.axhline(
                         y=bracket_price,
