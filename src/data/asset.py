@@ -240,8 +240,25 @@ class Asset:
             existing_df = self._load_price_cache()
             
             if existing_df is not None and not existing_df.empty:
+                # Normalize indices to ensure compatibility
+                # Convert both to datetime.date for consistent comparison
+                if hasattr(existing_df.index, 'date'):
+                    existing_dates = pd.to_datetime(existing_df.index).date
+                else:
+                    existing_dates = pd.to_datetime(existing_df.index).date
+                
+                if hasattr(df.index, 'date'):
+                    new_dates = pd.to_datetime(df.index).date
+                else:
+                    new_dates = pd.to_datetime(df.index).date
+                
+                # Reset indices to date objects for consistent merging
+                existing_df = existing_df.copy()
+                existing_df.index = existing_dates
+                df = df.copy()
+                df.index = new_dates
+                
                 # Combine existing cache with new data (union operation)
-                # Use pandas concat with outer join to preserve all data
                 combined_df = pd.concat([existing_df, df], axis=0)
                 # Remove duplicates based on index (date), keeping the last occurrence
                 combined_df = combined_df[~combined_df.index.duplicated(keep='last')]
@@ -272,8 +289,25 @@ class Asset:
             existing_series = self._load_dividend_cache()
             
             if existing_series is not None and not existing_series.empty:
+                # Normalize indices to ensure compatibility
+                # Convert both to datetime.date for consistent comparison
+                if hasattr(existing_series.index, 'date'):
+                    existing_dates = pd.to_datetime(existing_series.index).date
+                else:
+                    existing_dates = pd.to_datetime(existing_series.index).date
+                
+                if hasattr(series.index, 'date'):
+                    new_dates = pd.to_datetime(series.index).date
+                else:
+                    new_dates = pd.to_datetime(series.index).date
+                
+                # Reset indices to date objects for consistent merging
+                existing_series = existing_series.copy()
+                existing_series.index = existing_dates
+                series = series.copy()
+                series.index = new_dates
+                
                 # Combine existing cache with new data (union operation)
-                # Use pandas concat to preserve all data
                 combined_series = pd.concat([existing_series, series], axis=0)
                 # Remove duplicates based on index (date), keeping the last occurrence
                 combined_series = combined_series[~combined_series.index.duplicated(keep='last')]
