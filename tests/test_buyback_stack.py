@@ -229,7 +229,7 @@ class TestBuybackStackVShape:
         # Stack quantity should account for extra shares
         share_diff = sd_full - ath_only
         assert (
-            stack_qty == share_diff
+            abs(stack_qty - share_diff) < 1e-10
         ), f"Stack quantity ({stack_qty}) should equal share difference ({share_diff})"
 
     def test_v_shape_exceeds_ath(self):
@@ -287,7 +287,7 @@ class TestBuybackStackDrawdown:
         # Stack quantity should equal share difference
         share_diff = sd_full - ath_only
         assert (
-            stack_qty == share_diff
+            abs(stack_qty - share_diff) < 1e-10
         ), f"Stack quantity ({stack_qty}) should equal share difference ({share_diff})"
 
     def test_deep_drawdown(self):
@@ -310,7 +310,9 @@ class TestBuybackStackDrawdown:
         assert not stack_empty, "Stack should be non-empty in deep drawdown"
 
         # Verify stack accounts for difference
-        assert stack_qty == (sd_full - ath_only), "Stack should account for all extra shares"
+        assert (
+            abs(stack_qty - (sd_full - ath_only)) < 1e-10
+        ), f"Stack should account for all extra shares: stack_qty={stack_qty}, diff={sd_full - ath_only}"
 
 
 class TestBuybackStackMultipleCycles:
@@ -352,7 +354,7 @@ class TestBuybackStackMultipleCycles:
         # Stack quantity should account for extra shares
         share_diff = sd_full - ath_only
         assert (
-            stack_qty == share_diff
+            abs(stack_qty - share_diff) < 1e-10
         ), f"Stack quantity ({stack_qty}) should equal share difference ({share_diff})"
 
 
@@ -382,7 +384,7 @@ class TestBuybackStackParameterVariations:
         # Stack quantity should account for extra shares
         share_diff = sd_full - ath_only
         assert (
-            stack_qty == share_diff
+            abs(stack_qty - share_diff) < 1e-10
         ), f"Stack quantity ({stack_qty}) should equal share difference ({share_diff})"
 
     def test_granular_rebalance(self):
@@ -408,7 +410,7 @@ class TestBuybackStackParameterVariations:
         # Stack quantity should account for extra shares
         share_diff = sd_full - ath_only
         assert (
-            stack_qty == share_diff
+            abs(stack_qty - share_diff) < 1e-10
         ), f"Stack quantity ({stack_qty}) should equal share difference ({share_diff})"
 
     def test_zero_profit_sharing(self):
@@ -447,7 +449,7 @@ class TestBuybackStackParameterVariations:
         )
 
         assert (
-            sd_full == ath_only
+            abs(sd_full - ath_only) < 1e-10
         ), f"Shares should match with 100% profit sharing: SD Full={sd_full}, ATH-Only={ath_only}"
 
         assert stack_empty, "Stack should be empty at ATH"

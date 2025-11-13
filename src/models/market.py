@@ -38,7 +38,7 @@ class Order:
     """
 
     action: OrderAction
-    quantity: int
+    quantity: float  # Changed from int to float to support fractional shares
     order_type: OrderType = OrderType.LIMIT
     limit_price: Optional[float] = None
     notes: str = ""

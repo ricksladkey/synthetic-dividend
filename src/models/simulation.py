@@ -343,7 +343,7 @@ class SimulationState:
 
         # Initialize portfolio state
         self.shared_bank = self.initial_investment
-        self.holdings: Dict[str, int] = {}
+        self.holdings: Dict[str, float] = {}
         self.all_transactions: List[Transaction] = []
 
         # Track daily values
@@ -381,7 +381,7 @@ class SimulationState:
         self.total_dividends_by_asset = {ticker: 0.0 for ticker in self.allocations}
         self.dividend_payment_count_by_asset = {ticker: 0 for ticker in self.allocations}
         self.holdings_history = {
-            ticker: [(self.common_dates[0], 0)] for ticker in self.real_tickers
+            ticker: [(self.common_dates[0], 0.0)] for ticker in self.real_tickers
         }
 
         # Bank balance tracking
@@ -842,8 +842,8 @@ def market_process(
                     Transaction(
                         transaction_date=current_date,
                         action="WITHDRAWAL",
-                        qty=actual_withdrawal,  # Amount withdrawn (float, preserves cents)
-                        price=1.0,  # $1 per dollar withdrawn
+                        qty=int(actual_withdrawal * 100),  # Amount in cents (preserves precision)
+                        price=0.01,  # $0.01 per cent (so qty=12345 = $123.45)
                         ticker="CASH",
                         notes=withdrawal_notes,
                     )
@@ -914,12 +914,9 @@ def withdrawal_process(
                             )
                             proportion = asset_value / total_asset_value
                             amount_to_raise = shortfall * proportion
-                            shares_to_sell = max(
-                                1,
-                                int(
-                                    amount_to_raise
-                                    / state.price_data[ticker].loc[current_date, "Close"].item()
-                                ),
+                            shares_to_sell = math.ceil(
+                                amount_to_raise
+                                / state.price_data[ticker].loc[current_date, "Close"].item()
                             )
 
                             if shares_to_sell > 0:
@@ -957,8 +954,10 @@ def withdrawal_process(
                 Transaction(
                     transaction_date=current_date,
                     action="WITHDRAWAL",
-                    qty=actual_withdrawal,  # Dollar amount withdrawn (including cents)
-                    price=1.0,  # $1 per dollar withdrawn
+                    qty=int(
+                        actual_withdrawal * 100
+                    ),  # Dollar amount in cents (preserves precision)
+                    price=0.01,  # $0.01 per cent
                     ticker="CASH",
                     notes=notes,
                 )
@@ -1031,8 +1030,8 @@ def dividend_process(
                         Transaction(
                             transaction_date=div_date,
                             action="INTEREST",
-                            qty=0,  # CASH doesn't have shares
-                            price=div_per_share,
+                            qty=int(div_payment * 100),  # Interest amount in cents
+                            price=0.01,  # $0.01 per cent
                             ticker=ticker,
                             notes=f"${div_payment:.2f} (${avg_cash_balance:,.0f} @ {(div_per_share/bil_price)*12*100:.2f}% APY via BIL), bank = {state.shared_bank:.2f}",
                         )

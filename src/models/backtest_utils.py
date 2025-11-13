@@ -2,13 +2,13 @@
 
 import math
 from datetime import date
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
 
 def calculate_time_weighted_average_holdings(
-    holdings_history: List[Tuple[date, int]], period_start: date, period_end: date
+    holdings_history: List[Tuple[date, float]], period_start: date, period_end: date
 ) -> float:
     """Calculate time-weighted average holdings over a period.
 
@@ -65,12 +65,12 @@ def calculate_time_weighted_average_holdings(
 
 
 def calculate_synthetic_dividend_orders(
-    holdings: int,
+    holdings: float,
     last_transaction_price: float,
     rebalance_size: float,
     profit_sharing: float,
     bracket_seed: Optional[float] = None,
-) -> Dict[str, Union[float, int]]:
+) -> Dict[str, float]:
     """Pure function to calculate synthetic dividend buy/sell orders.
 
     The formulas ensure perfect symmetry: if you buy Q shares at price P_low,
@@ -108,15 +108,13 @@ def calculate_synthetic_dividend_orders(
 
     # Buy at r% below anchor price
     next_buy_price: float = anchor_price / (1 + rebalance_size)
-    # Buy quantity: r * H * s, rounded to nearest integer
-    next_buy_qty: int = int(rebalance_size * holdings * profit_sharing + 0.5)
+    # Buy quantity: r * H * s, allow fractional shares
+    next_buy_qty: float = rebalance_size * holdings * profit_sharing
 
     # Sell at r% above anchor price
     next_sell_price: float = anchor_price * (1 + rebalance_size)
     # Sell quantity: symmetric formula ensures roundtrip balance
-    next_sell_qty: int = int(
-        rebalance_size * holdings * profit_sharing / (1 + rebalance_size) + 0.5
-    )
+    next_sell_qty: float = rebalance_size * holdings * profit_sharing / (1 + rebalance_size)
 
     return {
         "next_buy_price": next_buy_price,

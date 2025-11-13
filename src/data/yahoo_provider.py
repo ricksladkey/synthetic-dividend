@@ -188,7 +188,9 @@ class YahooAssetProvider(AssetProvider):
 
             # Save the (possibly extended) cache
             df.to_pickle(self.pkl_path)
-            df.to_csv(self.csv_path, index=True)
+            df_copy = df.copy()
+            df_copy.index.name = "Date"
+            df_copy.to_csv(self.csv_path, index=True)
         except Exception:
             pass
 

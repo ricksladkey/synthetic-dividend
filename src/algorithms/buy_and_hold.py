@@ -21,11 +21,11 @@ class BuyAndHoldAlgorithm(AlgorithmBase):
         """Initialize (params ignored for compatibility)."""
         super().__init__(params)
 
-    def on_new_holdings(self, holdings: int, current_price: float) -> None:
+    def on_new_holdings(self, holdings: float, current_price: float) -> None:
         """No-op: no initialization needed."""
 
     def on_day(
-        self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame
+        self, date_: date, price_row: pd.Series, holdings: float, bank: float, history: pd.DataFrame
     ) -> List[Transaction]:
         """Always returns empty list: hold position."""
         return []

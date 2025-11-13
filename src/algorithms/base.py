@@ -1,5 +1,6 @@
 """Abstract base class for trading algorithms."""
 
+import math
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import Any, Dict, List, Optional
@@ -24,17 +25,17 @@ class AlgorithmBase(ABC):
         self.params: Dict[str, Any] = params or {}
 
     @abstractmethod
-    def on_new_holdings(self, holdings: int, current_price: float) -> None:
+    def on_new_holdings(self, holdings: float, current_price: float) -> None:
         """Initialize algorithm state after initial purchase.
 
         Args:
-            holdings: Initial share count
+            holdings: Initial share count (changed from int to float for fractional shares)
             current_price: Price at initial purchase
         """
 
     @abstractmethod
     def on_day(
-        self, date_: date, price_row: pd.Series, holdings: int, bank: float, history: pd.DataFrame
+        self, date_: date, price_row: pd.Series, holdings: float, bank: float, history: pd.DataFrame
     ) -> List[Transaction]:
         """Process one trading day, return list of transactions executed.
 
@@ -44,7 +45,7 @@ class AlgorithmBase(ABC):
         Args:
             date_: Current date
             price_row: OHLC prices for current day
-            holdings: Current share count
+            holdings: Current share count (changed from int to float for fractional shares)
             bank: Current cash balance (may be negative)
             history: All price data up to previous day
 
@@ -61,7 +62,7 @@ class AlgorithmBase(ABC):
         date_: date,
         requested_amount: float,
         current_price: float,
-        holdings: int,
+        holdings: float,
         bank: float,
         allow_margin: bool,
     ) -> WithdrawalResult:
@@ -74,7 +75,7 @@ class AlgorithmBase(ABC):
             date_: Current date
             requested_amount: Amount of cash requested for withdrawal
             current_price: Current share price
-            holdings: Current share count
+            holdings: Current share count (changed from int to float for fractional shares)
             bank: Current cash balance (may be negative)
             allow_margin: Whether negative bank balance is allowed
 
@@ -99,7 +100,9 @@ class AlgorithmBase(ABC):
                 # Strict mode: also need to cover negative bank balance
                 cash_needed = requested_amount - bank  # If bank<0, this increases cash_needed
 
-            shares_to_sell = int(cash_needed / current_price) + 1  # Round up
+            shares_to_sell: float = math.ceil(
+                cash_needed / current_price
+            )  # Allow fractional shares
             shares_to_sell = min(shares_to_sell, holdings)  # Cap at available
 
             # Calculate actual cash available from bank after share sale

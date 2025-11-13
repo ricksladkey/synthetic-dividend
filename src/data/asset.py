@@ -263,7 +263,10 @@ class Asset:
             if self.pkl_path is not None:
                 df.to_pickle(self.pkl_path)
             if self.csv_path is not None:
-                df.to_csv(self.csv_path, index=True)
+                # Ensure the index has a proper name for CSV header
+                df_copy = df.copy()
+                df_copy.index.name = "Date"
+                df_copy.to_csv(self.csv_path, index=True)
         except Exception:
             # Ignore cache write errors: cache is non-critical and failures should not interrupt main flow
             pass
