@@ -41,12 +41,12 @@ class OrderCalculatorGUI:
         # Configure grid weights
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
-        main_frame.columnconfigure(1, weight=1)
-        main_frame.rowconfigure(2, weight=1)
+        main_frame.columnconfigure(0, weight=1)
+        main_frame.rowconfigure(1, weight=1)
 
         # Input frame
         input_frame = ttk.LabelFrame(main_frame, text="Order Parameters", padding="5")
-        input_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
+        input_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
 
         # Ticker selection
         ttk.Label(input_frame, text="Ticker:").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
@@ -116,26 +116,30 @@ class OrderCalculatorGUI:
         )
         self.calc_button.grid(row=3, column=2, columnspan=2, pady=(5, 10))
 
-        # Output frame
-        output_frame = ttk.LabelFrame(main_frame, text="Order Details", padding="5")
-        output_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
-        output_frame.rowconfigure(0, weight=1)
-        output_frame.columnconfigure(0, weight=1)
+        # Tab control
+        self.tab_control = ttk.Notebook(main_frame)
+        self.tab_control.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
 
-        self.output_text = scrolledtext.ScrolledText(output_frame, wrap=tk.WORD, height=20)
-        self.output_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        # Order Details tab
+        order_tab = ttk.Frame(self.tab_control)
+        self.tab_control.add(order_tab, text="Order Details")
+        order_tab.columnconfigure(0, weight=1)
+        order_tab.rowconfigure(0, weight=1)
 
-        # Chart frame
-        chart_frame = ttk.LabelFrame(main_frame, text="Price Chart with Brackets", padding="5")
-        chart_frame.grid(row=1, column=1, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
-        chart_frame.rowconfigure(0, weight=1)
-        chart_frame.columnconfigure(0, weight=1)
+        self.output_text = scrolledtext.ScrolledText(order_tab, wrap=tk.WORD, height=20)
+        self.output_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=5, pady=5)
+
+        # Chart tab
+        chart_tab = ttk.Frame(self.tab_control)
+        self.tab_control.add(chart_tab, text="Price Chart")
+        chart_tab.columnconfigure(0, weight=1)
+        chart_tab.rowconfigure(0, weight=1)
 
         # Matplotlib figure
-        self.figure = Figure(figsize=(6, 4), dpi=100)
+        self.figure = Figure(figsize=(8, 6), dpi=100)
         self.ax = self.figure.add_subplot(111)
-        self.canvas = FigureCanvasTkAgg(self.figure, master=chart_frame)
-        self.canvas.get_tk_widget().grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.canvas = FigureCanvasTkAgg(self.figure, master=chart_tab)
+        self.canvas.get_tk_widget().grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=5, pady=5)
 
         # Status bar
         self.status_var = tk.StringVar()
@@ -143,7 +147,7 @@ class OrderCalculatorGUI:
         status_bar = ttk.Label(
             main_frame, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W
         )
-        status_bar.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E))
+        status_bar.grid(row=2, column=0, sticky=(tk.W, tk.E))
 
     @staticmethod
     def parse_price(s: str) -> float:
