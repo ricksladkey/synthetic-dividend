@@ -20,13 +20,18 @@ def test_quarterly_rebalance_60_40():
         target_allocations={"VOO": 0.6, "BIL": 0.4}, rebalance_months=[3, 6, 9, 12]
     )
 
-    transactions, summary = run_portfolio_backtest(
-        allocations={"VOO": 0.6, "BIL": 0.4},
-        start_date=date(2023, 1, 1),
-        end_date=date(2023, 12, 31),
-        portfolio_algo=algo,
-        initial_investment=100_000,
-    )
+    try:
+        transactions, summary = run_portfolio_backtest(
+            allocations={"VOO": 0.6, "BIL": 0.4},
+            start_date=date(2023, 1, 1),
+            end_date=date(2023, 12, 31),
+            portfolio_algo=algo,
+            initial_investment=100_000,
+        )
+    except ValueError as e:
+        if "No data available" in str(e):
+            pytest.skip(f"Market data not available: {e}")
+        raise
 
     # Verify basic structure
     assert summary["initial_investment"] == 100_000
@@ -55,13 +60,18 @@ def test_per_asset_portfolio_hybrid():
         }
     )
 
-    transactions, summary = run_portfolio_backtest(
-        allocations={"VOO": 0.7, "BIL": 0.3},
-        start_date=date(2023, 1, 1),
-        end_date=date(2023, 12, 31),
-        portfolio_algo=hybrid_algo,
-        initial_investment=100_000,
-    )
+    try:
+        transactions, summary = run_portfolio_backtest(
+            allocations={"VOO": 0.7, "BIL": 0.3},
+            start_date=date(2023, 1, 1),
+            end_date=date(2023, 12, 31),
+            portfolio_algo=hybrid_algo,
+            initial_investment=100_000,
+        )
+    except ValueError as e:
+        if "No data available" in str(e):
+            pytest.skip(f"Market data not available: {e}")
+        raise
 
     # Verify basic structure
     assert summary["initial_investment"] == 100_000
@@ -105,13 +115,18 @@ def test_shared_bank_isolation():
         }
     )
 
-    transactions, summary = run_portfolio_backtest(
-        allocations={"VOO": 0.4, "QQQ": 0.4, "BIL": 0.2},
-        start_date=date(2023, 1, 1),
-        end_date=date(2023, 12, 31),
-        portfolio_algo=hybrid_algo,
-        initial_investment=100_000,
-    )
+    try:
+        transactions, summary = run_portfolio_backtest(
+            allocations={"VOO": 0.4, "QQQ": 0.4, "BIL": 0.2},
+            start_date=date(2023, 1, 1),
+            end_date=date(2023, 12, 31),
+            portfolio_algo=hybrid_algo,
+            initial_investment=100_000,
+        )
+    except ValueError as e:
+        if "No data available" in str(e):
+            pytest.skip(f"Market data not available: {e}")
+        raise
 
     # Bank should never be super negative (some margin is ok)
     min_bank = min(summary["daily_bank_values"].values())

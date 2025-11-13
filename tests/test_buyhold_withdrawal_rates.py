@@ -220,6 +220,8 @@ class TestBuyHoldWithdrawalSustainability:
     def test_spy_2022_bear_market(self, fetcher, withdrawal_rate, expected_survival):
         """SPY 2022: Bear market (-18%). Withdrawals compound losses."""
         df = fetcher.get_history("SPY", date(2022, 1, 1), date(2022, 12, 31))
+        if df is None or df.empty:
+            pytest.skip("SPY 2022 data not available (network/cache issue)")
         initial_qty = 1000
 
         algo = BuyAndHoldAlgorithm()
@@ -277,6 +279,8 @@ class TestBuyHoldWithdrawalSustainability:
     def test_spy_2008_crash(self, fetcher, withdrawal_rate, expected_survival):
         """SPY 2008: Market crash (-37%). Withdrawals are devastating."""
         df = fetcher.get_history("SPY", date(2008, 1, 1), date(2008, 12, 31))
+        if df is None or df.empty:
+            pytest.skip("SPY 2008 data not available (network/cache issue)")
         initial_qty = 1000
 
         algo = BuyAndHoldAlgorithm()
@@ -334,6 +338,8 @@ class TestSequenceOfReturnsRisk:
         # 2019 (bull) then 2022 (bear)
         df1 = fetcher.get_history("SPY", date(2019, 1, 1), date(2019, 12, 31))
         df2 = fetcher.get_history("SPY", date(2022, 1, 1), date(2022, 12, 31))
+        if df1 is None or df1.empty or df2 is None or df2.empty:
+            pytest.skip("SPY 2019/2022 data not available (network/cache issue)")
 
         initial_qty = 1000
         withdrawal_rate = 0.05  # 5% annual
@@ -404,6 +410,8 @@ class TestSequenceOfReturnsRisk:
         # 2022 (bear) then 2019 (bull) - using 2019 data for Year 2
         df1 = fetcher.get_history("SPY", date(2022, 1, 1), date(2022, 12, 31))
         df2 = fetcher.get_history("SPY", date(2019, 1, 1), date(2019, 12, 31))
+        if df1 is None or df1.empty or df2 is None or df2.empty:
+            pytest.skip("SPY 2022/2019 data not available (network/cache issue)")
 
         initial_qty = 1000
         withdrawal_rate = 0.05  # 5% annual (same as good sequence)
