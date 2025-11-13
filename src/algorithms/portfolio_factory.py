@@ -85,9 +85,11 @@ def build_portfolio_algo_from_name(
         per_asset_algo_name = m.group(1)
         print(f"  -> PerAssetPortfolioAlgorithm applying '{per_asset_algo_name}' to all assets")
 
-        # Apply to all tickers
+        # Apply to all tickers except CASH
         strategies: Dict[str, AlgorithmBase] = {}
         for ticker in allocations.keys():
+            if ticker == "CASH":
+                continue
             # Create separate instance for each ticker
             strategies[ticker] = build_algo_from_name(per_asset_algo_name)
 
@@ -133,6 +135,8 @@ def _build_auto_strategies(allocations: Dict[str, float]) -> Dict[str, Algorithm
     INDEX_TICKERS = {"VOO", "SPY", "QQQ", "VTI", "IWM", "DIA"}
 
     for ticker in allocations.keys():
+        if ticker == "CASH":
+            continue
         if ticker in CRYPTO_TICKERS:
             # Very high volatility → wide brackets
             print(f"    {ticker}: sd4 (crypto - high volatility)")
