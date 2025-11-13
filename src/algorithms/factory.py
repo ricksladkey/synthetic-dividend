@@ -23,6 +23,7 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
     to decimals (0.0915, 0.5) internally for mathematical clarity.
 
     Examples (exponential scaling - Nth root of 2):
+        'sd0' → Buy-and-hold (no synthetic dividend brackets)
         'sd8' → 2^(1/8) - 1 = 9.05% rebalance trigger, 50% profit sharing
         'sd8,75' → 2^(1/8) - 1 = 9.05% rebalance trigger, 75% profit sharing
         'sd12' → 2^(1/12) - 1 = 5.95% rebalance trigger, 50% profit sharing
@@ -57,6 +58,12 @@ def build_algo_from_name(name: str) -> AlgorithmBase:
         n = float(m.group(1))
         profit_pct = float(m.group(2)) if m.group(2) else 50.0
         bracket_seed = float(m.group(3)) if m.group(3) else None
+        
+        # Special case: sd0 means buy-and-hold (no brackets)
+        if n == 0:
+            print("  Buy-and-hold mode: no synthetic dividend brackets")
+            return BuyAndHoldAlgorithm()
+        
         # Calculate rebalance trigger: Nth root of 2, minus 1 (as decimal)
         rebalance = pow(2.0, 1.0 / n) - 1.0
         print(f"  Exponential scaling: 2^(1/{n}) - 1 = {rebalance*100:.4f}% trigger")
