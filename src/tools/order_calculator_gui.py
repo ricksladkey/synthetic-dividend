@@ -29,6 +29,11 @@ class OrderCalculatorGUI:
         self.history_file = os.path.join(os.path.dirname(__file__), "order_calculator_history.json")
         self.history: Dict[str, Dict] = self.load_history()
 
+        # Load last ticker and pre-fill if available
+        last_ticker = self.history.get("last_ticker")
+        if last_ticker and last_ticker in self.history:
+            self.pre_fill_with_ticker(last_ticker)
+
         # Create main frame
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -48,7 +53,7 @@ class OrderCalculatorGUI:
         self.ticker_var = tk.StringVar()
         self.ticker_combo = ttk.Combobox(input_frame, textvariable=self.ticker_var, width=10)
         self.ticker_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(0, 10))
-        self.ticker_combo["values"] = list(self.history.keys())
+        self.ticker_combo['values'] = [t for t in self.history.keys() if t != "last_ticker"]
         self.ticker_combo.bind("<<ComboboxSelected>>", self.on_ticker_selected)
 
         # Holdings
@@ -177,7 +182,13 @@ class OrderCalculatorGUI:
         if os.path.exists(self.history_file):
             try:
                 with open(self.history_file, "r") as f:
-                    return json.load(f)
+                    data = json.load(f)
+                    # Extract ticker data (exclude last_ticker)
+                    history = {k: v for k, v in data.items() if k != "last_ticker"}
+                    # Store last_ticker separately
+                    if "last_ticker" in data:
+                        history["last_ticker"] = data["last_ticker"]
+                    return history
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to load history: {e}")
         return {}
@@ -185,10 +196,35 @@ class OrderCalculatorGUI:
     def save_history(self):
         """Save calculation history to JSON file."""
         try:
+            # Prepare data with last_ticker
+            data_to_save = dict(self.history)
             with open(self.history_file, "w") as f:
-                json.dump(self.history, f, indent=2)
+                json.dump(data_to_save, f, indent=2)
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save history: {e}")
+
+    def pre_fill_with_ticker(self, ticker: str):
+        """Pre-fill all fields with the specified ticker's data."""
+        if ticker in self.history:
+            params = self.history[ticker]
+            self.ticker_var.set(ticker)
+            self.holdings_var.set(
+                self.format_holdings(params.get("holdings", 0)) if params.get("holdings") else ""
+            )
+            self.last_price_var.set(
+                self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
+            )
+            # Current price defaults to last transaction price
+            self.current_price_var.set(
+                self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
+            )
+            self.sdn_var.set(params.get("sdn", ""))
+            self.profit_var.set(params.get("profit", ""))
+            bracket_seed = params.get("bracket_seed")
+            if bracket_seed is not None:
+                self.bracket_seed_var.set(self.format_price(bracket_seed))
+            else:
+                self.bracket_seed_var.set("")
 
     def on_ticker_selected(self, event):
         """Handle ticker selection - load defaults."""
@@ -287,10 +323,12 @@ class OrderCalculatorGUI:
                 "profit": profit,
                 "bracket_seed": bracket_seed,
             }
+            # Update last ticker
+            self.history["last_ticker"] = ticker
             self.save_history()
 
             # Update ticker list
-            self.ticker_combo["values"] = list(self.history.keys())
+            self.ticker_combo["values"] = [t for t in self.history.keys() if t != "last_ticker"]
 
             # Update chart
             self.update_chart(
