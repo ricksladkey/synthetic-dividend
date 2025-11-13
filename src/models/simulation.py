@@ -842,7 +842,7 @@ def market_process(
                     Transaction(
                         transaction_date=current_date,
                         action="WITHDRAWAL",
-                        qty=int(actual_withdrawal),  # Number of dollars withdrawn
+                        qty=actual_withdrawal,  # Amount withdrawn (float, preserves cents)
                         price=1.0,  # $1 per dollar withdrawn
                         ticker="CASH",
                         notes=withdrawal_notes,
