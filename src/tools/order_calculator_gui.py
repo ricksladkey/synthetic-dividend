@@ -8,14 +8,12 @@ import json
 import math
 import os
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox
+from tkinter import messagebox, scrolledtext, ttk
 from typing import Dict, Optional
 
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
-from src.models.backtest_utils import calculate_synthetic_dividend_orders
 from src.tools.order_calculator import calculate_orders_for_manual_entry, format_order_display
 
 
@@ -50,8 +48,8 @@ class OrderCalculatorGUI:
         self.ticker_var = tk.StringVar()
         self.ticker_combo = ttk.Combobox(input_frame, textvariable=self.ticker_var, width=10)
         self.ticker_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(0, 10))
-        self.ticker_combo['values'] = list(self.history.keys())
-        self.ticker_combo.bind('<<ComboboxSelected>>', self.on_ticker_selected)
+        self.ticker_combo["values"] = list(self.history.keys())
+        self.ticker_combo.bind("<<ComboboxSelected>>", self.on_ticker_selected)
 
         # Holdings
         ttk.Label(input_frame, text="Holdings:").grid(row=0, column=2, sticky=tk.W, padx=(0, 5))
@@ -60,37 +58,57 @@ class OrderCalculatorGUI:
         self.holdings_entry.grid(row=0, column=3, sticky=(tk.W, tk.E), padx=(0, 10))
 
         # Last Price
-        ttk.Label(input_frame, text="Last Price:").grid(row=1, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 0))
+        ttk.Label(input_frame, text="Last Price:").grid(
+            row=1, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 0)
+        )
         self.last_price_var = tk.StringVar()
         self.last_price_entry = ttk.Entry(input_frame, textvariable=self.last_price_var, width=12)
         self.last_price_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(0, 10), pady=(5, 0))
 
         # Current Price
-        ttk.Label(input_frame, text="Current Price:").grid(row=1, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 0))
+        ttk.Label(input_frame, text="Current Price:").grid(
+            row=1, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 0)
+        )
         self.current_price_var = tk.StringVar()
-        self.current_price_entry = ttk.Entry(input_frame, textvariable=self.current_price_var, width=12)
-        self.current_price_entry.grid(row=1, column=3, sticky=(tk.W, tk.E), padx=(0, 10), pady=(5, 0))
+        self.current_price_entry = ttk.Entry(
+            input_frame, textvariable=self.current_price_var, width=12
+        )
+        self.current_price_entry.grid(
+            row=1, column=3, sticky=(tk.W, tk.E), padx=(0, 10), pady=(5, 0)
+        )
 
         # SDN
-        ttk.Label(input_frame, text="SDN:").grid(row=2, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 0))
+        ttk.Label(input_frame, text="SDN:").grid(
+            row=2, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 0)
+        )
         self.sdn_var = tk.StringVar()
         self.sdn_entry = ttk.Entry(input_frame, textvariable=self.sdn_var, width=12)
         self.sdn_entry.grid(row=2, column=1, sticky=(tk.W, tk.E), padx=(0, 10), pady=(5, 0))
 
         # Profit
-        ttk.Label(input_frame, text="Profit %:").grid(row=2, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 0))
+        ttk.Label(input_frame, text="Profit %:").grid(
+            row=2, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 0)
+        )
         self.profit_var = tk.StringVar()
         self.profit_entry = ttk.Entry(input_frame, textvariable=self.profit_var, width=12)
         self.profit_entry.grid(row=2, column=3, sticky=(tk.W, tk.E), padx=(0, 10), pady=(5, 0))
 
         # Bracket Seed
-        ttk.Label(input_frame, text="Bracket Seed:").grid(row=3, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 10))
+        ttk.Label(input_frame, text="Bracket Seed:").grid(
+            row=3, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 10)
+        )
         self.bracket_seed_var = tk.StringVar()
-        self.bracket_seed_entry = ttk.Entry(input_frame, textvariable=self.bracket_seed_var, width=12)
-        self.bracket_seed_entry.grid(row=3, column=1, sticky=(tk.W, tk.E), padx=(0, 10), pady=(5, 10))
+        self.bracket_seed_entry = ttk.Entry(
+            input_frame, textvariable=self.bracket_seed_var, width=12
+        )
+        self.bracket_seed_entry.grid(
+            row=3, column=1, sticky=(tk.W, tk.E), padx=(0, 10), pady=(5, 10)
+        )
 
         # Calculate button
-        self.calc_button = ttk.Button(input_frame, text="Calculate Orders", command=self.calculate_orders)
+        self.calc_button = ttk.Button(
+            input_frame, text="Calculate Orders", command=self.calculate_orders
+        )
         self.calc_button.grid(row=3, column=2, columnspan=2, pady=(5, 10))
 
         # Output frame
@@ -117,7 +135,9 @@ class OrderCalculatorGUI:
         # Status bar
         self.status_var = tk.StringVar()
         self.status_var.set("Ready")
-        status_bar = ttk.Label(main_frame, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W)
+        status_bar = ttk.Label(
+            main_frame, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W
+        )
         status_bar.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E))
 
     @staticmethod
@@ -127,9 +147,9 @@ class OrderCalculatorGUI:
         if not s:
             raise ValueError("Price cannot be empty")
         # Remove common currency symbols
-        s = s.replace('$', '').replace('€', '').replace('£', '').replace('¥', '').replace('₹', '')
+        s = s.replace("$", "").replace("€", "").replace("£", "").replace("¥", "").replace("₹", "")
         # Remove commas
-        s = s.replace(',', '')
+        s = s.replace(",", "")
         return float(s)
 
     @staticmethod
@@ -137,11 +157,26 @@ class OrderCalculatorGUI:
         """Format a price to canonical accounting format."""
         return f"{price:,.2f}"
 
+    @staticmethod
+    def parse_holdings(s: str) -> float:
+        """Parse a holdings string, handling commas."""
+        s = s.strip()
+        if not s:
+            raise ValueError("Holdings cannot be empty")
+        # Remove commas
+        s = s.replace(",", "")
+        return float(s)
+
+    @staticmethod
+    def format_holdings(holdings: float) -> str:
+        """Format holdings with commas for readability."""
+        return f"{holdings:,.0f}"
+
     def load_history(self) -> Dict[str, Dict]:
         """Load calculation history from JSON file."""
         if os.path.exists(self.history_file):
             try:
-                with open(self.history_file, 'r') as f:
+                with open(self.history_file, "r") as f:
                     return json.load(f)
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to load history: {e}")
@@ -150,7 +185,7 @@ class OrderCalculatorGUI:
     def save_history(self):
         """Save calculation history to JSON file."""
         try:
-            with open(self.history_file, 'w') as f:
+            with open(self.history_file, "w") as f:
                 json.dump(self.history, f, indent=2)
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save history: {e}")
@@ -160,30 +195,36 @@ class OrderCalculatorGUI:
         ticker = self.ticker_var.get()
         if ticker in self.history:
             params = self.history[ticker]
-            self.holdings_var.set(params.get('holdings', ''))
-            self.last_price_var.set(self.format_price(params.get('last_price', 0)) if params.get('last_price') else '')
+            self.holdings_var.set(
+                self.format_holdings(params.get("holdings", 0)) if params.get("holdings") else ""
+            )
+            self.last_price_var.set(
+                self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
+            )
             # Current price defaults to last transaction price
-            self.current_price_var.set(self.format_price(params.get('last_price', 0)) if params.get('last_price') else '')
-            self.sdn_var.set(params.get('sdn', ''))
-            self.profit_var.set(params.get('profit', ''))
-            bracket_seed = params.get('bracket_seed')
+            self.current_price_var.set(
+                self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
+            )
+            self.sdn_var.set(params.get("sdn", ""))
+            self.profit_var.set(params.get("profit", ""))
+            bracket_seed = params.get("bracket_seed")
             if bracket_seed is not None:
                 self.bracket_seed_var.set(self.format_price(bracket_seed))
             else:
-                self.bracket_seed_var.set('')
+                self.bracket_seed_var.set("")
 
     def calculate_orders(self):
         """Calculate and display orders."""
         try:
             # Get inputs
             ticker = self.ticker_var.get().strip()
-            holdings = float(self.holdings_var.get())
+            holdings = self.parse_holdings(self.holdings_var.get())
             last_price = self.parse_price(self.last_price_var.get())
             current_price = self.parse_price(self.current_price_var.get())
             sdn = int(self.sdn_var.get())
             profit = float(self.profit_var.get())
             bracket_seed_str = self.bracket_seed_var.get().strip()
-            if bracket_seed_str.lower() in ('', 'none', 'nil'):
+            if bracket_seed_str.lower() in ("", "none", "nil"):
                 bracket_seed = None
             else:
                 bracket_seed = self.parse_price(bracket_seed_str)
@@ -201,6 +242,7 @@ class OrderCalculatorGUI:
                 raise ValueError("Profit must be between 0 and 200")
 
             # Update fields to canonical format
+            self.holdings_var.set(self.format_holdings(holdings))
             self.last_price_var.set(self.format_price(last_price))
             self.current_price_var.set(self.format_price(current_price))
             if bracket_seed is not None:
@@ -238,20 +280,22 @@ class OrderCalculatorGUI:
 
             # Save to history
             self.history[ticker] = {
-                'holdings': holdings,
-                'last_price': last_price,
-                'current_price': current_price,
-                'sdn': sdn,
-                'profit': profit,
-                'bracket_seed': bracket_seed,
+                "holdings": holdings,
+                "last_price": last_price,
+                "current_price": current_price,
+                "sdn": sdn,
+                "profit": profit,
+                "bracket_seed": bracket_seed,
             }
             self.save_history()
 
             # Update ticker list
-            self.ticker_combo['values'] = list(self.history.keys())
+            self.ticker_combo["values"] = list(self.history.keys())
 
             # Update chart
-            self.update_chart(ticker, last_price, current_price, buy_price, sell_price, sdn, bracket_seed)
+            self.update_chart(
+                ticker, last_price, current_price, buy_price, sell_price, sdn, bracket_seed
+            )
 
             self.status_var.set(f"Calculated orders for {ticker}")
 
@@ -259,8 +303,16 @@ class OrderCalculatorGUI:
             messagebox.showerror("Error", str(e))
             self.status_var.set("Error in calculation")
 
-    def update_chart(self, ticker: str, last_price: float, current_price: float,
-                    buy_price: float, sell_price: float, sdn: int, bracket_seed: Optional[float]):
+    def update_chart(
+        self,
+        ticker: str,
+        last_price: float,
+        current_price: float,
+        buy_price: float,
+        sell_price: float,
+        sdn: int,
+        bracket_seed: Optional[float],
+    ):
         """Update the price chart with brackets."""
         try:
             # Clear previous plot
@@ -269,42 +321,78 @@ class OrderCalculatorGUI:
             # Try to load asset data
             try:
                 from src.data.asset import Asset
+
                 asset = Asset(ticker)
                 df = asset._load_price_cache()
                 if df is not None and not df.empty:
                     # Plot price on log scale
-                    self.ax.semilogy(df.index, df['Close'], label='Price', linewidth=1)
-                    self.ax.set_title(f'{ticker} Price Chart (Log Scale)')
-                    self.ax.set_xlabel('Date')
-                    self.ax.set_ylabel('Price ($)')
+                    self.ax.semilogy(df.index, df["Close"], label="Price", linewidth=1)
+                    self.ax.set_title(f"{ticker} Price Chart (Log Scale)")
+                    self.ax.set_xlabel("Date")
+                    self.ax.set_ylabel("Price ($)")
                     self.ax.grid(True, alpha=0.3)
 
                     # Add bracket lines
-                    self.ax.axhline(y=buy_price, color='green', linestyle='--', alpha=0.7,
-                                   label=f'Buy: ${buy_price:.2f}')
-                    self.ax.axhline(y=sell_price, color='red', linestyle='--', alpha=0.7,
-                                   label=f'Sell: ${sell_price:.2f}')
-                    self.ax.axhline(y=last_price, color='blue', linestyle='-', alpha=0.7,
-                                   label=f'Last: ${last_price:.2f}')
+                    self.ax.axhline(
+                        y=buy_price,
+                        color="green",
+                        linestyle="--",
+                        alpha=0.7,
+                        label=f"Buy: ${buy_price:.2f}",
+                    )
+                    self.ax.axhline(
+                        y=sell_price,
+                        color="red",
+                        linestyle="--",
+                        alpha=0.7,
+                        label=f"Sell: ${sell_price:.2f}",
+                    )
+                    self.ax.axhline(
+                        y=last_price,
+                        color="blue",
+                        linestyle="-",
+                        alpha=0.7,
+                        label=f"Last: ${last_price:.2f}",
+                    )
 
                     # Add bracket ladder annotations
-                    self.add_bracket_annotations(last_price, buy_price, sell_price, sdn, bracket_seed)
+                    self.add_bracket_annotations(
+                        last_price, buy_price, sell_price, sdn, bracket_seed
+                    )
 
                     self.ax.legend()
                 else:
-                    self.ax.text(0.5, 0.5, f'No price data available for {ticker}',
-                               ha='center', va='center', transform=self.ax.transAxes)
+                    self.ax.text(
+                        0.5,
+                        0.5,
+                        f"No price data available for {ticker}",
+                        ha="center",
+                        va="center",
+                        transform=self.ax.transAxes,
+                    )
             except Exception as e:
-                self.ax.text(0.5, 0.5, f'Failed to load chart data: {str(e)}',
-                           ha='center', va='center', transform=self.ax.transAxes)
+                self.ax.text(
+                    0.5,
+                    0.5,
+                    f"Failed to load chart data: {str(e)}",
+                    ha="center",
+                    va="center",
+                    transform=self.ax.transAxes,
+                )
 
             self.canvas.draw()
 
         except Exception as e:
             self.status_var.set(f"Chart error: {str(e)}")
 
-    def add_bracket_annotations(self, last_price: float, buy_price: float, sell_price: float,
-                               sdn: int, bracket_seed: Optional[float]):
+    def add_bracket_annotations(
+        self,
+        last_price: float,
+        buy_price: float,
+        sell_price: float,
+        sdn: int,
+        bracket_seed: Optional[float],
+    ):
         """Add bracket ladder annotations to the chart."""
         try:
             rebalance_size = (2.0 ** (1.0 / float(sdn))) - 1.0
@@ -320,10 +408,15 @@ class OrderCalculatorGUI:
             for i in range(-3, 4):
                 bracket_price = anchor_price * math.pow(1 + rebalance_size, i)
                 if bracket_price > 0:
-                    color = 'purple' if i == 0 else 'gray'
+                    color = "purple" if i == 0 else "gray"
                     alpha = 0.5 if abs(i) > 1 else 0.3
-                    self.ax.axhline(y=bracket_price, color=color, linestyle=':', alpha=alpha,
-                                   label=f'Bracket {i}' if i != 0 else f'Current Bracket')
+                    self.ax.axhline(
+                        y=bracket_price,
+                        color=color,
+                        linestyle=":",
+                        alpha=alpha,
+                        label=f"Bracket {i}" if i != 0 else f"Current Bracket",
+                    )
 
         except Exception:
             pass  # Skip annotations if calculation fails
