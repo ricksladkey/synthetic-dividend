@@ -48,6 +48,19 @@ python -m src.tools.order_calculator \
     --profit 50
 ```
 
+### Order Calculator GUI
+```bash
+python -m src.tools.order_calculator_gui
+```
+
+**Features**:
+- Interactive GUI with persistent defaults per ticker
+- Dropdown of all previously calculated tickers
+- Current price defaults to last transaction price
+- Accepts currency symbols and commas in price inputs ($1,234.56)
+- Logarithmic price chart with bracket annotations
+- Bracket seed supports 'none'/'nil' for no seed alignment
+
 ---
 
 ## 📊 Return Metrics (What to Look At)
@@ -181,7 +194,8 @@ cat theory/INVESTING_THEORY.md theory/VOLATILITY_ALPHA_THESIS.md | less
 ```
 src/
 ├── models/backtest.py          # Core engine (423 lines, 78% covered)
-├── tools/order_calculator.py   # Manual trading tool
+├── tools/order_calculator.py   # Manual trading tool (CLI)
+├── tools/order_calculator_gui.py # Manual trading tool (GUI)
 └── research/
     ├── strategy_comparison.py  # Multi-strategy experiments
     └── volatility_alpha.py     # Alpha validation
