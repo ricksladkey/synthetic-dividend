@@ -321,9 +321,13 @@ class OrderCalculatorGUI:
             # Try to load asset data
             try:
                 from src.data.asset import Asset
+                from datetime import date, timedelta
 
                 asset = Asset(ticker)
-                df = asset._load_price_cache()
+                # Get data for the last 2 years for chart visualization
+                end_date = date.today()
+                start_date = end_date - timedelta(days=730)  # 2 years
+                df = asset.get_prices(start_date, end_date)
                 if df is not None and not df.empty:
                     # Plot price on log scale
                     self.ax.semilogy(df.index, df["Close"], label="Price", linewidth=1)
