@@ -537,6 +537,9 @@ Features:
             else:
                 self.bracket_seed_var.set("")
 
+            # Trigger auto-calculation after loading ticker data
+            self.schedule_auto_calculation()
+
     def on_ticker_selected(self, event):
         """Handle ticker selection - load defaults and trigger auto-calculation."""
         ticker = self.ticker_var.get()
