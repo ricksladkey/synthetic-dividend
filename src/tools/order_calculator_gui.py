@@ -31,6 +31,12 @@ class OrderCalculatorGUI:
         self.last_ticker: Optional[str] = None
         self.load_history()
 
+        # Store calculated order values for buy/sell buttons
+        self.current_buy_price = 0.0
+        self.current_buy_qty = 0.0
+        self.current_sell_price = 0.0
+        self.current_sell_qty = 0.0
+
         # Create main frame
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.grid(row=0, column=0, sticky="wens")
@@ -104,11 +110,22 @@ class OrderCalculatorGUI:
         )
         self.bracket_seed_entry.grid(row=3, column=1, sticky="we", padx=(0, 10), pady=(5, 10))
 
+        # Buy and Sell buttons
+        self.buy_button = ttk.Button(
+            input_frame, text="BUY", command=self.execute_buy_order
+        )
+        self.buy_button.grid(row=3, column=2, sticky="we", padx=(0, 5), pady=(5, 10))
+
+        self.sell_button = ttk.Button(
+            input_frame, text="SELL", command=self.execute_sell_order
+        )
+        self.sell_button.grid(row=3, column=3, sticky="we", pady=(5, 10))
+
         # Calculate button
         self.calc_button = ttk.Button(
             input_frame, text="Calculate Orders", command=self.calculate_orders
         )
-        self.calc_button.grid(row=3, column=2, columnspan=2, pady=(5, 10))
+        self.calc_button.grid(row=4, column=0, columnspan=4, pady=(5, 10))
 
         # Output frame (right side)
         output_frame = ttk.LabelFrame(main_frame, text="Broker Orders", padding="5")
@@ -321,6 +338,12 @@ class OrderCalculatorGUI:
                 bracket_seed=bracket_seed,
             )
 
+            # Store current order values for buy/sell buttons
+            self.current_buy_price = buy_price
+            self.current_buy_qty = buy_qty
+            self.current_sell_price = sell_price
+            self.current_sell_qty = sell_qty
+
             # Format broker syntax orders
             buy_amount = buy_price * buy_qty
             sell_amount = sell_price * sell_qty
@@ -380,6 +403,71 @@ class OrderCalculatorGUI:
             # Clear broker order displays on error
             self.buy_order_var.set("")
             self.sell_order_var.set("")
+
+    def execute_buy_order(self):
+        """Execute the calculated buy order by updating position and recalculating."""
+        try:
+            if self.current_buy_price <= 0 or self.current_buy_qty <= 0:
+                messagebox.showwarning("Warning", "No buy order calculated. Please calculate orders first.")
+                return
+
+            # Get current holdings
+            holdings_str = self.holdings_var.get().strip()
+            current_holdings = float(holdings_str.replace(",", "")) if holdings_str else 0.0
+
+            # Update holdings (add bought shares)
+            new_holdings = current_holdings + self.current_buy_qty
+
+            # Update last price and current price to the buy execution price
+            execution_price = self.current_buy_price
+            self.last_price_var.set(self.format_price(execution_price))
+            self.current_price_var.set(self.format_price(execution_price))
+
+            # Update holdings
+            self.holdings_var.set(self.format_holdings(new_holdings))
+
+            # Recalculate orders with new position
+            self.calculate_orders()
+
+            self.status_var.set(f"Executed BUY: {int(self.current_buy_qty)} shares @ ${execution_price:.2f}")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to execute buy order: {str(e)}")
+
+    def execute_sell_order(self):
+        """Execute the calculated sell order by updating position and recalculating."""
+        try:
+            if self.current_sell_price <= 0 or self.current_sell_qty <= 0:
+                messagebox.showwarning("Warning", "No sell order calculated. Please calculate orders first.")
+                return
+
+            # Get current holdings
+            holdings_str = self.holdings_var.get().strip()
+            current_holdings = float(holdings_str.replace(",", "")) if holdings_str else 0.0
+
+            # Check if we have enough shares to sell
+            if current_holdings < self.current_sell_qty:
+                messagebox.showwarning("Warning", f"Insufficient holdings. Have {current_holdings:.0f} shares, trying to sell {self.current_sell_qty:.0f} shares.")
+                return
+
+            # Update holdings (subtract sold shares)
+            new_holdings = current_holdings - self.current_sell_qty
+
+            # Update last price and current price to the sell execution price
+            execution_price = self.current_sell_price
+            self.last_price_var.set(self.format_price(execution_price))
+            self.current_price_var.set(self.format_price(execution_price))
+
+            # Update holdings
+            self.holdings_var.set(self.format_holdings(new_holdings))
+
+            # Recalculate orders with new position
+            self.calculate_orders()
+
+            self.status_var.set(f"Executed SELL: {int(self.current_sell_qty)} shares @ ${execution_price:.2f}")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to execute sell order: {str(e)}")
 
     def update_chart(
         self,
