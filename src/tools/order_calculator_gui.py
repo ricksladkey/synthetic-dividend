@@ -656,7 +656,7 @@ class OrderCalculatorGUI:
         sdn: int,
         bracket_seed: Optional[float],
     ):
-        """Add order of magnitude reference lines (powers of 2) to the chart."""
+        """Add order of magnitude reference lines (powers of 2) and subdivisions to the chart."""
         try:
             # Get the current y-axis limits (price range shown on chart)
             y_min, y_max = self.ax.get_ylim()
@@ -682,6 +682,25 @@ class OrderCalculatorGUI:
                         linewidth=0.8,
                         zorder=1,  # Behind other elements
                     )
+
+            # Add dashed light gray lines for 8 subdivisions between each factor of 2
+            # For each pair of consecutive powers of 2, add 8 subdivision lines
+            for power in range(min_power, max_power):
+                base_price = 2.0 ** power
+                next_base_price = 2.0 ** (power + 1)
+
+                # Add 8 subdivisions between base_price and next_base_price
+                for i in range(1, 8):  # 1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8
+                    subdivision_price = base_price + (next_base_price - base_price) * (i / 8.0)
+                    if y_min <= subdivision_price <= y_max:  # Only add if within visible range
+                        self.ax.axhline(
+                            y=subdivision_price,
+                            color="lightgray",
+                            linestyle="--",
+                            alpha=0.3,
+                            linewidth=0.5,
+                            zorder=1,  # Behind other elements
+                        )
 
         except Exception:
             pass  # Skip annotations if calculation fails
