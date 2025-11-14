@@ -656,37 +656,31 @@ class OrderCalculatorGUI:
         sdn: int,
         bracket_seed: Optional[float],
     ):
-        """Add bracket ladder annotations to the chart."""
+        """Add order of magnitude reference lines (powers of 2) to the chart."""
         try:
-            rebalance_size = (2.0 ** (1.0 / float(sdn))) - 1.0
-
-            # Calculate bracket positions
-            anchor_price = last_price
-            if bracket_seed is not None and bracket_seed > 0:
-                bracket_n = math.log(last_price / bracket_seed) / math.log(1 + rebalance_size)
-                bracket_rounded = round(bracket_n)
-                anchor_price = bracket_seed * math.pow(1 + rebalance_size, bracket_rounded)
-
             # Get the current y-axis limits (price range shown on chart)
             y_min, y_max = self.ax.get_ylim()
 
-            # Calculate all bracket levels that fit within the visible price range
-            # Find the lowest bracket level that would be visible
-            min_bracket_level = math.floor(math.log(y_min / anchor_price) / math.log(1 + rebalance_size))
-            # Find the highest bracket level that would be visible
-            max_bracket_level = math.ceil(math.log(y_max / anchor_price) / math.log(1 + rebalance_size))
+            # Add solid light gray lines for every mathematical order of magnitude (factor of 2)
+            # Find the range of powers of 2 that fit within the visible price range
+            import math
 
-            # Add horizontal lines for all brackets within the visible range
-            for i in range(min_bracket_level, max_bracket_level + 1):
-                bracket_price = anchor_price * math.pow(1 + rebalance_size, i)
-                if y_min <= bracket_price <= y_max:  # Only add if within visible range
-                    color = "purple" if i == 0 else "gray"
-                    alpha = 0.2  # Subtle lines for all brackets
+            # Find the lowest power of 2 that would be visible (or just below)
+            min_power = math.floor(math.log2(y_min))
+            # Find the highest power of 2 that would be visible (or just above)
+            max_power = math.ceil(math.log2(y_max))
+
+            # Add horizontal lines for all powers of 2 within the visible range
+            for power in range(min_power, max_power + 1):
+                magnitude_price = 2.0 ** power
+                if y_min <= magnitude_price <= y_max:  # Only add if within visible range
                     self.ax.axhline(
-                        y=bracket_price,
-                        color=color,
-                        linestyle=":",
-                        alpha=alpha,
+                        y=magnitude_price,
+                        color="lightgray",
+                        linestyle="-",
+                        alpha=0.5,
+                        linewidth=0.8,
+                        zorder=1,  # Behind other elements
                     )
 
         except Exception:
