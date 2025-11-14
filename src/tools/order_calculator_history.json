@@ -1,8 +1,8 @@
 {
   "NVDA": {
-    "holdings": 1003.0,
-    "last_price": 197.87,
-    "current_price": 197.87,
+    "holdings": 1048.0,
+    "last_price": 181.45,
+    "current_price": 181.45,
     "sdn": 8,
     "profit": 50.0,
     "bracket_seed": 197.87
@@ -15,5 +15,13 @@
     "profit": 50.0,
     "bracket_seed": 12.06
   },
-  "last_ticker": "SOUN"
+  "MSTR": {
+    "holdings": 157.0,
+    "last_price": 208.2,
+    "current_price": 208.2,
+    "sdn": 8,
+    "profit": 50.0,
+    "bracket_seed": 208.2
+  },
+  "last_ticker": "MSTR"
 }
