@@ -125,7 +125,13 @@ class OrderCalculatorGUI:
         self.calc_button = ttk.Button(
             input_frame, text="Calculate Orders", command=self.calculate_orders
         )
-        self.calc_button.grid(row=4, column=0, columnspan=4, pady=(5, 10))
+        self.calc_button.grid(row=4, column=0, columnspan=3, pady=(5, 10))
+
+        # Help button
+        self.help_button = ttk.Button(
+            input_frame, text="Help", command=self.show_help
+        )
+        self.help_button.grid(row=4, column=3, pady=(5, 10))
 
         # Output frame (right side)
         output_frame = ttk.LabelFrame(main_frame, text="Broker Orders", padding="5")
@@ -468,6 +474,33 @@ class OrderCalculatorGUI:
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to execute sell order: {str(e)}")
+
+    def show_help(self):
+        """Show help documentation in a scrollable window."""
+        try:
+            # Read the help file
+            help_file_path = os.path.join(os.path.dirname(__file__), "..", "..", "docs", "HOW_TO_order_gui.md")
+            with open(help_file_path, "r", encoding="utf-8") as f:
+                help_content = f.read()
+
+            # Create help window
+            help_window = tk.Toplevel(self.root)
+            help_window.title("Order Calculator GUI - Help")
+            help_window.geometry("800x600")
+
+            # Create scrolled text widget
+            help_text = scrolledtext.ScrolledText(help_window, wrap=tk.WORD, padx=10, pady=10)
+            help_text.pack(fill=tk.BOTH, expand=True)
+
+            # Insert help content
+            help_text.insert(tk.END, help_content)
+            help_text.config(state=tk.DISABLED)  # Make it read-only
+
+            # Focus the help window
+            help_window.focus_set()
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load help documentation: {str(e)}")
 
     def update_chart(
         self,
