@@ -87,6 +87,9 @@ class OrderCalculatorGUI:
         self.current_sell_price = 0.0
         self.current_sell_qty = 0.0
 
+        # Set default dates
+        self.set_default_dates()
+
         # Auto-calculation debouncing
         self.calculation_timer: Optional[str] = None
         self.calculation_delay = 500  # milliseconds
@@ -137,35 +140,43 @@ class OrderCalculatorGUI:
         self.last_price_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.last_price_entry, "Price you last bought or sold shares at")
 
-        # Current Price
-        ttk.Label(input_frame, text="Current Price:").grid(
+        # Start Date
+        ttk.Label(input_frame, text="Start Date:").grid(
             row=1, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 0)
         )
-        self.current_price_var = tk.StringVar()
-        self.current_price_entry = ttk.Entry(
-            input_frame, textvariable=self.current_price_var, width=12
+        self.start_date_var = tk.StringVar()
+        self.start_date_entry = ttk.Entry(input_frame, textvariable=self.start_date_var, width=12)
+        self.start_date_entry.grid(row=1, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
+        self.start_date_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        ToolTip(self.start_date_entry, "Start date for price data (YYYY-MM-DD)")
+
+        # End Date
+        ttk.Label(input_frame, text="End Date:").grid(
+            row=2, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 0)
         )
-        self.current_price_entry.grid(row=1, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
-        self.current_price_entry.bind("<FocusOut>", self.schedule_auto_calculation)
-        ToolTip(self.current_price_entry, "Current market price of the stock")
+        self.end_date_var = tk.StringVar()
+        self.end_date_entry = ttk.Entry(input_frame, textvariable=self.end_date_var, width=12)
+        self.end_date_entry.grid(row=2, column=1, sticky="we", padx=(0, 10), pady=(5, 0))
+        self.end_date_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        ToolTip(self.end_date_entry, "End date for price data (YYYY-MM-DD)")
 
         # SDN
         ttk.Label(input_frame, text="SDN:").grid(
-            row=2, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 0)
+            row=2, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 0)
         )
         self.sdn_var = tk.StringVar()
         self.sdn_entry = ttk.Entry(input_frame, textvariable=self.sdn_var, width=12)
-        self.sdn_entry.grid(row=2, column=1, sticky="we", padx=(0, 10), pady=(5, 0))
+        self.sdn_entry.grid(row=2, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
         self.sdn_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.sdn_entry, "Synthetic Dividend Number (2-8): Controls bracket spacing")
 
         # Profit
         ttk.Label(input_frame, text="Profit %:").grid(
-            row=2, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 0)
+            row=3, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 0)
         )
         self.profit_var = tk.StringVar()
         self.profit_entry = ttk.Entry(input_frame, textvariable=self.profit_var, width=12)
-        self.profit_entry.grid(row=2, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
+        self.profit_entry.grid(row=3, column=1, sticky="we", padx=(0, 10), pady=(5, 0))
         self.profit_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(
             self.profit_entry,
@@ -174,13 +185,13 @@ class OrderCalculatorGUI:
 
         # Bracket Seed
         ttk.Label(input_frame, text="Bracket Seed:").grid(
-            row=3, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 10)
+            row=3, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 10)
         )
         self.bracket_seed_var = tk.StringVar()
         self.bracket_seed_entry = ttk.Entry(
             input_frame, textvariable=self.bracket_seed_var, width=12
         )
-        self.bracket_seed_entry.grid(row=3, column=1, sticky="we", padx=(0, 10), pady=(5, 10))
+        self.bracket_seed_entry.grid(row=3, column=3, sticky="we", padx=(0, 10), pady=(5, 10))
         self.bracket_seed_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.bracket_seed_entry, "Optional: Starting price for bracket calculations")
 
@@ -359,7 +370,7 @@ class OrderCalculatorGUI:
         self.ticker_var.set("")
         self.holdings_var.set("")
         self.last_price_var.set("")
-        self.current_price_var.set("")
+        # Note: current_price is now fetched from market data, not cleared
         self.sdn_var.set("")
         self.profit_var.set("")
         self.bracket_seed_var.set("")
@@ -420,7 +431,8 @@ Features:
             ticker = self.ticker_var.get().strip()
             holdings_str = self.holdings_var.get().strip()
             last_price_str = self.last_price_var.get().strip()
-            current_price_str = self.current_price_var.get().strip()
+            start_date_str = self.start_date_var.get().strip()
+            end_date_str = self.end_date_var.get().strip()
             sdn_str = self.sdn_var.get().strip()
             profit_str = self.profit_var.get().strip()
 
@@ -431,7 +443,9 @@ Features:
                 return False
             if not last_price_str:
                 return False
-            if not current_price_str:
+            if not start_date_str:
+                return False
+            if not end_date_str:
                 return False
             if not sdn_str:
                 return False
@@ -441,12 +455,15 @@ Features:
             # Try to parse values to ensure they're valid
             holdings = self.parse_holdings(holdings_str)
             last_price = self.parse_price(last_price_str)
-            current_price = self.parse_price(current_price_str)
+            start_date = self.parse_date(start_date_str)
+            end_date = self.parse_date(end_date_str)
             sdn = int(sdn_str)
             profit = float(profit_str)
 
             # Basic validation
-            if holdings <= 0 or last_price <= 0 or current_price <= 0:
+            if holdings <= 0 or last_price <= 0:
+                return False
+            if start_date >= end_date:
                 return False
             if sdn < 2 or sdn > 20:
                 return False
@@ -457,6 +474,25 @@ Features:
 
         except (ValueError, TypeError):
             return False
+
+    def set_default_dates(self):
+        """Set default start and end dates."""
+        from datetime import date, timedelta
+
+        today = date.today()
+        one_year_ago = today - timedelta(days=365)
+
+        self.end_date_var.set(today.isoformat())
+        self.start_date_var.set(one_year_ago.isoformat())
+
+    @staticmethod
+    def parse_date(date_str: str) -> date:
+        """Parse a date string in YYYY-MM-DD format."""
+        from datetime import datetime
+        try:
+            return datetime.strptime(date_str.strip(), "%Y-%m-%d").date()
+        except ValueError:
+            raise ValueError(f"Invalid date format: {date_str}. Use YYYY-MM-DD format.")
 
     @staticmethod
     def parse_price(s: str) -> float:
@@ -540,10 +576,14 @@ Features:
             self.last_price_var.set(
                 self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
             )
-            # Current price defaults to last transaction price
-            self.current_price_var.set(
-                self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
-            )
+            # Set dates from history or use defaults
+            start_date = params.get("start_date")
+            if start_date:
+                self.start_date_var.set(start_date)
+            end_date = params.get("end_date")
+            if end_date:
+                self.end_date_var.set(end_date)
+            # Note: current_price is now fetched from market data
             self.sdn_var.set(params.get("sdn", ""))
             self.profit_var.set(params.get("profit", ""))
             bracket_seed = params.get("bracket_seed")
@@ -566,10 +606,14 @@ Features:
             self.last_price_var.set(
                 self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
             )
-            # Current price defaults to last transaction price
-            self.current_price_var.set(
-                self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
-            )
+            # Set dates from history or use defaults
+            start_date = params.get("start_date")
+            if start_date:
+                self.start_date_var.set(start_date)
+            end_date = params.get("end_date")
+            if end_date:
+                self.end_date_var.set(end_date)
+            # Note: current_price is now fetched from market data
             self.sdn_var.set(params.get("sdn", ""))
             self.profit_var.set(params.get("profit", ""))
             bracket_seed = params.get("bracket_seed")
@@ -588,7 +632,8 @@ Features:
             ticker = self.ticker_var.get().strip()
             holdings = self.parse_holdings(self.holdings_var.get())
             last_price = self.parse_price(self.last_price_var.get())
-            current_price = self.parse_price(self.current_price_var.get())
+            start_date = self.parse_date(self.start_date_var.get())
+            end_date = self.parse_date(self.end_date_var.get())
             sdn = int(self.sdn_var.get())
             profit = float(self.profit_var.get())
             bracket_seed_str = self.bracket_seed_var.get().strip()
@@ -602,17 +647,28 @@ Features:
                 raise ValueError("Ticker is required")
             if holdings <= 0:
                 raise ValueError("Holdings must be positive")
-            if last_price <= 0 or current_price <= 0:
-                raise ValueError("Prices must be positive")
+            if last_price <= 0:
+                raise ValueError("Last price must be positive")
+            if start_date >= end_date:
+                raise ValueError("Start date must be before end date")
             if sdn < 2 or sdn > 20:
                 raise ValueError("SDN must be between 2 and 20")
             if profit < 0 or profit > 200:
                 raise ValueError("Profit must be between 0 and 200")
 
+            # Fetch current price from market data
+            asset = Asset(ticker)
+            price_df = asset.get_prices(start_date, end_date)
+            if price_df.empty:
+                raise ValueError(f"No price data available for {ticker} between {start_date} and {end_date}")
+
+            # Get the most recent price (last row)
+            current_price = float(price_df.iloc[-1]["Close"])
+
             # Update fields to canonical format
             self.holdings_var.set(self.format_holdings(holdings, ticker))
             self.last_price_var.set(self.format_price(last_price))
-            self.current_price_var.set(self.format_price(current_price))
+            # Note: current_price is now fetched from market data, not displayed in UI
             if bracket_seed is not None:
                 self.bracket_seed_var.set(self.format_price(bracket_seed))
 
@@ -681,7 +737,9 @@ Features:
             self.history[ticker] = {
                 "holdings": holdings,
                 "last_price": last_price,
-                "current_price": current_price,
+                # Note: current_price is now fetched from market data, not stored in history
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
                 "sdn": sdn,
                 "profit": profit,
                 "bracket_seed": bracket_seed,
