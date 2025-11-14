@@ -23,5 +23,13 @@
     "profit": 50.0,
     "bracket_seed": 208.2
   },
-  "last_ticker": "MSTR"
+  "BTC-USD": {
+    "holdings": 2.0,
+    "last_price": 95961.96,
+    "current_price": 95961.96,
+    "sdn": 8,
+    "profit": 50.0,
+    "bracket_seed": 124447.26
+  },
+  "last_ticker": "BTC-USD"
 }

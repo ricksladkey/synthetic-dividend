@@ -309,7 +309,7 @@ def run_algorithm_backtest(
     # Single-ticker parameters (legacy interface) - maintain backward compatibility order
     df: Optional[pd.DataFrame] = None,
     ticker: str = "",
-    initial_qty: Optional[int] = None,
+    initial_qty: Optional[float] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     algo: Optional[Union[AlgorithmBase, Callable]] = None,

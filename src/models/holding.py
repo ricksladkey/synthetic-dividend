@@ -35,7 +35,7 @@ class Transaction:
     """
 
     transaction_type: str  # 'BUY' or 'SELL'
-    shares: int  # Number of shares (always positive)
+    shares: float  # Number of shares (changed from int to float for fractional shares)
     purchase_date: date  # When the transaction occurred
     purchase_price: float  # Price per share at purchase
 
@@ -191,13 +191,13 @@ class Holding:
     transactions: List[Transaction] = field(default_factory=list)
 
     def add_buy(
-        self, shares: int, purchase_date: date, purchase_price: float, notes: str = ""
+        self, shares: float, purchase_date: date, purchase_price: float, notes: str = ""
     ) -> Transaction:
         """
         Record a buy transaction.
 
         Args:
-            shares: Number of shares purchased (positive integer)
+            shares: Number of shares purchased (positive float, supports fractional shares)
             purchase_date: Date of purchase
             purchase_price: Price per share
             notes: Optional explanation
@@ -217,7 +217,7 @@ class Holding:
 
     def add_sell(
         self,
-        shares: int,
+        shares: float,
         sale_date: date,
         sale_price: float,
         notes: str = "",
@@ -230,7 +230,7 @@ class Holding:
         open BUY transactions to track cost basis.
 
         Args:
-            shares: Number of shares to sell
+            shares: Number of shares to sell (supports fractional shares)
             sale_date: Date of sale
             sale_price: Price per share
             notes: Optional explanation
@@ -302,14 +302,14 @@ class Holding:
 
         return sell_transactions
 
-    def current_shares(self) -> int:
+    def current_shares(self) -> float:
         """
         Calculate total shares currently held (open positions only).
 
         Returns:
-            Number of shares (always >= 0)
+            Number of shares (always >= 0, supports fractional shares)
         """
-        total = 0
+        total = 0.0
         for txn in self.transactions:
             if txn.transaction_type == "BUY" and txn.is_open:
                 total += txn.shares

@@ -225,6 +225,30 @@ class Asset:
                     # Ignore file deletion errors: cache clearing is best-effort
                     pass
 
+    @property
+    def supports_fractional_shares(self) -> bool:
+        """
+        Whether this asset supports fractional shares.
+
+        Returns:
+            True for crypto and mutual funds
+            False for traditional stocks and ETFs
+        """
+        if getattr(self, "_provider", None) is not None:
+            assert self._provider is not None
+            return self._provider.supports_fractional_shares
+
+        # Fallback implementation for when no provider is available
+        ticker = self.ticker.upper()
+        # Crypto tickers (BTC-USD, ETH-USD, etc.)
+        if "-" in ticker and any(crypto in ticker for crypto in ["BTC", "ETH", "ADA", "SOL", "DOT"]):
+            return True
+        # Mutual funds (typically start with VF, VG, etc.)
+        if any(ticker.startswith(prefix) for prefix in ["VF", "VG"]):
+            return True
+        # Default to False for traditional stocks and ETFs
+        return False
+
     # --- Internal helpers for the fallback implementation ---
     def _load_price_cache(self) -> Optional[pd.DataFrame]:
         if self.pkl_path is not None and os.path.exists(self.pkl_path):

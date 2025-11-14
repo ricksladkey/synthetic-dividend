@@ -49,7 +49,7 @@ class AssetProvider(ABC):
 
     @abstractmethod
     def get_dividends(self, start_date: date, end_date: date) -> pd.Series:
-        """Get dividend/interest history for date range.
+        """Get dividend history for date range.
 
         Args:
             start_date: Start date (inclusive)
@@ -59,6 +59,26 @@ class AssetProvider(ABC):
             Series with dividend amounts indexed by ex-dividend date
             Empty Series if no dividends
         """
+
+    @property
+    def supports_fractional_shares(self) -> bool:
+        """
+        Whether this asset supports fractional shares.
+
+        Returns:
+            True for crypto and mutual funds
+            False for traditional stocks and ETFs
+        """
+        # Default implementation: check ticker patterns
+        ticker = self.ticker.upper()
+        # Crypto tickers (BTC-USD, ETH-USD, etc.)
+        if "-" in ticker and any(crypto in ticker for crypto in ["BTC", "ETH", "ADA", "SOL", "DOT"]):
+            return True
+        # Mutual funds (typically start with VF, VG, etc.)
+        if any(ticker.startswith(prefix) for prefix in ["VF", "VG"]):
+            return True
+        # Default to False for traditional stocks and ETFs
+        return False
 
     def clear_cache(self) -> None:
         """Clear any cached data for this asset.

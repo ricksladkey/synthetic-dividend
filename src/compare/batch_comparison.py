@@ -46,7 +46,7 @@ def run_single_backtest(
     start_date: date,
     end_date: date,
     algo_name: str,
-    initial_qty: int = 10000,
+    initial_qty: float = 10000,
     reference_rate_ticker: str = "",
     risk_free_rate_ticker: str = "",
 ) -> Dict[str, Any]:
@@ -203,7 +203,7 @@ def run_batch_comparison(
     ticker: str,
     start_date: date,
     end_date: date,
-    initial_qty: int = 10000,
+    initial_qty: float = 10000,
     configs: Optional[List[str]] = None,
     reference_asset: str = "VOO",
     risk_free_asset: str = "BIL",
