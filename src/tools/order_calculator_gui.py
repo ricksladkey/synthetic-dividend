@@ -391,7 +391,7 @@ class OrderCalculatorGUI:
         sdn: int,
         bracket_seed: Optional[float],
     ):
-        """Update the price chart with brackets."""
+        """Update the price chart with brackets and backtest signals."""
         try:
             # Clear previous plot
             self.ax.clear()
@@ -443,6 +443,11 @@ class OrderCalculatorGUI:
                         last_price, buy_price, sell_price, sdn, bracket_seed
                     )
 
+                    # Run backtest to get buy/sell signals
+                    self.add_backtest_signals(
+                        ticker, last_price, sdn, self.profit_var.get(), bracket_seed, df, start_date, end_date
+                    )
+
                     self.ax.legend()
                 else:
                     self.ax.text(
@@ -467,6 +472,93 @@ class OrderCalculatorGUI:
 
         except Exception as e:
             self.status_var.set(f"Chart error: {str(e)}")
+
+    def add_backtest_signals(
+        self,
+        ticker: str,
+        last_price: float,
+        sdn: int,
+        profit_pct_str: str,
+        bracket_seed: Optional[float],
+        df: pd.DataFrame,
+        start_date: date,
+        end_date: date,
+    ):
+        """Run backtest and add buy/sell signal dots to the chart."""
+        try:
+            # Parse profit percentage
+            profit_pct = float(profit_pct_str) if profit_pct_str.strip() else 50.0
+
+            # Calculate algorithm parameters
+            rebalance_size = (2.0 ** (1.0 / float(sdn))) - 1.0
+            profit_sharing = profit_pct / 100.0
+
+            # Get holdings from GUI
+            holdings_str = self.holdings_var.get().strip()
+            holdings = float(holdings_str.replace(",", "")) if holdings_str else 1000.0
+
+            # Create algorithm
+            from src.algorithms.synthetic_dividend import SyntheticDividendAlgorithm
+
+            algo = SyntheticDividendAlgorithm(
+                rebalance_size=rebalance_size,
+                profit_sharing=profit_sharing,
+                buyback_enabled=True,
+                bracket_seed=bracket_seed,
+            )
+
+            # Run backtest
+            from src.models.backtest import run_algorithm_backtest
+
+            transactions, _ = run_algorithm_backtest(
+                df=df,
+                ticker=ticker,
+                initial_qty=holdings,
+                start_date=start_date,
+                end_date=end_date,
+                algo=algo,
+                simple_mode=True,  # Use simple mode for faster execution
+            )
+
+            # Extract buy/sell signals
+            buy_signals = []
+            sell_signals = []
+
+            for txn in transactions:
+                if txn.action == "BUY":
+                    buy_signals.append((txn.transaction_date, txn.price))
+                elif txn.action == "SELL":
+                    sell_signals.append((txn.transaction_date, txn.price))
+
+            # Plot signals as dots
+            if buy_signals:
+                buy_dates, buy_prices = zip(*buy_signals)
+                self.ax.scatter(buy_dates, buy_prices, color="red", s=30, alpha=0.8, label="Buy Signals", zorder=5)
+
+            if sell_signals:
+                sell_dates, sell_prices = zip(*sell_signals)
+                self.ax.scatter(sell_dates, sell_prices, color="green", s=30, alpha=0.8, label="Sell Signals", zorder=5)
+
+            # Add signal count inset in lower right
+            total_buys = len(buy_signals)
+            total_sells = len(sell_signals)
+
+            # Create inset text box
+            inset_text = f"Signals\nBuys: {total_buys}\nSells: {total_sells}"
+            self.ax.text(
+                0.98, 0.02, inset_text,
+                transform=self.ax.transAxes,
+                fontsize=9,
+                verticalalignment="bottom",
+                horizontalalignment="right",
+                bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8),
+                family="monospace",
+            )
+
+        except Exception as e:
+            # Silently skip signal plotting on error
+            print(f"Warning: Could not add backtest signals: {e}")
+            pass
 
     def add_bracket_annotations(
         self,
