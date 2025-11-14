@@ -16,6 +16,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 from src.tools.order_calculator import calculate_orders_for_manual_entry, format_order_display
+from src.data.asset import Asset
 
 # Optional imports for enhanced help display
 try:
@@ -485,8 +486,22 @@ Features:
         return float(s)
 
     @staticmethod
-    def format_holdings(holdings: float) -> str:
-        """Format holdings with commas for readability."""
+    def format_holdings(holdings: float, ticker: str = "") -> str:
+        """Format holdings with commas for readability.
+
+        For assets that support fractional shares, shows decimal places.
+        For assets that don't support fractional shares, rounds to whole numbers.
+        """
+        if ticker:
+            try:
+                from src.data.asset import Asset
+                asset = Asset(ticker)
+                if asset.supports_fractional_shares:
+                    return f"{holdings:,.4f}"
+            except:
+                pass  # Fall back to whole number formatting on error
+
+        # Default: format as whole numbers with commas
         return f"{holdings:,.0f}"
 
     def load_history(self) -> None:
@@ -520,7 +535,7 @@ Features:
             params = self.history[ticker]
             self.ticker_var.set(ticker)
             self.holdings_var.set(
-                self.format_holdings(params.get("holdings", 0)) if params.get("holdings") else ""
+                self.format_holdings(params.get("holdings", 0), ticker) if params.get("holdings") else ""
             )
             self.last_price_var.set(
                 self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
@@ -546,7 +561,7 @@ Features:
         if ticker in self.history:
             params = self.history[ticker]
             self.holdings_var.set(
-                self.format_holdings(params.get("holdings", 0)) if params.get("holdings") else ""
+                self.format_holdings(params.get("holdings", 0), ticker) if params.get("holdings") else ""
             )
             self.last_price_var.set(
                 self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
@@ -595,7 +610,7 @@ Features:
                 raise ValueError("Profit must be between 0 and 200")
 
             # Update fields to canonical format
-            self.holdings_var.set(self.format_holdings(holdings))
+            self.holdings_var.set(self.format_holdings(holdings, ticker))
             self.last_price_var.set(self.format_price(last_price))
             self.current_price_var.set(self.format_price(current_price))
             if bracket_seed is not None:
@@ -622,9 +637,21 @@ Features:
             buy_amount = buy_price * buy_qty
             sell_amount = sell_price * sell_qty
 
-            buy_order_text = f"BUY {ticker} {int(buy_qty)} @ ${buy_price:.2f} = ${buy_amount:.2f}"
+            # Check if asset supports fractional shares
+            asset = Asset(ticker)
+            supports_fractional = asset.supports_fractional_shares
+
+            # Format quantity: use int() only for assets that don't support fractional shares
+            if supports_fractional:
+                buy_qty_display = f"{buy_qty:.4f}"
+                sell_qty_display = f"{sell_qty:.4f}"
+            else:
+                buy_qty_display = f"{int(buy_qty)}"
+                sell_qty_display = f"{int(sell_qty)}"
+
+            buy_order_text = f"BUY {ticker} {buy_qty_display} @ ${buy_price:.2f} = ${buy_amount:.2f}"
             sell_order_text = (
-                f"SELL {ticker} {int(sell_qty)} @ ${sell_price:.2f} = ${sell_amount:.2f}"
+                f"SELL {ticker} {sell_qty_display} @ ${sell_price:.2f} = ${sell_amount:.2f}"
             )
 
             # Update broker order displays
@@ -702,13 +729,20 @@ Features:
             self.current_price_var.set(self.format_price(execution_price))
 
             # Update holdings
-            self.holdings_var.set(self.format_holdings(new_holdings))
+            self.holdings_var.set(self.format_holdings(new_holdings, self.ticker_var.get().strip()))
 
             # Recalculate orders with new position
             self.calculate_orders()
 
+            # Format quantity for status message based on asset type
+            asset = Asset(self.ticker_var.get().strip())
+            if asset.supports_fractional_shares:
+                qty_display = f"{self.current_buy_qty:.4f}"
+            else:
+                qty_display = f"{int(self.current_buy_qty)}"
+
             self.status_var.set(
-                f"Executed BUY: {int(self.current_buy_qty)} shares @ ${execution_price:.2f}"
+                f"Executed BUY: {qty_display} shares @ ${execution_price:.2f}"
             )
 
         except Exception as e:
@@ -744,13 +778,20 @@ Features:
             self.current_price_var.set(self.format_price(execution_price))
 
             # Update holdings
-            self.holdings_var.set(self.format_holdings(new_holdings))
+            self.holdings_var.set(self.format_holdings(new_holdings, self.ticker_var.get().strip()))
 
             # Recalculate orders with new position
             self.calculate_orders()
 
+            # Format quantity for status message based on asset type
+            asset = Asset(self.ticker_var.get().strip())
+            if asset.supports_fractional_shares:
+                qty_display = f"{self.current_sell_qty:.4f}"
+            else:
+                qty_display = f"{int(self.current_sell_qty)}"
+
             self.status_var.set(
-                f"Executed SELL: {int(self.current_sell_qty)} shares @ ${execution_price:.2f}"
+                f"Executed SELL: {qty_display} shares @ ${execution_price:.2f}"
             )
 
         except Exception as e:

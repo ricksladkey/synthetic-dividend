@@ -283,7 +283,7 @@ class TestHolding:
         holding = Holding(ticker="NVDA")
         holding.add_buy(shares=100, purchase_date=date(2024, 1, 1), purchase_price=50.0)
 
-        with pytest.raises(ValueError, match="Cannot sell 150 shares.*only 100 shares held"):
+        with pytest.raises(ValueError, match="Cannot sell 150 shares.*only 100.0 shares held"):
             holding.add_sell(shares=150, sale_date=date(2024, 6, 1), sale_price=75.0)
 
     def test_fifo_lot_selection(self):
