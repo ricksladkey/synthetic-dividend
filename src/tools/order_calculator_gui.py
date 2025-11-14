@@ -5,12 +5,13 @@ with persistent defaults per ticker and chart visualization.
 """
 
 import json
-import math
 import os
 import tkinter as tk
+from datetime import date
 from tkinter import messagebox, scrolledtext, ttk
 from typing import Any, Dict, Optional
 
+import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
@@ -18,8 +19,9 @@ from src.tools.order_calculator import calculate_orders_for_manual_entry, format
 
 # Optional imports for enhanced help display
 try:
-    import markdown
+    import markdown  # type: ignore
     import tkinterweb
+
     MARKDOWN_AVAILABLE = True
 except ImportError:
     MARKDOWN_AVAILABLE = False
@@ -27,14 +29,14 @@ except ImportError:
 
 class ToolTip:
     """Simple tooltip class for Tkinter widgets."""
-    
+
     def __init__(self, widget, text):
         self.widget = widget
         self.text = text
         self.tooltip_window = None
         self.widget.bind("<Enter>", self.show_tooltip)
         self.widget.bind("<Leave>", self.hide_tooltip)
-    
+
     def show_tooltip(self, event=None):
         if self.tooltip_window or not self.text:
             return
@@ -44,11 +46,17 @@ class ToolTip:
         self.tooltip_window = tk.Toplevel(self.widget)
         self.tooltip_window.wm_overrideredirect(True)
         self.tooltip_window.wm_geometry(f"+{x}+{y}")
-        label = tk.Label(self.tooltip_window, text=self.text, justify='left',
-                        background="#ffffe0", relief='solid', borderwidth=1,
-                        font=("tahoma", "8", "normal"))
+        label = tk.Label(
+            self.tooltip_window,
+            text=self.text,
+            justify="left",
+            background="#ffffe0",
+            relief="solid",
+            borderwidth=1,
+            font="tahoma 8 normal",
+        )
         label.pack(ipadx=1)
-    
+
     def hide_tooltip(self, event=None):
         if self.tooltip_window:
             self.tooltip_window.destroy()
@@ -79,7 +87,7 @@ class OrderCalculatorGUI:
         self.current_sell_qty = 0.0
 
         # Auto-calculation debouncing
-        self.calculation_timer = None
+        self.calculation_timer: Optional[str] = None
         self.calculation_delay = 500  # milliseconds
 
         # Create menu bar
@@ -158,7 +166,10 @@ class OrderCalculatorGUI:
         self.profit_entry = ttk.Entry(input_frame, textvariable=self.profit_var, width=12)
         self.profit_entry.grid(row=2, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
         self.profit_entry.bind("<FocusOut>", self.schedule_auto_calculation)
-        ToolTip(self.profit_entry, "Profit sharing percentage (25-75%): Higher = more aggressive profit-taking")
+        ToolTip(
+            self.profit_entry,
+            "Profit sharing percentage (25-75%): Higher = more aggressive profit-taking",
+        )
 
         # Bracket Seed
         ttk.Label(input_frame, text="Bracket Seed:").grid(
@@ -173,22 +184,16 @@ class OrderCalculatorGUI:
         ToolTip(self.bracket_seed_entry, "Optional: Starting price for bracket calculations")
 
         # Buy and Sell buttons
-        self.buy_button = ttk.Button(
-            input_frame, text="BUY", command=self.execute_buy_order
-        )
+        self.buy_button = ttk.Button(input_frame, text="BUY", command=self.execute_buy_order)
         self.buy_button.grid(row=3, column=2, sticky="we", padx=(0, 5), pady=(5, 10))
         ToolTip(self.buy_button, "Execute calculated buy order and update position")
 
-        self.sell_button = ttk.Button(
-            input_frame, text="SELL", command=self.execute_sell_order
-        )
+        self.sell_button = ttk.Button(input_frame, text="SELL", command=self.execute_sell_order)
         self.sell_button.grid(row=3, column=3, sticky="we", pady=(5, 10))
         ToolTip(self.sell_button, "Execute calculated sell order and update position")
 
         # Help button (moved to where Calculate Orders button was)
-        self.help_button = ttk.Button(
-            input_frame, text="Help", command=self.show_help
-        )
+        self.help_button = ttk.Button(input_frame, text="Help", command=self.show_help)
         self.help_button.grid(row=4, column=0, columnspan=4, pady=(5, 10))
         ToolTip(self.help_button, "Show detailed help documentation (F1)")
 
@@ -265,17 +270,25 @@ class OrderCalculatorGUI:
         # File menu
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="New Calculation", command=self.clear_all_fields, accelerator="Ctrl+N")
+        file_menu.add_command(
+            label="New Calculation", command=self.clear_all_fields, accelerator="Ctrl+N"
+        )
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.on_closing, accelerator="Ctrl+Q")
 
         # Edit menu
         edit_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Edit", menu=edit_menu)
-        edit_menu.add_command(label="Copy Buy Order", command=self.copy_buy_order, accelerator="Ctrl+B")
-        edit_menu.add_command(label="Copy Sell Order", command=self.copy_sell_order, accelerator="Ctrl+S")
+        edit_menu.add_command(
+            label="Copy Buy Order", command=self.copy_buy_order, accelerator="Ctrl+B"
+        )
+        edit_menu.add_command(
+            label="Copy Sell Order", command=self.copy_sell_order, accelerator="Ctrl+S"
+        )
         edit_menu.add_separator()
-        edit_menu.add_command(label="Clear All", command=self.clear_all_fields, accelerator="Ctrl+L")
+        edit_menu.add_command(
+            label="Clear All", command=self.clear_all_fields, accelerator="Ctrl+L"
+        )
 
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
@@ -285,12 +298,12 @@ class OrderCalculatorGUI:
         help_menu.add_command(label="About", command=self.show_about)
 
         # Bind keyboard shortcuts
-        self.root.bind('<Control-n>', lambda e: self.clear_all_fields())
-        self.root.bind('<Control-q>', lambda e: self.on_closing())
-        self.root.bind('<Control-b>', lambda e: self.copy_buy_order())
-        self.root.bind('<Control-s>', lambda e: self.copy_sell_order())
-        self.root.bind('<Control-l>', lambda e: self.clear_all_fields())
-        self.root.bind('<F1>', lambda e: self.show_help())
+        self.root.bind("<Control-n>", lambda e: self.clear_all_fields())
+        self.root.bind("<Control-q>", lambda e: self.on_closing())
+        self.root.bind("<Control-b>", lambda e: self.copy_buy_order())
+        self.root.bind("<Control-s>", lambda e: self.copy_sell_order())
+        self.root.bind("<Control-l>", lambda e: self.clear_all_fields())
+        self.root.bind("<F1>", lambda e: self.show_help())
 
     def load_window_settings(self):
         """Load window size and position settings."""
@@ -371,7 +384,7 @@ Features:
 • Professional broker order formatting
 
 © 2025 Synthetic Dividend Project"""
-        
+
         messagebox.showinfo("About", about_text)
 
     def schedule_auto_calculation(self, event=None):
@@ -379,9 +392,11 @@ Features:
         # Cancel any existing timer
         if self.calculation_timer:
             self.root.after_cancel(self.calculation_timer)
-        
+
         # Schedule new calculation after delay
-        self.calculation_timer = self.root.after(self.calculation_delay, self.perform_auto_calculation)
+        self.calculation_timer = self.root.after(
+            self.calculation_delay, self.perform_auto_calculation
+        )
 
     def perform_auto_calculation(self):
         """Perform auto-calculation if all required fields are filled."""
@@ -389,11 +404,11 @@ Features:
             # Check if we have enough information to calculate
             if not self.can_calculate():
                 return
-            
+
             # Perform the calculation
             self.calculate_orders()
-            
-        except Exception as e:
+
+        except Exception:
             # Silently handle errors during auto-calculation
             # User will see error if they manually trigger calculation
             pass
@@ -407,7 +422,7 @@ Features:
             current_price_str = self.current_price_var.get().strip()
             sdn_str = self.sdn_var.get().strip()
             profit_str = self.profit_var.get().strip()
-            
+
             # Check required fields
             if not ticker:
                 return False
@@ -421,14 +436,14 @@ Features:
                 return False
             if not profit_str:
                 return False
-            
+
             # Try to parse values to ensure they're valid
             holdings = self.parse_holdings(holdings_str)
             last_price = self.parse_price(last_price_str)
             current_price = self.parse_price(current_price_str)
             sdn = int(sdn_str)
             profit = float(profit_str)
-            
+
             # Basic validation
             if holdings <= 0 or last_price <= 0 or current_price <= 0:
                 return False
@@ -436,9 +451,9 @@ Features:
                 return False
             if profit < 0 or profit > 200:
                 return False
-            
+
             return True
-            
+
         except (ValueError, TypeError):
             return False
 
@@ -544,7 +559,7 @@ Features:
                 self.bracket_seed_var.set(self.format_price(bracket_seed))
             else:
                 self.bracket_seed_var.set("")
-            
+
             # Trigger auto-calculation after loading ticker data
             self.schedule_auto_calculation()
 
@@ -605,7 +620,9 @@ Features:
             sell_amount = sell_price * sell_qty
 
             buy_order_text = f"BUY {ticker} {int(buy_qty)} @ ${buy_price:.2f} = ${buy_amount:.2f}"
-            sell_order_text = f"SELL {ticker} {int(sell_qty)} @ ${sell_price:.2f} = ${sell_amount:.2f}"
+            sell_order_text = (
+                f"SELL {ticker} {int(sell_qty)} @ ${sell_price:.2f} = ${sell_amount:.2f}"
+            )
 
             # Update broker order displays
             self.buy_order_var.set(buy_order_text)
@@ -664,7 +681,9 @@ Features:
         """Execute the calculated buy order by updating position and recalculating."""
         try:
             if self.current_buy_price <= 0 or self.current_buy_qty <= 0:
-                messagebox.showwarning("Warning", "No buy order calculated. Please calculate orders first.")
+                messagebox.showwarning(
+                    "Warning", "No buy order calculated. Please calculate orders first."
+                )
                 return
 
             # Get current holdings
@@ -685,7 +704,9 @@ Features:
             # Recalculate orders with new position
             self.calculate_orders()
 
-            self.status_var.set(f"Executed BUY: {int(self.current_buy_qty)} shares @ ${execution_price:.2f}")
+            self.status_var.set(
+                f"Executed BUY: {int(self.current_buy_qty)} shares @ ${execution_price:.2f}"
+            )
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to execute buy order: {str(e)}")
@@ -694,7 +715,9 @@ Features:
         """Execute the calculated sell order by updating position and recalculating."""
         try:
             if self.current_sell_price <= 0 or self.current_sell_qty <= 0:
-                messagebox.showwarning("Warning", "No sell order calculated. Please calculate orders first.")
+                messagebox.showwarning(
+                    "Warning", "No sell order calculated. Please calculate orders first."
+                )
                 return
 
             # Get current holdings
@@ -703,7 +726,10 @@ Features:
 
             # Check if we have enough shares to sell
             if current_holdings < self.current_sell_qty:
-                messagebox.showwarning("Warning", f"Insufficient holdings. Have {current_holdings:.0f} shares, trying to sell {self.current_sell_qty:.0f} shares.")
+                messagebox.showwarning(
+                    "Warning",
+                    f"Insufficient holdings. Have {current_holdings:.0f} shares, trying to sell {self.current_sell_qty:.0f} shares.",
+                )
                 return
 
             # Update holdings (subtract sold shares)
@@ -720,7 +746,9 @@ Features:
             # Recalculate orders with new position
             self.calculate_orders()
 
-            self.status_var.set(f"Executed SELL: {int(self.current_sell_qty)} shares @ ${execution_price:.2f}")
+            self.status_var.set(
+                f"Executed SELL: {int(self.current_sell_qty)} shares @ ${execution_price:.2f}"
+            )
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to execute sell order: {str(e)}")
@@ -729,7 +757,9 @@ Features:
         """Show help documentation in a scrollable window with markdown rendering if available."""
         try:
             # Read the help file
-            help_file_path = os.path.join(os.path.dirname(__file__), "..", "..", "docs", "HOW_TO_order_gui.md")
+            help_file_path = os.path.join(
+                os.path.dirname(__file__), "..", "..", "docs", "HOW_TO_order_gui.md"
+            )
             with open(help_file_path, "r", encoding="utf-8") as f:
                 help_content = f.read()
 
@@ -740,7 +770,7 @@ Features:
 
             if MARKDOWN_AVAILABLE:
                 # Use HTML rendering for better formatting
-                html_content = markdown.markdown(help_content, extensions=['extra', 'codehilite'])
+                html_content = markdown.markdown(help_content, extensions=["extra", "codehilite"])
 
                 # Add some basic CSS styling
                 styled_html = f"""
@@ -877,7 +907,14 @@ Features:
 
                     # Run backtest to get buy/sell signals
                     self.add_backtest_signals(
-                        ticker, last_price, sdn, self.profit_var.get(), bracket_seed, df, start_date, end_date
+                        ticker,
+                        last_price,
+                        sdn,
+                        self.profit_var.get(),
+                        bracket_seed,
+                        df,
+                        start_date,
+                        end_date,
                     )
 
                     self.ax.legend()
@@ -945,7 +982,7 @@ Features:
             transactions, _ = run_algorithm_backtest(
                 df=df,
                 ticker=ticker,
-                initial_qty=holdings,
+                initial_qty=int(holdings),
                 start_date=start_date,
                 end_date=end_date,
                 algo=algo,
@@ -965,11 +1002,27 @@ Features:
             # Plot signals as dots
             if buy_signals:
                 buy_dates, buy_prices = zip(*buy_signals)
-                self.ax.scatter(buy_dates, buy_prices, color="red", s=30, alpha=0.8, label="Buy Signals", zorder=5)
+                self.ax.scatter(
+                    buy_dates,
+                    buy_prices,
+                    color="red",
+                    s=30,
+                    alpha=0.8,
+                    label="Buy Signals",
+                    zorder=5,
+                )
 
             if sell_signals:
                 sell_dates, sell_prices = zip(*sell_signals)
-                self.ax.scatter(sell_dates, sell_prices, color="green", s=30, alpha=0.8, label="Sell Signals", zorder=5)
+                self.ax.scatter(
+                    sell_dates,
+                    sell_prices,
+                    color="green",
+                    s=30,
+                    alpha=0.8,
+                    label="Sell Signals",
+                    zorder=5,
+                )
 
             # Add signal count inset in lower right
             total_buys = len(buy_signals)
@@ -978,7 +1031,9 @@ Features:
             # Create inset text box
             inset_text = f"Signals\nBuys: {total_buys}\nSells: {total_sells}"
             self.ax.text(
-                0.98, 0.02, inset_text,
+                0.98,
+                0.02,
+                inset_text,
                 transform=self.ax.transAxes,
                 fontsize=9,
                 verticalalignment="bottom",
@@ -1016,7 +1071,7 @@ Features:
 
             # Add horizontal lines for all powers of 2 within the visible range
             for power in range(min_power, max_power + 1):
-                magnitude_price = 2.0 ** power
+                magnitude_price = 2.0**power
                 if y_min <= magnitude_price <= y_max:  # Only add if within visible range
                     self.ax.axhline(
                         y=magnitude_price,
@@ -1030,7 +1085,7 @@ Features:
             # Add dashed light gray lines for 8 subdivisions between each factor of 2
             # For each pair of consecutive powers of 2, add 8 subdivision lines
             for power in range(min_power, max_power):
-                base_price = 2.0 ** power
+                base_price = 2.0**power
                 next_base_price = 2.0 ** (power + 1)
 
                 # Add 8 subdivisions between base_price and next_base_price
