@@ -25,6 +25,36 @@ except ImportError:
     MARKDOWN_AVAILABLE = False
 
 
+class ToolTip:
+    """Simple tooltip class for Tkinter widgets."""
+    
+    def __init__(self, widget, text):
+        self.widget = widget
+        self.text = text
+        self.tooltip_window = None
+        self.widget.bind("<Enter>", self.show_tooltip)
+        self.widget.bind("<Leave>", self.hide_tooltip)
+    
+    def show_tooltip(self, event=None):
+        if self.tooltip_window or not self.text:
+            return
+        x, y, _, _ = self.widget.bbox("insert")
+        x += self.widget.winfo_rootx() + 25
+        y += self.widget.winfo_rooty() + 25
+        self.tooltip_window = tk.Toplevel(self.widget)
+        self.tooltip_window.wm_overrideredirect(True)
+        self.tooltip_window.wm_geometry(f"+{x}+{y}")
+        label = tk.Label(self.tooltip_window, text=self.text, justify='left',
+                        background="#ffffe0", relief='solid', borderwidth=1,
+                        font=("tahoma", "8", "normal"))
+        label.pack(ipadx=1)
+    
+    def hide_tooltip(self, event=None):
+        if self.tooltip_window:
+            self.tooltip_window.destroy()
+            self.tooltip_window = None
+
+
 class OrderCalculatorGUI:
     """Tkinter GUI for order calculator with chart visualization."""
 
@@ -32,6 +62,9 @@ class OrderCalculatorGUI:
         self.root = root
         self.root.title("Synthetic Dividend Order Calculator")
         self.root.geometry("1200x800")
+
+        # Load window settings
+        self.load_window_settings()
 
         # History file path
         self.history_file = os.path.join(os.path.dirname(__file__), "order_calculator_history.json")
@@ -44,6 +77,9 @@ class OrderCalculatorGUI:
         self.current_buy_qty = 0.0
         self.current_sell_price = 0.0
         self.current_sell_qty = 0.0
+
+        # Create menu bar
+        self.create_menu_bar()
 
         # Create main frame
         main_frame = ttk.Frame(self.root, padding="10")
@@ -67,12 +103,14 @@ class OrderCalculatorGUI:
         self.ticker_combo.grid(row=0, column=1, sticky="we", padx=(0, 10))
         self.ticker_combo["values"] = [t for t in self.history.keys() if t != "last_ticker"]
         self.ticker_combo.bind("<<ComboboxSelected>>", self.on_ticker_selected)
+        ToolTip(self.ticker_combo, "Stock ticker symbol (e.g., NVDA, SPY, AAPL)")
 
         # Holdings
         ttk.Label(input_frame, text="Holdings:").grid(row=0, column=2, sticky=tk.W, padx=(0, 5))
         self.holdings_var = tk.StringVar()
         self.holdings_entry = ttk.Entry(input_frame, textvariable=self.holdings_var, width=12)
         self.holdings_entry.grid(row=0, column=3, sticky="we", padx=(0, 10))
+        ToolTip(self.holdings_entry, "Number of shares you currently own")
 
         # Last Price
         ttk.Label(input_frame, text="Last Price:").grid(
@@ -81,6 +119,7 @@ class OrderCalculatorGUI:
         self.last_price_var = tk.StringVar()
         self.last_price_entry = ttk.Entry(input_frame, textvariable=self.last_price_var, width=12)
         self.last_price_entry.grid(row=1, column=1, sticky="we", padx=(0, 10), pady=(5, 0))
+        ToolTip(self.last_price_entry, "Price you last bought or sold shares at")
 
         # Current Price
         ttk.Label(input_frame, text="Current Price:").grid(
@@ -91,6 +130,7 @@ class OrderCalculatorGUI:
             input_frame, textvariable=self.current_price_var, width=12
         )
         self.current_price_entry.grid(row=1, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
+        ToolTip(self.current_price_entry, "Current market price of the stock")
 
         # SDN
         ttk.Label(input_frame, text="SDN:").grid(
@@ -99,6 +139,7 @@ class OrderCalculatorGUI:
         self.sdn_var = tk.StringVar()
         self.sdn_entry = ttk.Entry(input_frame, textvariable=self.sdn_var, width=12)
         self.sdn_entry.grid(row=2, column=1, sticky="we", padx=(0, 10), pady=(5, 0))
+        ToolTip(self.sdn_entry, "Synthetic Dividend Number (2-8): Controls bracket spacing")
 
         # Profit
         ttk.Label(input_frame, text="Profit %:").grid(
@@ -107,6 +148,7 @@ class OrderCalculatorGUI:
         self.profit_var = tk.StringVar()
         self.profit_entry = ttk.Entry(input_frame, textvariable=self.profit_var, width=12)
         self.profit_entry.grid(row=2, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
+        ToolTip(self.profit_entry, "Profit sharing percentage (25-75%): Higher = more aggressive profit-taking")
 
         # Bracket Seed
         ttk.Label(input_frame, text="Bracket Seed:").grid(
@@ -117,29 +159,34 @@ class OrderCalculatorGUI:
             input_frame, textvariable=self.bracket_seed_var, width=12
         )
         self.bracket_seed_entry.grid(row=3, column=1, sticky="we", padx=(0, 10), pady=(5, 10))
+        ToolTip(self.bracket_seed_entry, "Optional: Starting price for bracket calculations")
 
         # Buy and Sell buttons
         self.buy_button = ttk.Button(
             input_frame, text="BUY", command=self.execute_buy_order
         )
         self.buy_button.grid(row=3, column=2, sticky="we", padx=(0, 5), pady=(5, 10))
+        ToolTip(self.buy_button, "Execute calculated buy order and update position")
 
         self.sell_button = ttk.Button(
             input_frame, text="SELL", command=self.execute_sell_order
         )
         self.sell_button.grid(row=3, column=3, sticky="we", pady=(5, 10))
+        ToolTip(self.sell_button, "Execute calculated sell order and update position")
 
         # Calculate button
         self.calc_button = ttk.Button(
             input_frame, text="Calculate Orders", command=self.calculate_orders
         )
         self.calc_button.grid(row=4, column=0, columnspan=3, pady=(5, 10))
+        ToolTip(self.calc_button, "Calculate buy/sell bracket orders (Ctrl+Enter)")
 
         # Help button
         self.help_button = ttk.Button(
             input_frame, text="Help", command=self.show_help
         )
         self.help_button.grid(row=4, column=3, pady=(5, 10))
+        ToolTip(self.help_button, "Show detailed help documentation (F1)")
 
         # Output frame (right side)
         output_frame = ttk.LabelFrame(main_frame, text="Broker Orders", padding="5")
@@ -202,6 +249,128 @@ class OrderCalculatorGUI:
         # Load last ticker and pre-fill if available (after UI is created)
         if self.last_ticker and self.last_ticker in self.history:
             self.pre_fill_with_ticker(self.last_ticker)
+
+        # Bind window close event to save settings
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def create_menu_bar(self):
+        """Create the application menu bar."""
+        menubar = tk.Menu(self.root)
+        self.root.config(menu=menubar)
+
+        # File menu
+        file_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="New Calculation", command=self.clear_all_fields, accelerator="Ctrl+N")
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.on_closing, accelerator="Ctrl+Q")
+
+        # Edit menu
+        edit_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Edit", menu=edit_menu)
+        edit_menu.add_command(label="Copy Buy Order", command=self.copy_buy_order, accelerator="Ctrl+B")
+        edit_menu.add_command(label="Copy Sell Order", command=self.copy_sell_order, accelerator="Ctrl+S")
+        edit_menu.add_separator()
+        edit_menu.add_command(label="Clear All", command=self.clear_all_fields, accelerator="Ctrl+L")
+
+        # Help menu
+        help_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Help", menu=help_menu)
+        help_menu.add_command(label="Help", command=self.show_help, accelerator="F1")
+        help_menu.add_separator()
+        help_menu.add_command(label="About", command=self.show_about)
+
+        # Bind keyboard shortcuts
+        self.root.bind('<Control-n>', lambda e: self.clear_all_fields())
+        self.root.bind('<Control-q>', lambda e: self.on_closing())
+        self.root.bind('<Control-b>', lambda e: self.copy_buy_order())
+        self.root.bind('<Control-s>', lambda e: self.copy_sell_order())
+        self.root.bind('<Control-l>', lambda e: self.clear_all_fields())
+        self.root.bind('<F1>', lambda e: self.show_help())
+        self.root.bind('<Control-Return>', lambda e: self.calculate_orders())  # Ctrl+Enter
+        self.root.bind('<Control-KP_Enter>', lambda e: self.calculate_orders())  # Ctrl+Enter on numpad
+
+    def load_window_settings(self):
+        """Load window size and position settings."""
+        settings_file = os.path.join(os.path.dirname(__file__), "window_settings.json")
+        if os.path.exists(settings_file):
+            try:
+                with open(settings_file, "r") as f:
+                    settings = json.load(f)
+                    geometry = settings.get("geometry", "1200x800")
+                    self.root.geometry(geometry)
+            except Exception:
+                pass  # Use default geometry
+
+    def save_window_settings(self):
+        """Save window size and position settings."""
+        settings_file = os.path.join(os.path.dirname(__file__), "window_settings.json")
+        try:
+            geometry = self.root.geometry()
+            settings = {"geometry": geometry}
+            with open(settings_file, "w") as f:
+                json.dump(settings, f, indent=2)
+        except Exception:
+            pass  # Silently fail
+
+    def on_closing(self):
+        """Handle window close event."""
+        self.save_window_settings()
+        self.root.quit()
+
+    def copy_buy_order(self):
+        """Copy buy order to clipboard."""
+        buy_order = self.buy_order_var.get()
+        if buy_order:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(buy_order)
+            self.status_var.set("Buy order copied to clipboard")
+        else:
+            self.status_var.set("No buy order to copy")
+
+    def copy_sell_order(self):
+        """Copy sell order to clipboard."""
+        sell_order = self.sell_order_var.get()
+        if sell_order:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(sell_order)
+            self.status_var.set("Sell order copied to clipboard")
+        else:
+            self.status_var.set("No sell order to copy")
+
+    def clear_all_fields(self):
+        """Clear all input fields."""
+        self.ticker_var.set("")
+        self.holdings_var.set("")
+        self.last_price_var.set("")
+        self.current_price_var.set("")
+        self.sdn_var.set("")
+        self.profit_var.set("")
+        self.bracket_seed_var.set("")
+        self.buy_order_var.set("")
+        self.sell_order_var.set("")
+        self.output_text.delete(1.0, tk.END)
+        self.status_var.set("All fields cleared")
+
+    def show_about(self):
+        """Show about dialog."""
+        about_text = """Synthetic Dividend Order Calculator
+
+Version 1.0
+
+A professional tool for calculating synthetic dividend orders
+using the Synthetic Dividend Algorithm.
+
+Features:
+• Interactive order calculation
+• Visual price chart with signals
+• Bracket order simulation
+• Persistent settings per ticker
+• Professional broker order formatting
+
+© 2025 Synthetic Dividend Project"""
+        
+        messagebox.showinfo("About", about_text)
 
     @staticmethod
     def parse_price(s: str) -> float:
