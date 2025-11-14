@@ -487,19 +487,26 @@ class OrderCalculatorGUI:
                 bracket_rounded = round(bracket_n)
                 anchor_price = bracket_seed * math.pow(1 + rebalance_size, bracket_rounded)
 
-            # Add a few bracket levels around the current position
-            for i in range(-3, 4):
+            # Get the current y-axis limits (price range shown on chart)
+            y_min, y_max = self.ax.get_ylim()
+
+            # Calculate all bracket levels that fit within the visible price range
+            # Find the lowest bracket level that would be visible
+            min_bracket_level = math.floor(math.log(y_min / anchor_price) / math.log(1 + rebalance_size))
+            # Find the highest bracket level that would be visible
+            max_bracket_level = math.ceil(math.log(y_max / anchor_price) / math.log(1 + rebalance_size))
+
+            # Add horizontal lines for all brackets within the visible range
+            for i in range(min_bracket_level, max_bracket_level + 1):
                 bracket_price = anchor_price * math.pow(1 + rebalance_size, i)
-                if bracket_price > 0:
+                if y_min <= bracket_price <= y_max:  # Only add if within visible range
                     color = "purple" if i == 0 else "gray"
-                    alpha = 0.3 if abs(i) > 1 else 0.5
-                    label = f"Bracket {i}" if i != 0 else "Current Bracket"
+                    alpha = 0.2  # Subtle lines for all brackets
                     self.ax.axhline(
                         y=bracket_price,
                         color=color,
                         linestyle=":",
                         alpha=alpha,
-                        label=label,
                     )
 
         except Exception:
