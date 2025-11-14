@@ -676,7 +676,7 @@ class OrderCalculatorGUI:
                 if y_min <= magnitude_price <= y_max:  # Only add if within visible range
                     self.ax.axhline(
                         y=magnitude_price,
-                        color="lightgray",
+                        color=(0.5, 0.5, 0.5),
                         linestyle="-",
                         alpha=0.5,
                         linewidth=0.8,
@@ -695,7 +695,7 @@ class OrderCalculatorGUI:
                     if y_min <= subdivision_price <= y_max:  # Only add if within visible range
                         self.ax.axhline(
                             y=subdivision_price,
-                            color="lightgray",
+                            color=(0.5, 0.5, 0.5),
                             linestyle="--",
                             alpha=0.3,
                             linewidth=0.5,
