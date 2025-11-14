@@ -506,14 +506,14 @@ class OrderCalculatorGUI:
                     # Add bracket lines
                     self.ax.axhline(
                         y=buy_price,
-                        color="green",
+                        color="red",
                         linestyle="--",
                         alpha=0.7,
                         label=f"Buy: ${buy_price:.2f}",
                     )
                     self.ax.axhline(
                         y=sell_price,
-                        color="red",
+                        color="green",
                         linestyle="--",
                         alpha=0.7,
                         label=f"Sell: ${sell_price:.2f}",
