@@ -367,7 +367,29 @@ source .venv/bin/activate
 ```
 </details>
 
-### � Your First Backtest
+### 📊 Cache Management
+
+**Refresh Historical Price Data**:
+
+The tool caches historical price data locally for fast offline operation. To refresh the cache with the latest market data:
+
+```bash
+# Refresh cache with 5 years of data for all common tickers
+python scripts/populate_cache.py
+
+# Update cache with recent data only (e.g., last 30 days)
+python scripts/populate_cache.py --catch-up 30
+
+# Refresh specific tickers only
+python scripts/populate_cache.py --tickers NVDA SPY VOO
+
+# List available tickers and options
+python scripts/populate_cache.py --list
+```
+
+> 💡 **Tip**: Run cache refresh periodically to ensure you have the latest market data for backtesting and analysis.
+
+### 🔍 Your First Backtest
 
 **Run NVDA with optimal settings (sd8, 50% profit sharing):**
 
