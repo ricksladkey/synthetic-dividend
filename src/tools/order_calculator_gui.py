@@ -167,6 +167,7 @@ class OrderCalculatorGUI:
             self.start_date_entry = ttk.Entry(input_frame, textvariable=self.start_date_var, width=12)
         self.start_date_entry.grid(row=1, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
         self.start_date_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.start_date_entry.bind("<<DateEntrySelected>>", self.schedule_auto_calculation)
         ToolTip(self.start_date_entry, "Start date for price data (YYYY-MM-DD)")
 
         # End Date
@@ -188,6 +189,7 @@ class OrderCalculatorGUI:
             self.end_date_entry = ttk.Entry(input_frame, textvariable=self.end_date_var, width=12)
         self.end_date_entry.grid(row=2, column=1, sticky="we", padx=(0, 10), pady=(5, 0))
         self.end_date_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.end_date_entry.bind("<<DateEntrySelected>>", self.schedule_auto_calculation)
         ToolTip(self.end_date_entry, "End date for price data (YYYY-MM-DD)")
 
         # SDN
