@@ -2,7 +2,8 @@
   "NVDA": {
     "holdings": 1048.0,
     "last_price": 181.45,
-    "current_price": 181.45,
+    "start_date": "2024-11-14",
+    "end_date": "2025-11-14",
     "sdn": 8,
     "profit": 50.0,
     "bracket_seed": 197.87
@@ -24,9 +25,10 @@
     "bracket_seed": 208.2
   },
   "BTC-USD": {
-    "holdings": 2.0,
-    "last_price": 95961.96,
-    "current_price": 95961.96,
+    "holdings": 1.6,
+    "last_price": 104647.25,
+    "start_date": "2024-01-01",
+    "end_date": "2025-11-14",
     "sdn": 8,
     "profit": 50.0,
     "bracket_seed": 124447.26
