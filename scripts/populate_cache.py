@@ -9,6 +9,7 @@ Usage:
     python scripts/populate_cache.py
     python scripts/populate_cache.py --tickers NVDA SPY  # Specific tickers only
     python scripts/populate_cache.py --years 10  # Fetch 10 years instead of 5
+    python scripts/populate_cache.py --catch-up 30  # Update with last 30 days only
 """
 
 import argparse
@@ -54,21 +55,27 @@ COMMON_TICKERS = [
 ]
 
 
-def populate_cache(tickers: list, years: int = 5, cache_dir: str = "cache"):
+def populate_cache(tickers: list, years: int = 5, cache_dir: str = "cache", catch_up_days: int = None):
     """
     Fetch and cache historical data for specified tickers.
 
     Args:
         tickers: List of ticker symbols
-        years: Number of years of historical data to fetch
+        years: Number of years of historical data to fetch (ignored if catch_up_days is set)
         cache_dir: Cache directory path
+        catch_up_days: If set, fetch only the last N days instead of full range
     """
-    # Calculate date range (years ago to today)
+    # Calculate date range
     end_date = date.today()
-    start_date = end_date - timedelta(days=years * 365)
+    if catch_up_days is not None:
+        start_date = end_date - timedelta(days=catch_up_days)
+        range_desc = f"last {catch_up_days} days"
+    else:
+        start_date = end_date - timedelta(days=years * 365)
+        range_desc = f"{years} years"
 
     print("=" * 70)
-    print(f"CACHE POPULATION: {years} years of data")
+    print(f"CACHE POPULATION: {range_desc} of data")
     print("=" * 70)
     print(f"Date range: {start_date} to {end_date}")
     print(f"Cache directory: {cache_dir}")
@@ -121,7 +128,10 @@ def populate_cache(tickers: list, years: int = 5, cache_dir: str = "cache"):
     print(f"Total:     {len(tickers)}")
     print()
     print(f"Cache populated in: {cache_dir}/")
-    print(f"Any date range in last {years} years will now work offline! 🎉")
+    if catch_up_days is not None:
+        print(f"Cache updated with recent {catch_up_days} days of data! 🔄")
+    else:
+        print(f"Any date range in last {years} years will now work offline! 🎉")
 
 
 def main():
@@ -138,7 +148,13 @@ def main():
         "--years",
         type=int,
         default=5,
-        help="Years of historical data to fetch (default: 5)",
+        help="Years of historical data to fetch (default: 5, ignored with --catch-up)",
+    )
+    parser.add_argument(
+        "--catch-up",
+        type=int,
+        metavar="DAYS",
+        help="Fetch only the last N days of data instead of full range (for updating existing cache)",
     )
     parser.add_argument(
         "--cache-dir",
@@ -169,7 +185,7 @@ def main():
                 print(f"  - {ticker}")
         return
 
-    populate_cache(args.tickers, args.years, args.cache_dir)
+    populate_cache(args.tickers, args.years, args.cache_dir, args.catch_up)
 
 
 if __name__ == "__main__":
