@@ -7,7 +7,7 @@ with persistent defaults per ticker and chart visualization.
 import json
 import os
 import tkinter as tk
-from datetime import date
+from datetime import date, timedelta
 from tkinter import messagebox, scrolledtext, ttk
 from typing import Any, Dict, Optional
 
@@ -18,12 +18,13 @@ from matplotlib.figure import Figure
 # Try to import tkcalendar for date picker functionality
 try:
     from tkcalendar import DateEntry
+
     TKCALENDAR_AVAILABLE = True
 except ImportError:
     TKCALENDAR_AVAILABLE = False
 
-from src.tools.order_calculator import calculate_orders_for_manual_entry, format_order_display
 from src.data.asset import Asset
+from src.tools.order_calculator import calculate_orders_for_manual_entry, format_order_display
 
 # Optional imports for enhanced help display
 try:
@@ -118,7 +119,9 @@ class OrderCalculatorGUI:
 
         # Configure input frame columns to allow proper expansion
         input_frame.columnconfigure(1, weight=1)  # Ticker entry
-        input_frame.columnconfigure(3, weight=1)  # Holdings, Last Price, Start Date, End Date, SDN, Profit, Bracket Seed entries
+        input_frame.columnconfigure(
+            3, weight=1
+        )  # Holdings, Last Price, Start Date, End Date, SDN, Profit, Bracket Seed entries
 
         # Ticker selection
         ttk.Label(input_frame, text="Ticker:").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
@@ -154,17 +157,19 @@ class OrderCalculatorGUI:
         )
         if TKCALENDAR_AVAILABLE:
             self.start_date_entry = DateEntry(
-                input_frame, 
-                width=12, 
-                background='darkblue', 
-                foreground='white', 
+                input_frame,
+                width=12,
+                background="darkblue",
+                foreground="white",
                 borderwidth=1,
-                date_pattern='yyyy-mm-dd'
+                date_pattern="yyyy-mm-dd",
             )
             self.start_date_var = self.start_date_entry
         else:
             self.start_date_var = tk.StringVar()
-            self.start_date_entry = ttk.Entry(input_frame, textvariable=self.start_date_var, width=12)
+            self.start_date_entry = ttk.Entry(
+                input_frame, textvariable=self.start_date_var, width=12
+            )
         self.start_date_entry.grid(row=1, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
         self.start_date_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         self.start_date_entry.bind("<<DateEntrySelected>>", self.schedule_auto_calculation)
@@ -176,12 +181,12 @@ class OrderCalculatorGUI:
         )
         if TKCALENDAR_AVAILABLE:
             self.end_date_entry = DateEntry(
-                input_frame, 
-                width=12, 
-                background='darkblue', 
-                foreground='white', 
+                input_frame,
+                width=12,
+                background="darkblue",
+                foreground="white",
                 borderwidth=1,
-                date_pattern='yyyy-mm-dd'
+                date_pattern="yyyy-mm-dd",
             )
             self.end_date_var = self.end_date_entry
         else:
@@ -249,7 +254,9 @@ class OrderCalculatorGUI:
         output_frame.grid(row=0, column=1, sticky="wen", padx=(10, 0))
 
         # Current price display
-        ttk.Label(output_frame, text="Current Price:").grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
+        ttk.Label(output_frame, text="Current Price:").grid(
+            row=0, column=0, sticky=tk.W, pady=(0, 5)
+        )
         self.current_price_var = tk.StringVar()
         self.current_price_var.set("")  # Initialize empty
         self.current_price_entry = ttk.Entry(
@@ -418,6 +425,7 @@ class OrderCalculatorGUI:
         if TKCALENDAR_AVAILABLE:
             # Reset to defaults when clearing
             from datetime import date, timedelta
+
             today = date.today()
             one_year_ago = today - timedelta(days=365)
             self.start_date_entry.set_date(one_year_ago)
@@ -498,13 +506,13 @@ Features:
                 return False
             if not last_price_str:
                 return False
-            
+
             # Get dates - handle both DateEntry and StringVar
             if TKCALENDAR_AVAILABLE:
                 try:
                     start_date = self.start_date_entry.get_date()
                     end_date = self.end_date_entry.get_date()
-                except:
+                except Exception:
                     return False
             else:
                 if not start_date_str:
@@ -514,9 +522,9 @@ Features:
                 try:
                     start_date = self.parse_date(start_date_str)
                     end_date = self.parse_date(end_date_str)
-                except:
+                except Exception:
                     return False
-                    
+
             if not sdn_str:
                 return False
             if not profit_str:
@@ -561,6 +569,7 @@ Features:
     def parse_date(date_str: str) -> date:
         """Parse a date string in YYYY-MM-DD format."""
         from datetime import datetime
+
         try:
             return datetime.strptime(date_str.strip(), "%Y-%m-%d").date()
         except ValueError:
@@ -603,10 +612,11 @@ Features:
         if ticker:
             try:
                 from src.data.asset import Asset
+
                 asset = Asset(ticker)
                 if asset.supports_fractional_shares:
                     return f"{holdings:,.4f}"
-            except:
+            except Exception:
                 pass  # Fall back to whole number formatting on error
 
         # Default: format as whole numbers with commas
@@ -643,7 +653,9 @@ Features:
             params = self.history[ticker]
             self.ticker_var.set(ticker)
             self.holdings_var.set(
-                self.format_holdings(params.get("holdings", 0), ticker) if params.get("holdings") else ""
+                self.format_holdings(params.get("holdings", 0), ticker)
+                if params.get("holdings")
+                else ""
             )
             self.last_price_var.set(
                 self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
@@ -653,6 +665,7 @@ Features:
             if start_date:
                 if TKCALENDAR_AVAILABLE:
                     from datetime import datetime
+
                     self.start_date_entry.set_date(datetime.fromisoformat(start_date).date())
                 else:
                     self.start_date_var.set(start_date)
@@ -660,6 +673,7 @@ Features:
             if end_date:
                 if TKCALENDAR_AVAILABLE:
                     from datetime import datetime
+
                     self.end_date_entry.set_date(datetime.fromisoformat(end_date).date())
                 else:
                     self.end_date_var.set(end_date)
@@ -681,7 +695,9 @@ Features:
         if ticker in self.history:
             params = self.history[ticker]
             self.holdings_var.set(
-                self.format_holdings(params.get("holdings", 0), ticker) if params.get("holdings") else ""
+                self.format_holdings(params.get("holdings", 0), ticker)
+                if params.get("holdings")
+                else ""
             )
             self.last_price_var.set(
                 self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
@@ -691,6 +707,7 @@ Features:
             if start_date:
                 if TKCALENDAR_AVAILABLE:
                     from datetime import datetime
+
                     self.start_date_entry.set_date(datetime.fromisoformat(start_date).date())
                 else:
                     self.start_date_var.set(start_date)
@@ -698,6 +715,7 @@ Features:
             if end_date:
                 if TKCALENDAR_AVAILABLE:
                     from datetime import datetime
+
                     self.end_date_entry.set_date(datetime.fromisoformat(end_date).date())
                 else:
                     self.end_date_var.set(end_date)
@@ -720,7 +738,7 @@ Features:
             ticker = self.ticker_var.get().strip()
             holdings = self.parse_holdings(self.holdings_var.get())
             last_price = self.parse_price(self.last_price_var.get())
-            
+
             # Get dates - handle both DateEntry and StringVar
             if TKCALENDAR_AVAILABLE:
                 start_date = self.start_date_entry.get_date()
@@ -728,7 +746,7 @@ Features:
             else:
                 start_date = self.parse_date(self.start_date_var.get())
                 end_date = self.parse_date(self.end_date_var.get())
-                
+
             sdn = int(self.sdn_var.get())
             profit = float(self.profit_var.get())
             bracket_seed_str = self.bracket_seed_var.get().strip()
@@ -755,12 +773,13 @@ Features:
             asset = Asset(ticker)
             price_df = asset.get_prices(start_date, end_date)
             if price_df.empty:
-                raise ValueError(f"No price data available for {ticker} between {start_date} and {end_date}")
+                raise ValueError(
+                    f"No price data available for {ticker} between {start_date} and {end_date}"
+                )
 
             # Calculate current price based on end_date
-            from datetime import datetime
             today = date.today()
-            
+
             if end_date >= today:
                 # For today or future dates, use the most recent available close price
                 current_price = float(price_df.iloc[-1]["Close"])
@@ -781,7 +800,9 @@ Features:
                     current_price = float(price_df.iloc[-1]["Close"])
 
             # Update current price display
-            self.current_price_var.set(f"{self.format_price(current_price)} on {end_date.isoformat()}")
+            self.current_price_var.set(
+                f"{self.format_price(current_price)} on {end_date.isoformat()}"
+            )
 
             # Update fields to canonical format
             self.holdings_var.set(self.format_holdings(holdings, ticker))
@@ -823,7 +844,9 @@ Features:
                 buy_qty_display = f"{int(buy_qty)}"
                 sell_qty_display = f"{int(sell_qty)}"
 
-            buy_order_text = f"BUY {ticker} {buy_qty_display} @ ${buy_price:.2f} = ${buy_amount:.2f}"
+            buy_order_text = (
+                f"BUY {ticker} {buy_qty_display} @ ${buy_price:.2f} = ${buy_amount:.2f}"
+            )
             sell_order_text = (
                 f"SELL {ticker} {sell_qty_display} @ ${sell_price:.2f} = ${sell_amount:.2f}"
             )
@@ -902,7 +925,9 @@ Features:
             # Update last price and current price to the buy execution price
             execution_price = self.current_buy_price
             self.last_price_var.set(self.format_price(execution_price))
-            self.current_price_var.set(f"{self.format_price(execution_price)} on {date.today().isoformat()}")
+            self.current_price_var.set(
+                f"{self.format_price(execution_price)} on {date.today().isoformat()}"
+            )
 
             # Update holdings
             self.holdings_var.set(self.format_holdings(new_holdings, self.ticker_var.get().strip()))
@@ -917,9 +942,7 @@ Features:
             else:
                 qty_display = f"{int(self.current_buy_qty)}"
 
-            self.status_var.set(
-                f"Executed BUY: {qty_display} shares @ ${execution_price:.2f}"
-            )
+            self.status_var.set(f"Executed BUY: {qty_display} shares @ ${execution_price:.2f}")
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to execute buy order: {str(e)}")
@@ -951,7 +974,9 @@ Features:
             # Update last price and current price to the sell execution price
             execution_price = self.current_sell_price
             self.last_price_var.set(self.format_price(execution_price))
-            self.current_price_var.set(f"{self.format_price(execution_price)} on {date.today().isoformat()}")
+            self.current_price_var.set(
+                f"{self.format_price(execution_price)} on {date.today().isoformat()}"
+            )
 
             # Update holdings
             self.holdings_var.set(self.format_holdings(new_holdings, self.ticker_var.get().strip()))
@@ -966,9 +991,7 @@ Features:
             else:
                 qty_display = f"{int(self.current_sell_qty)}"
 
-            self.status_var.set(
-                f"Executed SELL: {qty_display} shares @ ${execution_price:.2f}"
-            )
+            self.status_var.set(f"Executed SELL: {qty_display} shares @ ${execution_price:.2f}")
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to execute sell order: {str(e)}")
@@ -1080,8 +1103,6 @@ Features:
 
             # Try to load asset data
             try:
-                from datetime import date, timedelta
-
                 from src.data.asset import Asset
 
                 asset = Asset(ticker)
@@ -1091,7 +1112,6 @@ Features:
                     end_date = self.end_date_entry.get_date()
                 else:
                     # Fallback to default dates if tkcalendar not available
-                    from datetime import date, timedelta
                     end_date = date.today()
                     start_date = end_date - timedelta(days=365)
                 df = asset.get_prices(start_date, end_date)

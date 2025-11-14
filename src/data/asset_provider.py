@@ -72,7 +72,9 @@ class AssetProvider(ABC):
         # Default implementation: check ticker patterns
         ticker = self.ticker.upper()
         # Crypto tickers (BTC-USD, ETH-USD, etc.)
-        if "-" in ticker and any(crypto in ticker for crypto in ["BTC", "ETH", "ADA", "SOL", "DOT"]):
+        if "-" in ticker and any(
+            crypto in ticker for crypto in ["BTC", "ETH", "ADA", "SOL", "DOT"]
+        ):
             return True
         # Mutual funds (typically start with VF, VG, etc.)
         if any(ticker.startswith(prefix) for prefix in ["VF", "VG"]):

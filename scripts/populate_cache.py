@@ -55,7 +55,9 @@ COMMON_TICKERS = [
 ]
 
 
-def populate_cache(tickers: list, years: int = 5, cache_dir: str = "cache", catch_up_days: int = None):
+def populate_cache(
+    tickers: list, years: int = 5, cache_dir: str = "cache", catch_up_days: int = None
+):
     """
     Fetch and cache historical data for specified tickers.
 
