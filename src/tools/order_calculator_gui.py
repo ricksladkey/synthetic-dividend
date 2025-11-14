@@ -39,6 +39,7 @@ class OrderCalculatorGUI:
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(0, weight=1)
+        main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(1, weight=1)
 
         # Input frame
@@ -109,9 +110,34 @@ class OrderCalculatorGUI:
         )
         self.calc_button.grid(row=3, column=2, columnspan=2, pady=(5, 10))
 
+        # Output frame (right side)
+        output_frame = ttk.LabelFrame(main_frame, text="Broker Orders", padding="5")
+        output_frame.grid(row=0, column=1, sticky="wen", padx=(10, 0))
+
+        # Buy order display
+        ttk.Label(output_frame, text="Buy Order:").grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
+        self.buy_order_var = tk.StringVar()
+        self.buy_order_var.set("")  # Initialize empty
+        self.buy_order_entry = ttk.Entry(
+            output_frame, textvariable=self.buy_order_var, state="readonly", width=35
+        )
+        self.buy_order_entry.grid(row=0, column=1, sticky="we", pady=(0, 5))
+
+        # Sell order display
+        ttk.Label(output_frame, text="Sell Order:").grid(row=1, column=0, sticky=tk.W)
+        self.sell_order_var = tk.StringVar()
+        self.sell_order_var.set("")  # Initialize empty
+        self.sell_order_entry = ttk.Entry(
+            output_frame, textvariable=self.sell_order_var, state="readonly", width=35
+        )
+        self.sell_order_entry.grid(row=1, column=1, sticky="we")
+
+        # Configure output frame columns
+        output_frame.columnconfigure(1, weight=1)
+
         # Tab control
         self.tab_control = ttk.Notebook(main_frame)
-        self.tab_control.grid(row=1, column=0, sticky="wens", pady=(0, 10))
+        self.tab_control.grid(row=1, column=0, columnspan=2, sticky="wens", pady=(10, 10))
 
         # Order Details tab
         order_tab = ttk.Frame(self.tab_control)
@@ -295,6 +321,17 @@ class OrderCalculatorGUI:
                 bracket_seed=bracket_seed,
             )
 
+            # Format broker syntax orders
+            buy_amount = buy_price * buy_qty
+            sell_amount = sell_price * sell_qty
+
+            buy_order_text = f"BUY {ticker} {int(buy_qty)} @ ${buy_price:.2f} = ${buy_amount:.2f}"
+            sell_order_text = f"SELL {ticker} {int(sell_qty)} @ ${sell_price:.2f} = ${sell_amount:.2f}"
+
+            # Update broker order displays
+            self.buy_order_var.set(buy_order_text)
+            self.sell_order_var.set(sell_order_text)
+
             # Format output
             output = format_order_display(
                 ticker=ticker,
@@ -340,6 +377,9 @@ class OrderCalculatorGUI:
         except Exception as e:
             messagebox.showerror("Error", str(e))
             self.status_var.set("Error in calculation")
+            # Clear broker order displays on error
+            self.buy_order_var.set("")
+            self.sell_order_var.set("")
 
     def update_chart(
         self,
