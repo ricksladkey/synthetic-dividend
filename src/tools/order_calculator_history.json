@@ -1,6 +1,6 @@
 {
   "NVDA": {
-    "holdings": 982.0,
+    "holdings": 1003.0,
     "last_price": 197.87,
     "current_price": 197.87,
     "sdn": 8,
@@ -15,5 +15,5 @@
     "profit": 50.0,
     "bracket_seed": 12.06
   },
-  "last_ticker": "NVDA"
+  "last_ticker": "SOUN"
 }
