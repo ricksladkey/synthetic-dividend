@@ -78,6 +78,10 @@ class OrderCalculatorGUI:
         self.current_sell_price = 0.0
         self.current_sell_qty = 0.0
 
+        # Auto-calculation debouncing
+        self.calculation_timer = None
+        self.calculation_delay = 500  # milliseconds
+
         # Create menu bar
         self.create_menu_bar()
 
@@ -103,6 +107,7 @@ class OrderCalculatorGUI:
         self.ticker_combo.grid(row=0, column=1, sticky="we", padx=(0, 10))
         self.ticker_combo["values"] = [t for t in self.history.keys() if t != "last_ticker"]
         self.ticker_combo.bind("<<ComboboxSelected>>", self.on_ticker_selected)
+        self.ticker_combo.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.ticker_combo, "Stock ticker symbol (e.g., NVDA, SPY, AAPL)")
 
         # Holdings
@@ -110,6 +115,7 @@ class OrderCalculatorGUI:
         self.holdings_var = tk.StringVar()
         self.holdings_entry = ttk.Entry(input_frame, textvariable=self.holdings_var, width=12)
         self.holdings_entry.grid(row=0, column=3, sticky="we", padx=(0, 10))
+        self.holdings_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.holdings_entry, "Number of shares you currently own")
 
         # Last Price
@@ -119,6 +125,7 @@ class OrderCalculatorGUI:
         self.last_price_var = tk.StringVar()
         self.last_price_entry = ttk.Entry(input_frame, textvariable=self.last_price_var, width=12)
         self.last_price_entry.grid(row=1, column=1, sticky="we", padx=(0, 10), pady=(5, 0))
+        self.last_price_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.last_price_entry, "Price you last bought or sold shares at")
 
         # Current Price
@@ -130,6 +137,7 @@ class OrderCalculatorGUI:
             input_frame, textvariable=self.current_price_var, width=12
         )
         self.current_price_entry.grid(row=1, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
+        self.current_price_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.current_price_entry, "Current market price of the stock")
 
         # SDN
@@ -139,6 +147,7 @@ class OrderCalculatorGUI:
         self.sdn_var = tk.StringVar()
         self.sdn_entry = ttk.Entry(input_frame, textvariable=self.sdn_var, width=12)
         self.sdn_entry.grid(row=2, column=1, sticky="we", padx=(0, 10), pady=(5, 0))
+        self.sdn_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.sdn_entry, "Synthetic Dividend Number (2-8): Controls bracket spacing")
 
         # Profit
@@ -148,6 +157,7 @@ class OrderCalculatorGUI:
         self.profit_var = tk.StringVar()
         self.profit_entry = ttk.Entry(input_frame, textvariable=self.profit_var, width=12)
         self.profit_entry.grid(row=2, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
+        self.profit_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.profit_entry, "Profit sharing percentage (25-75%): Higher = more aggressive profit-taking")
 
         # Bracket Seed
@@ -159,6 +169,7 @@ class OrderCalculatorGUI:
             input_frame, textvariable=self.bracket_seed_var, width=12
         )
         self.bracket_seed_entry.grid(row=3, column=1, sticky="we", padx=(0, 10), pady=(5, 10))
+        self.bracket_seed_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.bracket_seed_entry, "Optional: Starting price for bracket calculations")
 
         # Buy and Sell buttons
@@ -174,18 +185,11 @@ class OrderCalculatorGUI:
         self.sell_button.grid(row=3, column=3, sticky="we", pady=(5, 10))
         ToolTip(self.sell_button, "Execute calculated sell order and update position")
 
-        # Calculate button
-        self.calc_button = ttk.Button(
-            input_frame, text="Calculate Orders", command=self.calculate_orders
-        )
-        self.calc_button.grid(row=4, column=0, columnspan=3, pady=(5, 10))
-        ToolTip(self.calc_button, "Calculate buy/sell bracket orders (Ctrl+Enter)")
-
-        # Help button
+        # Help button (moved to where Calculate Orders button was)
         self.help_button = ttk.Button(
             input_frame, text="Help", command=self.show_help
         )
-        self.help_button.grid(row=4, column=3, pady=(5, 10))
+        self.help_button.grid(row=4, column=0, columnspan=4, pady=(5, 10))
         ToolTip(self.help_button, "Show detailed help documentation (F1)")
 
         # Output frame (right side)
@@ -287,8 +291,6 @@ class OrderCalculatorGUI:
         self.root.bind('<Control-s>', lambda e: self.copy_sell_order())
         self.root.bind('<Control-l>', lambda e: self.clear_all_fields())
         self.root.bind('<F1>', lambda e: self.show_help())
-        self.root.bind('<Control-Return>', lambda e: self.calculate_orders())  # Ctrl+Enter
-        self.root.bind('<Control-KP_Enter>', lambda e: self.calculate_orders())  # Ctrl+Enter on numpad
 
     def load_window_settings(self):
         """Load window size and position settings."""
@@ -372,6 +374,74 @@ Features:
         
         messagebox.showinfo("About", about_text)
 
+    def schedule_auto_calculation(self, event=None):
+        """Schedule auto-calculation with debouncing."""
+        # Cancel any existing timer
+        if self.calculation_timer:
+            self.root.after_cancel(self.calculation_timer)
+        
+        # Schedule new calculation after delay
+        self.calculation_timer = self.root.after(self.calculation_delay, self.perform_auto_calculation)
+
+    def perform_auto_calculation(self):
+        """Perform auto-calculation if all required fields are filled."""
+        try:
+            # Check if we have enough information to calculate
+            if not self.can_calculate():
+                return
+            
+            # Perform the calculation
+            self.calculate_orders()
+            
+        except Exception as e:
+            # Silently handle errors during auto-calculation
+            # User will see error if they manually trigger calculation
+            pass
+
+    def can_calculate(self) -> bool:
+        """Check if all required fields are filled for calculation."""
+        try:
+            ticker = self.ticker_var.get().strip()
+            holdings_str = self.holdings_var.get().strip()
+            last_price_str = self.last_price_var.get().strip()
+            current_price_str = self.current_price_var.get().strip()
+            sdn_str = self.sdn_var.get().strip()
+            profit_str = self.profit_var.get().strip()
+            
+            # Check required fields
+            if not ticker:
+                return False
+            if not holdings_str:
+                return False
+            if not last_price_str:
+                return False
+            if not current_price_str:
+                return False
+            if not sdn_str:
+                return False
+            if not profit_str:
+                return False
+            
+            # Try to parse values to ensure they're valid
+            holdings = self.parse_holdings(holdings_str)
+            last_price = self.parse_price(last_price_str)
+            current_price = self.parse_price(current_price_str)
+            sdn = int(sdn_str)
+            profit = float(profit_str)
+            
+            # Basic validation
+            if holdings <= 0 or last_price <= 0 or current_price <= 0:
+                return False
+            if sdn < 2 or sdn > 20:
+                return False
+            if profit < 0 or profit > 200:
+                return False
+            
+            return True
+            
+        except (ValueError, TypeError):
+            return False
+
     @staticmethod
     def parse_price(s: str) -> float:
         """Parse a price string, handling currency symbols and commas."""
@@ -453,7 +523,7 @@ Features:
                 self.bracket_seed_var.set("")
 
     def on_ticker_selected(self, event):
-        """Handle ticker selection - load defaults."""
+        """Handle ticker selection - load defaults and trigger auto-calculation."""
         ticker = self.ticker_var.get()
         if ticker in self.history:
             params = self.history[ticker]
@@ -474,6 +544,9 @@ Features:
                 self.bracket_seed_var.set(self.format_price(bracket_seed))
             else:
                 self.bracket_seed_var.set("")
+            
+            # Trigger auto-calculation after loading ticker data
+            self.schedule_auto_calculation()
 
     def calculate_orders(self):
         """Calculate and display orders."""
