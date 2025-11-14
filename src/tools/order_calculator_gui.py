@@ -16,6 +16,14 @@ from matplotlib.figure import Figure
 
 from src.tools.order_calculator import calculate_orders_for_manual_entry, format_order_display
 
+# Optional imports for enhanced help display
+try:
+    import markdown
+    import tkinterweb
+    MARKDOWN_AVAILABLE = True
+except ImportError:
+    MARKDOWN_AVAILABLE = False
+
 
 class OrderCalculatorGUI:
     """Tkinter GUI for order calculator with chart visualization."""
@@ -476,7 +484,7 @@ class OrderCalculatorGUI:
             messagebox.showerror("Error", f"Failed to execute sell order: {str(e)}")
 
     def show_help(self):
-        """Show help documentation in a scrollable window."""
+        """Show help documentation in a scrollable window with markdown rendering if available."""
         try:
             # Read the help file
             help_file_path = os.path.join(os.path.dirname(__file__), "..", "..", "docs", "HOW_TO_order_gui.md")
@@ -486,15 +494,76 @@ class OrderCalculatorGUI:
             # Create help window
             help_window = tk.Toplevel(self.root)
             help_window.title("Order Calculator GUI - Help")
-            help_window.geometry("800x600")
+            help_window.geometry("900x700")
 
-            # Create scrolled text widget
-            help_text = scrolledtext.ScrolledText(help_window, wrap=tk.WORD, padx=10, pady=10)
-            help_text.pack(fill=tk.BOTH, expand=True)
+            if MARKDOWN_AVAILABLE:
+                # Use HTML rendering for better formatting
+                html_content = markdown.markdown(help_content, extensions=['extra', 'codehilite'])
 
-            # Insert help content
-            help_text.insert(tk.END, help_content)
-            help_text.config(state=tk.DISABLED)  # Make it read-only
+                # Add some basic CSS styling
+                styled_html = f"""
+                <html>
+                <head>
+                <style>
+                    body {{
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                        margin: 20px;
+                        background-color: #f5f5f5;
+                    }}
+                    h1 {{
+                        color: #2c3e50;
+                        border-bottom: 2px solid #3498db;
+                        padding-bottom: 10px;
+                    }}
+                    h2 {{
+                        color: #34495e;
+                        margin-top: 30px;
+                        border-left: 4px solid #3498db;
+                        padding-left: 10px;
+                    }}
+                    h3 {{
+                        color: #7f8c8d;
+                    }}
+                    code {{
+                        background-color: #ecf0f1;
+                        padding: 2px 4px;
+                        border-radius: 3px;
+                        font-family: 'Courier New', monospace;
+                    }}
+                    pre {{
+                        background-color: #ecf0f1;
+                        padding: 10px;
+                        border-radius: 5px;
+                        overflow-x: auto;
+                    }}
+                    ul, ol {{
+                        margin-left: 20px;
+                    }}
+                    li {{
+                        margin: 5px 0;
+                    }}
+                    strong {{
+                        color: #2c3e50;
+                    }}
+                </style>
+                </head>
+                <body>
+                {html_content}
+                </body>
+                </html>
+                """
+
+                # Create HTML frame
+                html_frame = tkinterweb.HtmlFrame(help_window)
+                html_frame.load_html(styled_html)
+                html_frame.pack(fill=tk.BOTH, expand=True)
+            else:
+                # Fallback to plain text display
+                help_text = scrolledtext.ScrolledText(help_window, wrap=tk.WORD, padx=10, pady=10)
+                help_text.pack(fill=tk.BOTH, expand=True)
+                help_text.insert(tk.END, help_content)
+                help_text.config(state=tk.DISABLED)  # Make it read-only
 
             # Focus the help window
             help_window.focus_set()
