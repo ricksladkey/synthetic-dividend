@@ -19,3 +19,4 @@ pre-commit>=3.0
 # GUI enhancements
 markdown>=3.4
 tkinterweb>=3.15
+tkcalendar>=1.6
