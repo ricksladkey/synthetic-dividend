@@ -6,6 +6,7 @@ inflation_rate_ticker parameters produces the same results as the proven
 single-ticker implementation.
 """
 
+import tempfile
 from datetime import date
 
 import pandas as pd
@@ -101,90 +102,93 @@ class TestDividendParity:
 
     def test_dividend_parity_monthly_interest(self):
         """Test that monthly interest payments (like BIL) produce equivalent results."""
-        # Flat price data for 1 year
-        dates = pd.date_range(start="2024-01-01", end="2024-12-31", freq="D")
-        df = pd.DataFrame(
-            {
-                "Open": [100.0] * len(dates),
-                "High": [100.0] * len(dates),
-                "Low": [100.0] * len(dates),
-                "Close": [100.0] * len(dates),
-            },
-            index=dates,
-        )
+        # Use temporary cache directory to avoid polluting main cache
+        with tempfile.TemporaryDirectory() as temp_cache_dir:
+            # Flat price data for 1 year
+            dates = pd.date_range(start="2024-01-01", end="2024-12-31", freq="D")
+            df = pd.DataFrame(
+                {
+                    "Open": [100.0] * len(dates),
+                    "High": [100.0] * len(dates),
+                    "Low": [100.0] * len(dates),
+                    "Close": [100.0] * len(dates),
+                },
+                index=dates,
+            )
 
-        # 12 monthly interest payments
-        monthly_payment = 0.375
-        div_dates = [
-            "2024-01-05",
-            "2024-02-05",
-            "2024-03-05",
-            "2024-04-05",
-            "2024-05-03",
-            "2024-06-05",
-            "2024-07-05",
-            "2024-08-05",
-            "2024-09-05",
-            "2024-10-04",
-            "2024-11-05",
-            "2024-12-05",
-        ]
-        div_series = pd.Series([monthly_payment] * 12, index=pd.to_datetime(div_dates))
+            # 12 monthly interest payments
+            monthly_payment = 0.375
+            div_dates = [
+                "2024-01-05",
+                "2024-02-05",
+                "2024-03-05",
+                "2024-04-05",
+                "2024-05-03",
+                "2024-06-05",
+                "2024-07-05",
+                "2024-08-05",
+                "2024-09-05",
+                "2024-10-04",
+                "2024-11-05",
+                "2024-12-05",
+            ]
+            div_series = pd.Series([monthly_payment] * 12, index=pd.to_datetime(div_dates))
 
-        # Single-ticker backtest
-        algo1 = BuyAndHoldAlgorithm()
-        single_txns, single_summary = run_algorithm_backtest(
-            df=df,
-            ticker="BIL",
-            initial_qty=100,
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 12, 31),
-            algo=algo1,
-            dividend_series=div_series,
-            simple_mode=True,
-        )
-
-        # Portfolio backtest
-        import src.data.fetcher as fetcher_module
-
-        original_fetcher = fetcher_module.HistoryFetcher
-
-        class MockFetcher:
-            def get_history(self, ticker, start_date, end_date):
-                return df
-
-        fetcher_module.HistoryFetcher = MockFetcher
-
-        try:
-            portfolio_txns, portfolio_summary = run_portfolio_backtest(
-                allocations={"BIL": 1.0},
+            # Single-ticker backtest
+            algo1 = BuyAndHoldAlgorithm()
+            single_txns, single_summary = run_algorithm_backtest(
+                df=df,
+                ticker="BIL",
+                initial_qty=100,
                 start_date=date(2024, 1, 1),
                 end_date=date(2024, 12, 31),
-                portfolio_algo="per-asset:buy-and-hold",
-                initial_investment=10_000.0,
-                dividend_data={"BIL": div_series},
+                algo=algo1,
+                dividend_series=div_series,
                 simple_mode=True,
+                cache_dir=temp_cache_dir,  # Use temp cache to avoid pollution
             )
 
-            # Verify counts match
-            assert single_summary["dividend_payment_count"] == 12
-            assert portfolio_summary["dividend_payment_count_by_asset"]["BIL"] == 12
+            # Portfolio backtest
+            import src.data.fetcher as fetcher_module
 
-            # Verify totals match within tolerance
-            single_divs = single_summary["total_dividends"]
-            portfolio_divs = portfolio_summary["total_dividends"]
-            assert abs(single_divs - portfolio_divs) < 1.0, (
-                f"Monthly interest totals don't match: single={single_divs:.2f}, "
-                f"portfolio={portfolio_divs:.2f}"
-            )
+            original_fetcher = fetcher_module.HistoryFetcher
 
-            print("\n[OK] Monthly interest parity test passed:")
-            print(f"  Single-ticker total: ${single_divs:.2f}")
-            print(f"  Portfolio total: ${portfolio_divs:.2f}")
-            print(f"  Difference: ${abs(single_divs - portfolio_divs):.2f}")
+            class MockFetcher:
+                def get_history(self, ticker, start_date, end_date):
+                    return df
 
-        finally:
-            fetcher_module.HistoryFetcher = original_fetcher
+            fetcher_module.HistoryFetcher = MockFetcher
+
+            try:
+                portfolio_txns, portfolio_summary = run_portfolio_backtest(
+                    allocations={"BIL": 1.0},
+                    start_date=date(2024, 1, 1),
+                    end_date=date(2024, 12, 31),
+                    portfolio_algo="per-asset:buy-and-hold",
+                    initial_investment=10_000.0,
+                    dividend_data={"BIL": div_series},
+                    simple_mode=True,
+                )
+
+                # Verify counts match
+                assert single_summary["dividend_payment_count"] == 12
+                assert portfolio_summary["dividend_payment_count_by_asset"]["BIL"] == 12
+
+                # Verify totals match within tolerance
+                single_divs = single_summary["total_dividends"]
+                portfolio_divs = portfolio_summary["total_dividends"]
+                assert abs(single_divs - portfolio_divs) < 1.0, (
+                    f"Monthly interest totals don't match: single={single_divs:.2f}, "
+                    f"portfolio={portfolio_divs:.2f}"
+                )
+
+                print("\n[OK] Monthly interest parity test passed:")
+                print(f"  Single-ticker total: ${single_divs:.2f}")
+                print(f"  Portfolio total: ${portfolio_divs:.2f}")
+                print(f"  Difference: ${abs(single_divs - portfolio_divs):.2f}")
+
+            finally:
+                fetcher_module.HistoryFetcher = original_fetcher
 
     def test_dividend_parity_time_weighted_calculation(self):
         """Verify time-weighted averaging produces identical results."""

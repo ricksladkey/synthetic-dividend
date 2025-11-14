@@ -331,6 +331,8 @@ def run_algorithm_backtest(
     allow_margin: bool = True,
     # Investment amount (alternative to initial_qty)
     initial_investment: Optional[float] = None,
+    # Test/development parameters
+    cache_dir: str = "cache",
     **kwargs: Any,
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
     """Execute backtest of trading algorithm against historical price data.
@@ -547,7 +549,7 @@ def run_algorithm_backtest(
     # Ensure the data is cached so run_portfolio_backtest can fetch it
     from src.data.asset import Asset
 
-    asset = Asset(ticker, cache_dir="cache")
+    asset = Asset(ticker, cache_dir=cache_dir)
     asset._save_price_cache(df_indexed)
     # Force use of cache by disabling provider
     asset._provider = None
