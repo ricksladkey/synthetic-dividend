@@ -139,16 +139,7 @@ class OrderCalculatorGUI:
         self.tab_control = ttk.Notebook(main_frame)
         self.tab_control.grid(row=1, column=0, columnspan=2, sticky="wens", pady=(10, 10))
 
-        # Order Details tab
-        order_tab = ttk.Frame(self.tab_control)
-        self.tab_control.add(order_tab, text="Order Details")
-        order_tab.columnconfigure(0, weight=1)
-        order_tab.rowconfigure(0, weight=1)
-
-        self.output_text = scrolledtext.ScrolledText(order_tab, wrap=tk.WORD, height=20)
-        self.output_text.grid(row=0, column=0, sticky="wens", padx=5, pady=5)
-
-        # Chart tab
+        # Chart tab (first/default tab)
         chart_tab = ttk.Frame(self.tab_control)
         self.tab_control.add(chart_tab, text="Price Chart")
         chart_tab.columnconfigure(0, weight=1)
@@ -159,6 +150,15 @@ class OrderCalculatorGUI:
         self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvasTkAgg(self.figure, master=chart_tab)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="wens", padx=5, pady=5)
+
+        # Order Details tab
+        order_tab = ttk.Frame(self.tab_control)
+        self.tab_control.add(order_tab, text="Order Details")
+        order_tab.columnconfigure(0, weight=1)
+        order_tab.rowconfigure(0, weight=1)
+
+        self.output_text = scrolledtext.ScrolledText(order_tab, wrap=tk.WORD, height=20)
+        self.output_text.grid(row=0, column=0, sticky="wens", padx=5, pady=5)
 
         # Status bar
         self.status_var = tk.StringVar()
