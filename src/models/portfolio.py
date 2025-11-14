@@ -142,7 +142,7 @@ class Portfolio:
             lot_selection=lot_selection,
         )
 
-    def total_shares(self, ticker: Optional[str] = None) -> int:
+    def total_shares(self, ticker: Optional[str] = None) -> float:
         """
         Get total shares held.
 
@@ -151,7 +151,7 @@ class Portfolio:
                    If None, return total across all tickers.
 
         Returns:
-            Number of shares
+            Number of shares (can be fractional)
         """
         if ticker is not None:
             holding = self.holdings.get(ticker)
