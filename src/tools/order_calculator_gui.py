@@ -234,16 +234,16 @@ class OrderCalculatorGUI:
 
         # Buy and Sell buttons
         self.buy_button = ttk.Button(input_frame, text="BUY", command=self.execute_buy_order)
-        self.buy_button.grid(row=3, column=2, sticky="we", padx=(0, 5), pady=(5, 10))
+        self.buy_button.grid(row=4, column=0, sticky="we", padx=(0, 5), pady=(5, 10))
         ToolTip(self.buy_button, "Execute calculated buy order and update position")
 
         self.sell_button = ttk.Button(input_frame, text="SELL", command=self.execute_sell_order)
-        self.sell_button.grid(row=3, column=3, sticky="we", pady=(5, 10))
+        self.sell_button.grid(row=4, column=1, sticky="we", pady=(5, 10))
         ToolTip(self.sell_button, "Execute calculated sell order and update position")
 
         # Help button (moved to where Calculate Orders button was)
         self.help_button = ttk.Button(input_frame, text="Help", command=self.show_help)
-        self.help_button.grid(row=4, column=0, columnspan=4, pady=(5, 10))
+        self.help_button.grid(row=5, column=0, columnspan=4, pady=(5, 10))
         ToolTip(self.help_button, "Show detailed help documentation (F1)")
 
         # Set default dates after date fields are created
@@ -684,7 +684,12 @@ Features:
             if bracket_seed is not None:
                 self.bracket_seed_var.set(self.format_price(bracket_seed))
             else:
-                self.bracket_seed_var.set("")
+                # Default to last_price if not set (for backward compatibility)
+                last_price = params.get("last_price", 0)
+                if last_price:
+                    self.bracket_seed_var.set(self.format_price(last_price))
+                else:
+                    self.bracket_seed_var.set("")
 
             # Trigger auto-calculation after loading ticker data
             self.schedule_auto_calculation()
@@ -726,7 +731,12 @@ Features:
             if bracket_seed is not None:
                 self.bracket_seed_var.set(self.format_price(bracket_seed))
             else:
-                self.bracket_seed_var.set("")
+                # Default to last_price if not set (for backward compatibility)
+                last_price = params.get("last_price", 0)
+                if last_price:
+                    self.bracket_seed_var.set(self.format_price(last_price))
+                else:
+                    self.bracket_seed_var.set("")
 
             # Trigger auto-calculation after loading ticker data
             self.schedule_auto_calculation()
@@ -751,7 +761,7 @@ Features:
             profit = float(self.profit_var.get())
             bracket_seed_str = self.bracket_seed_var.get().strip()
             if bracket_seed_str.lower() in ("", "none", "nil"):
-                bracket_seed = None
+                bracket_seed = last_price  # Default to last_price to lock bracket offset
             else:
                 bracket_seed = self.parse_price(bracket_seed_str)
 
@@ -808,8 +818,7 @@ Features:
             self.holdings_var.set(self.format_holdings(holdings, ticker))
             self.last_price_var.set(self.format_price(last_price))
             # Note: current_price is now fetched from market data, not displayed in UI
-            if bracket_seed is not None:
-                self.bracket_seed_var.set(self.format_price(bracket_seed))
+            self.bracket_seed_var.set(self.format_price(bracket_seed))
 
             # Calculate orders
             buy_price, buy_qty, sell_price, sell_qty = calculate_orders_for_manual_entry(
