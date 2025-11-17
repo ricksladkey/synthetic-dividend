@@ -92,7 +92,29 @@ class YahooAssetProvider(AssetProvider):
         if self._cache_covers_range(cached, start_date, end_date):
             return self._filter_range(cached, start_date, end_date)
 
-        # Cache miss or incomplete: download full range
+        # Check if we can do incremental update (cache exists but needs topping off)
+        if self._can_do_incremental_update(cached, start_date, end_date):
+            # Cache has most of the data, just fetch the missing tail
+            cached_dates = pd.to_datetime(cached.index).date
+            cache_max = max(cached_dates)
+
+            # Fetch only the missing days (from day after cache_max to end_date)
+            from datetime import timedelta
+            fetch_start = cache_max + timedelta(days=1)
+
+            # Download only the missing range
+            new_df = self._download_ohlc(fetch_start, end_date)
+
+            if not new_df.empty:
+                # Merge with existing cache (save handles the merge)
+                self._save_price_cache(new_df)
+                # Reload merged cache
+                cached = self._load_price_cache()
+
+            # Return the full range from merged cache
+            return self._filter_range(cached, start_date, end_date)
+
+        # Cache miss or too old: download full range
         df = self._download_ohlc(start_date, end_date)
 
         if not df.empty:
@@ -251,6 +273,47 @@ class YahooAssetProvider(AssetProvider):
             cache_min = min(cached_dates)
             cache_max = max(cached_dates)
             return bool(cache_min <= start and cache_max >= end)
+        except Exception:
+            return False
+
+    def _can_do_incremental_update(
+        self, cached: Optional[pd.DataFrame], start: date, end: date
+    ) -> bool:
+        """Check if we can do an incremental update instead of full refetch.
+
+        Returns True if:
+        - Cache exists and is not empty
+        - Cache covers the start of the requested range
+        - Cache is missing only the end portion (recent days)
+        - The gap is reasonable (< 30 days) to avoid huge incremental fetches
+
+        This enables "topping off" the cache with just the latest data.
+        """
+        if cached is None or cached.empty:
+            return False
+
+        try:
+            from datetime import timedelta
+
+            cached_dates = pd.to_datetime(cached.index).date
+            cache_min = min(cached_dates)
+            cache_max = max(cached_dates)
+
+            # Cache must cover the start of requested range
+            if cache_min > start:
+                return False
+
+            # Cache must be missing only the end (cache_max < end)
+            if cache_max >= end:
+                return False
+
+            # Gap should be reasonable (< 30 days) to benefit from incremental update
+            # Otherwise, full refetch might be more efficient
+            gap_days = (end - cache_max).days
+            if gap_days > 30:
+                return False
+
+            return True
         except Exception:
             return False
 
