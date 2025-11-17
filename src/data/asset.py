@@ -23,6 +23,8 @@ from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
 
+from src.paths import get_cache_dir
+
 # Optional dependency: yfinance is only required for the fallback implementation
 try:
     import yfinance as yf  # type: ignore
@@ -44,16 +46,20 @@ class Asset:
     implements a small fallback that uses yfinance and a simple on-disk cache.
     """
 
-    def __init__(self, ticker: str, cache_dir: str = "cache") -> None:
+    def __init__(self, ticker: str, cache_dir: Optional[str] = None) -> None:
         self.ticker = ticker.upper()
-        self.cache_dir = cache_dir
-        os.makedirs(cache_dir, exist_ok=True)
+        # Use centralized cache directory from src/paths.py if not specified
+        if cache_dir is None:
+            self.cache_dir = str(get_cache_dir())
+        else:
+            self.cache_dir = cache_dir
+        os.makedirs(self.cache_dir, exist_ok=True)
 
         # Default cache file paths
-        self.pkl_path = os.path.join(cache_dir, f"{self.ticker}.pkl")
-        self.csv_path = os.path.join(cache_dir, f"{self.ticker}.csv")
-        self.div_pkl_path = os.path.join(cache_dir, f"{self.ticker}_dividends.pkl")
-        self.div_csv_path = os.path.join(cache_dir, f"{self.ticker}_dividends.csv")
+        self.pkl_path = os.path.join(self.cache_dir, f"{self.ticker}.pkl")
+        self.csv_path = os.path.join(self.cache_dir, f"{self.ticker}.csv")
+        self.div_pkl_path = os.path.join(self.cache_dir, f"{self.ticker}_dividends.pkl")
+        self.div_csv_path = os.path.join(self.cache_dir, f"{self.ticker}_dividends.csv")
 
         # Provider instance (None = use fallback)
         self._provider: Optional["AssetProvider"] = None
@@ -70,7 +76,7 @@ class Asset:
 
         if provider_class is not None:
             # Instantiate provider and mirror common cache attributes
-            self._provider = provider_class(self.ticker, cache_dir)
+            self._provider = provider_class(self.ticker, self.cache_dir)
             self.pkl_path = getattr(self._provider, "pkl_path", self.pkl_path)
             self.csv_path = getattr(self._provider, "csv_path", self.csv_path)
             self.div_pkl_path = getattr(self._provider, "div_pkl_path", self.div_pkl_path)
