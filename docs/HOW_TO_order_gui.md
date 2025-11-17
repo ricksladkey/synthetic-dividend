@@ -6,16 +6,24 @@ The Order Calculator GUI helps you calculate and execute synthetic dividend orde
 ## First-Time Setup
 
 ### 1. Enter Your Position Details
+
+**Your Position** (top row - most important):
 - **Ticker**: Enter the stock symbol (e.g., NVDA, SPY)
 - **Holdings**: Your current number of shares owned
-- **Last Price**: The price you last bought or sold shares at
-- **Current Price**: Today's current market price
-- **SDN**: Synthetic Dividend Number (typically 2-8, controls bracket spacing)
-- **Profit %**: Your target profit sharing percentage (typically 25-75%)
-- **Bracket Seed**: Optional starting price for bracket calculations
+- **Last Trade Price**: The price you last bought or sold shares at
+
+**Strategy Settings**:
+- **Start Date**: Beginning of price history period (default: 1 year ago)
+- **End Date**: End of price history period (default: today)
+- **Bracket Spacing**: Controls how tight or wide your buy/sell brackets are (2-8)
+  - Lower numbers (2-4) = tighter brackets, more frequent trades
+  - Higher numbers (6-8) = wider brackets, less frequent trades
+- **Profit Sharing %**: Percentage of profits to take vs. reinvest (typically 25-75%)
+  - Higher = more aggressive profit-taking
+- **Starting Price**: Optional - lock bracket levels to a specific price point
 
 ### 2. Calculate Orders
-Click the **"Calculate Orders"** button to generate buy and sell bracket orders based on your inputs.
+Orders are calculated automatically as you type. The system fetches current price data and generates buy/sell bracket orders based on your inputs.
 
 ### 3. Review the Results
 - **Broker Orders**: Read-only displays show the exact broker syntax for buy/sell orders
@@ -31,11 +39,11 @@ Click the **"Calculate Orders"** button to generate buy and sell bracket orders 
 ### 1. Select Your Ticker
 Use the dropdown to select a previously used ticker - all your settings will be automatically loaded.
 
-### 2. Update Current Price
-Only update the **Current Price** field with today's market price. All other settings remain from your last session.
+### 2. Review Current Data
+The system automatically fetches the latest market price based on your **End Date** (typically today). All settings remain from your last session.
 
-### 3. Recalculate
-Click **"Calculate Orders"** to update brackets based on the new price.
+### 3. Auto-Calculation
+Orders are recalculated automatically when you change any field. No need to click a calculate button!
 
 ## Executing Orders
 
@@ -54,12 +62,16 @@ Click **"Calculate Orders"** to update brackets based on the new price.
 ## Understanding the Interface
 
 ### Input Section (Left)
-- All your position parameters
-- BUY/SELL buttons for order execution
-- Calculate Orders button
+The input section is now organized into three clear groups:
+
+1. **Your Position** - Current holdings and last trade price
+2. **Strategy Settings** - Date range, bracket spacing, and profit sharing
+3. **Actions** - BUY, SELL, and Help buttons
 
 ### Broker Orders Section (Upper Right)
-- Read-only displays of broker-ready order syntax
+- **Current Price**: Latest market price from your selected end date
+- **Buy Order**: Ready-to-execute buy order in broker format
+- **Sell Order**: Ready-to-execute sell order in broker format
 - Format: `BUY TICKER QTY @ $PRICE = $AMOUNT`
 
 ### Chart Tab
@@ -77,18 +89,19 @@ Click **"Calculate Orders"** to update brackets based on the new price.
 
 ## Tips
 
-- **SDN Values**: Lower SDN (2-4) = tighter brackets, higher SDN (6-8) = wider brackets
-- **Bracket Seed**: Use when you want brackets to start at a specific price level
-- **Profit %**: Higher percentages mean more aggressive profit-taking
+- **Bracket Spacing**: Lower values (2-4) = tighter brackets (more trades), higher (6-8) = wider brackets (fewer trades)
+- **Starting Price**: Use when you want to lock bracket levels to a specific price (advanced feature)
+- **Profit Sharing**: Higher percentages mean more aggressive profit-taking
 - **Data Persistence**: All settings are automatically saved per ticker
-- **Quick Updates**: On return visits, you typically only need to update the current price
+- **Auto-Calculation**: Orders update automatically as you type - no calculate button needed!
+- **Quick Workflow**: Select ticker from dropdown → verify/adjust settings → execute BUY or SELL
 
 ## Algorithm Details
 
 The Synthetic Dividend Algorithm creates a "bracket" trading strategy where:
 - Buy orders are placed below current price
 - Sell orders are placed above current price
-- Orders are spaced geometrically using the SDN parameter
-- Profit sharing determines how much profit is taken vs. reinvested
+- Orders are spaced geometrically using the Bracket Spacing parameter
+- Profit Sharing determines how much profit is taken vs. reinvested
 
-This creates an automated dollar-cost averaging system that buys low and sells high systematically.
+This creates a systematic approach to buying low and selling high with mathematical precision.

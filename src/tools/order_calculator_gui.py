@@ -114,51 +114,58 @@ class OrderCalculatorGUI:
         main_frame.rowconfigure(1, weight=1)
 
         # Input frame
-        input_frame = ttk.LabelFrame(main_frame, text="Order Parameters", padding="5")
+        input_frame = ttk.LabelFrame(main_frame, text="Order Parameters", padding="10")
         input_frame.grid(row=0, column=0, sticky="we", pady=(0, 10))
 
         # Configure input frame columns to allow proper expansion
-        input_frame.columnconfigure(1, weight=1)  # Ticker entry
-        input_frame.columnconfigure(
-            3, weight=1
-        )  # Holdings, Last Price, Start Date, End Date, SDN, Profit, Bracket Seed entries
+        for i in [1, 3, 5]:
+            input_frame.columnconfigure(i, weight=1)
 
-        # Ticker selection
-        ttk.Label(input_frame, text="Ticker:").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
+        # === GROUP 1: POSITION (Most Important - Top Row) ===
+        position_label = ttk.Label(input_frame, text="Your Position", font=("TkDefaultFont", 9, "bold"))
+        position_label.grid(row=0, column=0, columnspan=6, sticky=tk.W, pady=(0, 5))
+
+        # Ticker
+        ttk.Label(input_frame, text="Ticker:").grid(row=1, column=0, sticky=tk.W, padx=(0, 5))
         self.ticker_var = tk.StringVar()
-        self.ticker_combo = ttk.Combobox(input_frame, textvariable=self.ticker_var, width=10)
-        self.ticker_combo.grid(row=0, column=1, sticky="we", padx=(0, 10))
+        self.ticker_combo = ttk.Combobox(input_frame, textvariable=self.ticker_var, width=12)
+        self.ticker_combo.grid(row=1, column=1, sticky="we", padx=(0, 15))
         self.ticker_combo["values"] = [t for t in self.history.keys() if t != "last_ticker"]
         self.ticker_combo.bind("<<ComboboxSelected>>", self.on_ticker_selected)
         self.ticker_combo.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.ticker_combo, "Stock ticker symbol (e.g., NVDA, SPY, AAPL)")
 
         # Holdings
-        ttk.Label(input_frame, text="Holdings:").grid(row=0, column=2, sticky=tk.W, padx=(0, 5))
+        ttk.Label(input_frame, text="Holdings:").grid(row=1, column=2, sticky=tk.W, padx=(0, 5))
         self.holdings_var = tk.StringVar()
         self.holdings_entry = ttk.Entry(input_frame, textvariable=self.holdings_var, width=12)
-        self.holdings_entry.grid(row=0, column=3, sticky="we", padx=(0, 10))
+        self.holdings_entry.grid(row=1, column=3, sticky="we", padx=(0, 15))
         self.holdings_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.holdings_entry, "Number of shares you currently own")
 
-        # Last Price
-        ttk.Label(input_frame, text="Last Price:").grid(
-            row=1, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 0)
-        )
+        # Last Trade Price
+        ttk.Label(input_frame, text="Last Trade Price:").grid(row=1, column=4, sticky=tk.W, padx=(0, 5))
         self.last_price_var = tk.StringVar()
         self.last_price_entry = ttk.Entry(input_frame, textvariable=self.last_price_var, width=12)
-        self.last_price_entry.grid(row=1, column=1, sticky="we", padx=(0, 10), pady=(5, 0))
+        self.last_price_entry.grid(row=1, column=5, sticky="we")
         self.last_price_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.last_price_entry, "Price you last bought or sold shares at")
 
-        # Start Date
-        ttk.Label(input_frame, text="Start Date:").grid(
-            row=1, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 0)
+        # Separator
+        ttk.Separator(input_frame, orient="horizontal").grid(
+            row=2, column=0, columnspan=6, sticky="we", pady=(10, 10)
         )
+
+        # === GROUP 2: STRATEGY SETTINGS ===
+        strategy_label = ttk.Label(input_frame, text="Strategy Settings", font=("TkDefaultFont", 9, "bold"))
+        strategy_label.grid(row=3, column=0, columnspan=6, sticky=tk.W, pady=(0, 5))
+
+        # Start Date
+        ttk.Label(input_frame, text="Start Date:").grid(row=4, column=0, sticky=tk.W, padx=(0, 5))
         if TKCALENDAR_AVAILABLE:
             self.start_date_entry = DateEntry(
                 input_frame,
-                width=12,
+                width=10,
                 background="darkblue",
                 foreground="white",
                 borderwidth=1,
@@ -170,19 +177,17 @@ class OrderCalculatorGUI:
             self.start_date_entry = ttk.Entry(
                 input_frame, textvariable=self.start_date_var, width=12
             )
-        self.start_date_entry.grid(row=1, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
+        self.start_date_entry.grid(row=4, column=1, sticky="we", padx=(0, 15))
         self.start_date_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         self.start_date_entry.bind("<<DateEntrySelected>>", self.schedule_auto_calculation)
-        ToolTip(self.start_date_entry, "Start date for price data (YYYY-MM-DD)")
+        ToolTip(self.start_date_entry, "Start date for price history (YYYY-MM-DD)")
 
         # End Date
-        ttk.Label(input_frame, text="End Date:").grid(
-            row=2, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 0)
-        )
+        ttk.Label(input_frame, text="End Date:").grid(row=4, column=2, sticky=tk.W, padx=(0, 5))
         if TKCALENDAR_AVAILABLE:
             self.end_date_entry = DateEntry(
                 input_frame,
-                width=12,
+                width=10,
                 background="darkblue",
                 foreground="white",
                 borderwidth=1,
@@ -192,59 +197,67 @@ class OrderCalculatorGUI:
         else:
             self.end_date_var = tk.StringVar()
             self.end_date_entry = ttk.Entry(input_frame, textvariable=self.end_date_var, width=12)
-        self.end_date_entry.grid(row=2, column=1, sticky="we", padx=(0, 10), pady=(5, 0))
+        self.end_date_entry.grid(row=4, column=3, sticky="we", padx=(0, 15))
         self.end_date_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         self.end_date_entry.bind("<<DateEntrySelected>>", self.schedule_auto_calculation)
-        ToolTip(self.end_date_entry, "End date for price data (YYYY-MM-DD)")
+        ToolTip(self.end_date_entry, "End date for price history (typically today)")
 
-        # SDN
-        ttk.Label(input_frame, text="SDN:").grid(
-            row=2, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 0)
-        )
+        # Bracket Spacing (was SDN)
+        ttk.Label(input_frame, text="Bracket Spacing:").grid(row=5, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 0))
         self.sdn_var = tk.StringVar()
         self.sdn_entry = ttk.Entry(input_frame, textvariable=self.sdn_var, width=12)
-        self.sdn_entry.grid(row=2, column=3, sticky="we", padx=(0, 10), pady=(5, 0))
+        self.sdn_entry.grid(row=5, column=1, sticky="we", padx=(0, 15), pady=(5, 0))
         self.sdn_entry.bind("<FocusOut>", self.schedule_auto_calculation)
-        ToolTip(self.sdn_entry, "Synthetic Dividend Number (2-8): Controls bracket spacing")
+        ToolTip(self.sdn_entry, "Lower numbers = tighter brackets (2-4), higher = wider (6-8)")
 
-        # Profit
-        ttk.Label(input_frame, text="Profit %:").grid(
-            row=3, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 0)
-        )
+        # Profit Sharing %
+        ttk.Label(input_frame, text="Profit Sharing %:").grid(row=5, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 0))
         self.profit_var = tk.StringVar()
         self.profit_entry = ttk.Entry(input_frame, textvariable=self.profit_var, width=12)
-        self.profit_entry.grid(row=3, column=1, sticky="we", padx=(0, 10), pady=(5, 0))
+        self.profit_entry.grid(row=5, column=3, sticky="we", padx=(0, 15), pady=(5, 0))
         self.profit_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(
             self.profit_entry,
-            "Profit sharing percentage (25-75%): Higher = more aggressive profit-taking",
+            "Percentage of profits to take (25-75%). Higher = more aggressive profit-taking",
         )
 
-        # Bracket Seed
-        ttk.Label(input_frame, text="Bracket Seed:").grid(
-            row=3, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 10)
-        )
+        # Starting Price (was Bracket Seed)
+        ttk.Label(input_frame, text="Starting Price:").grid(row=5, column=4, sticky=tk.W, padx=(0, 5), pady=(5, 0))
         self.bracket_seed_var = tk.StringVar()
         self.bracket_seed_entry = ttk.Entry(
             input_frame, textvariable=self.bracket_seed_var, width=12
         )
-        self.bracket_seed_entry.grid(row=3, column=3, sticky="we", padx=(0, 10), pady=(5, 10))
+        self.bracket_seed_entry.grid(row=5, column=5, sticky="we", pady=(5, 0))
         self.bracket_seed_entry.bind("<FocusOut>", self.schedule_auto_calculation)
-        ToolTip(self.bracket_seed_entry, "Optional: Starting price for bracket calculations")
+        ToolTip(self.bracket_seed_entry, "Optional: Lock bracket levels to a specific price point")
 
-        # Buy and Sell buttons
-        self.buy_button = ttk.Button(input_frame, text="BUY", command=self.execute_buy_order)
-        self.buy_button.grid(row=4, column=0, sticky="we", padx=(0, 5), pady=(5, 10))
+        # Separator
+        ttk.Separator(input_frame, orient="horizontal").grid(
+            row=6, column=0, columnspan=6, sticky="we", pady=(10, 10)
+        )
+
+        # === GROUP 3: ACTIONS ===
+        actions_label = ttk.Label(input_frame, text="Actions", font=("TkDefaultFont", 9, "bold"))
+        actions_label.grid(row=7, column=0, columnspan=6, sticky=tk.W, pady=(0, 5))
+
+        # Create a frame for buttons to center them nicely
+        button_frame = ttk.Frame(input_frame)
+        button_frame.grid(row=8, column=0, columnspan=6, pady=(0, 5))
+
+        # Buy button
+        self.buy_button = ttk.Button(button_frame, text="BUY", command=self.execute_buy_order, width=15)
+        self.buy_button.grid(row=0, column=0, padx=5)
         ToolTip(self.buy_button, "Execute calculated buy order and update position")
 
-        self.sell_button = ttk.Button(input_frame, text="SELL", command=self.execute_sell_order)
-        self.sell_button.grid(row=4, column=1, sticky="we", pady=(5, 10))
+        # Sell button
+        self.sell_button = ttk.Button(button_frame, text="SELL", command=self.execute_sell_order, width=15)
+        self.sell_button.grid(row=0, column=1, padx=5)
         ToolTip(self.sell_button, "Execute calculated sell order and update position")
 
-        # Help button (moved to where Calculate Orders button was)
-        self.help_button = ttk.Button(input_frame, text="Help", command=self.show_help)
-        self.help_button.grid(row=5, column=0, columnspan=4, pady=(5, 10))
-        ToolTip(self.help_button, "Show detailed help documentation (F1)")
+        # Help button
+        self.help_button = ttk.Button(button_frame, text="Help (F1)", command=self.show_help, width=15)
+        self.help_button.grid(row=0, column=2, padx=5)
+        ToolTip(self.help_button, "Show detailed help documentation")
 
         # Set default dates after date fields are created
         self.set_default_dates()
@@ -446,17 +459,20 @@ class OrderCalculatorGUI:
         """Show about dialog."""
         about_text = """Synthetic Dividend Order Calculator
 
-Version 1.0
+Version 2.0 - Retail Edition
 
-A professional tool for calculating synthetic dividend orders
-using the Synthetic Dividend Algorithm.
+A user-friendly tool for manual order placement using
+the Synthetic Dividend Algorithm.
 
 Features:
-• Interactive order calculation
-• Visual price chart with signals
-• Bracket order simulation
+• Auto-calculation as you type
+• Clear, organized interface
+• Visual price chart with trading signals
 • Persistent settings per ticker
 • Professional broker order formatting
+• BUY/SELL execution tracking
+
+Designed for retail traders using manual order entry.
 
 © 2025 Synthetic Dividend Project"""
 
