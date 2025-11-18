@@ -58,9 +58,7 @@ class CacheLock:
         while True:
             try:
                 # Open/create lock file (must use low-level os.open for proper locking)
-                self.lock_file = os.open(
-                    str(self.lock_path), os.O_CREAT | os.O_RDWR | os.O_TRUNC
-                )
+                self.lock_file = os.open(str(self.lock_path), os.O_CREAT | os.O_RDWR | os.O_TRUNC)
 
                 # Try to acquire exclusive lock
                 if sys.platform == "win32":
@@ -149,9 +147,7 @@ class SharedCacheLock:
         while True:
             try:
                 # Open/create lock file
-                self.lock_file = os.open(
-                    str(self.lock_path), os.O_CREAT | os.O_RDWR | os.O_TRUNC
-                )
+                self.lock_file = os.open(str(self.lock_path), os.O_CREAT | os.O_RDWR | os.O_TRUNC)
 
                 # Try to acquire shared lock
                 if sys.platform == "win32":

@@ -122,7 +122,9 @@ class OrderCalculatorGUI:
             input_frame.columnconfigure(i, weight=1)
 
         # === GROUP 1: POSITION (Most Important - Top Row) ===
-        position_label = ttk.Label(input_frame, text="Your Position", font=("TkDefaultFont", 9, "bold"))
+        position_label = ttk.Label(
+            input_frame, text="Your Position", font=("TkDefaultFont", 9, "bold")
+        )
         position_label.grid(row=0, column=0, columnspan=6, sticky=tk.W, pady=(0, 5))
 
         # Ticker
@@ -144,7 +146,9 @@ class OrderCalculatorGUI:
         ToolTip(self.holdings_entry, "Number of shares you currently own")
 
         # Last Trade Price
-        ttk.Label(input_frame, text="Last Trade Price:").grid(row=1, column=4, sticky=tk.W, padx=(0, 5))
+        ttk.Label(input_frame, text="Last Trade Price:").grid(
+            row=1, column=4, sticky=tk.W, padx=(0, 5)
+        )
         self.last_price_var = tk.StringVar()
         self.last_price_entry = ttk.Entry(input_frame, textvariable=self.last_price_var, width=12)
         self.last_price_entry.grid(row=1, column=5, sticky="we")
@@ -157,7 +161,9 @@ class OrderCalculatorGUI:
         )
 
         # === GROUP 2: STRATEGY SETTINGS ===
-        strategy_label = ttk.Label(input_frame, text="Strategy Settings", font=("TkDefaultFont", 9, "bold"))
+        strategy_label = ttk.Label(
+            input_frame, text="Strategy Settings", font=("TkDefaultFont", 9, "bold")
+        )
         strategy_label.grid(row=3, column=0, columnspan=6, sticky=tk.W, pady=(0, 5))
 
         # Start Date
@@ -203,7 +209,9 @@ class OrderCalculatorGUI:
         ToolTip(self.end_date_entry, "End date for price history (typically today)")
 
         # Bracket Spacing (was SDN)
-        ttk.Label(input_frame, text="Bracket Spacing:").grid(row=5, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 0))
+        ttk.Label(input_frame, text="Bracket Spacing:").grid(
+            row=5, column=0, sticky=tk.W, padx=(0, 5), pady=(5, 0)
+        )
         self.sdn_var = tk.StringVar()
         self.sdn_entry = ttk.Entry(input_frame, textvariable=self.sdn_var, width=12)
         self.sdn_entry.grid(row=5, column=1, sticky="we", padx=(0, 15), pady=(5, 0))
@@ -211,7 +219,9 @@ class OrderCalculatorGUI:
         ToolTip(self.sdn_entry, "Lower numbers = tighter brackets (2-4), higher = wider (6-8)")
 
         # Profit Sharing %
-        ttk.Label(input_frame, text="Profit Sharing %:").grid(row=5, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 0))
+        ttk.Label(input_frame, text="Profit Sharing %:").grid(
+            row=5, column=2, sticky=tk.W, padx=(0, 5), pady=(5, 0)
+        )
         self.profit_var = tk.StringVar()
         self.profit_entry = ttk.Entry(input_frame, textvariable=self.profit_var, width=12)
         self.profit_entry.grid(row=5, column=3, sticky="we", padx=(0, 15), pady=(5, 0))
@@ -222,7 +232,9 @@ class OrderCalculatorGUI:
         )
 
         # Starting Price (was Bracket Seed)
-        ttk.Label(input_frame, text="Starting Price:").grid(row=5, column=4, sticky=tk.W, padx=(0, 5), pady=(5, 0))
+        ttk.Label(input_frame, text="Starting Price:").grid(
+            row=5, column=4, sticky=tk.W, padx=(0, 5), pady=(5, 0)
+        )
         self.bracket_seed_var = tk.StringVar()
         self.bracket_seed_entry = ttk.Entry(
             input_frame, textvariable=self.bracket_seed_var, width=12
@@ -245,17 +257,23 @@ class OrderCalculatorGUI:
         button_frame.grid(row=8, column=0, columnspan=6, pady=(0, 5))
 
         # Buy button
-        self.buy_button = ttk.Button(button_frame, text="BUY", command=self.execute_buy_order, width=15)
+        self.buy_button = ttk.Button(
+            button_frame, text="BUY", command=self.execute_buy_order, width=15
+        )
         self.buy_button.grid(row=0, column=0, padx=5)
         ToolTip(self.buy_button, "Execute calculated buy order and update position")
 
         # Sell button
-        self.sell_button = ttk.Button(button_frame, text="SELL", command=self.execute_sell_order, width=15)
+        self.sell_button = ttk.Button(
+            button_frame, text="SELL", command=self.execute_sell_order, width=15
+        )
         self.sell_button.grid(row=0, column=1, padx=5)
         ToolTip(self.sell_button, "Execute calculated sell order and update position")
 
         # Help button
-        self.help_button = ttk.Button(button_frame, text="Help (F1)", command=self.show_help, width=15)
+        self.help_button = ttk.Button(
+            button_frame, text="Help (F1)", command=self.show_help, width=15
+        )
         self.help_button.grid(row=0, column=2, padx=5)
         ToolTip(self.help_button, "Show detailed help documentation")
 

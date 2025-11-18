@@ -14,38 +14,37 @@ from pathlib import Path
 # Emoji replacements (emoji -> text)
 EMOJI_REPLACEMENTS = {
     # Checkmarks and status
-    '✅': '[OK]',
-    '❌': '[FAIL]',
-    '✓': '[OK]',
-    '✗': '[FAIL]',
-
+    "✅": "[OK]",
+    "❌": "[FAIL]",
+    "✓": "[OK]",
+    "✗": "[FAIL]",
     # Symbols
-    '🎯': '',  # Remove decorative
-    '📦': '',
-    '🚀': '',
-    '🛠️': '',
-    '🛠': '',
-    '🐳': '',
-    '🔧': '',
-    '🔑': '',
-    '📚': '',
-    '🌍': '',
-    '🤖': '',
-    '✨': '',
-    '⚠️': 'WARNING:',
-    '⚠': 'WARNING:',
-    '💡': 'TIP:',
-    '📋': '',
-    '🐍': '',
-    '⚙️': '',
-    '🔒': '',
-    '📈': '',
-    '💰': '',
-    '📊': '',
-    '🏆': '',
-    '💻': '',
-    '🎨': '',
-    '🔥': '',
+    "🎯": "",  # Remove decorative
+    "📦": "",
+    "🚀": "",
+    "🛠️": "",
+    "🛠": "",
+    "🐳": "",
+    "🔧": "",
+    "🔑": "",
+    "📚": "",
+    "🌍": "",
+    "🤖": "",
+    "✨": "",
+    "⚠️": "WARNING:",
+    "⚠": "WARNING:",
+    "💡": "TIP:",
+    "📋": "",
+    "🐍": "",
+    "⚙️": "",
+    "🔒": "",
+    "📈": "",
+    "💰": "",
+    "📊": "",
+    "🏆": "",
+    "💻": "",
+    "🎨": "",
+    "🔥": "",
 }
 
 
@@ -56,7 +55,7 @@ def remove_emojis_from_file(file_path: Path, dry_run: bool = False) -> tuple[int
         (replacements_made, file_modified)
     """
     try:
-        content = file_path.read_text(encoding='utf-8')
+        content = file_path.read_text(encoding="utf-8")
     except Exception as e:
         print(f"Error reading {file_path}: {e}", file=sys.stderr)
         return 0, False
@@ -72,15 +71,16 @@ def remove_emojis_from_file(file_path: Path, dry_run: bool = False) -> tuple[int
 
     # Clean up multiple spaces left by removed emojis
     import re
-    content = re.sub(r'  +', ' ', content)  # Multiple spaces -> single space
-    content = re.sub(r' \n', '\n', content)  # Space before newline -> just newline
-    content = re.sub(r'\n\n\n+', '\n\n', content)  # Multiple blank lines -> double
+
+    content = re.sub(r"  +", " ", content)  # Multiple spaces -> single space
+    content = re.sub(r" \n", "\n", content)  # Space before newline -> just newline
+    content = re.sub(r"\n\n\n+", "\n\n", content)  # Multiple blank lines -> double
 
     if content != original_content:
         if dry_run:
             print(f"[DRY RUN] {file_path}: {replacements} emoji replacements")
         else:
-            file_path.write_text(content, encoding='utf-8')
+            file_path.write_text(content, encoding="utf-8")
             print(f"Updated {file_path}: {replacements} emoji replacements")
         return replacements, True
 
@@ -92,10 +92,12 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Show what would be changed without modifying files')
-    parser.add_argument('paths', nargs='*', default=['.'],
-                        help='Paths to process (default: current directory)')
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Show what would be changed without modifying files"
+    )
+    parser.add_argument(
+        "paths", nargs="*", default=["."], help="Paths to process (default: current directory)"
+    )
     args = parser.parse_args()
 
     total_files = 0
@@ -109,7 +111,7 @@ def main():
             files = [path]
         else:
             # Find all markdown files
-            files = list(path.rglob('*.md'))
+            files = list(path.rglob("*.md"))
 
         for file_path in files:
             replacements, modified = remove_emojis_from_file(file_path, args.dry_run)
@@ -129,5 +131,5 @@ def main():
         print("This was a dry run. Use without --dry-run to actually modify files.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
