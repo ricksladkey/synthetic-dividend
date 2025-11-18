@@ -234,8 +234,8 @@ class OrderCalculatorGUI:
             "Percentage of profits to take (25-75%). Higher = more aggressive profit-taking",
         )
 
-        # Starting Price (was Bracket Seed)
-        ttk.Label(input_frame, text="Starting Price:").grid(
+        # Alignment Price (controls bracket alignment)
+        ttk.Label(input_frame, text="Alignment Price:").grid(
             row=5, column=4, sticky=tk.W, padx=(0, 5), pady=(5, 0)
         )
         self.bracket_seed_var = tk.StringVar()
@@ -244,7 +244,10 @@ class OrderCalculatorGUI:
         )
         self.bracket_seed_entry.grid(row=5, column=5, sticky="we", pady=(5, 0))
         self.bracket_seed_entry.bind("<FocusOut>", self.schedule_auto_calculation)
-        ToolTip(self.bracket_seed_entry, "Optional: Lock bracket levels to a specific price point")
+        ToolTip(
+            self.bracket_seed_entry,
+            "Reference price that controls bracket alignment. Any price in the geometric sequence will suffice.",
+        )
 
         # Separator
         ttk.Separator(input_frame, orient="horizontal").grid(
