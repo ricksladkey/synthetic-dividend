@@ -80,6 +80,9 @@ class OrderCalculatorGUI:
         self.root.title("Synthetic Dividend Order Calculator")
         self.root.geometry("1200x800")
 
+        # Start maximized for better visibility
+        self.root.state("zoomed")
+
         # Load window settings
         self.load_window_settings()
 
