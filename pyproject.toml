@@ -83,6 +83,9 @@ sd-volatility-alpha = "src.research.volatility_alpha:main"
 sd-run-tests = "src.cli:test_command"
 sd-compare-table = "src.compare.table:main"
 
+# Order calculator CLI (command-line interface)
+sd-calc-orders = "src.tools.order_calculator:main"
+
 # Test convenience scripts
 sd-test-sd = "src.cli:test_sd_command"
 sd-test-buy-and-hold = "src.cli:test_buy_and_hold_command"
@@ -90,7 +93,7 @@ sd-test-batch-comparison = "src.cli:test_batch_comparison_command"
 
 [project.gui-scripts]
 # GUI applications that run without console window on Windows
-sd-calc-orders = "src.tools.order_calculator_gui:main"
+sd-calc-orders-gui = "src.tools.order_calculator_gui:main"
 sd-plotter = "src.compare.plotter:main"
 
 [tool.setuptools.packages.find]
