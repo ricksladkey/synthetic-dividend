@@ -11,6 +11,7 @@ from typing import Optional
 import pandas as pd
 
 from src.data.asset_provider import AssetProvider
+from src.data.cache_lock import CacheLock, SharedCacheLock
 
 # Optional dependency: gracefully degrade if yfinance unavailable
 try:
@@ -170,11 +171,12 @@ class YahooAssetProvider(AssetProvider):
     # -------------------------------------------------------------------------
 
     def _load_price_cache(self) -> Optional[pd.DataFrame]:
-        """Load OHLC cache from pickle (fast path)."""
+        """Load OHLC cache from pickle (fast path) with shared lock."""
         if os.path.exists(self.pkl_path):
             try:
-                df: pd.DataFrame = pd.read_pickle(self.pkl_path)
-                return df
+                with SharedCacheLock(self.pkl_path):
+                    df: pd.DataFrame = pd.read_pickle(self.pkl_path)
+                    return df
             except Exception:
                 return None
         return None
@@ -183,45 +185,54 @@ class YahooAssetProvider(AssetProvider):
         """Save OHLC cache in both formats: pickle (fast) + CSV (readable).
 
         Extends existing cache with new data rather than overwriting.
+        Uses exclusive lock to prevent concurrent writes.
         """
         try:
-            # Load existing cache if it exists
-            existing_df = self._load_price_cache()
+            # Acquire exclusive lock for the entire read-modify-write operation
+            with CacheLock(self.pkl_path):
+                # Load existing cache if it exists (no need for separate lock - we have exclusive)
+                existing_df = None
+                if os.path.exists(self.pkl_path):
+                    try:
+                        existing_df = pd.read_pickle(self.pkl_path)
+                    except Exception:
+                        existing_df = None
 
-            if existing_df is not None and not existing_df.empty:
-                # Normalize indices to ensure compatibility
-                # Convert both to datetime for consistent comparison
-                existing_dates = pd.to_datetime(existing_df.index)
-                new_dates = pd.to_datetime(df.index)
+                if existing_df is not None and not existing_df.empty:
+                    # Normalize indices to ensure compatibility
+                    # Convert both to datetime for consistent comparison
+                    existing_dates = pd.to_datetime(existing_df.index)
+                    new_dates = pd.to_datetime(df.index)
 
-                # Reset indices to datetime objects for consistent merging
-                existing_df = existing_df.copy()
-                existing_df.index = existing_dates
-                df = df.copy()
-                df.index = new_dates
+                    # Reset indices to datetime objects for consistent merging
+                    existing_df = existing_df.copy()
+                    existing_df.index = existing_dates
+                    df = df.copy()
+                    df.index = new_dates
 
-                # Combine existing cache with new data (union operation)
-                combined_df = pd.concat([existing_df, df], axis=0)
-                # Remove duplicates based on index (date), keeping the last occurrence
-                combined_df = combined_df[~combined_df.index.duplicated(keep="last")]
-                # Sort by index to maintain chronological order
-                combined_df = combined_df.sort_index()
-                df = combined_df
+                    # Combine existing cache with new data (union operation)
+                    combined_df = pd.concat([existing_df, df], axis=0)
+                    # Remove duplicates based on index (date), keeping the last occurrence
+                    combined_df = combined_df[~combined_df.index.duplicated(keep="last")]
+                    # Sort by index to maintain chronological order
+                    combined_df = combined_df.sort_index()
+                    df = combined_df
 
-            # Save the (possibly extended) cache
-            df.to_pickle(self.pkl_path)
-            df_copy = df.copy()
-            df_copy.index.name = "Date"
-            df_copy.to_csv(self.csv_path, index=True)
+                # Save the (possibly extended) cache
+                df.to_pickle(self.pkl_path)
+                df_copy = df.copy()
+                df_copy.index.name = "Date"
+                df_copy.to_csv(self.csv_path, index=True)
         except Exception:
             pass
 
     def _load_dividend_cache(self) -> Optional[pd.Series]:
-        """Load dividend cache from pickle (fast path)."""
+        """Load dividend cache from pickle (fast path) with shared lock."""
         if os.path.exists(self.div_pkl_path):
             try:
-                series: pd.Series = pd.read_pickle(self.div_pkl_path)
-                return series
+                with SharedCacheLock(self.div_pkl_path):
+                    series: pd.Series = pd.read_pickle(self.div_pkl_path)
+                    return series
             except Exception:
                 return None
         return None
@@ -230,36 +241,44 @@ class YahooAssetProvider(AssetProvider):
         """Save dividend cache in both formats: pickle (fast) + CSV (readable).
 
         Extends existing cache with new data rather than overwriting.
+        Uses exclusive lock to prevent concurrent writes.
         """
         try:
-            # Load existing cache if it exists
-            existing_series = self._load_dividend_cache()
+            # Acquire exclusive lock for the entire read-modify-write operation
+            with CacheLock(self.div_pkl_path):
+                # Load existing cache if it exists (no need for separate lock - we have exclusive)
+                existing_series = None
+                if os.path.exists(self.div_pkl_path):
+                    try:
+                        existing_series = pd.read_pickle(self.div_pkl_path)
+                    except Exception:
+                        existing_series = None
 
-            if existing_series is not None and not existing_series.empty:
-                # Normalize indices to ensure compatibility
-                # Convert both to datetime for consistent comparison
-                existing_dates = pd.to_datetime(existing_series.index)
-                new_dates = pd.to_datetime(series.index)
+                if existing_series is not None and not existing_series.empty:
+                    # Normalize indices to ensure compatibility
+                    # Convert both to datetime for consistent comparison
+                    existing_dates = pd.to_datetime(existing_series.index)
+                    new_dates = pd.to_datetime(series.index)
 
-                # Reset indices to datetime objects for consistent merging
-                existing_series = existing_series.copy()
-                existing_series.index = existing_dates
-                series = series.copy()
-                series.index = new_dates
+                    # Reset indices to datetime objects for consistent merging
+                    existing_series = existing_series.copy()
+                    existing_series.index = existing_dates
+                    series = series.copy()
+                    series.index = new_dates
 
-                # Combine existing cache with new data (union operation)
-                combined_series = pd.concat([existing_series, series], axis=0)
-                # Remove duplicates based on index (date), keeping the last occurrence
-                combined_series = combined_series[~combined_series.index.duplicated(keep="last")]
-                # Sort by index to maintain chronological order
-                combined_series = combined_series.sort_index()
-                series = combined_series
+                    # Combine existing cache with new data (union operation)
+                    combined_series = pd.concat([existing_series, series], axis=0)
+                    # Remove duplicates based on index (date), keeping the last occurrence
+                    combined_series = combined_series[~combined_series.index.duplicated(keep="last")]
+                    # Sort by index to maintain chronological order
+                    combined_series = combined_series.sort_index()
+                    series = combined_series
 
-            # Save the (possibly extended) cache
-            series.to_pickle(self.div_pkl_path)
-            df = series.to_frame(name="Dividend")
-            df.index.name = "Date"
-            df.to_csv(self.div_csv_path)
+                # Save the (possibly extended) cache
+                series.to_pickle(self.div_pkl_path)
+                df = series.to_frame(name="Dividend")
+                df.index.name = "Date"
+                df.to_csv(self.div_csv_path)
         except Exception:
             pass
 
