@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-all lint check format clean build publish examples
+.PHONY: help install install-dev install-gui install-all test test-all lint check format clean build publish examples
 
 # Platform-independent Python executable detection
 ROOT_DIR := $(CURDIR)
@@ -19,16 +19,25 @@ export PYTHON
 help:
 	@echo "Synthetic Dividend - Development Commands"
 	@echo ""
-	@echo "  make install       Install package in development mode"
-	@echo "  make install-dev   Install with development dependencies"
+	@echo "Installation:"
+	@echo "  make install       Install core package in development mode"
+	@echo "  make install-dev   Install with dev dependencies (testing, linting)"
+	@echo "  make install-gui   Install with GUI dependencies (markdown, tkinterweb)"
+	@echo "  make install-all   Install with all optional dependencies"
+	@echo ""
+	@echo "Testing:"
 	@echo "  make test-checks    Run tests (CI mode - quiet)"
 	@echo "  make test-all      Run all tests (quiet, includes network tests)"
 	@echo "  make test-parallel Run tests in parallel (requires pytest-xdist)"
 	@echo "  make test-all-parallel  Run all tests in parallel"
 	@echo "  make test          Run both CI-only and all tests (quiet)"
+	@echo ""
+	@echo "Code Quality:"
 	@echo "  make lint          Run all linters (black, isort, flake8, mypy)"
 	@echo "  make check         Run lint and test (simulates CI checks)"
 	@echo "  make format        Format code with black and isort"
+	@echo ""
+	@echo "Build & Deploy:"
 	@echo "  make clean         Remove build artifacts and cache"
 	@echo "  make build         Build distribution packages"
 	@echo "  make publish       Publish to PyPI (requires credentials)"
@@ -39,6 +48,12 @@ install:
 
 install-dev:
 	pip install -e ".[dev]"
+
+install-gui:
+	pip install -e ".[gui]"
+
+install-all:
+	pip install -e ".[all]"
 
 test-checks:
 	env CI=true $(PYTHON) -m pytest -q -m "not slow"
