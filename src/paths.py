@@ -4,7 +4,6 @@ This module provides functions to locate important project directories
 regardless of where the code is executed from.
 """
 
-import os
 from pathlib import Path
 
 

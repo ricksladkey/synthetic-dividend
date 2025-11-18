@@ -96,11 +96,13 @@ class YahooAssetProvider(AssetProvider):
         # Check if we can do incremental update (cache exists but needs topping off)
         if self._can_do_incremental_update(cached, start_date, end_date):
             # Cache has most of the data, just fetch the missing tail
+            assert cached is not None  # Guaranteed by _can_do_incremental_update
             cached_dates = pd.to_datetime(cached.index).date
             cache_max = max(cached_dates)
 
             # Fetch only the missing days (from day after cache_max to end_date)
             from datetime import timedelta
+
             fetch_start = cache_max + timedelta(days=1)
 
             # Download only the missing range
@@ -269,7 +271,9 @@ class YahooAssetProvider(AssetProvider):
                     # Combine existing cache with new data (union operation)
                     combined_series = pd.concat([existing_series, series], axis=0)
                     # Remove duplicates based on index (date), keeping the last occurrence
-                    combined_series = combined_series[~combined_series.index.duplicated(keep="last")]
+                    combined_series = combined_series[
+                        ~combined_series.index.duplicated(keep="last")
+                    ]
                     # Sort by index to maintain chronological order
                     combined_series = combined_series.sort_index()
                     series = combined_series
@@ -312,8 +316,6 @@ class YahooAssetProvider(AssetProvider):
             return False
 
         try:
-            from datetime import timedelta
-
             cached_dates = pd.to_datetime(cached.index).date
             cache_min = min(cached_dates)
             cache_max = max(cached_dates)
