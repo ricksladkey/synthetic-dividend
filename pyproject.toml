@@ -81,14 +81,17 @@ sd-volatility-alpha = "src.research.volatility_alpha:main"
 
 # Convenience scripts for common operations (replacing batch files)
 sd-run-tests = "src.cli:test_command"
-sd-calc-orders = "src.tools.order_calculator:main"
 sd-compare-table = "src.compare.table:main"
-sd-plotter = "src.compare.plotter:main"
 
 # Test convenience scripts
 sd-test-sd = "src.cli:test_sd_command"
 sd-test-buy-and-hold = "src.cli:test_buy_and_hold_command"
 sd-test-batch-comparison = "src.cli:test_batch_comparison_command"
+
+[project.gui-scripts]
+# GUI applications that run without console window on Windows
+sd-calc-orders = "src.tools.order_calculator_gui:main"
+sd-plotter = "src.compare.plotter:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
