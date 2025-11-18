@@ -39,7 +39,7 @@ run_algorithm_backtest(
 
 ### Order Calculator
 ```bash
-python -m src.tools.order_calculator \
+sd-calc-orders \
  --ticker NVDA \
  --holdings 1000 \
  --last-price 120.50 \
@@ -50,7 +50,7 @@ python -m src.tools.order_calculator \
 
 ### Order Calculator GUI
 ```bash
-python -m src.tools.order_calculator_gui
+sd-calc-orders-gui
 ```
 
 **Features**:
