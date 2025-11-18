@@ -115,43 +115,35 @@ pyinstaller --name "SD-Calculator" \
 
 **As of November 2024**:
 
-✅ **Configured**: `pyproject.toml` has `[project.gui-scripts]` section
-⚠️ **Limitation**: Requires setuptools >= 75.0 for console-less executables
-✅ **Workaround**: Use `pythonw -m src.tools.order_calculator_gui`
+✅ **WORKING**: setuptools >= 75.0 is now required in `pyproject.toml`
+✅ **Configured**: `[project.gui-scripts]` creates console-less executables
+✅ **Verified**: `sd-calc-orders.exe` uses Windows GUI subsystem (no console)
 
 ## Recommended User Instructions
 
-For now, until setuptools is upgraded project-wide, users should:
+**Primary Method** (Simplest - No Console):
+```bash
+pip install -e ".[gui]"
+sd-calc-orders  # Launches GUI without console!
+```
 
-**Option A**: Use pythonw (simplest)
+**Alternative Methods**:
+
+**Option A**: Use pythonw directly
 ```bash
 pythonw -m src.tools.order_calculator_gui
 ```
 
-**Option B**: Create a shortcut
+**Option B**: Double-click the .pyw file
+```bash
+# Just double-click this in Windows Explorer:
+launch_calculator.pyw
+```
+
+**Option C**: Create a desktop shortcut
 1. Right-click Desktop → New → Shortcut
-2. Target: `C:\path\to\pythonw.exe -m src.tools.order_calculator_gui`
+2. Target: `sd-calc-orders` (or full path to .exe)
 3. Name: "Order Calculator"
-
-**Option C**: Create launch_calculator.pyw
-```python
-from src.tools.order_calculator_gui import main
-main()
-```
-Then double-click the `.pyw` file.
-
-## Future: When setuptools >= 75.0 is standard
-
-After upgrading setuptools:
-```bash
-pip install --upgrade "setuptools>=75.0"
-pip install -e ".[gui]"
-```
-
-Then simply run:
-```bash
-sd-calc-orders  # No console window!
-```
 
 ## Technical Details
 
