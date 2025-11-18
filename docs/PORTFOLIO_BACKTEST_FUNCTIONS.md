@@ -68,15 +68,15 @@ Problem: Can't rebalance across assets, can't handle portfolio-level withdrawals
 ### New Architecture (`run_portfolio_backtest`)
 ```
 Shared Bank: $600K → Portfolio algo sees full state:
-  - VOO: 1000 shares @ $400
-  - BIL: 5000 shares @ $100
-  - BTC: 2.5 shares @ $40,000
-  - Shared bank: $600K
+ - VOO: 1000 shares @ $400
+ - BIL: 5000 shares @ $100
+ - BTC: 2.5 shares @ $40,000
+ - Shared bank: $600K
 
 Portfolio algo can:
-  - Rebalance across assets (sell VOO, buy BTC)
-  - Handle withdrawals from shared pool
-  - Coordinate per-asset strategies
+ - Rebalance across assets (sell VOO, buy BTC)
+ - Handle withdrawals from shared pool
+ - Coordinate per-asset strategies
 ```
 
 ---
@@ -85,8 +85,8 @@ Portfolio algo can:
 
 1. **Backward Compatibility**: `simulate_portfolio()` still uses old function
 2. **Different Use Cases**:
-   - Old: Simple buy-and-hold with independent assets
-   - New: Portfolio-level coordination and synthetic dividends
+ - Old: Simple buy-and-hold with independent assets
+ - New: Portfolio-level coordination and synthetic dividends
 3. **Migration In Progress**: New research uses v2, legacy code uses v1
 4. **Feature Parity Not Complete**: v1 has more parameters (dividends, CPI, reference assets)
 
@@ -105,18 +105,18 @@ Portfolio algo can:
 **Cons**:
 - Breaking change for `simulate_portfolio()` users
 - Would need to port features from v1 to v2:
-  - Dividend tracking
-  - CPI adjustment
-  - Reference asset adjustments
-  - Risk-free rate calculations
+ - Dividend tracking
+ - CPI adjustment
+ - Reference asset adjustments
+ - Risk-free rate calculations
 
 ### Recommendation: **Phased Unification**
 
 **Phase 1: Feature Parity** (Do This)
 1. Add missing features to `run_portfolio_backtest()`:
-   - `dividend_series` parameter
-   - `cpi_data` parameter
-   - `reference_data` and `risk_free_data` parameters
+ - `dividend_series` parameter
+ - `cpi_data` parameter
+ - `reference_data` and `risk_free_data` parameters
 2. Update `simulate_portfolio()` to use v2 with shared bank
 3. Test that all legacy code still works
 
@@ -138,12 +138,12 @@ Portfolio algo can:
 **Current**:
 ```python
 transactions, portfolio_summary = run_portfolio_backtest(
-    allocations=allocations,
-    start_date=start_date,
-    end_date=end_date,
-    initial_investment=initial_value,
-    algo="buy-and-hold",
-    simple_mode=True,
+ allocations=allocations,
+ start_date=start_date,
+ end_date=end_date,
+ initial_investment=initial_value,
+ algo="buy-and-hold",
+ simple_mode=True,
 )
 ```
 
@@ -154,11 +154,11 @@ from src.algorithms.portfolio_factory import build_portfolio_algo_from_name
 algo = build_portfolio_algo_from_name("per-asset:buy-and-hold", allocations)
 
 transactions, portfolio_summary = run_portfolio_backtest(
-    allocations=allocations,
-    start_date=start_date,
-    end_date=end_date,
-    portfolio_algo=algo,
-    initial_investment=initial_value,
+ allocations=allocations,
+ start_date=start_date,
+ end_date=end_date,
+ portfolio_algo=algo,
+ initial_investment=initial_value,
 )
 ```
 
@@ -170,9 +170,9 @@ transactions, portfolio_summary = run_portfolio_backtest(
 
 ```bash
 $ git log --oneline --all --grep="portfolio.*backtest"
-270c161 Implement quarterly rebalancing and portfolio backtest runner  # v2 introduced
-ae7a221 Unify portfolio backtesting, add comprehensive docs            # v1 created
-5a96748 Add multi-asset portfolio infrastructure                       # Original
+270c161 Implement quarterly rebalancing and portfolio backtest runner # v2 introduced
+ae7a221 Unify portfolio backtesting, add comprehensive docs # v1 created
+5a96748 Add multi-asset portfolio infrastructure # Original
 ```
 
 **Timeline**:

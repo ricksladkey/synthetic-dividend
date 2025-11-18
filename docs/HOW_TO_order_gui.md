@@ -16,10 +16,10 @@ The Order Calculator GUI helps you calculate and execute synthetic dividend orde
 - **Start Date**: Beginning of price history period (default: 1 year ago)
 - **End Date**: End of price history period (default: today)
 - **Bracket Spacing**: Controls how tight or wide your buy/sell brackets are (2-8)
-  - Lower numbers (2-4) = tighter brackets, more frequent trades
-  - Higher numbers (6-8) = wider brackets, less frequent trades
+ - Lower numbers (2-4) = tighter brackets, more frequent trades
+ - Higher numbers (6-8) = wider brackets, less frequent trades
 - **Profit Sharing %**: Percentage of profits to take vs. reinvest (typically 25-75%)
-  - Higher = more aggressive profit-taking
+ - Higher = more aggressive profit-taking
 - **Starting Price**: Optional - lock bracket levels to a specific price point
 
 ### 2. Calculate Orders
@@ -28,11 +28,11 @@ Orders are calculated automatically as you type. The system fetches current pric
 ### 3. Review the Results
 - **Broker Orders**: Read-only displays show the exact broker syntax for buy/sell orders
 - **Price Chart**: Visual chart with:
-  - Historical price data (log scale)
-  - Buy/sell bracket lines (red/green dashed)
-  - Last transaction price (blue solid)
-  - Buy/sell signal dots from backtesting
-  - Mathematical reference grid (powers of 2 and subdivisions)
+ - Historical price data (log scale)
+ - Buy/sell bracket lines (red/green dashed)
+ - Last transaction price (blue solid)
+ - Buy/sell signal dots from backtesting
+ - Mathematical reference grid (powers of 2 and subdivisions)
 
 ## Returning User Workflow
 

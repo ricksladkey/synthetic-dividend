@@ -6,27 +6,27 @@ As of November 2024, this project has migrated from `requirements.txt` files to 
 
 ## Quick Migration
 
-### Before (Old Way ❌)
+### Before (Old Way [FAIL])
 
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 
-### After (New Way ✅)
+### After (New Way [OK])
 
 ```bash
-pip install -e .              # Core dependencies
-pip install -e ".[dev]"       # Development dependencies
-pip install -e ".[gui]"       # GUI dependencies
-pip install -e ".[all]"       # Everything
+pip install -e . # Core dependencies
+pip install -e ".[dev]" # Development dependencies
+pip install -e ".[gui]" # GUI dependencies
+pip install -e ".[all]" # Everything
 ```
 
 ## What This Means
 
 ### Files Removed
-- ❌ `requirements.txt` - **REMOVED**
-- ❌ `requirements-dev.txt` - **REMOVED**
+- [FAIL] `requirements.txt` - **REMOVED**
+- [FAIL] `requirements-dev.txt` - **REMOVED**
 
 ### Single Source of Truth
 All dependencies are now defined in `pyproject.toml`:
@@ -34,34 +34,34 @@ All dependencies are now defined in `pyproject.toml`:
 ```toml
 [project]
 dependencies = [
-    "pandas>=1.0",
-    "matplotlib>=3.0",
-    "yfinance>=0.2.0",
-    "pandas-datareader>=0.10",
-    "lxml>=4.9",
-    "simpy>=4.0",
+ "pandas>=1.0",
+ "matplotlib>=3.0",
+ "yfinance>=0.2.0",
+ "pandas-datareader>=0.10",
+ "lxml>=4.9",
+ "simpy>=4.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0",
-    "pytest-cov>=4.0",
-    "pytest-xdist>=3.0",
-    "mypy>=1.0",
-    "black>=23.0",
-    "flake8>=6.0",
-    "pylint>=3.0",
-    "isort>=5.0",
+ "pytest>=7.0",
+ "pytest-cov>=4.0",
+ "pytest-xdist>=3.0",
+ "mypy>=1.0",
+ "black>=23.0",
+ "flake8>=6.0",
+ "pylint>=3.0",
+ "isort>=5.0",
 ]
 
 gui = [
-    "markdown>=3.4",
-    "tkinterweb>=3.15",
-    "tkcalendar>=1.6",
+ "markdown>=3.4",
+ "tkinterweb>=3.15",
+ "tkcalendar>=1.6",
 ]
 
 all = [
-    # Combines dev + gui
+ # Combines dev + gui
 ]
 ```
 

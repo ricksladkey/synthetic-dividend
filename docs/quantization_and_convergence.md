@@ -43,10 +43,10 @@ Q = (Initial shares) × (Bracket spacing) / (Price)
 
 | Ticker | Price | Position | SDN | δ | Q | Regime |
 |--------|-------|----------|-----|---|---|--------|
-| NVDA | $50 | 10,000 | sd8 | 9.05% | 18 | Continuous ✓ |
-| NVDA | $50 | 100 | sd32 | 2.19% | 0.04 | Discrete ✗ |
-| MSTR | $400 | 100 | sd16 | 4.43% | 0.11 | Discrete ✗ |
-| MSTR | $400 | 10,000 | sd16 | 4.43% | 11 | Continuous ✓ |
+| NVDA | $50 | 10,000 | sd8 | 9.05% | 18 | Continuous [OK] |
+| NVDA | $50 | 100 | sd32 | 2.19% | 0.04 | Discrete [FAIL] |
+| MSTR | $400 | 100 | sd16 | 4.43% | 0.11 | Discrete [FAIL] |
+| MSTR | $400 | 10,000 | sd16 | 4.43% | 11 | Continuous [OK] |
 
 **Conclusion:** Need Q > 10 to avoid quantization artifacts.
 
@@ -68,9 +68,9 @@ Consider the continuous limit where:
 **Total realized alpha:**
 ```
 A(n) = λ(n) × α(n) × T
-     ≈ c₁·n × c₂/n × T
-     = c₁·c₂·T
-     = constant (independent of n!)
+ ≈ c₁·n × c₂/n × T
+ = c₁·c₂·T
+ = constant (independent of n!)
 ```
 
 This explains why realized alpha **converges** as brackets tighten.
@@ -81,10 +81,10 @@ Recall our results:
 
 | SDN | δ | Txns | Realized α |
 |-----|---|------|------------|
-| 4   | 18.9% | 7 | 0.00% |
-| 8   | 9.05% | 24 | 1.98% |
-| 16  | 4.43% | 403 | 18.59% |
-| 32  | 2.19% | 2677 | 32.81% |
+| 4 | 18.9% | 7 | 0.00% |
+| 8 | 9.05% | 24 | 1.98% |
+| 16 | 4.43% | 403 | 18.59% |
+| 32 | 2.19% | 2677 | 32.81% |
 
 **Problem:** These are still increasing! But notice:
 - sd16→sd32: α increased by 1.76× for 2× tighter brackets
@@ -160,8 +160,8 @@ A_∞ = ∫₀ᵀ σ²(t)/2 · f(μ(t)/σ(t)) dt
 where f(x) is the **efficiency function**:
 ```
 f(x) = {
-  1 - x²  if |x| < 1   (choppy market, high efficiency)
-  0       if |x| ≥ 1   (strong trend, stack accumulation)
+ 1 - x² if |x| < 1 (choppy market, high efficiency)
+ 0 if |x| ≥ 1 (strong trend, stack accumulation)
 }
 ```
 
@@ -207,18 +207,18 @@ N_txns ≈ k · σ · n · log(2) · T
 **For NVDA 2023** (T = 1 year, σ = 40%):
 ```
 N_txns(n) ≈ 0.28 · n · (trading days)
-         ≈ 0.28 · n · 250
-         ≈ 70 · n
+ ≈ 0.28 · n · 250
+ ≈ 70 · n
 ```
 
 **Predictions vs Empirical:**
 
 | SDN | Predicted | Actual | Ratio |
 |-----|-----------|--------|-------|
-| 4   | 280 | 7 | 0.025 |
-| 8   | 560 | 24 | 0.043 |
-| 16  | 1120 | 403 | 0.36 |
-| 32  | 2240 | 2677 | 1.19 |
+| 4 | 280 | 7 | 0.025 |
+| 8 | 560 | 24 | 0.043 |
+| 16 | 1120 | 403 | 0.36 |
+| 32 | 2240 | 2677 | 1.19 |
 
 **Observation:** Underpredicts at small n, overpredicts at large n.
 
@@ -266,10 +266,10 @@ Modify algorithm to track **fractional share quantities**:
 
 ```python
 # Current (discrete):
-shares_to_buy = int(dollar_amount / current_price)  # Rounds down
+shares_to_buy = int(dollar_amount / current_price) # Rounds down
 
 # Proposed (fractional):
-shares_to_buy = dollar_amount / current_price  # Keep as float
+shares_to_buy = dollar_amount / current_price # Keep as float
 ```
 
 **Benefits:**
@@ -287,17 +287,17 @@ Test hypothesis that realized alpha converges with:
 
 **Experiment design:**
 1. Run NVDA 2023 with different position sizes:
-   - 100 shares (Q << 1, discrete regime)
-   - 1,000 shares (Q ≈ 1, transition)
-   - 10,000 shares (Q >> 1, continuous)
-   - 100,000 shares (verify convergence)
+ - 100 shares (Q << 1, discrete regime)
+ - 1,000 shares (Q ≈ 1, transition)
+ - 10,000 shares (Q >> 1, continuous)
+ - 100,000 shares (verify convergence)
 
 2. Compare realized alpha across SDN values:
-   - Expect convergence as position size increases
-   - Discrete artifacts should disappear
+ - Expect convergence as position size increases
+ - Discrete artifacts should disappear
 
 3. Test with/without fractional shares:
-   - Validate that fractional = large position limit
+ - Validate that fractional = large position limit
 
 ---
 
@@ -347,6 +347,6 @@ A_∞ = (0.4)²/2 · 1 = 0.08 = 8%
 4. **Transaction explosion:** Quadratic growth from intraday volatility makes sd32+ impractical
 
 5. **Optimal regime:** sd8-sd16 with 1000+ shares balances:
-   - Enough transactions to capture volatility
-   - Manageable stack (Q > 10, δ near δ*)
-   - Practical transaction counts
+ - Enough transactions to capture volatility
+ - Manageable stack (Q > 10, δ near δ*)
+ - Practical transaction counts

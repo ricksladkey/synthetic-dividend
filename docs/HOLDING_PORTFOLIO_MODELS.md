@@ -1,7 +1,7 @@
 # Foundation Models: Holding & Portfolio
 
-**Last Updated**: October 26, 2025  
-**Status**: ✅ Complete and Tested
+**Last Updated**: October 26, 2025
+**Status**: [OK] Complete and Tested
 
 ---
 
@@ -25,22 +25,22 @@ The core insight: **All portfolio state can be recreated from transaction histor
 
 ```
 Transaction History → Current State
-(source of truth)     (derived)
+(source of truth) (derived)
 ```
 
 This means:
-- ✅ **Immutable history**: Transactions are append-only
-- ✅ **Derived state**: Current shares, cost basis, P/L all computed on demand
-- ✅ **Perfect auditability**: Can recreate portfolio state at any point in time
-- ✅ **No synchronization bugs**: Single source of truth
+- [OK] **Immutable history**: Transactions are append-only
+- [OK] **Derived state**: Current shares, cost basis, P/L all computed on demand
+- [OK] **Perfect auditability**: Can recreate portfolio state at any point in time
+- [OK] **No synchronization bugs**: Single source of truth
 
 ### Compositional Design
 
 ```
 Transaction (atomic unit)
-    ↓
+ ↓
 Holding (single ticker)
-    ↓
+ ↓
 Portfolio (multiple tickers)
 ```
 
@@ -71,11 +71,11 @@ from src.models.holding import Transaction
 
 # Buy 100 shares on Jan 1
 txn = Transaction(
-    transaction_type='BUY',
-    shares=100,
-    purchase_date=date(2024, 1, 1),
-    purchase_price=50.0,
-    notes="Initial purchase"
+ transaction_type='BUY',
+ shares=100,
+ purchase_date=date(2024, 1, 1),
+ purchase_price=50.0,
+ notes="Initial purchase"
 )
 ```
 
@@ -112,18 +112,18 @@ current_gain = txn.unrealized_gain_loss(current_price=80.0)
 The Transaction model enforces critical business rules:
 
 ```python
-# ✅ Valid transaction
+# [OK] Valid transaction
 Transaction(transaction_type='BUY', shares=100, ...)
 
-# ❌ Invalid: negative shares
+# [FAIL] Invalid: negative shares
 Transaction(transaction_type='BUY', shares=-100, ...)
 # ValueError: shares must be positive
 
-# ❌ Invalid: sale before purchase
+# [FAIL] Invalid: sale before purchase
 Transaction(
-    purchase_date=date(2024, 6, 1),
-    sale_date=date(2024, 1, 1),  # Before purchase!
-    ...
+ purchase_date=date(2024, 6, 1),
+ sale_date=date(2024, 1, 1), # Before purchase!
+ ...
 )
 # ValueError: sale_date cannot be before purchase_date
 ```
@@ -149,8 +149,8 @@ holding.add_buy(shares=50, purchase_date=date(2024, 2, 1), purchase_price=60.0)
 holding.add_sell(shares=75, sale_date=date(2024, 6, 1), sale_price=80.0)
 
 # Query current state
-print(holding.current_shares())  # 75
-print(holding.market_value(current_price=90.0))  # $6,750
+print(holding.current_shares()) # 75
+print(holding.market_value(current_price=90.0)) # $6,750
 ```
 
 ### FIFO Lot Selection
@@ -185,20 +185,20 @@ Holdings provide rich aggregation:
 
 ```python
 # Current state
-holding.current_shares()           # Number of shares held
-holding.market_value(price)        # Total market value
-holding.cost_basis()               # Total purchase cost
-holding.average_cost_basis()       # Weighted average price paid
+holding.current_shares() # Number of shares held
+holding.market_value(price) # Total market value
+holding.cost_basis() # Total purchase cost
+holding.average_cost_basis() # Weighted average price paid
 
 # Profit/Loss
-holding.unrealized_gain_loss(price)  # Unrealized P/L on open positions
-holding.realized_gain_loss()         # Realized P/L from sales
-holding.total_gain_loss(price)       # Total P/L (realized + unrealized)
+holding.unrealized_gain_loss(price) # Unrealized P/L on open positions
+holding.realized_gain_loss() # Realized P/L from sales
+holding.total_gain_loss(price) # Total P/L (realized + unrealized)
 
 # Transaction queries
-holding.get_open_lots()            # Unsold buy transactions
-holding.get_closed_lots()          # Sold buy transactions
-holding.get_sell_transactions()    # All sell transactions
+holding.get_open_lots() # Unsold buy transactions
+holding.get_closed_lots() # Sold buy transactions
+holding.get_sell_transactions() # All sell transactions
 ```
 
 ### Example: Complex Scenario
@@ -227,10 +227,10 @@ holding.add_sell(shares=150, sale_date=date(2024, 1, 1), sale_price=80.0)
 # - Avg cost of remaining: (50×55 + 100×60) / 150 = $58.33
 
 # Current analysis
-print(holding.current_shares())                    # 150
-print(holding.realized_gain_loss())                # $4,250
-print(holding.unrealized_gain_loss(price=90.0))    # (150 × 90) - (150 × 58.33) = $4,750
-print(holding.total_gain_loss(price=90.0))         # $9,000
+print(holding.current_shares()) # 150
+print(holding.realized_gain_loss()) # $4,250
+print(holding.unrealized_gain_loss(price=90.0)) # (150 × 90) - (150 × 58.33) = $4,750
+print(holding.total_gain_loss(price=90.0)) # $9,000
 ```
 
 ---
@@ -253,8 +253,8 @@ portfolio.buy("GLD", shares=200, purchase_date=date(2024, 1, 1), purchase_price=
 
 # Query portfolio
 prices = {"NVDA": 75.0, "VOO": 450.0, "GLD": 200.0}
-print(portfolio.total_value(prices))  # Total market value
-print(portfolio.allocations(prices))  # Percentage allocations
+print(portfolio.total_value(prices)) # Total market value
+print(portfolio.allocations(prices)) # Percentage allocations
 ```
 
 ### Multi-Ticker Operations
@@ -288,21 +288,21 @@ allocations = portfolio.allocations(prices)
 # Detailed positions
 positions = portfolio.get_positions(prices)
 # [
-#   {'ticker': 'VOO', 'shares': 50, 'value': 22500, 'unrealized_pl': 2500, ...},
-#   {'ticker': 'NVDA', 'shares': 100, 'value': 7500, 'unrealized_pl': 2500, ...},
-#   ...
+# {'ticker': 'VOO', 'shares': 50, 'value': 22500, 'unrealized_pl': 2500, ...},
+# {'ticker': 'NVDA', 'shares': 100, 'value': 7500, 'unrealized_pl': 2500, ...},
+# ...
 # ]
 
 # Comprehensive summary
 summary = portfolio.portfolio_summary(prices)
 # {
-#   'total_tickers': 3,
-#   'active_positions': 3,
-#   'total_value': 68000.0,
-#   'total_cost_basis': 63000.0,
-#   'total_gain_loss': 5000.0,
-#   'total_return_pct': 7.94,
-#   'allocations': {...}
+# 'total_tickers': 3,
+# 'active_positions': 3,
+# 'total_value': 68000.0,
+# 'total_cost_basis': 63000.0,
+# 'total_gain_loss': 5000.0,
+# 'total_return_pct': 7.94,
+# 'allocations': {...}
 # }
 ```
 
@@ -319,10 +319,10 @@ portfolio.buy("BIL", shares=1000, purchase_date=date(2020, 1, 1), purchase_price
 
 # Current prices (Oct 2024)
 current_prices = {
-    "VOO": 450.0,
-    "NVDA": 120.0,
-    "GLD": 200.0,
-    "BIL": 91.5
+ "VOO": 450.0,
+ "NVDA": 120.0,
+ "GLD": 200.0,
+ "BIL": 91.5
 }
 
 # Portfolio analysis
@@ -344,12 +344,12 @@ print(f"Return: {summary['total_return_pct']:.1f}%")
 
 print("\nAllocations:")
 for ticker, pct in summary['allocations'].items():
-    print(f"  {ticker}: {pct*100:.1f}%")
+ print(f" {ticker}: {pct*100:.1f}%")
 # Allocations:
-#   VOO: 40.9%
-#   NVDA: 4.4%
-#   GLD: 14.6%
-#   BIL: 16.7%
+# VOO: 40.9%
+# NVDA: 4.4%
+# GLD: 14.6%
+# BIL: 16.7%
 ```
 
 ---
@@ -386,30 +386,30 @@ holding = Holding(ticker="NVDA")
 
 # In backtest loop:
 for date, price in price_series.items():
-    if should_buy:
-        holding.add_buy(
-            shares=qty,
-            purchase_date=date,
-            purchase_price=price,
-            notes="ATH rebalance"
-        )
-    
-    if should_sell:
-        holding.add_sell(
-            shares=qty,
-            sale_date=date,
-            sale_price=price,
-            notes="Buyback"
-        )
+ if should_buy:
+ holding.add_buy(
+ shares=qty,
+ purchase_date=date,
+ purchase_price=price,
+ notes="ATH rebalance"
+ )
+
+ if should_sell:
+ holding.add_sell(
+ shares=qty,
+ sale_date=date,
+ sale_price=price,
+ notes="Buyback"
+ )
 
 # At end of backtest:
 final_summary = {
-    'current_shares': holding.current_shares(),
-    'market_value': holding.market_value(final_price),
-    'total_gain_loss': holding.total_gain_loss(final_price),
-    'transaction_count': len(holding.transactions),
-    'realized_pl': holding.realized_gain_loss(),
-    'unrealized_pl': holding.unrealized_gain_loss(final_price)
+ 'current_shares': holding.current_shares(),
+ 'market_value': holding.market_value(final_price),
+ 'total_gain_loss': holding.total_gain_loss(final_price),
+ 'transaction_count': len(holding.transactions),
+ 'realized_pl': holding.realized_gain_loss(),
+ 'unrealized_pl': holding.unrealized_gain_loss(final_price)
 }
 ```
 
@@ -419,14 +419,14 @@ final_summary = {
 
 ```
 src/models/
-├── holding.py          # Transaction & Holding models (~400 lines)
-├── portfolio.py        # Portfolio model (~300 lines)
-├── backtest.py         # Existing backtest logic (unchanged for now)
-└── stock.py            # Existing Stock class (unchanged for now)
+├── holding.py # Transaction & Holding models (~400 lines)
+├── portfolio.py # Portfolio model (~300 lines)
+├── backtest.py # Existing backtest logic (unchanged for now)
+└── stock.py # Existing Stock class (unchanged for now)
 
 tests/
-├── test_holding.py     # 34 tests, 89% coverage
-└── test_portfolio.py   # 23 tests, 93% coverage
+├── test_holding.py # 34 tests, 89% coverage
+└── test_portfolio.py # 23 tests, 93% coverage
 ```
 
 ---
@@ -437,13 +437,13 @@ tests/
 
 ```python
 Transaction(
-    transaction_type: str,      # 'BUY' or 'SELL'
-    shares: int,                # Number of shares (positive)
-    purchase_date: date,        # Date of transaction
-    purchase_price: float,      # Price per share
-    sale_date: Optional[date] = None,      # For closed positions
-    sale_price: Optional[float] = None,    # For closed positions
-    notes: str = ""             # Optional description
+ transaction_type: str, # 'BUY' or 'SELL'
+ shares: int, # Number of shares (positive)
+ purchase_date: date, # Date of transaction
+ purchase_price: float, # Price per share
+ sale_date: Optional[date] = None, # For closed positions
+ sale_price: Optional[float] = None, # For closed positions
+ notes: str = "" # Optional description
 )
 
 # Properties
@@ -522,39 +522,39 @@ Portfolio()
 ### Test Statistics
 
 - **Total Tests**: 57
-  - Transaction: 17 tests
-  - Holding: 17 tests
-  - Portfolio: 23 tests
+ - Transaction: 17 tests
+ - Holding: 17 tests
+ - Portfolio: 23 tests
 
 - **Code Coverage**:
-  - `holding.py`: 89%
-  - `portfolio.py`: 93%
+ - `holding.py`: 89%
+ - `portfolio.py`: 93%
 
 ### Test Categories
 
 **Transaction Tests**:
-- ✅ Creation and validation
-- ✅ Open/closed lifecycle
-- ✅ Profit/loss calculations
-- ✅ Market value tracking
-- ✅ Error handling (invalid dates, prices, types)
+- [OK] Creation and validation
+- [OK] Open/closed lifecycle
+- [OK] Profit/loss calculations
+- [OK] Market value tracking
+- [OK] Error handling (invalid dates, prices, types)
 
 **Holding Tests**:
-- ✅ Buy/sell operations
-- ✅ FIFO lot selection
-- ✅ Partial sales and lot splitting
-- ✅ Cost basis calculations
-- ✅ Aggregate P/L tracking
-- ✅ Transaction queries
-- ✅ Complex multi-lot scenarios
+- [OK] Buy/sell operations
+- [OK] FIFO lot selection
+- [OK] Partial sales and lot splitting
+- [OK] Cost basis calculations
+- [OK] Aggregate P/L tracking
+- [OK] Transaction queries
+- [OK] Complex multi-lot scenarios
 
 **Portfolio Tests**:
-- ✅ Multi-ticker management
-- ✅ Portfolio-level aggregation
-- ✅ Allocation calculations
-- ✅ Position reporting
-- ✅ Summary statistics
-- ✅ Realistic portfolio scenarios
+- [OK] Multi-ticker management
+- [OK] Portfolio-level aggregation
+- [OK] Allocation calculations
+- [OK] Position reporting
+- [OK] Summary statistics
+- [OK] Realistic portfolio scenarios
 
 ---
 
@@ -563,54 +563,54 @@ Portfolio()
 ### Planned Features
 
 1. **LIFO Lot Selection**
-   ```python
-   holding.add_sell(..., lot_selection="LIFO")
-   ```
+ ```python
+ holding.add_sell(..., lot_selection="LIFO")
+ ```
 
 2. **Specific Lot Identification**
-   ```python
-   holding.add_sell(..., lot_selection="SPECIFIC", lot_ids=[1, 3, 5])
-   ```
+ ```python
+ holding.add_sell(..., lot_selection="SPECIFIC", lot_ids=[1, 3, 5])
+ ```
 
 3. **Tax Lot Optimization**
-   ```python
-   holding.add_sell(..., lot_selection="TAX_EFFICIENT")
-   # Automatically select lots to minimize taxes
-   ```
+ ```python
+ holding.add_sell(..., lot_selection="TAX_EFFICIENT")
+ # Automatically select lots to minimize taxes
+ ```
 
 4. **Time-Travel Queries**
-   ```python
-   holding.market_value_on(date=date(2023, 12, 31), price=50.0)
-   holding.cost_basis_on(date=date(2023, 12, 31))
-   ```
+ ```python
+ holding.market_value_on(date=date(2023, 12, 31), price=50.0)
+ holding.cost_basis_on(date=date(2023, 12, 31))
+ ```
 
 5. **Transaction Export/Import**
-   ```python
-   holding.to_csv("nvda_transactions.csv")
-   holding.from_csv("nvda_transactions.csv")
-   ```
+ ```python
+ holding.to_csv("nvda_transactions.csv")
+ holding.from_csv("nvda_transactions.csv")
+ ```
 
 6. **Dividend Tracking**
-   ```python
-   holding.add_dividend(date=date(2024, 3, 15), amount=125.50)
-   ```
+ ```python
+ holding.add_dividend(date=date(2024, 3, 15), amount=125.50)
+ ```
 
 ### Architectural Extensions
 
 1. **Bank/Cash Management**
-   - Add `CashAccount` model
-   - Track deposits, withdrawals, interest
-   - Integrate with Portfolio
+ - Add `CashAccount` model
+ - Track deposits, withdrawals, interest
+ - Integrate with Portfolio
 
 2. **Multi-Currency Support**
-   - Currency field on transactions
-   - FX rate tracking
-   - Multi-currency portfolio analysis
+ - Currency field on transactions
+ - FX rate tracking
+ - Multi-currency portfolio analysis
 
 3. **Performance Attribution**
-   - Decompose returns by ticker
-   - Time-weighted return calculation
-   - Benchmark comparison
+ - Decompose returns by ticker
+ - Time-weighted return calculation
+ - Benchmark comparison
 
 ---
 
@@ -619,12 +619,12 @@ Portfolio()
 The Holding and Portfolio models provide a **clean, transaction-based foundation** for all portfolio management operations.
 
 **Key Benefits**:
-- ✅ **Single source of truth**: Transaction history
-- ✅ **Derived state**: Everything computed from history
-- ✅ **Perfect auditability**: Can reconstruct any point in time
-- ✅ **Extensible design**: Easy to add new features
-- ✅ **Well-tested**: 57 tests, >90% coverage
-- ✅ **Beautiful simplicity**: Clear conceptual model
+- [OK] **Single source of truth**: Transaction history
+- [OK] **Derived state**: Everything computed from history
+- [OK] **Perfect auditability**: Can reconstruct any point in time
+- [OK] **Extensible design**: Easy to add new features
+- [OK] **Well-tested**: 57 tests, >90% coverage
+- [OK] **Beautiful simplicity**: Clear conceptual model
 
 This foundation enables:
 - Multi-asset backtesting
@@ -641,6 +641,6 @@ This foundation enables:
 
 ---
 
-*Last Updated: October 26, 2025*  
-*Version: 1.0 - Initial Release*  
-*Test Status: ✅ All 57 tests passing*
+*Last Updated: October 26, 2025*
+*Version: 1.0 - Initial Release*
+*Test Status: [OK] All 57 tests passing*

@@ -36,7 +36,7 @@ For SDN parameter `n`:
 
 Triggers at price levels:
 ```
-S_k = S_0 · exp(k · log(1 + δ))  for k ∈ ℤ
+S_k = S_0 · exp(k · log(1 + δ)) for k ∈ ℤ
 ```
 
 ### Transaction Rate
@@ -131,10 +131,10 @@ From `scripts/debug_stack.py`:
 
 | SDN | Txns | Txns/n² | Stack | Bank | Realized α |
 |-----|------|---------|-------|------|------------|
-| 4   | 7    | 0.44    | 0     | +$109K | 0.00% |
-| 8   | 24   | 0.38    | 44    | +$119K | 1.98% |
-| 16  | 403  | 1.57    | 116   | +$94K  | 18.59% |
-| 32  | 2677 | 2.61    | 112K  | -$4.1M | 32.81% |
+| 4 | 7 | 0.44 | 0 | +$109K | 0.00% |
+| 8 | 24 | 0.38 | 44 | +$119K | 1.98% |
+| 16 | 403 | 1.57 | 116 | +$94K | 18.59% |
+| 32 | 2677 | 2.61 | 112K | -$4.1M | 32.81% |
 
 **Key insights**:
 1. Txns/n² increases with n (not constant!)

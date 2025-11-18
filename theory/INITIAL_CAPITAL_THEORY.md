@@ -12,7 +12,7 @@ When backtesting, what opportunity cost should we measure against the initial ca
 ```python
 # Starting state
 holdings = 100 shares × $100 = $10,000 deployed
-bank = $0  # Starts at zero
+bank = $0 # Starts at zero
 
 # We measure opportunity cost on:
 # - Bank balance (when negative = borrowed capital)
@@ -47,7 +47,7 @@ When you deploy $10K into NVDA:
 **Formula**:
 ```python
 total_opportunity_cost = sum(
-    (stock_return[day] - VOO_return[day]) × deployed_capital[day]
+ (stock_return[day] - VOO_return[day]) × deployed_capital[day]
 )
 ```
 
@@ -114,7 +114,7 @@ relative_return = asset_return - voo_return
 **Current reporting**:
 ```
 Final value: $14,000
-Return: 17%  (looks good!)
+Return: 17% (looks good!)
 ```
 
 **Missing**:

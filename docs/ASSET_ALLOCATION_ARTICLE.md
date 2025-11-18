@@ -2,7 +2,7 @@
 
 **Understanding the Foundation of Investment Success**
 
-*By Synthetic Dividend Research Team*  
+*By Synthetic Dividend Research Team*
 *Published: October 30, 2025*
 
 ---

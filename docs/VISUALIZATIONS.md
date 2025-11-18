@@ -20,9 +20,9 @@ Quick steps (Windows PowerShell, from repo root)
 Notes
 - The `test-visualization.bat` script calls the venv Python directly so you don't need to run `Activate.ps1` first.
 - The runner and other CLI tools expect the *modern* algorithm naming convention. Examples:
-  - `buy-and-hold`
-  - `sd8` (exponential shorthand)
-  - `sd-9.05,50` (explicit rebalance percent and profit sharing)
+ - `buy-and-hold`
+ - `sd8` (exponential shorthand)
+ - `sd-9.05,50` (explicit rebalance percent and profit sharing)
 
 What the script produces
 - PNG files in the repository root, e.g. `out-nvda-sd-full.png`.

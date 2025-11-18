@@ -74,10 +74,10 @@ Additional diagnostics to store per lot:
 
 - Maintain a FIFO `buyback_stack` of lots (buy_date, buy_price, qty, expected_sell_price).
 - On SELL that unwinds lots:
-  - Pop FIFO lots, compute realized profit per lot, increment `volatility_alpha_realized` and record the transaction.
+ - Pop FIFO lots, compute realized profit per lot, increment `volatility_alpha_realized` and record the transaction.
 - On report/visualization:
-  - Compute `volatility_alpha_unrealized` from remaining lots.
-  - Display `volatility_alpha_estimated_total` as an upper-bound and label it as "potential".
+ - Compute `volatility_alpha_unrealized` from remaining lots.
+ - Display `volatility_alpha_estimated_total` as an upper-bound and label it as "potential".
 
 ---
 

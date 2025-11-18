@@ -1,6 +1,6 @@
 # Experiments Summary: Market Regime Framework
 
-**Research Period**: January 2025  
+**Research Period**: January 2025
 **Objective**: Quantify SD8 performance across different market conditions to build portfolio planning framework
 
 ---
@@ -10,7 +10,7 @@
 Three experiments completed testing Synthetic Dividend (SD8) algorithm across distinct market regimes:
 
 1. **Experiment 001**: NVDA 2020-2025 (Extreme Bull)
-2. **Experiment 002**: SPY 2020-2025 (Moderate Bull)  
+2. **Experiment 002**: SPY 2020-2025 (Moderate Bull)
 3. **Experiment 003**: SPY 2015-2019 (Choppy/Sideways)
 
 **Key Discovery**: SD8 performance follows a predictable pattern based on volatility/trend ratio.
@@ -37,7 +37,7 @@ Three experiments completed testing Synthetic Dividend (SD8) algorithm across di
 |--------|----------|--------------|--------|
 | **Extreme Bull** | **-27.16%** | **-31.69%** | Buy-and-Hold |
 | **Moderate Bull** | **-0.66%** | **-1.27%** | Buy-and-Hold (barely) |
-| **Choppy/Sideways** | **+0.23%** ✅ | **+0.09%** ✅ | **SD8** |
+| **Choppy/Sideways** | **+0.23%** [OK] | **+0.09%** [OK] | **SD8** |
 
 **Pattern**: Alpha gap narrows as trend weakens, turns positive in choppy markets.
 
@@ -51,16 +51,16 @@ Three experiments completed testing Synthetic Dividend (SD8) algorithm across di
 
 **As % of Initial Position:**
 - Extreme Bull: 6.6-7.4%
-- Moderate Bull: **36-38%** ✨ (sweet spot!)
+- Moderate Bull: **36-38%** (sweet spot!)
 - Choppy/Sideways: 10-19%
 
 ### Withdrawal Coverage (Assuming $50K/year)
 
 | Regime | SD8 Full | SD8 ATH-Only | Buy-and-Hold |
 |--------|----------|--------------|--------------|
-| **Extreme Bull** | 110.6% ✅ | 96.7% ⚠️ | 0% |
-| **Moderate Bull** | **497.2%** ✅ | **478.0%** ✅ | 0% |
-| **Choppy/Sideways** | 104.3% ✅ | 201.4% ✅ | 0% |
+| **Extreme Bull** | 110.6% [OK] | 96.7% WARNING: | 0% |
+| **Moderate Bull** | **497.2%** [OK] | **478.0%** [OK] | 0% |
+| **Choppy/Sideways** | 104.3% [OK] | 201.4% [OK] | 0% |
 
 **Key Insight**: SD8 generates sufficient cash in ALL market regimes, but coverage varies dramatically (97% to 497%).
 
@@ -135,21 +135,21 @@ Three experiments completed testing Synthetic Dividend (SD8) algorithm across di
 **If you need regular withdrawals (e.g., retirement):**
 
 1. **Use SD8 ATH-Only on moderate-volatility positions**
-   - SPY, QQQ, diversified ETFs
-   - Expect 1-2 transactions/year
-   - Tax-efficient LTCG only
-   - Minimal/positive alpha
-   - Excellent cash generation
+ - SPY, QQQ, diversified ETFs
+ - Expect 1-2 transactions/year
+ - Tax-efficient LTCG only
+ - Minimal/positive alpha
+ - Excellent cash generation
 
 2. **Consider buy-and-hold for extreme growth assets**
-   - High-conviction individual stocks (if expecting NVDA-like growth)
-   - Accept you may need to sell small amounts for income
-   - Or pair with SD8 on other holdings to fund withdrawals
+ - High-conviction individual stocks (if expecting NVDA-like growth)
+ - Accept you may need to sell small amounts for income
+ - Or pair with SD8 on other holdings to fund withdrawals
 
 3. **Size your SD8 positions to generate needed cash**
-   - Moderate bull: Expect ~7-10%/year cash generation
-   - Choppy market: Expect ~5%/year cash generation  
-   - Plan conservatively, especially for long horizons
+ - Moderate bull: Expect ~7-10%/year cash generation
+ - Choppy market: Expect ~5%/year cash generation
+ - Plan conservatively, especially for long horizons
 
 ### For Tax-Deferred Accounts
 
@@ -232,11 +232,11 @@ Three experiments completed testing Synthetic Dividend (SD8) algorithm across di
 
 **Immediate Priorities:**
 
-1. ✅ Model buy-and-hold WITH systematic withdrawals (Task 7)
-2. ✅ Create visualization of cash flows over time (Task 6)
-3. ✅ Document empirical framework in theory folder (Task 8)
-4. ✅ Test 2022 bear market for downside protection
-5. ✅ Calculate after-tax returns comparison
+1. [OK] Model buy-and-hold WITH systematic withdrawals (Task 7)
+2. [OK] Create visualization of cash flows over time (Task 6)
+3. [OK] Document empirical framework in theory folder (Task 8)
+4. [OK] Test 2022 bear market for downside protection
+5. [OK] Calculate after-tax returns comparison
 
 **Long-Term Research:**
 
@@ -252,8 +252,8 @@ Three experiments completed testing Synthetic Dividend (SD8) algorithm across di
 **Three experiments have validated a clear market regime framework:**
 
 - **Extreme bull markets**: SD8 sacrifices significant returns but generates cash
-- **Moderate bull markets**: SD8 sacrifices minimal returns while generating exceptional cash ✨
-- **Choppy/sideways markets**: SD8 shows positive alpha while generating good cash ✅
+- **Moderate bull markets**: SD8 sacrifices minimal returns while generating exceptional cash
+- **Choppy/sideways markets**: SD8 shows positive alpha while generating good cash [OK]
 
 **The moderate bull market (SPY 2020-2025) appears to be the optimal environment for SD8**, sacrificing only 0.66-1.27% annualized returns while generating nearly 5x the cash needed for $50K/year withdrawals.
 

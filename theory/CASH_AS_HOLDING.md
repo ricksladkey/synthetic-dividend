@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-**STATUS: SOLVED** ✅ - The solution is **conceptual clarity**, not technical gymnastics.
+**STATUS: SOLVED** [OK] - The solution is **conceptual clarity**, not technical gymnastics.
 
 **Key Insight**: Margin isn't "negative cash" - it's **debt**. An Account contains:
 - **Portfolio**: What you OWN (assets, always positive)
@@ -21,11 +21,11 @@
 ```
 Account
 ├── Portfolio (Assets: what you OWN)
-│   ├── NVDA: 1000 shares
-│   ├── VOO: 50 shares
-│   └── BTC: 0.5 coins
+│ ├── NVDA: 1000 shares
+│ ├── VOO: 50 shares
+│ └── BTC: 0.5 coins
 └── Debt: $50,000 (Liabilities: what you OWE)
-    
+
 Net Worth = Portfolio Value - Debt
 ```
 
@@ -51,12 +51,12 @@ account = Account()
 
 # Buy $1M of NVDA on margin (borrow the full amount)
 account.borrow(1_000_000, date(2024, 1, 1), "Margin loan for initial purchase")
-account.portfolio.buy("NVDA", shares=10000, purchase_date=date(2024, 1, 1), 
-                     purchase_price=100.0)
+account.portfolio.buy("NVDA", shares=10000, purchase_date=date(2024, 1, 1),
+ purchase_price=100.0)
 
 # Sell some shares, repay part of loan
-proceeds = account.portfolio.sell("NVDA", shares=1000, sale_date=date(2024, 2, 1), 
-                                  sale_price=110.0)
+proceeds = account.portfolio.sell("NVDA", shares=1000, sale_date=date(2024, 2, 1),
+ sale_price=110.0)
 account.repay(110_000, date(2024, 2, 1), "Partial repayment from sale")
 
 # Check account status
@@ -68,11 +68,11 @@ summary = account.account_summary(prices={"NVDA": 110.0})
 
 ### Benefits
 
-✅ **Conceptually correct**: Assets ≠ Liabilities  
-✅ **Clean separation**: Portfolio unchanged, debt isolated  
-✅ **Simple**: debt is just a float, not a complex model  
-✅ **Flexible**: Handles margin, cash, and hybrid states  
-✅ **Auditable**: Portfolio transactions + debt history  
+[OK] **Conceptually correct**: Assets ≠ Liabilities
+[OK] **Clean separation**: Portfolio unchanged, debt isolated
+[OK] **Simple**: debt is just a float, not a complex model
+[OK] **Flexible**: Handles margin, cash, and hybrid states
+[OK] **Auditable**: Portfolio transactions + debt history
 
 ### Comparison to Previous Attempts
 
@@ -107,7 +107,7 @@ But margin/borrowing requires:
 ### Attempt 1: Allow Negative USD Shares
 **Problem**: Transaction validation prevents negative shares
 
-### Attempt 2: Use Negative Prices  
+### Attempt 2: Use Negative Prices
 **Problem**: Price validation prevents negative prices
 
 ### Attempt 3: Bypass Validation with Manual append()
@@ -123,23 +123,23 @@ Keep the existing architecture but add USD for visibility:
 ```python
 # Backtest uses bank variable for all logic (as before)
 bank = 0.0
-bank -= cost  # Can go negative
+bank -= cost # Can go negative
 bank += proceeds
 
 # At end of backtest, sync USD holding for reporting
 if bank >= 0:
-    portfolio.buy("USD", shares=int(bank), ...)
+ portfolio.buy("USD", shares=int(bank), ...)
 else:
-    # Negative balance: represent as debt somehow
-    portfolio.add_note("USD", f"Borrowed: ${abs(bank):.2f}")
+ # Negative balance: represent as debt somehow
+ portfolio.add_note("USD", f"Borrowed: ${abs(bank):.2f}")
 ```
 
 ## Benefits of Hybrid Approach
 
-✅ **Zero risk** - doesn't change existing logic
-✅ **Simple** - just a reporting enhancement  
-✅ **Clean** - doesn't corrupt the Transaction model
-✅ **Visible** - USD appears in portfolio for composition analysis
+[OK] **Zero risk** - doesn't change existing logic
+[OK] **Simple** - just a reporting enhancement
+[OK] **Clean** - doesn't corrupt the Transaction model
+[OK] **Visible** - USD appears in portfolio for composition analysis
 
 ## Future: True Unification
 
@@ -150,17 +150,17 @@ To fully implement cash-as-holding would require:
 ```python
 @dataclass
 class Transaction:
-    shares: int  # Can be negative for borrowing/margin
-    # ... validation updated to allow negative shares for specific tickers
+ shares: int # Can be negative for borrowing/margin
+ # ... validation updated to allow negative shares for specific tickers
 ```
 
 ### 2. Add Ticker-Specific Rules
 
 ```python
 class Holding:
-    def __init__(self, ticker: str, allow_margin: bool = False):
-        self.ticker = ticker
-        self.allow_margin = allow_margin  # USD = True, stocks = False
+ def __init__(self, ticker: str, allow_margin: bool = False):
+ self.ticker = ticker
+ self.allow_margin = allow_margin # USD = True, stocks = False
 ```
 
 ### 3. Update All Validation
@@ -174,20 +174,20 @@ class Holding:
 ```python
 # Negative USD balance accrues interest (borrowing cost)
 if usd_holding.current_shares() < 0:
-    interest = abs(usd_holding.current_shares()) * daily_rate
-    usd_holding.add_transaction(...)  # Add interest charge
+ interest = abs(usd_holding.current_shares()) * daily_rate
+ usd_holding.add_transaction(...) # Add interest charge
 ```
 
-## Decision: IMPLEMENTED ✅
+## Decision: IMPLEMENTED [OK]
 
-**The right abstraction makes everything simple.** 
+**The right abstraction makes everything simple.**
 
 The Account/Portfolio/Debt separation:
-- ✅ Respects the nature of assets vs liabilities
-- ✅ Keeps the Transaction/Holding model pristine
-- ✅ Adds minimal complexity (simple Account wrapper)
-- ✅ Provides clean mental model
-- ✅ Ready for extension (interest on debt, multi-currency, etc.)
+- [OK] Respects the nature of assets vs liabilities
+- [OK] Keeps the Transaction/Holding model pristine
+- [OK] Adds minimal complexity (simple Account wrapper)
+- [OK] Provides clean mental model
+- [OK] Ready for extension (interest on debt, multi-currency, etc.)
 
 **When it's ready for more:**
 - Interest accrual on debt (daily/monthly compounding)
@@ -205,7 +205,7 @@ For now: **Clean architecture. Ship it.** �
 4. **Simple is beautiful** - debt is just a float with history
 5. **User insight FTW** - "Margin is debt, not negative cash" unlocked everything
 
-The code is happy now. Listen to it. ✨
+The code is happy now. Listen to it.
 
 ---
 
@@ -213,18 +213,16 @@ The code is happy now. Listen to it. ✨
 
 [Original visionary content below for future reference...]
 
-
-
 **Two separate systems:**
 
 1. **Holdings** - Transaction-based model for assets (NVDA, BTC, etc.)
-   - Clean, composable, auditable
-   - Each holding tracks its own transaction history
-   
+ - Clean, composable, auditable
+ - Each holding tracks its own transaction history
+
 2. **Bank** - Special float variable for cash
-   - Separate accounting logic
-   - Special handling in backtest engine
-   - Can go negative (margin/borrowing)
+ - Separate accounting logic
+ - Special handling in backtest engine
+ - Can go negative (margin/borrowing)
 
 **Problems:**
 - Dual accounting systems (holdings vs. bank)
@@ -248,12 +246,12 @@ The code is happy now. Listen to it. ✨
 portfolio.add_holding("USD")
 
 # Selling NVDA for cash = two transactions
-portfolio.sell("NVDA", shares=10, price=50.0, date=...)  # SELL NVDA
-portfolio.buy("USD", shares=500.0, price=1.0, date=...)  # BUY USD
+portfolio.sell("NVDA", shares=10, price=50.0, date=...) # SELL NVDA
+portfolio.buy("USD", shares=500.0, price=1.0, date=...) # BUY USD
 
-# Buying NVDA with cash = two transactions  
-portfolio.sell("USD", shares=500.0, price=1.0, date=...)  # SELL USD
-portfolio.buy("NVDA", shares=10, price=50.0, date=...)   # BUY NVDA
+# Buying NVDA with cash = two transactions
+portfolio.sell("USD", shares=500.0, price=1.0, date=...) # SELL USD
+portfolio.buy("NVDA", shares=10, price=50.0, date=...) # BUY NVDA
 
 # Current cash balance
 cash_balance = portfolio.holdings["USD"].current_shares()
@@ -273,8 +271,8 @@ cash_value = portfolio.holdings["USD"].market_value(price=1.0)
 Every trade is atomic and balanced:
 ```python
 # Before (bank version):
-bank -= 500  # magic number appears
-holdings += 10  # where did the money go?
+bank -= 500 # magic number appears
+holdings += 10 # where did the money go?
 
 # After (USD holding):
 Sell USD: -500 shares → clear cash outflow
@@ -285,9 +283,9 @@ Buy NVDA: +10 shares → clear what we bought
 Portfolio now includes everything:
 ```python
 portfolio.total_value(prices={
-    "NVDA": 75.0,
-    "BTC": 45000.0,
-    "USD": 1.0  # always 1.0
+ "NVDA": 75.0,
+ "BTC": 45000.0,
+ "USD": 1.0 # always 1.0
 })
 
 # Portfolio composition pie chart naturally includes cash!
@@ -298,10 +296,10 @@ Cash flow becomes auditable:
 ```python
 usd_holding = portfolio.holdings["USD"]
 for txn in usd_holding.transactions:
-    if txn.transaction_type == "BUY":
-        print(f"Cash inflow: ${txn.shares} on {txn.purchase_date}")
-    else:
-        print(f"Cash outflow: ${txn.shares} on {txn.purchase_date}")
+ if txn.transaction_type == "BUY":
+ print(f"Cash inflow: ${txn.shares} on {txn.purchase_date}")
+ else:
+ print(f"Cash outflow: ${txn.shares} on {txn.purchase_date}")
 ```
 
 ### 5. **Withdrawal Tracking**
@@ -315,12 +313,12 @@ portfolio.sell("USD", shares=1000.0, price=1.0, notes="Monthly withdrawal")
 
 ## Implementation Plan
 
-### Phase 1: Add USD Support to Holding ✅ (Already works!)
+### Phase 1: Add USD Support to Holding [OK] (Already works!)
 
 The Holding model already supports this with zero changes:
-- ✅ Shares can be float (good for dollars)
-- ✅ Price can be constant (always $1.00)
-- ✅ Transaction history tracks everything
+- [OK] Shares can be float (good for dollars)
+- [OK] Price can be constant (always $1.00)
+- [OK] Transaction history tracks everything
 
 ### Phase 2: Update Backtest Engine
 
@@ -330,7 +328,7 @@ The Holding model already supports this with zero changes:
 # Before
 bank: float = 0.0
 
-# After  
+# After
 portfolio.add_holding("USD")
 # Initialize with starting capital
 portfolio.buy("USD", shares=initial_capital, price=1.0, date=start_date)
@@ -341,13 +339,13 @@ portfolio.buy("USD", shares=initial_capital, price=1.0, date=start_date)
 ```python
 # Before
 if action == "BUY":
-    bank -= price * qty
-    holdings += qty
-    
+ bank -= price * qty
+ holdings += qty
+
 # After
 if action == "BUY":
-    portfolio.sell("USD", shares=price * qty, price=1.0, date=date)
-    portfolio.buy(ticker, shares=qty, price=price, date=date)
+ portfolio.sell("USD", shares=price * qty, price=1.0, date=date)
+ portfolio.buy(ticker, shares=qty, price=price, date=date)
 ```
 
 ### Phase 3: Update Algorithms
@@ -357,19 +355,19 @@ Algorithms already receive `bank` parameter - replace with USD balance:
 ```python
 # Before
 def on_day(self, date_, price_row, holdings, bank, history):
-    # bank is a float
+ # bank is a float
 
-# After  
+# After
 def on_day(self, date_, price_row, holdings, usd_balance, history):
-    # usd_balance = portfolio.holdings["USD"].current_shares()
+ # usd_balance = portfolio.holdings["USD"].current_shares()
 ```
 
 Or even better - pass the full portfolio:
 
 ```python
 def on_day(self, date_, price_row, portfolio, history):
-    holdings = portfolio.holdings[self.ticker].current_shares()
-    cash = portfolio.holdings["USD"].current_shares()
+ holdings = portfolio.holdings[self.ticker].current_shares()
+ cash = portfolio.holdings["USD"].current_shares()
 ```
 
 ### Phase 4: Update Statistics
@@ -393,7 +391,7 @@ max_cash = max(txn.shares for txn in usd_holding.transactions if txn.transaction
 **Option A: Allow negative USD shares**
 ```python
 # USD holding can have negative shares = borrowed money
-usd_balance = -5000  # $5000 borrowed
+usd_balance = -5000 # $5000 borrowed
 ```
 
 **Option B: Separate "LOAN" holding**
@@ -410,8 +408,8 @@ portfolio.add_holding("LOAN")
 Model as additional USD transactions:
 ```python
 # Daily interest earned
-portfolio.buy("USD", shares=daily_interest, price=1.0, 
-              notes=f"Interest earned ({rate*100}% APR)")
+portfolio.buy("USD", shares=daily_interest, price=1.0,
+ notes=f"Interest earned ({rate*100}% APR)")
 ```
 
 ### 3. **Dividends**
@@ -420,7 +418,7 @@ Already works perfectly:
 ```python
 # Dividend payment
 portfolio.buy("USD", shares=dividend_amount, price=1.0,
-              notes=f"NVDA dividend ({shares} × ${div_per_share})")
+ notes=f"NVDA dividend ({shares} × ${div_per_share})")
 ```
 
 ## Migration Strategy
@@ -431,13 +429,13 @@ Keep both systems temporarily:
 
 ```python
 class Backtest:
-    def __init__(self, use_usd_holding=False):
-        if use_usd_holding:
-            # New unified system
-            self.portfolio.add_holding("USD")
-        else:
-            # Old bank system
-            self.bank = 0.0
+ def __init__(self, use_usd_holding=False):
+ if use_usd_holding:
+ # New unified system
+ self.portfolio.add_holding("USD")
+ else:
+ # Old bank system
+ self.bank = 0.0
 ```
 
 Tests can run both modes to verify equivalence.
@@ -451,10 +449,10 @@ Tests can run both modes to verify equivalence.
 ## Conclusion
 
 Treating cash as a holding is:
-- ✅ **Conceptually cleaner** - one model, no special cases
-- ✅ **More powerful** - full transaction history for cash
-- ✅ **Easier to extend** - multi-currency support becomes trivial
-- ✅ **Already supported** - Holding model works as-is
+- [OK] **Conceptually cleaner** - one model, no special cases
+- [OK] **More powerful** - full transaction history for cash
+- [OK] **Easier to extend** - multi-currency support becomes trivial
+- [OK] **Already supported** - Holding model works as-is
 
 **The code wants to be this way.** The transaction-based Holding model is beautiful and general - we should use it for everything, including cash.
 
@@ -470,27 +468,27 @@ portfolio.add_holding("BTC")
 
 # Currency conversion = two transactions
 portfolio.sell("USD", shares=1000, price=1.0)
-portfolio.buy("EUR", shares=850, price=1.18)  # at $1.18/EUR exchange rate
+portfolio.buy("EUR", shares=850, price=1.18) # at $1.18/EUR exchange rate
 ```
 
 ### Cash Flow Analysis
 ```python
 usd = portfolio.holdings["USD"]
-deposits = sum(txn.shares for txn in usd.transactions 
-               if txn.transaction_type == "BUY" and "deposit" in txn.notes)
+deposits = sum(txn.shares for txn in usd.transactions
+ if txn.transaction_type == "BUY" and "deposit" in txn.notes)
 withdrawals = sum(txn.shares for txn in usd.transactions
-                  if txn.transaction_type == "SELL" and "withdrawal" in txn.notes)
+ if txn.transaction_type == "SELL" and "withdrawal" in txn.notes)
 ```
 
 ### Rebalancing Visualization
 ```python
 # Portfolio composition over time (including cash!)
 for date in dates:
-    composition = {
-        ticker: holding.market_value_at(date, prices[ticker])
-        for ticker, holding in portfolio.holdings.items()
-    }
-    # USD naturally appears in the pie chart
+ composition = {
+ ticker: holding.market_value_at(date, prices[ticker])
+ for ticker, holding in portfolio.holdings.items()
+ }
+ # USD naturally appears in the pie chart
 ```
 
-**The architecture is calling us toward this design.** Let's embrace it! 🎯
+**The architecture is calling us toward this design.** Let's embrace it!

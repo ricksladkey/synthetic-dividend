@@ -1,7 +1,7 @@
 # Risk-Free Gains Feature Implementation
 
-**Status**: ✅ **COMPLETE AND WORKING**  
-**Date**: October 27, 2025  
+**Status**: [OK] **COMPLETE AND WORKING**
+**Date**: October 27, 2025
 **Commits**: `5b21272`, `e7fcaf3`, `3729c8d`
 
 ## Overview
@@ -17,8 +17,8 @@ Risk-free gains were being **calculated** but never **applied** to the bank bala
 ```python
 # OLD CODE (lines 695-707): Post-processing only
 for d, bank_balance in bank_history:
-    if bank_balance > 0:
-        risk_free_gains_total += bank_balance * daily_return  # Tracked but not applied!
+ if bank_balance > 0:
+ risk_free_gains_total += bank_balance * daily_return # Tracked but not applied!
 ```
 
 This meant:
@@ -39,18 +39,18 @@ Added daily gain/cost application **before** algorithm makes decisions each day:
 ```python
 # Apply daily gains/costs to bank balance (if not in simple mode)
 if not simple_mode:
-    if bank < 0:
-        # Negative balance: opportunity cost of borrowed money
-        daily_return = reference_returns.get(d, daily_reference_rate_fallback)
-        opportunity_cost_today = abs(bank) * daily_return
-        bank -= opportunity_cost_today  # Makes bank more negative
-        opportunity_cost_total += opportunity_cost_today
-    elif bank > 0:
-        # Positive balance: risk-free interest earned on cash
-        daily_return = risk_free_returns.get(d, daily_risk_free_rate_fallback)
-        risk_free_gain_today = bank * daily_return
-        bank += risk_free_gain_today  # Adds to cash balance
-        risk_free_gains_total += risk_free_gain_today
+ if bank < 0:
+ # Negative balance: opportunity cost of borrowed money
+ daily_return = reference_returns.get(d, daily_reference_rate_fallback)
+ opportunity_cost_today = abs(bank) * daily_return
+ bank -= opportunity_cost_today # Makes bank more negative
+ opportunity_cost_total += opportunity_cost_today
+ elif bank > 0:
+ # Positive balance: risk-free interest earned on cash
+ daily_return = risk_free_returns.get(d, daily_risk_free_rate_fallback)
+ risk_free_gain_today = bank * daily_return
+ bank += risk_free_gain_today # Adds to cash balance
+ risk_free_gains_total += risk_free_gain_today
 ```
 
 ### Supporting Changes
@@ -92,11 +92,11 @@ All 31 withdrawal rate tests still passing, covering:
 
 ### What It Enables
 
-✅ **Cash earns returns** from any specified asset (VOO, BND, SGOV, etc.)  
-✅ **Daily compounding** throughout the backtest period  
-✅ **True 2-asset portfolio** simulation: main position + cash in risk-free asset  
-✅ **Realistic mode** with `simple_mode=False`  
-✅ **Clean testing mode** with `simple_mode=True` (cash earns 0%, borrowing free)
+[OK] **Cash earns returns** from any specified asset (VOO, BND, SGOV, etc.)
+[OK] **Daily compounding** throughout the backtest period
+[OK] **True 2-asset portfolio** simulation: main position + cash in risk-free asset
+[OK] **Realistic mode** with `simple_mode=False`
+[OK] **Clean testing mode** with `simple_mode=True` (cash earns 0%, borrowing free)
 
 ### Usage
 
@@ -111,18 +111,18 @@ voo_df = fetcher.get_history('VOO', start, end)
 
 # Run with cash earning VOO returns
 _, summary = run_retirement_backtest(
-    df, 'NVDA', initial_qty, start, end, algorithm,
-    annual_withdrawal_rate=0.05,
-    withdrawal_frequency='monthly',
-    cpi_adjust=True,
-    simple_mode=False,           # Enable realistic mode
-    risk_free_data=voo_df,       # Cash earns VOO returns
-    risk_free_asset_ticker='VOO' # For reporting
+ df, 'NVDA', initial_qty, start, end, algorithm,
+ annual_withdrawal_rate=0.05,
+ withdrawal_frequency='monthly',
+ cpi_adjust=True,
+ simple_mode=False, # Enable realistic mode
+ risk_free_data=voo_df, # Cash earns VOO returns
+ risk_free_asset_ticker='VOO' # For reporting
 )
 
 # Summary includes compounded gains
-print(f"Bank: ${summary['bank']:,.0f}")  # Includes all compounded gains
-print(f"Risk-free gains: ${summary['risk_free_gains']:,.0f}")  # Total accumulated
+print(f"Bank: ${summary['bank']:,.0f}") # Includes all compounded gains
+print(f"Risk-free gains: ${summary['risk_free_gains']:,.0f}") # Total accumulated
 ```
 
 ## Architecture
@@ -131,8 +131,8 @@ print(f"Risk-free gains: ${summary['risk_free_gains']:,.0f}")  # Total accumulat
 
 1. **Get current price** for the day
 2. **Apply gains/costs** to bank balance (NEW!)
-   - Positive bank: `bank += daily_return * bank`
-   - Negative bank: `bank -= daily_return * abs(bank)`
+ - Positive bank: `bank += daily_return * bank`
+ - Negative bank: `bank -= daily_return * abs(bank)`
 3. **Algorithm evaluates** with updated bank balance
 4. **Execute trades**
 5. **Process dividends**
@@ -181,15 +181,15 @@ Can specify any risk-free asset:
 ## Testing
 
 ### Unit Tests
-- ✅ All 31 withdrawal rate tests passing
-- ✅ Tests cover 5 market conditions
-- ✅ Sequence-of-returns risk validated
-- ✅ No regressions introduced
+- [OK] All 31 withdrawal rate tests passing
+- [OK] Tests cover 5 market conditions
+- [OK] Sequence-of-returns risk validated
+- [OK] No regressions introduced
 
 ### Demo Scripts
-- ✅ `demo_voo_cash_returns.py` - 1-year impact
-- ✅ `demo_cash_returns_impact.py` - Multi-year compounding
-- ✅ `demo_withdrawal_sustainability.py` - Context-dependent rates
+- [OK] `demo_voo_cash_returns.py` - 1-year impact
+- [OK] `demo_cash_returns_impact.py` - Multi-year compounding
+- [OK] `demo_withdrawal_sustainability.py` - Context-dependent rates
 
 ## Files Modified
 
@@ -217,7 +217,7 @@ Can specify any risk-free asset:
 ### Experiments to Re-run
 
 Now that cash earns returns, consider re-running:
-- ✅ Multi-year retirement scenarios (DONE - shows 13.7% improvement over 10 years)
+- [OK] Multi-year retirement scenarios (DONE - shows 13.7% improvement over 10 years)
 - Portfolio comparison tools (compare with realistic cash returns)
 - Volatility alpha validation (update for realistic mode)
 - Asset class research (include cash allocation impact)

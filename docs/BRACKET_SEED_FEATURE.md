@@ -26,8 +26,8 @@ With a bracket seed (e.g., 100.0), all prices normalize to the same bracket ladd
 
 ```
 All traders with seed 100.0:
-  Entry $120.50, $121.00, or $119.80 → All normalize to bracket 55
-  → Buy: $107.59, Sell: $127.95 (identical for all)
+ Entry $120.50, $121.00, or $119.80 → All normalize to bracket 55
+ → Buy: $107.59, Sell: $127.95 (identical for all)
 ```
 
 ## Usage
@@ -37,22 +37,22 @@ All traders with seed 100.0:
 ```bash
 # Without seed (default behavior)
 python -m src.tools.order_calculator \
-  --ticker NVDA \
-  --holdings 1000 \
-  --last-price 120.50 \
-  --current-price 125.30 \
-  --sdn 8 \
-  --profit 50
+ --ticker NVDA \
+ --holdings 1000 \
+ --last-price 120.50 \
+ --current-price 125.30 \
+ --sdn 8 \
+ --profit 50
 
 # With bracket seed for aligned positions
 python -m src.tools.order_calculator \
-  --ticker NVDA \
-  --holdings 1000 \
-  --last-price 120.50 \
-  --current-price 125.30 \
-  --sdn 8 \
-  --profit 50 \
-  --bracket-seed 100.0
+ --ticker NVDA \
+ --holdings 1000 \
+ --last-price 120.50 \
+ --current-price 125.30 \
+ --sdn 8 \
+ --profit 50 \
+ --bracket-seed 100.0
 ```
 
 ### Python API
@@ -62,17 +62,17 @@ from src.algorithms.synthetic_dividend import SyntheticDividendAlgorithm
 
 # Create algorithm with bracket seed
 algo = SyntheticDividendAlgorithm(
-    rebalance_size=0.0905,      # sd8
-    profit_sharing=0.5,          # 50%
-    buyback_enabled=True,
-    bracket_seed=100.0           # Align to brackets based on $100
+ rebalance_size=0.0905, # sd8
+ profit_sharing=0.5, # 50%
+ buyback_enabled=True,
+ bracket_seed=100.0 # Align to brackets based on $100
 )
 
 # Or pass via params dict
 algo = SyntheticDividendAlgorithm(
-    rebalance_size=0.0905,
-    profit_sharing=0.5,
-    params={"bracket_seed": 100.0}
+ rebalance_size=0.0905,
+ profit_sharing=0.5,
+ params={"bracket_seed": 100.0}
 )
 ```
 
@@ -82,40 +82,40 @@ algo = SyntheticDividendAlgorithm(
 from src.models.backtest_utils import calculate_synthetic_dividend_orders
 
 orders = calculate_synthetic_dividend_orders(
-    holdings=100,
-    last_transaction_price=120.50,
-    rebalance_size=0.0905,
-    profit_sharing=0.5,
-    bracket_seed=100.0  # Optional
+ holdings=100,
+ last_transaction_price=120.50,
+ rebalance_size=0.0905,
+ profit_sharing=0.5,
+ bracket_seed=100.0 # Optional
 )
 ```
 
 ## How It Works
 
 1. **Without seed**: Orders are calculated directly from the transaction price
-   ```
-   Buy:  P / (1 + r)
-   Sell: P * (1 + r)
-   ```
+ ```
+ Buy: P / (1 + r)
+ Sell: P * (1 + r)
+ ```
 
 2. **With seed**: Transaction price is first normalized to the nearest bracket
-   ```
-   bracket_n = log(P) / log(1 + r)
-   normalized_P = (1 + r) ^ round(bracket_n)
-   
-   Buy:  normalized_P / (1 + r)
-   Sell: normalized_P * (1 + r)
-   ```
+ ```
+ bracket_n = log(P) / log(1 + r)
+ normalized_P = (1 + r) ^ round(bracket_n)
+
+ Buy: normalized_P / (1 + r)
+ Sell: normalized_P * (1 + r)
+ ```
 
 This ensures all calculations align to the same geometric ladder defined by the bracket spacing.
 
 ## Benefits
 
-✓ **Deterministic**: Same bracket positions every time
-✓ **Reproducible**: Backtests match real-world trading
-✓ **Comparable**: Easy to compare different entry points
-✓ **Collaborative**: Multiple traders can use the same brackets
-✓ **Backward Compatible**: Optional parameter, defaults to None (original behavior)
+[OK] **Deterministic**: Same bracket positions every time
+[OK] **Reproducible**: Backtests match real-world trading
+[OK] **Comparable**: Easy to compare different entry points
+[OK] **Collaborative**: Multiple traders can use the same brackets
+[OK] **Backward Compatible**: Optional parameter, defaults to None (original behavior)
 
 ## Example
 

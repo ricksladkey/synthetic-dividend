@@ -37,14 +37,14 @@ where Δ = bracket spacing.
 ### Gap vs Volatility Trade-off
 
 **Wide brackets (sd4-sd8)**:
-- ✅ Capture gaps fully
-- ✅ Hold through multi-bracket moves
-- ❌ Miss small oscillations
+- [OK] Capture gaps fully
+- [OK] Hold through multi-bracket moves
+- [FAIL] Miss small oscillations
 
 **Tight brackets (sd16-sd32)**:
-- ✅ Harvest small volatility
-- ❌ **"Suck the life out" of gaps** (sell too early!)
-- ❌ Massive transaction count
+- [OK] Harvest small volatility
+- [FAIL] **"Suck the life out" of gaps** (sell too early!)
+- [FAIL] Massive transaction count
 
 ---
 
@@ -80,7 +80,7 @@ Alpha_gap = Σ_gaps min(gap_size, 2Δ) × (shares/initial_shares)
 
 **Tight brackets** (sd16-sd32):
 ```
-Alpha_gap = Σ_gaps (Δ) × (shares/initial_shares)  [capped at Δ!]
+Alpha_gap = Σ_gaps (Δ) × (shares/initial_shares) [capped at Δ!]
 ```
 
 **NVDA 2023 estimate**:
@@ -117,9 +117,9 @@ Assume 2 minutes per transaction (review, execute, record):
 
 | SDN | Annual Hours | Monthly Hours | Practical? |
 |-----|--------------|---------------|------------|
-| sd8 | 0.8 hours | 0.07 hours | ✅ Yes |
-| sd16 | 13.4 hours | 1.1 hours | ⚠️ Maybe |
-| sd32 | **89 hours** | **7.4 hours** | ❌ No! |
+| sd8 | 0.8 hours | 0.07 hours | [OK] Yes |
+| sd16 | 13.4 hours | 1.1 hours | WARNING: Maybe |
+| sd32 | **89 hours** | **7.4 hours** | [FAIL] No! |
 
 **sd32 = 2 weeks of full-time work per year!**
 
@@ -212,10 +212,10 @@ This is the **"life sucking" effect** - tight brackets force you to sell into st
 ### Revised Framework
 
 The continuous model says sd16-sd32 maximize "realized alpha," but ignores:
-1. ❌ Gap capture (biggest profit source)
-2. ❌ Transaction burden (100+ hours/year)
-3. ❌ Margin costs (can exceed alpha)
-4. ❌ Psychological stress
+1. [FAIL] Gap capture (biggest profit source)
+2. [FAIL] Transaction burden (100+ hours/year)
+3. [FAIL] Margin costs (can exceed alpha)
+4. [FAIL] Psychological stress
 
 ### Practical Optimization
 
@@ -253,17 +253,17 @@ Subject to:
 Total_Alpha = Gap_Alpha + Volatility_Alpha - Friction
 
 where:
-  Gap_Alpha = Σ min(gap_size, 2Δ) × multiplier
-  Volatility_Alpha = σ·T·η(Δ) (from continuous model)
-  Friction = Transaction_cost + Margin_interest + Opportunity_cost
+ Gap_Alpha = Σ min(gap_size, 2Δ) × multiplier
+ Volatility_Alpha = σ·T·η(Δ) (from continuous model)
+ Friction = Transaction_cost + Margin_interest + Opportunity_cost
 ```
 
 ### Gap Multiplier
 
 ```
 multiplier(Δ) = {
-  1.0    if gap_size < Δ     (captured fully)
-  Δ/gap  if gap_size > Δ     (partial capture)
+ 1.0 if gap_size < Δ (captured fully)
+ Δ/gap if gap_size > Δ (partial capture)
 }
 ```
 
@@ -299,10 +299,10 @@ Largest 10 gap days:
 | ... | ... | ... | ... | ... | ... |
 
 **Average gap capture efficiency**:
-- sd4: **98%** ✅
-- sd8: **92%** ✅
-- sd16: **51%** ⚠️
-- sd32: **25%** ❌
+- sd4: **98%** [OK]
+- sd8: **92%** [OK]
+- sd16: **51%** WARNING:
+- sd32: **25%** [FAIL]
 
 Top 10 gaps account for ~80% of total return!
 
@@ -337,21 +337,21 @@ Top 10 gaps account for ~80% of total return!
 ### The Continuous Model is Right... Technically
 
 For **infinite liquidity, zero transaction costs, frictionless markets**:
-- sd16-sd32 maximize instantaneous realized alpha ✓
+- sd16-sd32 maximize instantaneous realized alpha [OK]
 
 ### But in Reality
 
 For **retail investors with day jobs, margin aversion, and desire to capture gaps**:
-- **sd4-sd8 dominate** ✓
-- Specifically: **sd8 is optimal for 95% of scenarios** ✓
+- **sd4-sd8 dominate** [OK]
+- Specifically: **sd8 is optimal for 95% of scenarios** [OK]
 
 ### The Formula That Matters
 
 ```
 Practical_Alpha = Gap_Capture × 0.7 + Volatility_Harvest × 0.3
-                  - Transaction_Burden × 0.05
-                  - Margin_Cost × 1.0
-                  - Stress_Factor × 0.1
+ - Transaction_Burden × 0.05
+ - Margin_Cost × 1.0
+ - Stress_Factor × 0.1
 
 Optimal δ ≈ 2 × E[gap_size]
 ```
@@ -381,9 +381,9 @@ Optimal δ ≈ 2 × 7% = 14%
 1. **Default to sd8** unless you have strong reasons otherwise
 2. **Use sd4** if volatility is extreme (σ > 60%)
 3. **Avoid sd16+** unless:
-   - You have automated execution
-   - You're comfortable with margin
-   - You don't mind 100+ transactions/year
+ - You have automated execution
+ - You're comfortable with margin
+ - You don't mind 100+ transactions/year
 4. **Never use sd32** for retail (it's a full-time job!)
 
 ### For Institutions
@@ -406,16 +406,16 @@ Then sd16 might be viable, but:
 ### Fundamental Trade-off
 
 ```
-                   Wide Brackets          Tight Brackets
-                   (sd4-sd8)              (sd16-sd32)
+ Wide Brackets Tight Brackets
+ (sd4-sd8) (sd16-sd32)
 ────────────────────────────────────────────────────────────
-Gap Capture:       ★★★★★ Excellent        ★☆☆☆☆ Poor
-Vol Harvest:       ★★☆☆☆ Basic            ★★★★★ Excellent
-Transaction Load:  ★★★★★ Minimal          ★☆☆☆☆ Extreme
-Margin Risk:       ★★★★★ None             ★☆☆☆☆ Catastrophic
-Simplicity:        ★★★★★ Simple           ★☆☆☆☆ Complex
+Gap Capture: ★★★★★ Excellent ★☆☆☆☆ Poor
+Vol Harvest: ★★☆☆☆ Basic ★★★★★ Excellent
+Transaction Load: ★★★★★ Minimal ★☆☆☆☆ Extreme
+Margin Risk: ★★★★★ None ★☆☆☆☆ Catastrophic
+Simplicity: ★★★★★ Simple ★☆☆☆☆ Complex
 ────────────────────────────────────────────────────────────
-TOTAL ALPHA:       ★★★★★ Superior         ★★☆☆☆ Inferior
+TOTAL ALPHA: ★★★★★ Superior ★★☆☆☆ Inferior
 ```
 
 **Gaps dominate returns.** Capturing 95% of gaps with 10% of transactions beats capturing 50% of volatility with 100× transactions.
@@ -430,20 +430,20 @@ Add **gap dynamics** to the framework:
 
 ```python
 def calculate_total_alpha(sdn, stock_params):
-    """Calculate total alpha including gaps."""
+ """Calculate total alpha including gaps."""
 
-    delta = 2**(1/sdn) - 1
+ delta = 2**(1/sdn) - 1
 
-    # Continuous model (volatility only)
-    vol_alpha = continuous_model_alpha(stock_params.sigma, delta)
+ # Continuous model (volatility only)
+ vol_alpha = continuous_model_alpha(stock_params.sigma, delta)
 
-    # Gap contribution (NEW!)
-    gap_alpha = expected_gap_capture(stock_params.gaps, delta)
+ # Gap contribution (NEW!)
+ gap_alpha = expected_gap_capture(stock_params.gaps, delta)
 
-    # Friction costs
-    friction = transaction_cost(sdn) + margin_cost(sdn, delta)
+ # Friction costs
+ friction = transaction_cost(sdn) + margin_cost(sdn, delta)
 
-    return gap_alpha + vol_alpha - friction
+ return gap_alpha + vol_alpha - friction
 ```
 
 ### Revised Critical Spacing

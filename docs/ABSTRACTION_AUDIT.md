@@ -4,7 +4,7 @@ This document tracks violations of the "Abstraction Level Determines Naming" pri
 
 ## Type Aliases
 
-**Status**: ✅ Implemented
+**Status**: [OK] Implemented
 
 - `Data = pd.DataFrame` - Clean abstraction for tabular data parameters
 
@@ -15,24 +15,24 @@ Parameters typed as `pd.DataFrame` that should use `Data` alias for clean abstra
 ### High Priority (Public API)
 
 **src/models/backtest.py**:
-- ✅ Line 89: `df: Data` - FIXED
-- ✅ Line 98: Already uses `Data` for `reference_data`
-- ✅ Line 99: Already uses `Data` for `risk_free_data`
-- ✅ Line 107: Already uses `Data` for `cpi_data`
+- [OK] Line 89: `df: Data` - FIXED
+- [OK] Line 98: Already uses `Data` for `reference_data`
+- [OK] Line 99: Already uses `Data` for `risk_free_data`
+- [OK] Line 107: Already uses `Data` for `cpi_data`
 
 **src/models/retirement_backtest.py**:
-- ✅ Line 26: `df: Data` - FIXED
-- ✅ Line 139: `df: Data` - FIXED
-- ✅ Line 208: `df: Data` - FIXED
+- [OK] Line 26: `df: Data` - FIXED
+- [OK] Line 139: `df: Data` - FIXED
+- [OK] Line 208: `df: Data` - FIXED
 
 **src/synthetic_dividend_tool.py**:
-- ✅ Line 128: `reference_data: Optional[Data]` - FIXED (was reference_df)
-- ✅ Line 129: `risk_free_data: Optional[Data]` - FIXED (was risk_free_df)
+- [OK] Line 128: `reference_data: Optional[Data]` - FIXED (was reference_df)
+- [OK] Line 129: `risk_free_data: Optional[Data]` - FIXED (was risk_free_df)
 
 **src/compare/batch_comparison.py**:
-- ✅ Line 47: `df: Data` - FIXED
-- ✅ Line 55: `reference_data: Data` - FIXED (was reference_asset_df)
-- ✅ Line 56: `risk_free_data: Data` - FIXED (was risk_free_asset_df)
+- [OK] Line 47: `df: Data` - FIXED
+- [OK] Line 55: `reference_data: Data` - FIXED (was reference_asset_df)
+- [OK] Line 56: `risk_free_data: Data` - FIXED (was risk_free_asset_df)
 
 **src/compare/runner.py, table.py, validator.py**:
 - TODO: Multiple instances of `df: pd.DataFrame` → `df: Data`
@@ -70,9 +70,9 @@ Parameters ending with `_pct` imply non-universal units (percentages stored as 0
 ### Critical Issues (Require Unit Conversion)
 
 **src/models/backtest.py**:
-- ❌ Line 96: `reference_return_pct: float = 0.0` → Should be `reference_return: float = 0.0` (stored as decimal)
-- ❌ Line 97: `risk_free_rate_pct: float = 0.0` → Should be `risk_free_rate: float = 0.0` (stored as decimal)
-- ❌ Line 105: `withdrawal_rate_pct: float = 0.0` → Should be `withdrawal_rate: float = 0.0` (stored as decimal)
+- [FAIL] Line 96: `reference_return_pct: float = 0.0` → Should be `reference_return: float = 0.0` (stored as decimal)
+- [FAIL] Line 97: `risk_free_rate_pct: float = 0.0` → Should be `risk_free_rate: float = 0.0` (stored as decimal)
+- [FAIL] Line 105: `withdrawal_rate_pct: float = 0.0` → Should be `withdrawal_rate: float = 0.0` (stored as decimal)
 - Line 243-244: Requires division by 100 because input is percentage
 - Line 366: Requires division by 100 because input is percentage
 
@@ -112,7 +112,7 @@ These are internal calculations for display purposes, not API parameters:
 
 ## Remediation Strategy
 
-### Phase 1: Type Aliases (✅ DONE)
+### Phase 1: Type Aliases ([OK] DONE)
 - Add `Data = pd.DataFrame` alias to backtest.py
 - Update public API parameters in backtest.py
 
@@ -124,9 +124,9 @@ These are internal calculations for display purposes, not API parameters:
 
 ### Phase 3: Unit Standardization (CRITICAL)
 1. Change API parameters from `*_pct` (percentage) to universal units (decimal)
-   - `reference_return_pct` → `reference_return` (0.10 instead of 10.0)
-   - `risk_free_rate_pct` → `risk_free_rate`
-   - `withdrawal_rate_pct` → `withdrawal_rate`
+ - `reference_return_pct` → `reference_return` (0.10 instead of 10.0)
+ - `risk_free_rate_pct` → `risk_free_rate`
+ - `withdrawal_rate_pct` → `withdrawal_rate`
 2. Update all callers to pass decimals instead of percentages
 3. Remove division by 100 from backtest.py implementation
 4. Update documentation to clarify decimal format
@@ -138,13 +138,13 @@ These are internal calculations for display purposes, not API parameters:
 ## Principle Violations Found
 
 1. **Mixed abstraction in type hints**: `pd.DataFrame` exposes pandas implementation detail
-   - **Fix**: Use `Data` type alias
+ - **Fix**: Use `Data` type alias
 
 2. **Non-universal units in API**: `_pct` suffix indicates percentage (0-100) instead of decimal (0-1)
-   - **Fix**: Store as decimal, convert only at UI/display layer
+ - **Fix**: Store as decimal, convert only at UI/display layer
 
 3. **Inconsistent naming**: `reference_asset_df` mixed domain + implementation, now partially fixed
-   - **Fix**: Use `reference_data` consistently
+ - **Fix**: Use `reference_data` consistently
 
 ## Benefits of Remediation
 

@@ -19,8 +19,8 @@ where:
 - μ = annualized drift (return)
 
 **Physical interpretation**: When bracket spacing drops below δ*, the algorithm transitions from:
-- ✅ **Volatility harvesting** (bankable profits)
-- ❌ **Leveraged accumulation** (unmovable stack)
+- [OK] **Volatility harvesting** (bankable profits)
+- [FAIL] **Leveraged accumulation** (unmovable stack)
 
 ### NVDA 2023 Example
 
@@ -37,10 +37,10 @@ Comparing to SDN parameters:
 
 | SDN | δ (spacing) | vs. δ* | Behavior | Stack | Bank |
 |-----|-------------|--------|----------|-------|------|
-| sd4 | 18.9% | **3.6× above** | ✓ Harvesting | 0 | +$109K |
-| sd8 | 9.05% | **1.7× above** | ✓ Harvesting | 44 | +$119K |
-| sd16 | 4.43% | **0.84× below** | ⚠ Marginal | 116 | +$94K |
-| sd32 | 2.19% | **0.41× below** | ✗ Catastrophic | 112K | -$4.1M |
+| sd4 | 18.9% | **3.6× above** | [OK] Harvesting | 0 | +$109K |
+| sd8 | 9.05% | **1.7× above** | [OK] Harvesting | 44 | +$119K |
+| sd16 | 4.43% | **0.84× below** | WARNING: Marginal | 116 | +$94K |
+| sd32 | 2.19% | **0.41× below** | [FAIL] Catastrophic | 112K | -$4.1M |
 
 **Prediction confirmed**: Transition occurs around sd16, catastrophic failure at sd32!
 
@@ -63,10 +63,10 @@ N_txns(n, T) ≈ α·μ·n·T + β·σ²·n²·T
 
 | SDN | Txns | Txns/n | Txns/n² | Regime |
 |-----|------|--------|---------|--------|
-| 4   | 7    | 1.75   | 0.44    | Trend |
-| 8   | 24   | 3.00   | 0.38    | Trend |
-| 16  | 403  | 25.2   | 1.57    | Mixed |
-| 32  | 2677 | 83.7   | 2.61    | Volatility |
+| 4 | 7 | 1.75 | 0.44 | Trend |
+| 8 | 24 | 3.00 | 0.38 | Trend |
+| 16 | 403 | 25.2 | 1.57 | Mixed |
+| 32 | 2677 | 83.7 | 2.61 | Volatility |
 
 **Interpretation**: As brackets tighten, intraday volatility begins to dominate, causing quadratic explosion in transaction count.
 
@@ -118,9 +118,9 @@ This suggests **sd16-sd32** range, but...
 ### Practical Constraints
 
 The formula assumes:
-- ✗ Infinite liquidity (can always unwind stack)
-- ✗ Unlimited margin (no borrowing constraints)
-- ✗ Zero transaction costs
+- [FAIL] Infinite liquidity (can always unwind stack)
+- [FAIL] Unlimited margin (no borrowing constraints)
+- [FAIL] Zero transaction costs
 
 **Reality check**:
 - sd32 requires $4.1M margin for $143K initial investment
@@ -236,9 +236,9 @@ For most growth stocks (Sharpe 0.5-1.5):
 
 The continuous model provides theoretical foundation for empirical observations:
 
-✅ **Explains** why sd32 shows high "realized alpha" (quadratic transaction scaling)
-✅ **Predicts** catastrophic margin usage below critical spacing δ*
-✅ **Derives** optimal SDN around n ≈ 2μ/(σ²·log(2))
-✅ **Justifies** practical preference for sd8-sd16
+[OK] **Explains** why sd32 shows high "realized alpha" (quadratic transaction scaling)
+[OK] **Predicts** catastrophic margin usage below critical spacing δ*
+[OK] **Derives** optimal SDN around n ≈ 2μ/(σ²·log(2))
+[OK] **Justifies** practical preference for sd8-sd16
 
 **Bottom line**: Mathematical analysis confirms your intuition that **sd4-sd8 are optimal** for bankable, sustainable alpha extraction.

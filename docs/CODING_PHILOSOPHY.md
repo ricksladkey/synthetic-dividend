@@ -92,22 +92,22 @@ After running portfolio volatility alpha experiment, don't just commit the code�
 
 **Rules**:
 1. **High-level business logic**: Use domain concepts exclusively
-   - ✓ `process_transaction(price: float, quantity: int)`
-   - ✗ `process_transaction(df_row: pd.Series, qty: int)`
+ - [OK] `process_transaction(price: float, quantity: int)`
+ - [FAIL] `process_transaction(df_row: pd.Series, qty: int)`
 
 2. **Mid-level architecture**: Use data structure abstractions
-   - ✓ `def calculate_returns(price_series: pd.Series) -> pd.Series`
-   - ✓ `def fetch_market_data(ticker: str) -> pd.DataFrame`  (pandas is THE Python standard)
-   - ✗ `def calculate_returns(price_list: List[float])`  (too specific for this level)
+ - [OK] `def calculate_returns(price_series: pd.Series) -> pd.Series`
+ - [OK] `def fetch_market_data(ticker: str) -> pd.DataFrame` (pandas is THE Python standard)
+ - [FAIL] `def calculate_returns(price_list: List[float])` (too specific for this level)
 
 3. **Pythonic naming**: When a concept has an established Python/pandas convention, use it
-   - ✓ `df` for DataFrame in local scopes (pandas convention)
-   - ✓ `Series` for time series data (pandas standard)
-   - ✗ `data_row` when `Series` is the Pythonic term everyone understands
+ - [OK] `df` for DataFrame in local scopes (pandas convention)
+ - [OK] `Series` for time series data (pandas standard)
+ - [FAIL] `data_row` when `Series` is the Pythonic term everyone understands
 
 4. **Glue code is free**: Interface/adapter code can be implementation-specific
-   - ✓ `def convert_df_to_records(df: pd.DataFrame) -> List[Dict]`
-   - ✓ `def pandas_series_to_numpy(series: pd.Series) -> np.ndarray`
+ - [OK] `def convert_df_to_records(df: pd.DataFrame) -> List[Dict]`
+ - [OK] `def pandas_series_to_numpy(series: pd.Series) -> np.ndarray`
 
 **Naming Priority** (choose the first applicable):
 1. **Domain term** (if concept exists in business logic): `price`, `order`, `account`
@@ -120,46 +120,46 @@ After running portfolio volatility alpha experiment, don't just commit the code�
 ```python
 # GOOD: Domain-level abstraction
 def calculate_portfolio_value(
-    holdings: int,
-    price: float,
-    cash_balance: float
+ holdings: int,
+ price: float,
+ cash_balance: float
 ) -> float:
-    """High-level business logic uses domain concepts."""
-    return holdings * price + cash_balance
+ """High-level business logic uses domain concepts."""
+ return holdings * price + cash_balance
 
 # GOOD: Data architecture abstraction
 def run_algorithm_backtest(
-    price_data: pd.DataFrame,  # "price_data" is more abstract than "df"
-    ticker: str,
-    initial_qty: int,
-    reference_series: Optional[pd.Series] = None  # "series" is the data architecture term
+ price_data: pd.DataFrame, # "price_data" is more abstract than "df"
+ ticker: str,
+ initial_qty: int,
+ reference_series: Optional[pd.Series] = None # "series" is the data architecture term
 ) -> Tuple[List[Transaction], Dict[str, Any]]:
-    """Mid-level uses data abstractions + Pythonic conventions."""
-    pass
+ """Mid-level uses data abstractions + Pythonic conventions."""
+ pass
 
 # AVOID: Mixed abstraction levels
 def run_algorithm_backtest(
-    reference_asset_df: Optional[pd.DataFrame] = None  # ❌ "asset" is domain, "df" is implementation
+ reference_asset_df: Optional[pd.DataFrame] = None # [FAIL] "asset" is domain, "df" is implementation
 ):
-    """Mixing "asset" (domain) with "df" (pandas-specific) confuses the abstraction."""
-    pass
+ """Mixing "asset" (domain) with "df" (pandas-specific) confuses the abstraction."""
+ pass
 
 # GOOD: Corrected
 def run_algorithm_backtest(
-    reference_data: Optional[pd.DataFrame] = None  # ✓ "data" is appropriately abstract
+ reference_data: Optional[pd.DataFrame] = None # [OK] "data" is appropriately abstract
 ):
-    """Or even better: reference_series if it's 1D time series data."""
-    pass
+ """Or even better: reference_series if it's 1D time series data."""
+ pass
 
 # GOOD: Low-level glue code can be specific
 def _extract_close_prices_as_array(df: pd.DataFrame) -> np.ndarray:
-    """Implementation-specific helper is fine at this layer."""
-    return df['Close'].values
+ """Implementation-specific helper is fine at this layer."""
+ return df['Close'].values
 
 # GOOD: Pythonic convention for local scope
 def process_data(price_data: pd.DataFrame) -> pd.Series:
-    df = price_data  # Local rename to idiomatic 'df' is fine
-    return df['Close'].pct_change()
+ df = price_data # Local rename to idiomatic 'df' is fine
+ return df['Close'].pct_change()
 ```
 
 **Database Analogy**:
@@ -197,18 +197,18 @@ C++ programmers rarely look at assembly—until there's a problem. Then it becom
 The goal is **sustainable collaboration**—AI accelerates work you understand, it doesn't replace understanding.
 
 **Good uses** (delegate the busywork):
-- ✅ Boilerplate generation (test scaffolding, type hints, docstrings)
-- ✅ Repetitive edits across multiple files
-- ✅ Documentation formatting and consistency
-- ✅ Implementing well-specified algorithms you've designed
-- ✅ Converting between data formats you understand
+- [OK] Boilerplate generation (test scaffolding, type hints, docstrings)
+- [OK] Repetitive edits across multiple files
+- [OK] Documentation formatting and consistency
+- [OK] Implementing well-specified algorithms you've designed
+- [OK] Converting between data formats you understand
 
 **Bad uses** (don't delegate architecture):
-- ❌ Designing core algorithms without understanding the approach
-- ❌ Accepting abstractions you can't explain
-- ❌ Implementing business logic without grasping the why
-- ❌ "Fix this bug" without understanding the root cause
-- ❌ Any code you wouldn't confidently review and approve yourself
+- [FAIL] Designing core algorithms without understanding the approach
+- [FAIL] Accepting abstractions you can't explain
+- [FAIL] Implementing business logic without grasping the why
+- [FAIL] "Fix this bug" without understanding the root cause
+- [FAIL] Any code you wouldn't confidently review and approve yourself
 
 **Bare-Bones Over Clever**:
 
@@ -217,8 +217,8 @@ Prefer simple, obvious code over "elegant" abstractions you don't fully understa
 ```python
 # GOOD: Straightforward, maintainable
 def calculate_profit(sell_price: float, buy_price: float, qty: int) -> float:
-    """Calculate profit from a trade."""
-    return (sell_price - buy_price) * qty
+ """Calculate profit from a trade."""
+ return (sell_price - buy_price) * qty
 
 # AVOID: Clever but opaque (even if "more Pythonic")
 from functools import reduce
@@ -274,21 +274,21 @@ Good engineers use abstractions (compilers, frameworks, AI) but maintain concept
 ```python
 # GOOD: Pure function with explicit signature
 def calculate_synthetic_dividend_orders(
-    holdings: int,
-    last_transaction_price: float,
-    rebalance_size: float,
-    profit_sharing: float
+ holdings: int,
+ last_transaction_price: float,
+ rebalance_size: float,
+ profit_sharing: float
 ) -> Dict[str, Union[float, int]]:
-    """Calculate buy/sell orders from current state."""
-    next_buy_price: float = last_transaction_price / (1 + rebalance_size)
-    next_buy_qty: int = int(rebalance_size * holdings * profit_sharing + 0.5)
-    # ... pure calculation, no side effects
-    return { ... }
+ """Calculate buy/sell orders from current state."""
+ next_buy_price: float = last_transaction_price / (1 + rebalance_size)
+ next_buy_qty: int = int(rebalance_size * holdings * profit_sharing + 0.5)
+ # ... pure calculation, no side effects
+ return { ... }
 
 # AVOID: Functions with hidden state dependencies
-def calculate_orders(self):  # Missing explicit parameters
-    # Reads from self.last_price, self.holdings, etc.
-    # Hard to test, hard to reason about
+def calculate_orders(self): # Missing explicit parameters
+ # Reads from self.last_price, self.holdings, etc.
+ # Hard to test, hard to reason about
 ```
 
 **Practice**:
@@ -297,7 +297,6 @@ def calculate_orders(self):  # Missing explicit parameters
 - Pass data explicitly via parameters
 - Return results explicitly (no out-parameters)
 - Avoid global variables and singletons
-
 
 ### 2. Static & Inferable Typing
 
@@ -319,20 +318,20 @@ def calculate_orders(self):  # Missing explicit parameters
 ```python
 # GOOD: Complete type annotations
 def run_algorithm_backtest(
-    df: pd.DataFrame,
-    ticker: str,
-    initial_qty: int,
-    start_date: date,
-    end_date: date,
-    algo: Optional[Union[AlgorithmBase, Callable]] = None,
-    algo_params: Optional[Dict[str, Any]] = None,
+ df: pd.DataFrame,
+ ticker: str,
+ initial_qty: int,
+ start_date: date,
+ end_date: date,
+ algo: Optional[Union[AlgorithmBase, Callable]] = None,
+ algo_params: Optional[Dict[str, Any]] = None,
 ) -> Tuple[List[str], Dict[str, Any]]:
-    """Execute backtest against historical data."""
-    # ...
+ """Execute backtest against historical data."""
+ # ...
 
 # AVOID: Missing or partial type annotations
-def run_backtest(df, ticker, qty, start, end, algo=None):  # No types
-    # Type checker can't help, IDE can't autocomplete
+def run_backtest(df, ticker, qty, start, end, algo=None): # No types
+ # Type checker can't help, IDE can't autocomplete
 ```
 
 **Type Annotation Guidelines**:
@@ -344,7 +343,6 @@ def run_backtest(df, ticker, qty, start, end, algo=None):  # No types
 - **Unions**: `Union[TypeA, TypeB]` for multiple possible types
 - **Callables**: `Callable[[Arg1Type, Arg2Type], ReturnType]`
 
-
 ### 3. Side-Effect-Free High-Level Operations
 
 **Principle**: Structure code as pipelines of transformations rather than sequences of mutations.
@@ -353,17 +351,17 @@ def run_backtest(df, ticker, qty, start, end, algo=None):  # No types
 ```python
 # GOOD: Immutable transformations
 def process_data(raw_data: pd.DataFrame) -> pd.DataFrame:
-    """Transform data through immutable operations."""
-    filtered = raw_data[raw_data['price'] > 0]  # New DataFrame
-    normalized = filtered.copy()  # Explicit copy
-    normalized['price'] = normalized['price'] / normalized['price'].iloc[0]
-    return normalized
+ """Transform data through immutable operations."""
+ filtered = raw_data[raw_data['price'] > 0] # New DataFrame
+ normalized = filtered.copy() # Explicit copy
+ normalized['price'] = normalized['price'] / normalized['price'].iloc[0]
+ return normalized
 
 # AVOID: In-place mutations
 def process_data(data):
-    data.drop(data[data['price'] <= 0].index, inplace=True)  # Mutates argument
-    data['price'] /= data['price'].iloc[0]  # Mutates in-place
-    # Function has no return value, operates via side effects
+ data.drop(data[data['price'] <= 0].index, inplace=True) # Mutates argument
+ data['price'] /= data['price'].iloc[0] # Mutates in-place
+ # Function has no return value, operates via side effects
 ```
 
 **Pandas Guidelines**:
@@ -371,7 +369,6 @@ def process_data(data):
 - Use `.loc[mask].copy()` to create filtered views
 - Chain operations with explicit intermediate variables for clarity
 - Avoid `inplace=True` parameter (deprecated and harder to reason about)
-
 
 ### 4. Short Functions
 
@@ -393,24 +390,23 @@ def process_data(data):
 ```python
 # BEFORE: Long monolithic function
 def run_backtest(df, ticker, qty, start, end, algo):
-    # 20 lines of validation
-    # 30 lines of data preprocessing
-    # 50 lines of algorithm execution
-    # 20 lines of result formatting
-    # Total: 120 lines—too long to understand at once
+ # 20 lines of validation
+ # 30 lines of data preprocessing
+ # 50 lines of algorithm execution
+ # 20 lines of result formatting
+ # Total: 120 lines—too long to understand at once
 
 # AFTER: Extracted into focused functions
 def run_backtest(df, ticker, qty, start, end, algo):
-    """Orchestrate backtest execution."""
-    _validate_inputs(ticker, qty, start, end)
-    df_processed = _preprocess_data(df, start, end)
-    transactions, metrics = _execute_algorithm(df_processed, qty, algo)
-    summary = _format_results(transactions, metrics)
-    return transactions, summary
+ """Orchestrate backtest execution."""
+ _validate_inputs(ticker, qty, start, end)
+ df_processed = _preprocess_data(df, start, end)
+ transactions, metrics = _execute_algorithm(df_processed, qty, algo)
+ summary = _format_results(transactions, metrics)
+ return transactions, summary
 
 # Each helper is 10-25 lines, focused on one task
 ```
-
 
 ### 5. Voluminous Terse Accurate Comments
 
@@ -430,21 +426,21 @@ Intelligently extends cache when requested dates exceed cached range.
 **B. Function Docstrings** (Google/NumPy style):
 ```python
 def calculate_orders(holdings: int, price: float) -> Dict[str, Union[float, int]]:
-    """Calculate symmetric buy/sell orders from current state.
-    
-    The formulas ensure perfect symmetry: if you buy Q shares at P_low,
-    you can sell exactly Q shares back from P_low at P_current.
-    
-    Args:
-        holdings: Current share count
-        price: Last transaction price
-        
-    Returns:
-        Dict with keys: next_buy_price, next_buy_qty, next_sell_price, next_sell_qty
-        
-    Raises:
-        ValueError: If holdings negative or price non-positive
-    """
+ """Calculate symmetric buy/sell orders from current state.
+
+ The formulas ensure perfect symmetry: if you buy Q shares at P_low,
+ you can sell exactly Q shares back from P_low at P_current.
+
+ Args:
+ holdings: Current share count
+ price: Last transaction price
+
+ Returns:
+ Dict with keys: next_buy_price, next_buy_qty, next_sell_price, next_sell_qty
+
+ Raises:
+ ValueError: If holdings negative or price non-positive
+ """
 ```
 
 **C. Inline Comments** (terse, explanatory):
@@ -457,7 +453,7 @@ next_buy_qty: int = int(rebalance_size * holdings * profit_sharing + 0.5)
 
 # ATH-only mode: seed with initial price as baseline
 if not self.buyback_enabled:
-    self.ath_price = current_price
+ self.ath_price = current_price
 ```
 
 **D. Complex Logic Comments** (explain "why"):
@@ -467,7 +463,7 @@ start_dt = datetime.combine(start, datetime.min.time()) - timedelta(days=1)
 
 # Extend cache leftward if requested range starts before cached data
 if start_date < cache_min:
-    df_left = self._download(ticker, start_date, cache_min - timedelta(days=1))
+ df_left = self._download(ticker, start_date, cache_min - timedelta(days=1))
 ```
 
 **Comment Guidelines**:
@@ -475,8 +471,7 @@ if start_date < cache_min:
 - **Accurate**: Comments must match code (update both together)
 - **Explanatory**: Focus on intent, not mechanics
 - **Strategic**: Comment complex algorithms, edge cases, workarounds
-- **Avoid**: Don't comment obvious code (`i += 1  # increment i`)
-
+- **Avoid**: Don't comment obvious code (`i += 1 # increment i`)
 
 ### 6. Immutability Preferences
 
@@ -491,32 +486,31 @@ if start_date < cache_min:
 ```python
 # GOOD: Create new objects instead of mutating
 def update_holdings(current: int, qty: int) -> int:
-    """Calculate new holdings count."""
-    return current + qty  # Pure function, no mutation
+ """Calculate new holdings count."""
+ return current + qty # Pure function, no mutation
 
 # AVOID: Mutating passed-in data structures
 def update_holdings(holdings_dict, qty):
-    holdings_dict['count'] += qty  # Mutates argument
+ holdings_dict['count'] += qty # Mutates argument
 ```
 
 **Dataclass Usage**:
 ```python
 from dataclasses import dataclass
 
-@dataclass(frozen=True)  # frozen=True makes immutable
+@dataclass(frozen=True) # frozen=True makes immutable
 class Transaction:
-    """Immutable transaction record."""
-    action: str  # 'BUY' or 'SELL'
-    qty: int
-    price: float
-    date: date
+ """Immutable transaction record."""
+ action: str # 'BUY' or 'SELL'
+ qty: int
+ price: float
+ date: date
 ```
 
 **When Mutation is Acceptable**:
 - Local variables within function scope (not visible to caller)
 - Builder patterns during object construction
 - Performance-critical loops (with clear comments explaining tradeoff)
-
 
 ### 7. Test-Driven Trust
 
@@ -544,21 +538,21 @@ Without tests, we might have "fixed" the algorithm to match wrong expectations, 
 ```python
 # GOOD: Test verifies economic invariants
 def test_v_shape_symmetric(self):
-    """Enhanced accumulates shares during dip, retains MORE after recovery."""
-    sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
-        price_path=[...],  # 100→200→100→200
-        rebalance_pct=10.0,
-        profit_sharing_pct=50.0
-    )
-    
-    # Enhanced MUST have more shares (volatility harvesting)
-    assert sd_full >= ath_only, \
-        f"Enhanced should retain more: SD={sd_full}, ATH={ath_only}"
-    
-    # Stack quantity accounts for extra shares
-    share_diff = sd_full - ath_only
-    assert stack_qty == share_diff, \
-        f"Stack ({stack_qty}) should equal difference ({share_diff})"
+ """Enhanced accumulates shares during dip, retains MORE after recovery."""
+ sd_full, ath_only, stack_qty, stack_empty = run_test_comparison(
+ price_path=[...], # 100→200→100→200
+ rebalance_pct=10.0,
+ profit_sharing_pct=50.0
+ )
+
+ # Enhanced MUST have more shares (volatility harvesting)
+ assert sd_full >= ath_only, \
+ f"Enhanced should retain more: SD={sd_full}, ATH={ath_only}"
+
+ # Stack quantity accounts for extra shares
+ share_diff = sd_full - ath_only
+ assert stack_qty == share_diff, \
+ f"Stack ({stack_qty}) should equal difference ({share_diff})"
 ```
 
 **What to Test**:
@@ -571,17 +565,17 @@ def test_v_shape_symmetric(self):
 **Test Organization**:
 ```python
 class TestBuybackStackVShape:
-    """Test V-shape price patterns (100→200→100→200).
-    
-    Expected behavior:
-    - Enhanced buys during dip, sells during recovery
-    - Retains MORE shares than ATH-only (volatility harvesting)
-    - Buyback stack tracks the share difference
-    """
-    
-    def test_symmetric_recovery(self): ...
-    def test_exceeds_previous_ath(self): ...
-    def test_multiple_cycles(self): ...
+ """Test V-shape price patterns (100→200→100→200).
+
+ Expected behavior:
+ - Enhanced buys during dip, sells during recovery
+ - Retains MORE shares than ATH-only (volatility harvesting)
+ - Buyback stack tracks the share difference
+ """
+
+ def test_symmetric_recovery(self): ...
+ def test_exceeds_previous_ath(self): ...
+ def test_multiple_cycles(self): ...
 ```
 
 **Trust Through Testing**:
@@ -590,7 +584,6 @@ class TestBuybackStackVShape:
 - Don't believe the algorithm is correct—**prove it with comprehensive tests**
 
 Tests transform hope into certainty. They're the difference between "I think this works" and "I know this works."
-
 
 ## Code Review Checklist
 
@@ -605,7 +598,6 @@ Before committing code, verify:
 - [ ] **Tests**: New functions have unit tests covering happy path, edge cases, and invariants
 - [ ] **Test Coverage**: Tests verify expected behavior, not just "it doesn't crash"
 - [ ] **Naming**: Variable/function names are descriptive and unambiguous
-
 
 ## Rationale
 
@@ -622,92 +614,89 @@ The goal is **code that is easy to understand, modify, and verify correctness**.
 
 **Special Note on Testing**: In financial/mathematical code, silent errors are the most dangerous. A bug that crashes is obvious; a bug that produces slightly wrong numbers can go undetected for years. Tests are your only defense against this—they transform uncertain calculations into verified facts.
 
-
 ## Examples From This Codebase
 
 ### Pure Function with Complete Types
 ```python
 def calculate_synthetic_dividend_orders(
-    holdings: int,
-    last_transaction_price: float,
-    rebalance_size: float,
-    profit_sharing: float
+ holdings: int,
+ last_transaction_price: float,
+ rebalance_size: float,
+ profit_sharing: float
 ) -> Dict[str, Union[float, int]]:
-    """Pure function to calculate synthetic dividend buy/sell orders.
-    
-    The formulas ensure perfect symmetry: if you buy Q shares at price P_low,
-    then from P_low you can sell exactly Q shares back at price P_current.
-    """
-    next_buy_price: float = last_transaction_price / (1 + rebalance_size)
-    next_buy_qty: int = int(rebalance_size * holdings * profit_sharing + 0.5)
-    next_sell_price: float = last_transaction_price * (1 + rebalance_size)
-    next_sell_qty: int = int(rebalance_size * holdings * profit_sharing / (1 + rebalance_size) + 0.5)
-    
-    return {
-        "next_buy_price": next_buy_price,
-        "next_buy_qty": next_buy_qty,
-        "next_sell_price": next_sell_price,
-        "next_sell_qty": next_sell_qty,
-    }
+ """Pure function to calculate synthetic dividend buy/sell orders.
+
+ The formulas ensure perfect symmetry: if you buy Q shares at price P_low,
+ then from P_low you can sell exactly Q shares back at price P_current.
+ """
+ next_buy_price: float = last_transaction_price / (1 + rebalance_size)
+ next_buy_qty: int = int(rebalance_size * holdings * profit_sharing + 0.5)
+ next_sell_price: float = last_transaction_price * (1 + rebalance_size)
+ next_sell_qty: int = int(rebalance_size * holdings * profit_sharing / (1 + rebalance_size) + 0.5)
+
+ return {
+ "next_buy_price": next_buy_price,
+ "next_buy_qty": next_buy_qty,
+ "next_sell_price": next_sell_price,
+ "next_sell_qty": next_sell_qty,
+ }
 ```
 
 **Why This is Good**:
-- ✓ Complete type annotations (all params and return)
-- ✓ Pure function (no side effects, no hidden state)
-- ✓ Short (14 lines of logic)
-- ✓ Comprehensive docstring with formula explanation
-- ✓ Terse inline comments explaining calculations
-- ✓ Explicit intermediate variables with types
-- ✓ Immutable return value (dict with explicit structure)
-
+- [OK] Complete type annotations (all params and return)
+- [OK] Pure function (no side effects, no hidden state)
+- [OK] Short (14 lines of logic)
+- [OK] Comprehensive docstring with formula explanation
+- [OK] Terse inline comments explaining calculations
+- [OK] Explicit intermediate variables with types
+- [OK] Immutable return value (dict with explicit structure)
 
 ### Abstract Base Class with Type Safety
 ```python
 class AlgorithmBase(ABC):
-    """Abstract base class for trading algorithms.
+ """Abstract base class for trading algorithms.
 
-    Subclasses must implement three lifecycle hooks:
-    - on_new_holdings: Called after initial purchase
-    - on_day: Called each trading day, returns Transaction or None
-    - on_end_holding: Called at end of backtest period
-    """
+ Subclasses must implement three lifecycle hooks:
+ - on_new_holdings: Called after initial purchase
+ - on_day: Called each trading day, returns Transaction or None
+ - on_end_holding: Called at end of backtest period
+ """
 
-    def __init__(self, params: Optional[Dict[str, Any]] = None) -> None:
-        """Initialize with optional parameters dict."""
-        self.params: Dict[str, Any] = params or {}
+ def __init__(self, params: Optional[Dict[str, Any]] = None) -> None:
+ """Initialize with optional parameters dict."""
+ self.params: Dict[str, Any] = params or {}
 
-    @abstractmethod
-    def on_day(
-        self, 
-        date_: date, 
-        price_row: pd.Series, 
-        holdings: int, 
-        bank: float, 
-        history: pd.DataFrame
-    ) -> Optional[Transaction]:
-        """Process one trading day, optionally return transaction.
-        
-        Args:
-            date_: Current date
-            price_row: OHLC prices for current day
-            holdings: Current share count
-            bank: Current cash balance (may be negative)
-            history: All price data up to previous day
-            
-        Returns:
-            Transaction to execute, or None to hold
-        """
-        pass
+ @abstractmethod
+ def on_day(
+ self,
+ date_: date,
+ price_row: pd.Series,
+ holdings: int,
+ bank: float,
+ history: pd.DataFrame
+ ) -> Optional[Transaction]:
+ """Process one trading day, optionally return transaction.
+
+ Args:
+ date_: Current date
+ price_row: OHLC prices for current day
+ holdings: Current share count
+ bank: Current cash balance (may be negative)
+ history: All price data up to previous day
+
+ Returns:
+ Transaction to execute, or None to hold
+ """
+ pass
 ```
 
 **Why This is Good**:
-- ✓ Complete type annotations on all methods
-- ✓ Comprehensive class docstring explaining contract
-- ✓ Method docstrings with detailed Args/Returns sections
-- ✓ Explicit types for instance variables (`self.params: Dict[str, Any]`)
-- ✓ Optional types used correctly (`Optional[Transaction]`)
-- ✓ Multi-line signatures for readability
-
+- [OK] Complete type annotations on all methods
+- [OK] Comprehensive class docstring explaining contract
+- [OK] Method docstrings with detailed Args/Returns sections
+- [OK] Explicit types for instance variables (`self.params: Dict[str, Any]`)
+- [OK] Optional types used correctly (`Optional[Transaction]`)
+- [OK] Multi-line signatures for readability
 
 ## Tools for Enforcement
 
@@ -741,7 +730,6 @@ pip install pytest
 pytest tests/
 ```
 
-
 ## Further Reading
 
 - **Clean Code** by Robert C. Martin - Principles of readable code
@@ -749,7 +737,6 @@ pytest tests/
 - **PEP 484** - Type Hints specification
 - **PEP 8** - Python Style Guide
 - **Google Python Style Guide** - Docstring conventions
-
 
 ## Evolution of This Document
 

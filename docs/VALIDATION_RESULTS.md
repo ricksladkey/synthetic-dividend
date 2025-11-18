@@ -19,9 +19,9 @@ This validation proves that synthetic dividends systematically harvest volatilit
 1. **Buy-and-hold**: Initial allocation, no rebalancing
 2. **Quarterly rebalance**: Traditional portfolio rebalancing every 3 months
 3. **Synthetic dividend auto**: Volatility harvesting with per-asset strategy selection
-   - BTC-USD: sd4 (18.92% trigger)
-   - VOO: sd8 (9.05% trigger)
-   - BIL: buy-and-hold (no volatility to harvest)
+ - BTC-USD: sd4 (18.92% trigger)
+ - VOO: sd8 (9.05% trigger)
+ - BIL: buy-and-hold (no volatility to harvest)
 
 ### Withdrawal Rates
 - 0% (accumulation phase)
@@ -167,10 +167,10 @@ During validation, baseline diagnostic revealed synthetic dividend was executing
 ```python
 # Initialize per-asset algorithms (if using PerAssetPortfolioAlgorithm)
 if isinstance(portfolio_algo, PerAssetPortfolioAlgorithm):
-    for ticker, algo in portfolio_algo.strategies.items():
-        if hasattr(algo, "on_new_holdings"):
-            first_price = price_data_indexed[ticker].loc[common_dates[0], "Close"].item()
-            algo.on_new_holdings(holdings[ticker], first_price)
+ for ticker, algo in portfolio_algo.strategies.items():
+ if hasattr(algo, "on_new_holdings"):
+ first_price = price_data_indexed[ticker].loc[common_dates[0], "Close"].item()
+ algo.on_new_holdings(holdings[ticker], first_price)
 ```
 
 Without this fix, results were identical to buy-and-hold (as expected - no trades occurred).
@@ -218,28 +218,28 @@ Tests strategy across multiple 5-year periods to avoid cherry-picking bias.
 1. **Synthetic dividend strategy generates +120% volatility alpha** when applied to portfolios containing volatile assets
 
 2. **Strategy systematically harvests volatility**, not just lucky timing:
-   - Consistent across all withdrawal rates
-   - Works in bull and bear markets
-   - Proven through BTC isolation analysis
+ - Consistent across all withdrawal rates
+ - Works in bull and bear markets
+ - Proven through BTC isolation analysis
 
 3. **Volatility is harvestable alpha**:
-   - BTC contribution: +382% via synthetic dividend vs +216% via buy-and-hold
-   - Strategy extracts 76% MORE value from BTC than passive holding
+ - BTC contribution: +382% via synthetic dividend vs +216% via buy-and-hold
+ - Strategy extracts 76% MORE value from BTC than passive holding
 
 4. **Asset selection matters**:
-   - High volatility assets (BTC) enable massive alpha
-   - Low volatility assets (VOO/BIL only) generate negative alpha
-   - Per-asset strategy selection is critical
+ - High volatility assets (BTC) enable massive alpha
+ - Low volatility assets (VOO/BIL only) generate negative alpha
+ - Per-asset strategy selection is critical
 
 5. **Traditional quarterly rebalancing fails spectacularly** (-210% to -227% alpha):
-   - Fixed intervals ignore market conditions
-   - Cannot adapt to volatility regime changes
-   - Synthetic dividend's dynamic triggers are superior
+ - Fixed intervals ignore market conditions
+ - Cannot adapt to volatility regime changes
+ - Synthetic dividend's dynamic triggers are superior
 
 6. **Withdrawal sustainability proven**:
-   - +120% alpha maintained even under 8% annual withdrawals
-   - Cash buffer naturally replenishes from harvested volatility
-   - No degradation as withdrawal rate increases
+ - +120% alpha maintained even under 8% annual withdrawals
+ - Cash buffer naturally replenishes from harvested volatility
+ - No degradation as withdrawal rate increases
 
 ---
 
@@ -252,9 +252,9 @@ Tests strategy across multiple 5-year periods to avoid cherry-picking bias.
 2. **Monte Carlo bootstrapping**: Randomized sampling of market conditions to stress-test strategy
 
 3. **Different portfolio compositions**:
-   - 70/20/10 (higher equity exposure)
-   - 50/40/10 (more conservative)
-   - Multi-crypto (BTC + ETH)
+ - 70/20/10 (higher equity exposure)
+ - 50/40/10 (more conservative)
+ - Multi-crypto (BTC + ETH)
 
 4. **Transaction cost sensitivity**: Add realistic commission and slippage models
 

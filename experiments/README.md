@@ -17,17 +17,17 @@ This distinction allows:
 
 ```
 experiments/
-├── README.md                        # This file
-├── volatility-alpha-validation/    # Formula validation dataset
-│   ├── README.md                    # Analysis and findings
-│   ├── generate-data.bat            # Reproduction script
-│   └── volatility_alpha_table.csv   # 18 scenarios across 6 assets
-├── 2025-01-25_profit-sharing/      # Experiment date + name
-│   ├── README.md                    # Experiment documentation
-│   ├── params.json                  # Parameters used
-│   ├── results.csv                  # Raw results
-│   └── charts/                      # Generated visualizations
-│       └── composition.png
+├── README.md # This file
+├── volatility-alpha-validation/ # Formula validation dataset
+│ ├── README.md # Analysis and findings
+│ ├── generate-data.bat # Reproduction script
+│ └── volatility_alpha_table.csv # 18 scenarios across 6 assets
+├── 2025-01-25_profit-sharing/ # Experiment date + name
+│ ├── README.md # Experiment documentation
+│ ├── params.json # Parameters used
+│ ├── results.csv # Raw results
+│ └── charts/ # Generated visualizations
+│ └── composition.png
 └── ...
 ```
 
@@ -36,8 +36,8 @@ experiments/
 ### volatility-alpha-validation/
 **Purpose**: Validate the mathematical formula `Alpha ≈ (trigger%)² / 2 × buy_count`
 
-**Assets**: NVDA, MSTR, BTC-USD, ETH-USD, PLTR, GLD  
-**Timeframes**: 1, 2, 3 years ending Oct 26, 2025  
+**Assets**: NVDA, MSTR, BTC-USD, ETH-USD, PLTR, GLD
+**Timeframes**: 1, 2, 3 years ending Oct 26, 2025
 **Key Finding**: Formula provides reliable conservative lower bound. High volatility assets show 2-3x theoretical minimum due to gap bonuses.
 
 **Reproduce**:
@@ -72,12 +72,12 @@ Documents:
 Machine-readable parameters:
 ```json
 {
-  "ticker": "NVDA",
-  "start_date": "2022-01-01",
-  "end_date": "2024-12-31",
-  "profit_sharing_range": [-0.25, 1.25],
-  "step": 0.05,
-  "commit": "abc123def"
+ "ticker": "NVDA",
+ "start_date": "2022-01-01",
+ "end_date": "2024-12-31",
+ "profit_sharing_range": [-0.25, 1.25],
+ "step": 0.05,
+ "commit": "abc123def"
 }
 ```
 
@@ -98,8 +98,8 @@ If the experiment used custom parameters or modifications not in the main codeba
 ```markdown
 # Profit Sharing Composition Analysis
 
-**Date:** 2025-01-25  
-**Commit:** `35aa755`  
+**Date:** 2025-01-25
+**Commit:** `35aa755`
 **Script:** `src/research/profit_sharing_composition.py`
 
 ## Research Question
@@ -136,17 +136,17 @@ How do different profit-sharing ratios (-25% to +125%) affect holdings compositi
 ## Best Practices
 
 ### Do:
-✅ Run experiments from a clean git state (committed code)  
-✅ Record git commit hash in experiment README  
-✅ Include date in folder name for chronological sorting  
-✅ Document unexpected findings  
-✅ Keep raw data (CSV) alongside visualizations  
+[OK] Run experiments from a clean git state (committed code)
+[OK] Record git commit hash in experiment README
+[OK] Include date in folder name for chronological sorting
+[OK] Document unexpected findings
+[OK] Keep raw data (CSV) alongside visualizations
 
 ### Don't:
-❌ Modify experiment results after the fact  
-❌ Cherry-pick successful runs (document failures too)  
-❌ Use experiments/ for in-progress work (use output/ instead)  
-❌ Commit huge files (>10MB) - use Git LFS or summarize  
+[FAIL] Modify experiment results after the fact
+[FAIL] Cherry-pick successful runs (document failures too)
+[FAIL] Use experiments/ for in-progress work (use output/ instead)
+[FAIL] Commit huge files (>10MB) - use Git LFS or summarize
 
 ## Workflow
 

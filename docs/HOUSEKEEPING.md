@@ -1,7 +1,7 @@
 # Project Housekeeping Guidelines
 ## Keeping Theory and Documentation Clean, Consistent, and Current
 
-**Created**: October 26, 2025  
+**Created**: October 26, 2025
 **Purpose**: Document best practices for maintaining conceptual clarity as the project evolves
 
 ---
@@ -52,11 +52,11 @@ As a research project grows rapidly, contradictions and inconsistencies naturall
 - [ ] Regenerate concatenated system prompt if needed
 
 **New Concepts to Integrate** (from this session):
-- ✅ Irregular → regular payment transformation
-- ✅ Sequence-of-returns risk mitigation
-- ✅ "Never forced to sell at a loss" principle
-- ✅ Coverage ratio as smoothing metric
-- ✅ Dual bank management modes
+- [OK] Irregular → regular payment transformation
+- [OK] Sequence-of-returns risk mitigation
+- [OK] "Never forced to sell at a loss" principle
+- [OK] Coverage ratio as smoothing metric
+- [OK] Dual bank management modes
 
 ---
 
@@ -73,10 +73,10 @@ As a research project grows rapidly, contradictions and inconsistencies naturall
 - [ ] Update "Last Updated" dates in documents
 
 **This Session's Updates**:
-- ✅ Test count: 20 → 44
-- ✅ Added withdrawal policy, margin modes, income smoothing
-- ✅ Updated roadmap phases
-- ✅ Added new theory documents to documentation table
+- [OK] Test count: 20 → 44
+- [OK] Added withdrawal policy, margin modes, income smoothing
+- [OK] Updated roadmap phases
+- [OK] Added new theory documents to documentation table
 
 ---
 
@@ -86,7 +86,7 @@ As a research project grows rapidly, contradictions and inconsistencies naturall
 
 **Strategy**:
 
-**❌ Wrong Approach**:
+**[FAIL] Wrong Approach**:
 ```
 Create INCOME_SMOOTHING.md in isolation
 → Mentions nothing about INCOME_GENERATION.md
@@ -94,7 +94,7 @@ Create INCOME_SMOOTHING.md in isolation
 → Two documents with related but disconnected concepts
 ```
 
-**✅ Right Approach**:
+**[OK] Right Approach**:
 ```
 Create INCOME_SMOOTHING.md with clear purpose
 → Update INCOME_GENERATION.md to reference it
@@ -104,10 +104,10 @@ Create INCOME_SMOOTHING.md with clear purpose
 ```
 
 **This Session**:
-- ✅ Added smoothing reference to INCOME_GENERATION.md executive summary
-- ✅ Added INCOME_SMOOTHING.md to theory/README.md
-- ✅ Updated learning order (step 4: read smoothing after generation)
-- ✅ Added key concepts section with unified themes
+- [OK] Added smoothing reference to INCOME_GENERATION.md executive summary
+- [OK] Added INCOME_SMOOTHING.md to theory/README.md
+- [OK] Updated learning order (step 4: read smoothing after generation)
+- [OK] Added key concepts section with unified themes
 
 ---
 
@@ -139,9 +139,9 @@ grep "^[0-9]\+\." theory/README.md | sort | uniq -d
 - Example code that uses deprecated APIs
 
 **This Session Found**:
-- ✅ Duplicate "5." in theory/README.md (fixed: renumbered 5-10)
-- ✅ Test count mismatch (20 in README vs 44 actual)
-- ✅ Missing INCOME_SMOOTHING.md from theory/README.md
+- [OK] Duplicate "5." in theory/README.md (fixed: renumbered 5-10)
+- [OK] Test count mismatch (20 in README vs 44 actual)
+- [OK] Missing INCOME_SMOOTHING.md from theory/README.md
 
 ---
 
@@ -156,9 +156,9 @@ grep "^[0-9]\+\." theory/README.md | sort | uniq -d
 - [ ] Ensure system prompt concatenation includes all files
 
 **This Session**:
-- ✅ Updated INCOME_GENERATION.md: Added INCOME_SMOOTHING.md to "Related"
-- ✅ Updated theory/README.md: Added INCOME_SMOOTHING.md to concatenation command
-- ✅ Added cross-references in both documents' executive summaries
+- [OK] Updated INCOME_GENERATION.md: Added INCOME_SMOOTHING.md to "Related"
+- [OK] Updated theory/README.md: Added INCOME_SMOOTHING.md to concatenation command
+- [OK] Added cross-references in both documents' executive summaries
 
 ---
 
@@ -194,9 +194,9 @@ pytest tests/ -v
 - [ ] Check "Created" dates are accurate
 
 **This Session**:
-- ✅ INCOME_SMOOTHING.md: Last Updated: October 26, 2025
-- ✅ theory/README.md: Status: Active development (Phase 3)
-- ✅ Main README: Roadmap updated (Phase 1-2 complete, Phase 3 in progress)
+- [OK] INCOME_SMOOTHING.md: Last Updated: October 26, 2025
+- [OK] theory/README.md: Status: Active development (Phase 3)
+- [OK] Main README: Roadmap updated (Phase 1-2 complete, Phase 3 in progress)
 
 ---
 
@@ -229,7 +229,7 @@ grep "Last Updated" theory/*.md
 
 **Update locations when count changes**:
 1. Main README badge: `[![Tests](https://img.shields.io/badge/tests-XX%20passing-brightgreen.svg)]`
-2. Main README table: `| ✅ **pytest** | XX tests | ...`
+2. Main README table: `| [OK] **pytest** | XX tests | ...`
 3. TODO.md summary: "Total tests: XX"
 4. Commit messages: "All XX tests passing"
 
@@ -247,8 +247,8 @@ grep "Last Updated" theory/*.md
 **Update trigger**: When major milestone completes (e.g., withdrawal policy → Phase 2 complete)
 
 **This Session**:
-- ✅ Main README: Phase 1-2 complete, Phase 3 in progress
-- ✅ theory/README.md: Phase 3 (income generation & smoothing)
+- [OK] Main README: Phase 1-2 complete, Phase 3 in progress
+- [OK] theory/README.md: Phase 3 (income generation & smoothing)
 
 ---
 
@@ -263,11 +263,11 @@ grep "Last Updated" theory/*.md
 5. **Update main README** if user-facing
 
 **This Session's Example** (income smoothing):
-1. ✅ Created INCOME_SMOOTHING.md (dedicated document)
-2. ✅ Added to theory/README.md Key Concepts section
-3. ✅ Updated INCOME_GENERATION.md to reference it
-4. ✅ Added to learning path (step 4)
-5. ✅ Updated main README (features, documentation table)
+1. [OK] Created INCOME_SMOOTHING.md (dedicated document)
+2. [OK] Added to theory/README.md Key Concepts section
+3. [OK] Updated INCOME_GENERATION.md to reference it
+4. [OK] Added to learning path (step 4)
+5. [OK] Updated main README (features, documentation table)
 
 ---
 
@@ -323,35 +323,35 @@ echo "Done!"
 6. **Fresh timestamps** (within 30 days for active areas)
 
 **Red flags**:
-- ⚠️ Test count mismatches across files
-- ⚠️ "Last Updated" > 90 days old for core documents
-- ⚠️ Roadmap "In Progress" items completed 30+ days ago
-- ⚠️ New features not mentioned in README
-- ⚠️ Theory concepts that don't reference related work
+- WARNING: Test count mismatches across files
+- WARNING: "Last Updated" > 90 days old for core documents
+- WARNING: Roadmap "In Progress" items completed 30+ days ago
+- WARNING: New features not mentioned in README
+- WARNING: Theory concepts that don't reference related work
 
 ---
 
 ## This Session's Housekeeping Results
 
 **Completed**:
-- ✅ Updated INCOME_SMOOTHING.md with 3 new concepts (irregular→regular, sequence-of-returns, never sell at loss)
-- ✅ Updated INCOME_GENERATION.md to reference smoothing
-- ✅ Updated theory/README.md (added INCOME_SMOOTHING.md, fixed duplicate numbering)
-- ✅ Updated main README.md (test count 44, new features, updated roadmap)
-- ✅ All cross-references verified and updated
-- ✅ All examples tested (44/44 tests passing)
+- [OK] Updated INCOME_SMOOTHING.md with 3 new concepts (irregular→regular, sequence-of-returns, never sell at loss)
+- [OK] Updated INCOME_GENERATION.md to reference smoothing
+- [OK] Updated theory/README.md (added INCOME_SMOOTHING.md, fixed duplicate numbering)
+- [OK] Updated main README.md (test count 44, new features, updated roadmap)
+- [OK] All cross-references verified and updated
+- [OK] All examples tested (44/44 tests passing)
 
 **Contradictions Resolved**:
-- ✅ Test count: 20 → 44 (unified across all documents)
-- ✅ Duplicate "5." in theory/README.md → renumbered 5-10
-- ✅ Missing INCOME_SMOOTHING.md reference → added to all relevant places
+- [OK] Test count: 20 → 44 (unified across all documents)
+- [OK] Duplicate "5." in theory/README.md → renumbered 5-10
+- [OK] Missing INCOME_SMOOTHING.md reference → added to all relevant places
 
 **Concepts Integrated**:
-- ✅ Irregular → regular transformation (smoothing)
-- ✅ Sequence-of-returns protection (for growth stocks)
-- ✅ "Never forced to sell at a loss" principle
-- ✅ Coverage ratio as smoothing metric
-- ✅ Portfolio diversification benefits
+- [OK] Irregular → regular transformation (smoothing)
+- [OK] Sequence-of-returns protection (for growth stocks)
+- [OK] "Never forced to sell at a loss" principle
+- [OK] Coverage ratio as smoothing metric
+- [OK] Portfolio diversification benefits
 
 ---
 
@@ -391,8 +391,8 @@ grep "^[0-9]\+\." theory/README.md | awk '{print $1}' | sort | uniq -d
 ```
 === Test Counts ===
 README.md:9:[![Tests](https://img.shields.io/badge/tests-44%20passing-brightgreen.svg)]
-README.md:312:| ✅ **pytest** | 44 tests | ...
-TODO.md:15:Total tests: 44 (all passing ✅)
+README.md:312:| [OK] **pytest** | 44 tests | ...
+TODO.md:15:Total tests: 44 (all passing [OK])
 
 === Last Updated ===
 theory/INCOME_GENERATION.md:**Last Updated**: October 25, 2025
@@ -411,5 +411,5 @@ theory/README.md:**Last Updated**: October 2025
 
 ---
 
-**Last Updated**: October 26, 2025  
+**Last Updated**: October 26, 2025
 **Next Review**: November 1, 2025 (or after next major feature)

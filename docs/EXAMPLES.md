@@ -1,4 +1,4 @@
-# 📚 Examples and Use Cases
+# Examples and Use Cases
 
 This document provides practical examples for using the Synthetic Dividend Algorithm tools.
 
@@ -126,29 +126,29 @@ sd analyze volatility-alpha --ticker GLD --start 10/26/2024 --end 10/26/2025
 VOLATILITY ALPHA ANALYZER: GLD
 ================================================================================
 
-📊 Historical Volatility: 19.67% annualized
-💡 Auto-suggestion: Low volatility (19.7%) → SD16 (4.47% trigger)
+ Historical Volatility: 19.67% annualized
+TIP: Auto-suggestion: Low volatility (19.7%) → SD16 (4.47% trigger)
 
 Backtest Period: 2024-10-26 to 2025-10-26 (1.00 years)
 Initial Investment: $4,237.00 (100 shares @ $42.37)
 
 SD16 (Full Strategy):
-  Final Value:        $6,173.22
-  Return:             45.71%
-  Bank Balance:       $271.14
-  Transactions:       4 sells, 2 buys
-  
-SD16-ATH-Only (No Buybacks):
-  Final Value:        $6,142.91
-  Return:             44.98%
-  Bank Balance:       $240.83
-  Transactions:       4 sells
-────────────────────────────────────────────────────────────────────────────────
-Volatility Alpha:           +0.72%
-Alpha Per Transaction:      +0.36% per buyback
+ Final Value: $6,173.22
+ Return: 45.71%
+ Bank Balance: $271.14
+ Transactions: 4 sells, 2 buys
 
-✅ Strong positive alpha! Buybacks added 0.72% extra return.
-   The 2 buyback opportunities captured $30.31 of additional profit.
+SD16-ATH-Only (No Buybacks):
+ Final Value: $6,142.91
+ Return: 44.98%
+ Bank Balance: $240.83
+ Transactions: 4 sells
+────────────────────────────────────────────────────────────────────────────────
+Volatility Alpha: +0.72%
+Alpha Per Transaction: +0.36% per buyback
+
+[OK] Strong positive alpha! Buybacks added 0.72% extra return.
+ The 2 buyback opportunities captured $30.31 of additional profit.
 ```
 
 **Experimental Summary**:
@@ -169,33 +169,33 @@ sd analyze volatility-alpha --ticker NVDA --start 01/01/2023 --end 12/31/2023 --
 VOLATILITY ALPHA ANALYZER: NVDA
 ================================================================================
 
-📊 Historical Volatility: 47.82% annualized
-💡 Auto-suggestion: High volatility (47.8%) → SD8 (9.05% trigger)
+ Historical Volatility: 47.82% annualized
+TIP: Auto-suggestion: High volatility (47.8%) → SD8 (9.05% trigger)
 
 Backtest Period: 2023-01-01 to 2023-12-31 (1.00 years)
 Initial Investment: $143,150.00 (10,000 shares @ $14.31)
 
 SD8 (Full Strategy):
-  Final Value:        $406,933.43
-  Return:             184.27%
-  Bank Balance:       $35,653.60
-  Holdings:           590 shares @ $50.41
-  Transactions:       24 sells, 24 buys
-  
+ Final Value: $406,933.43
+ Return: 184.27%
+ Bank Balance: $35,653.60
+ Holdings: 590 shares @ $50.41
+ Transactions: 24 sells, 24 buys
+
 SD8-ATH-Only (No Buybacks):
-  Final Value:        $402,148.99
-  Return:             180.93%
-  Bank Balance:       $28,595.12
-  Holdings:           590 shares @ $50.41
-  Transactions:       14 sells
+ Final Value: $402,148.99
+ Return: 180.93%
+ Bank Balance: $28,595.12
+ Holdings: 590 shares @ $50.41
+ Transactions: 14 sells
 ────────────────────────────────────────────────────────────────────────────────
-Volatility Alpha:           +3.34%
-Alpha Per Transaction:      +0.14% per buyback
+Volatility Alpha: +3.34%
+Alpha Per Transaction: +0.14% per buyback
 
-✅ Strong positive alpha! Buybacks generated $4,784.44 in extra profit.
-   24 buyback cycles transformed volatility into systematic gains.
+[OK] Strong positive alpha! Buybacks generated $4,784.44 in extra profit.
+ 24 buyback cycles transformed volatility into systematic gains.
 
-📊 Chart saved to: NVDA_volatility_alpha.png
+ Chart saved to: NVDA_volatility_alpha.png
 ```
 
 **Experimental Summary**:
@@ -256,24 +256,24 @@ sd analyze volatility-alpha --ticker GLD --start 10/26/2024 --end 10/26/2025 --s
 
 **Output**:
 ```
-📊 Historical Volatility: 19.67% annualized
-💡 Auto-suggestion: Low volatility (19.7%) → SD16 (4.47% trigger)
-⚠️  Override applied: Using SD8 (9.05% trigger) instead
+ Historical Volatility: 19.67% annualized
+TIP: Auto-suggestion: Low volatility (19.7%) → SD16 (4.47% trigger)
+WARNING: Override applied: Using SD8 (9.05% trigger) instead
 
 SD8 (Full Strategy):
-  Final Value:        $6,142.91
-  Return:             44.98%
-  Transactions:       4 sells, 0 buys
-  
-SD8-ATH-Only:
-  Final Value:        $6,142.91
-  Return:             44.98%
-  Transactions:       4 sells
-────────────────────────────────────────────────────────────────────────────────
-Volatility Alpha:           0.00%
+ Final Value: $6,142.91
+ Return: 44.98%
+ Transactions: 4 sells, 0 buys
 
-ℹ️  Zero alpha: SD8's 9.05% trigger was too wide for GLD's pullbacks.
-   Consider tightening to SD16 (4.47%) to capture smaller fluctuations.
+SD8-ATH-Only:
+ Final Value: $6,142.91
+ Return: 44.98%
+ Transactions: 4 sells
+────────────────────────────────────────────────────────────────────────────────
+Volatility Alpha: 0.00%
+
+ℹ️ Zero alpha: SD8's 9.05% trigger was too wide for GLD's pullbacks.
+ Consider tightening to SD16 (4.47%) to capture smaller fluctuations.
 ```
 
 **Experimental Summary**:
@@ -291,7 +291,7 @@ This experiment demonstrates threshold miscalibration. When forcing GLD to use S
 |--------|---------|--------------|-------------|-------------------|-----------------|
 | **Extreme Bull** | NVDA 2020-25 | +2139% | 86% | -27.16% alpha | 6.6% of position |
 | **Moderate Bull** | SPY 2020-25 | +81% | 12.5% | **-0.66% alpha** | **36-38% of position** ⭐ |
-| **Choppy/Sideways** | SPY 2015-19 | +21% | 5% | **+0.23% alpha** ✅ | 10-19% of position |
+| **Choppy/Sideways** | SPY 2015-19 | +21% | 5% | **+0.23% alpha** [OK] | 10-19% of position |
 
 **Key Insight**: Moderate bull markets (SPY 2020-2025) represent the optimal environment for SD8, sacrificing only 0.66-1.27% annualized returns while generating nearly 5x the cash needed for $50K/year withdrawals.
 
@@ -348,10 +348,10 @@ The **Transaction History Export** feature allows you to export detailed transac
 
 ### Key Features
 
-- ✅ **Complete transaction history** with dates, actions, quantities, and prices
-- ✅ **Multiple output formats** (text, CSV-ready)
-- ✅ **Works with any strategy** (SD8, SD16, ATH-only, custom algorithms)
-- ✅ **No visualization overhead** - pure data export
+- [OK] **Complete transaction history** with dates, actions, quantities, and prices
+- [OK] **Multiple output formats** (text, CSV-ready)
+- [OK] **Works with any strategy** (SD8, SD16, ATH-only, custom algorithms)
+- [OK] **No visualization overhead** - pure data export
 
 ### Basic Export
 
@@ -425,11 +425,11 @@ The **unified portfolio backtesting** system provides a single interface for bot
 
 ### Key Features
 
-- ✅ **Unified interface** for single-asset and multi-asset backtesting
-- ✅ **All algorithm features** available in portfolios (dividends, withdrawals, margin)
-- ✅ **Proper date alignment** across multiple assets
-- ✅ **Backward compatible** with existing `simulate_portfolio` calls
-- ✅ **CLI and programmatic** access
+- [OK] **Unified interface** for single-asset and multi-asset backtesting
+- [OK] **All algorithm features** available in portfolios (dividends, withdrawals, margin)
+- [OK] **Proper date alignment** across multiple assets
+- [OK] **Backward compatible** with existing `simulate_portfolio` calls
+- [OK] **CLI and programmatic** access
 
 ### Available Portfolio Algorithms
 
@@ -466,11 +466,11 @@ algo = build_portfolio_algo_from_name('auto', allocations={'NVDA': 0.4, 'VOO': 0
 
 # Run backtest
 transactions, summary = run_portfolio_backtest(
-    allocations={'NVDA': 0.4, 'VOO': 0.6},
-    start_date=date(2024, 1, 1),
-    end_date=date(2025, 1, 1),
-    portfolio_algo=algo,
-    initial_investment=1_000_000
+ allocations={'NVDA': 0.4, 'VOO': 0.6},
+ start_date=date(2024, 1, 1),
+ end_date=date(2025, 1, 1),
+ portfolio_algo=algo,
+ initial_investment=1_000_000
 )
 ```
 
@@ -490,12 +490,12 @@ Period: 2024-10-29 to 2025-10-29
 Initial investment: $1,000,000
 Algorithm: buy-and-hold
 Allocations:
-  NVDA: 40.0%
-  VOO: 60.0%
+ NVDA: 40.0%
+ VOO: 60.0%
 
 Fetching data for 2 assets...
-  - NVDA... ✓ (251 days)
-  - VOO... ✓ (252 days)
+ - NVDA... [OK] (251 days)
+ - VOO... [OK] (252 days)
 Common trading days: 251 (2024-10-29 to 2025-10-29)
 
 RESULTS:
@@ -504,8 +504,8 @@ Total return: 29.28%
 Annualized return: 29.31%
 
 Asset breakdown:
-  NVDA: $583,880 (46.01%)
-  VOO: $708,965 (18.26%)
+ NVDA: $583,880 (46.01%)
+ VOO: $708,965 (18.26%)
 ```
 
 **Experimental Summary**:
@@ -527,18 +527,18 @@ Period: 2024-01-01 to 2025-01-01
 Initial investment: $1,000,000
 Algorithm: sd-9.05,50.0
 Allocations:
-  NVDA: 20.0%
-  GOOG: 20.0%
-  BTC-USD: 20.0%
-  GLDM: 20.0%
-  PLTR: 20.0%
+ NVDA: 20.0%
+ GOOG: 20.0%
+ BTC-USD: 20.0%
+ GLDM: 20.0%
+ PLTR: 20.0%
 
 Fetching data for 5 assets...
-  - NVDA... ✓ (251 days)
-  - GOOG... ✓ (251 days)
-  - BTC-USD... ✓ (366 days)
-  - GLDM... ✓ (251 days)
-  - PLTR... ✓ (251 days)
+ - NVDA... [OK] (251 days)
+ - GOOG... [OK] (251 days)
+ - BTC-USD... [OK] (366 days)
+ - GLDM... [OK] (251 days)
+ - PLTR... [OK] (251 days)
 Common trading days: 251 (2024-01-01 to 2025-01-01)
 
 RESULTS:
@@ -547,11 +547,11 @@ Total return: 55.02%
 Annualized return: 55.08%
 
 Asset breakdown:
-  NVDA: $310,456 (46.01%)
-  GOOG: $278,901 (35.89%)
-  BTC-USD: $311,240 (52.97%)
-  GLDM: $218,765 (18.26%)
-  PLTR: $430,872 (138.59%)
+ NVDA: $310,456 (46.01%)
+ GOOG: $278,901 (35.89%)
+ BTC-USD: $311,240 (52.97%)
+ GLDM: $218,765 (18.26%)
+ PLTR: $430,872 (138.59%)
 ```
 
 **Experimental Summary**:
@@ -573,9 +573,9 @@ Period: 2024-01-01 to 2025-01-01
 Initial investment: $1,000,000
 Algorithm: sd-9.05,50.0
 Allocations:
-  NVDA: 30.0%
-  VOO: 40.0%
-  GLDM: 30.0%
+ NVDA: 30.0%
+ VOO: 40.0%
+ GLDM: 30.0%
 Withdrawal rate: 4.0% annually
 
 RESULTS:
@@ -586,9 +586,9 @@ Total withdrawn: $38,450
 Withdrawal count: 12
 
 Asset breakdown:
-  NVDA: $287,345 (42.15%)
-  VOO: $498,765 (17.89%)
-  GLDM: $459,568 (19.26%)
+ NVDA: $287,345 (42.15%)
+ VOO: $498,765 (17.89%)
+ GLDM: $459,568 (19.26%)
 ```
 
 **Experimental Summary**:
@@ -648,7 +648,7 @@ For convenience, you can use **named portfolios** instead of specifying asset al
 # Classic 60/40 stocks/bonds
 sd portfolio --allocations classic --start 2024-01-01 --end 2025-01-01
 
-# Buffett 90/10 stocks/bonds  
+# Buffett 90/10 stocks/bonds
 sd portfolio --allocations buffet --start 2024-01-01 --end 2025-01-01
 
 # Classic plus 10% crypto
@@ -779,34 +779,34 @@ BACKTEST RESULTS: NVDA
 Strategy: SD8 (9.05% rebalancing, 50% profit sharing, buybacks enabled)
 
 Initial Position (2023-10-23):
-  Price:              $42.35
-  Quantity:           10,000 shares
-  Initial Value:      $423,500.00
+ Price: $42.35
+ Quantity: 10,000 shares
+ Initial Value: $423,500.00
 
 Final Position (2024-10-23):
-  Price:              $139.56
-  Quantity:           6,349 shares
-  Holdings Value:     $886,066.42
-  Bank Balance:       $315,179.72
-  Total Value:        $1,201,246.15
+ Price: $139.56
+ Quantity: 6,349 shares
+ Holdings Value: $886,066.42
+ Bank Balance: $315,179.72
+ Total Value: $1,201,246.15
 
 Performance Metrics:
-  Total Return:       179.52%
-  Annualized Return:  178.93% (over 1.002 years)
-  Volatility Alpha:   11.88%
+ Total Return: 179.52%
+ Annualized Return: 178.93% (over 1.002 years)
+ Volatility Alpha: 11.88%
 
 Transaction Summary:
-  Total Transactions: 62
-  Sells:              38 (profit-taking)
-  Buys:               24 (buybacks during dips)
-  Net Shares Sold:    3,651 shares
+ Total Transactions: 62
+ Sells: 38 (profit-taking)
+ Buys: 24 (buybacks during dips)
+ Net Shares Sold: 3,651 shares
 
 Bank Balance Breakdown:
-  Synthetic Dividends:   $315,179.72
-  Real Dividends:        $0.00 (NVDA non-dividend stock)
-  Total Cash Generated:  $315,179.72
-  
-Coverage Ratio:         N/A (no withdrawals)
+ Synthetic Dividends: $315,179.72
+ Real Dividends: $0.00 (NVDA non-dividend stock)
+ Total Cash Generated: $315,179.72
+
+Coverage Ratio: N/A (no withdrawals)
 
 ════════════════════════════════════════════════════════════════════════════════
 ```
@@ -907,10 +907,10 @@ sd run compare batch --tickers NVDA AAPL GLD --strategies sd8 sd16 --start 01/01
 ```bash
 # Compare 3 assets with 2 strategies each
 python -m src.compare.batch_comparison \
-  --tickers NVDA AAPL GLD \
-  --strategies sd8 sd16 \
-  --start 01/01/2024 \
-  --end 12/31/2024
+ --tickers NVDA AAPL GLD \
+ --strategies sd8 sd16 \
+ --start 01/01/2024 \
+ --end 12/31/2024
 ```
 
 ---
@@ -941,13 +941,13 @@ initial_qty = 100
 start_price = price_df.iloc[0]["Close"]
 
 _, summary = run_portfolio_backtest(
-    allocations={ticker: 1.0},
-    start_date=start_date,
-    end_date=end_date,
-    portfolio_algo="per-asset:sd-9.05,50",  # SD8 algorithm: 9.05% trigger, 50% profit sharing
-    initial_investment=initial_qty * start_price,
-    dividend_data={ticker: div_series},  # Include real dividends
-    simple_mode=True,
+ allocations={ticker: 1.0},
+ start_date=start_date,
+ end_date=end_date,
+ portfolio_algo="per-asset:sd-9.05,50", # SD8 algorithm: 9.05% trigger, 50% profit sharing
+ initial_investment=initial_qty * start_price,
+ dividend_data={ticker: div_series}, # Include real dividends
+ simple_mode=True,
 )
 
 print(f"Total dividends received: ${summary['total_dividends']:.2f}")
@@ -1006,41 +1006,41 @@ WITHDRAWAL POLICY SIMULATION: VOO
 ================================================================================
 
 Initial Portfolio (2024-01-01):
-  Value:              $1,000,000.00
-  Shares:             2,500 @ $400.00
-  Bank:               $0.00
+ Value: $1,000,000.00
+ Shares: 2,500 @ $400.00
+ Bank: $0.00
 
 Withdrawal Schedule:
-  Annual Rate:        4.00%
-  Base Monthly:       $3,333.33
-  CPI Adjustment:     3.2% (2024 actual)
-  Final Monthly:      $3,439.99 (Dec 2024)
+ Annual Rate: 4.00%
+ Base Monthly: $3,333.33
+ CPI Adjustment: 3.2% (2024 actual)
+ Final Monthly: $3,439.99 (Dec 2024)
 
 Final Portfolio (2024-12-31):
-  Price:              $535.00 (VOO +33.75%)
-  Shares:             2,380
-  Holdings Value:     $1,273,300.00
-  Bank Balance:       $11,457.82
-  Total Value:        $1,284,757.82
+ Price: $535.00 (VOO +33.75%)
+ Shares: 2,380
+ Holdings Value: $1,273,300.00
+ Bank Balance: $11,457.82
+ Total Value: $1,284,757.82
 
 Performance:
-  Total Return:       28.48%
-  Withdrawals Taken:  $41,288.00 (12 months)
-  Shares Sold:        120 shares (to cover withdrawals)
+ Total Return: 28.48%
+ Withdrawals Taken: $41,288.00 (12 months)
+ Shares Sold: 120 shares (to cover withdrawals)
 
 Income Analysis:
-  Synthetic Dividends: $36,542.00 (3.65% yield on initial value)
-  Real Dividends:      $13,750.00 (VOO quarterly distributions)
-  Total Income:        $50,292.00
-  
-Coverage Ratio:       121.8% (income / withdrawals)
-  ✅ SUSTAINABLE: Income exceeded withdrawals by $9,004
-     Bank balance grew despite 4% withdrawal rate
-     
+ Synthetic Dividends: $36,542.00 (3.65% yield on initial value)
+ Real Dividends: $13,750.00 (VOO quarterly distributions)
+ Total Income: $50,292.00
+
+Coverage Ratio: 121.8% (income / withdrawals)
+ [OK] SUSTAINABLE: Income exceeded withdrawals by $9,004
+ Bank balance grew despite 4% withdrawal rate
+
 Bank Balance Trend:
-  Jan: $0 → Mar: $3,200 → Jun: $7,800 → Sep: $10,100 → Dec: $11,458
-  ✅ Positive trend throughout year
-  
+ Jan: $0 → Mar: $3,200 → Jun: $7,800 → Sep: $10,100 → Dec: $11,458
+ [OK] Positive trend throughout year
+
 ════════════════════════════════════════════════════════════════════════════════
 ```
 
@@ -1070,10 +1070,10 @@ sd backtest --ticker VOO --start 01/01/2024 --end 12/31/2024 --algorithm sd12 --
 
 | Withdrawal Rate | Annual Amount | Total Income | Coverage Ratio | Final Bank | Shares Sold | Sustainable? |
 |----------------|---------------|--------------|----------------|------------|-------------|--------------|
-| **3%** | $30,966 | $50,292 | **162.4%** | $19,326 | 0 | ✅ Excellent |
-| **4%** | $41,288 | $50,292 | **121.8%** | $11,458 | 120 | ✅ Good |
-| **5%** | $51,610 | $50,292 | **97.4%** | $1,136 | 340 | ⚠️ Marginal |
-| **6%** | $61,932 | $50,292 | **81.2%** | -$9,186 | 620 | ❌ Unsustainable |
+| **3%** | $30,966 | $50,292 | **162.4%** | $19,326 | 0 | [OK] Excellent |
+| **4%** | $41,288 | $50,292 | **121.8%** | $11,458 | 120 | [OK] Good |
+| **5%** | $51,610 | $50,292 | **97.4%** | $1,136 | 340 | WARNING: Marginal |
+| **6%** | $61,932 | $50,292 | **81.2%** | -$9,186 | 620 | [FAIL] Unsustainable |
 
 **Experimental Summary**:
 This sensitivity analysis reveals the algorithm's withdrawal rate limits for VOO in a strong 2024 market. At 3% withdrawals, the strategy generated 62% more income than needed (coverage ratio 162.4%), allowing the bank to grow to $19,326 with zero share sales. The traditional 4% rule proved sustainable (121.8% coverage), selling only 120 shares. At 5%, the strategy approaches its limit (97.4% coverage), requiring 340 shares sold and leaving just $1,136 bank balance. The 6% rate proved unsustainable (81.2% coverage), depleting the bank to -$9,186 and forcing sale of 620 shares (24.8% of holdings). The data suggests **4.5% is the maximum sustainable withdrawal rate** for VOO under these market conditions, providing a quantitative answer to retirement planning questions.
@@ -1182,23 +1182,23 @@ sd backtest --ticker VOO --start 01/01/2024 --end 12/31/2024 --algorithm sd12 --
 **Expected Results** (based on 2024 backtest):
 ```
 Income Sources:
-  Synthetic Dividends: $36,542  (3.65% of initial value)
-  Real VOO Dividends:  $13,750  (1.38% of initial value)
-  Total Income:        $50,292  (5.03% of initial value)
-  
+ Synthetic Dividends: $36,542 (3.65% of initial value)
+ Real VOO Dividends: $13,750 (1.38% of initial value)
+ Total Income: $50,292 (5.03% of initial value)
+
 Withdrawals:
-  Monthly (CPI-adj):   $3,333 → $3,440
-  Annual Total:        $41,288
-  
+ Monthly (CPI-adj): $3,333 → $3,440
+ Annual Total: $41,288
+
 Coverage Analysis:
-  Coverage Ratio:      121.8%
-  Surplus:             $9,004 (bank balance grew)
-  Shares Sold:         120 (4.8% of holdings)
-  
+ Coverage Ratio: 121.8%
+ Surplus: $9,004 (bank balance grew)
+ Shares Sold: 120 (4.8% of holdings)
+
 Performance:
-  Total Return:        28.48%
-  Final Value:         $1,284,758
-  Bank Balance:        $11,458 (positive throughout year)
+ Total Return: 28.48%
+ Final Value: $1,284,758
+ Bank Balance: $11,458 (positive throughout year)
 ```
 
 **Experimental Summary**:
@@ -1225,27 +1225,27 @@ sd backtest --ticker NVDA --start 10/23/2023 --end 10/23/2024 --algorithm "sd/9.
 **Results**:
 ```
 Initial Position:
-  Shares:             1,000
-  Value:              $42,350
-  
+ Shares: 1,000
+ Value: $42,350
+
 Final Position:
-  Shares:             692
-  Holdings Value:     $100,009
-  Bank Balance:       $17,827
-  Total Value:        $117,836
-  
+ Shares: 692
+ Holdings Value: $100,009
+ Bank Balance: $17,827
+ Total Value: $117,836
+
 Performance:
-  Total Return:       168.26%
-  vs Buy-and-Hold:    241% (price only)
-  
+ Total Return: 168.26%
+ vs Buy-and-Hold: 241% (price only)
+
 Transaction Summary:
-  Sells:              38 (profit-taking)
-  Buybacks:           24 (aggressive repurchasing)
-  Net Shares:         -308 (sold on net)
-  
+ Sells: 38 (profit-taking)
+ Buybacks: 24 (aggressive repurchasing)
+ Net Shares: -308 (sold on net)
+
 Cash Generation:
-  Total Cash:         $17,827
-  % of Initial:       42.1%
+ Total Cash: $17,827
+ % of Initial: 42.1%
 ```
 
 **Experimental Summary**:
@@ -1272,31 +1272,31 @@ sd backtest --ticker NVDA --start 10/23/2023 --end 10/23/2024 --algorithm "sd/9.
 **Results**:
 ```
 Initial Position:
-  Shares:             1,000
-  Value:              $42,350
-  
+ Shares: 1,000
+ Value: $42,350
+
 Final Position:
-  Shares:             485
-  Holdings Value:     $70,044
-  Bank Balance:       $52,468
-  Total Value:        $122,512
-  
+ Shares: 485
+ Holdings Value: $70,044
+ Bank Balance: $52,468
+ Total Value: $122,512
+
 Performance:
-  Total Return:       177.52%
-  Cash Generated:     $52,468 (124% of initial investment!)
-  
+ Total Return: 177.52%
+ Cash Generated: $52,468 (124% of initial investment!)
+
 Transaction Summary:
-  Sells:              38 (profit-taking)
-  Buybacks:           24 (minimal repurchasing)
-  Net Shares:         -515 (sold on net)
-  
+ Sells: 38 (profit-taking)
+ Buybacks: 24 (minimal repurchasing)
+ Net Shares: -515 (sold on net)
+
 Bank Trajectory:
-  Month 3:  $12,400
-  Month 6:  $28,900
-  Month 9:  $41,200
-  Month 12: $52,468
-  
-  Monthly Average: $4,372 (10.3% annual cash yield on initial value)
+ Month 3: $12,400
+ Month 6: $28,900
+ Month 9: $41,200
+ Month 12: $52,468
+
+ Monthly Average: $4,372 (10.3% annual cash yield on initial value)
 ```
 
 **Experimental Summary**:
@@ -1359,29 +1359,29 @@ sd analyze volatility-alpha --ticker BIL --start 01/01/2024 --end 12/31/2024
 
 **Portfolio-Level Results**:
 ```
-Initial Value:          $1,000,000
-Final Value:            $1,425,380
-Total Return:           42.54%
+Initial Value: $1,000,000
+Final Value: $1,425,380
+Total Return: 42.54%
 
 Income Breakdown:
-  NVDA Synthetic Div:   $33,680  (8.42% of allocation)
-  VOO Synthetic Div:    $8,610   (2.87% of allocation)
-  VOO Real Dividends:   $4,200   (1.40% of allocation)
-  GLD Synthetic Div:    $3,280   (1.64% of allocation)
-  BIL Interest:         $4,620   (4.62% of allocation)
-  
-  Total Income:         $54,390  (5.44% of initial portfolio)
-  
+ NVDA Synthetic Div: $33,680 (8.42% of allocation)
+ VOO Synthetic Div: $8,610 (2.87% of allocation)
+ VOO Real Dividends: $4,200 (1.40% of allocation)
+ GLD Synthetic Div: $3,280 (1.64% of allocation)
+ BIL Interest: $4,620 (4.62% of allocation)
+
+ Total Income: $54,390 (5.44% of initial portfolio)
+
 Portfolio Bank Balance: $54,390 (available for rebalancing or withdrawal)
 
 Holdings Summary:
-  NVDA:                 236 shares @ $144.42 = $341,051
-  VOO:                  590 shares @ $535.00 = $315,650
-  GLD:                  985 shares @ $61.25  = $203,281
-  BIL:                  1,043 shares @ $95.88 = $100,013
-  Bank:                 $54,390
-  
-Transaction Count:      98 total (74 sells, 24 buybacks)
+ NVDA: 236 shares @ $144.42 = $341,051
+ VOO: 590 shares @ $535.00 = $315,650
+ GLD: 985 shares @ $61.25 = $203,281
+ BIL: 1,043 shares @ $95.88 = $100,013
+ Bank: $54,390
+
+Transaction Count: 98 total (74 sells, 24 buybacks)
 ```
 
 **Experimental Summary**:
@@ -1423,13 +1423,13 @@ sd analyze volatility-alpha --ticker TICKER --start START --end END
 sd backtest TICKER START END sd8 --initial-investment 1000000
 
 # Portfolio backtest
-sd backtest TICKER START END portfolio --initial-investment 1000000  # Note: portfolio syntax may vary
+sd backtest TICKER START END portfolio --initial-investment 1000000 # Note: portfolio syntax may vary
 
 # Batch research
 sd research optimal-rebalancing --output results.csv
 
 # Batch comparison
-sd compare TICKERS STRATEGIES --start START --end END  # Note: compare syntax may vary
+sd compare TICKERS STRATEGIES --start START --end END # Note: compare syntax may vary
 
 # Run tests
 sd test
@@ -1480,4 +1480,4 @@ sd research optimal-rebalancing --output results.csv
 
 ---
 
-**Happy trading! May your volatility alpha be ever positive! 📈💰**
+**Happy trading! May your volatility alpha be ever positive! **

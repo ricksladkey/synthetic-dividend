@@ -47,7 +47,7 @@ N_min = ⌈$20 / $4⌉ - 1 = 5 - 1 = 4 crossings
 The **maximum** depends on the path the price took. Without additional information, the theoretical maximum is:
 
 ```
-N_max = ∞  (price could oscillate infinitely many times)
+N_max = ∞ (price could oscillate infinitely many times)
 ```
 
 **Practically bounded** by:
@@ -58,8 +58,8 @@ N_max = ∞  (price could oscillate infinitely many times)
 **Practical upper bound**:
 ```
 N_max ≈ (Trading minutes) / (Minutes per cycle)
-      ≈ 390 / 5
-      ≈ 78 crossings per day
+ ≈ 390 / 5
+ ≈ 78 crossings per day
 ```
 
 But this is extremely rare. More typical:
@@ -281,10 +281,10 @@ Alpha = 18.8% ± 0.5% (intraday data)
 
 ```python
 if end_date - start_date > 60 days:
-    use_daily_data()
-    apply_uncertainty_bounds()
+ use_daily_data()
+ apply_uncertainty_bounds()
 else:
-    use_intraday_data()  # More accurate for recent periods
+ use_intraday_data() # More accurate for recent periods
 ```
 
 ### 4. Monte Carlo Path Simulation
@@ -293,12 +293,12 @@ Given (O, H, L, C), simulate **1000 plausible paths** consistent with OHLC:
 
 ```python
 def simulate_paths(O, H, L, C, n_paths=1000):
-    """Generate paths consistent with OHLC using Brownian bridge."""
-    paths = []
-    for i in range(n_paths):
-        path = generate_brownian_bridge(O, C, H, L)
-        paths.append(path)
-    return paths
+ """Generate paths consistent with OHLC using Brownian bridge."""
+ paths = []
+ for i in range(n_paths):
+ path = generate_brownian_bridge(O, C, H, L)
+ paths.append(path)
+ return paths
 
 # Count crossings for each path
 crossing_counts = [count_crossings(path, brackets) for path in paths]
@@ -317,32 +317,32 @@ This gives **distribution** of possible crossing counts, not just point estimate
 ### Yahoo Finance
 
 **Daily OHLC**:
-- ✅ Available: Unlimited history
-- ✅ Free
-- ✅ Reliable
-- ❌ Limited granularity
+- [OK] Available: Unlimited history
+- [OK] Free
+- [OK] Reliable
+- [FAIL] Limited granularity
 
 **Intraday**:
-- ✅ Available: 1m/5m/15m/30m/1h
-- ✅ Free
-- ⚠️ Limited history (5-60 days)
-- ❌ Rate limited
+- [OK] Available: 1m/5m/15m/30m/1h
+- [OK] Free
+- WARNING: Limited history (5-60 days)
+- [FAIL] Rate limited
 
 ### Alpha Vantage
 
 **Intraday**:
-- ✅ Extended history (several years)
-- ✅ Multiple intervals
-- ⚠️ Free tier: 5 calls/minute, 500/day
-- ❌ Premium required for full access
+- [OK] Extended history (several years)
+- [OK] Multiple intervals
+- WARNING: Free tier: 5 calls/minute, 500/day
+- [FAIL] Premium required for full access
 
 ### Polygon.io
 
 **Intraday**:
-- ✅ Full history (years)
-- ✅ Tick-by-tick available
-- ✅ High rate limits
-- ❌ Paid service (~$200/month)
+- [OK] Full history (years)
+- [OK] Tick-by-tick available
+- [OK] High rate limits
+- [FAIL] Paid service (~$200/month)
 
 ---
 
@@ -352,70 +352,70 @@ This gives **distribution** of possible crossing counts, not just point estimate
 
 ```python
 def estimate_crossings_daily(df, bracket_spacing):
-    """Estimate crossings from daily OHLC with bounds."""
-    daily_range = df['High'] - df['Low']
+ """Estimate crossings from daily OHLC with bounds."""
+ daily_range = df['High'] - df['Low']
 
-    # Minimum crossings (proven lower bound)
-    min_crossings = np.floor(daily_range / bracket_spacing).astype(int)
+ # Minimum crossings (proven lower bound)
+ min_crossings = np.floor(daily_range / bracket_spacing).astype(int)
 
-    # Expected crossings (stochastic model)
-    expected_crossings = min_crossings * 1.5  # Empirical multiplier
+ # Expected crossings (stochastic model)
+ expected_crossings = min_crossings * 1.5 # Empirical multiplier
 
-    return {
-        'min': min_crossings.sum(),
-        'expected': int(expected_crossings.sum()),
-        'uncertainty': '±30%'
-    }
+ return {
+ 'min': min_crossings.sum(),
+ 'expected': int(expected_crossings.sum()),
+ 'uncertainty': '±30%'
+ }
 ```
 
 ### Phase 2: Intraday Data for sd16+ (Future)
 
 ```python
 def get_appropriate_data(ticker, start, end, sdn):
-    """Fetch data at appropriate granularity for SDN parameter."""
+ """Fetch data at appropriate granularity for SDN parameter."""
 
-    bracket_spacing = 2 ** (1/sdn) - 1
+ bracket_spacing = 2 ** (1/sdn) - 1
 
-    if sdn <= 8:
-        # Daily data sufficient
-        return fetch_daily(ticker, start, end)
+ if sdn <= 8:
+ # Daily data sufficient
+ return fetch_daily(ticker, start, end)
 
-    elif sdn <= 16:
-        # Hourly data needed
-        return fetch_intraday(ticker, start, end, interval='1h')
+ elif sdn <= 16:
+ # Hourly data needed
+ return fetch_intraday(ticker, start, end, interval='1h')
 
-    elif sdn <= 32:
-        # 15-minute data needed
-        return fetch_intraday(ticker, start, end, interval='15m')
+ elif sdn <= 32:
+ # 15-minute data needed
+ return fetch_intraday(ticker, start, end, interval='15m')
 
-    else:
-        # 1-minute data needed (sd64+)
-        return fetch_intraday(ticker, start, end, interval='1m')
+ else:
+ # 1-minute data needed (sd64+)
+ return fetch_intraday(ticker, start, end, interval='1m')
 ```
 
 ### Phase 3: Monte Carlo Simulation (Refinement)
 
 ```python
 def run_backtest_with_path_uncertainty(ticker, sdn, n_simulations=100):
-    """Run backtest accounting for path ambiguity."""
+ """Run backtest accounting for path ambiguity."""
 
-    df_daily = fetch_daily(ticker, start, end)
+ df_daily = fetch_daily(ticker, start, end)
 
-    results = []
-    for i in range(n_simulations):
-        # Generate plausible intraday path
-        df_intraday = simulate_intraday_from_daily(df_daily)
+ results = []
+ for i in range(n_simulations):
+ # Generate plausible intraday path
+ df_intraday = simulate_intraday_from_daily(df_daily)
 
-        # Run backtest on simulated path
-        result = run_backtest(df_intraday, sdn)
-        results.append(result)
+ # Run backtest on simulated path
+ result = run_backtest(df_intraday, sdn)
+ results.append(result)
 
-    # Return distribution of outcomes
-    return {
-        'mean_alpha': np.mean([r.alpha for r in results]),
-        'std_alpha': np.std([r.alpha for r in results]),
-        'confidence_95': np.percentile([r.alpha for r in results], [2.5, 97.5])
-    }
+ # Return distribution of outcomes
+ return {
+ 'mean_alpha': np.mean([r.alpha for r in results]),
+ 'std_alpha': np.std([r.alpha for r in results]),
+ 'confidence_95': np.percentile([r.alpha for r in results], [2.5, 97.5])
+ }
 ```
 
 ---

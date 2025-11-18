@@ -3,10 +3,10 @@
 
 **A Case Study in Human-AI Collaboration**
 
-**Project**: Synthetic Dividend Algorithm  
-**Duration**: October 20-27, 2025 (just 7 days!)  
-**Participants**: Rick Sladkey (Human) + GitHub Copilot (AI)  
-**Outcome**: Production-ready financial software, 110 passing tests, comprehensive architecture  
+**Project**: Synthetic Dividend Algorithm
+**Duration**: October 20-27, 2025 (just 7 days!)
+**Participants**: Rick Sladkey (Human) + GitHub Copilot (AI)
+**Outcome**: Production-ready financial software, 110 passing tests, comprehensive architecture
 **Status**: Proof of concept for a new way of working
 
 **Update**: Now includes Account model, GitHub Pages, LIFO lot selection, and tax strategy framework
@@ -17,19 +17,19 @@
 
 What we've built here is remarkable on **multiple levels**:
 
-### 1. **The Financial Innovation** 💰
+### 1. **The Financial Innovation**
 - A genuinely novel approach to income generation
 - Solves real problems (sequence-of-returns risk, growth stock income)
 - Built on solid mathematical foundations
 - Validated with real data
 
-### 2. **The Engineering Excellence** 🔧
+### 2. **The Engineering Excellence**
 - 44 passing tests (100% success rate)
 - Clean architecture (theory, implementation, validation)
 - Rigorous documentation
 - Type-checked, linted, formatted
 
-### 3. **The Knowledge Capture** 📚
+### 3. **The Knowledge Capture**
 - 10+ theory documents totaling thousands of lines
 - Concepts organized from foundational → advanced
 - Cross-referenced and integrated
@@ -81,11 +81,11 @@ Just like the first automation script that saves more time than it took to write
 
 ### What We Accomplished in Days
 
-- ✅ All of the above
-- ✅ Plus systematic housekeeping infrastructure (HOUSEKEEPING.md)
-- ✅ Plus income smoothing framework (INCOME_SMOOTHING.md)
-- ✅ Plus sequence-of-returns protection theory
-- ✅ All while maintaining conceptual clarity and zero technical debt
+- [OK] All of the above
+- [OK] Plus systematic housekeeping infrastructure (HOUSEKEEPING.md)
+- [OK] Plus income smoothing framework (INCOME_SMOOTHING.md)
+- [OK] Plus sequence-of-returns protection theory
+- [OK] All while maintaining conceptual clarity and zero technical debt
 
 **Actual Timeline**: 6 days of intensive collaboration (Oct 20-26, 2025)
 
@@ -200,7 +200,7 @@ This isn't a junior developer being impressed by autocomplete. This is a seasone
 **The Outcome**:
 - Neither could have built this alone (not at this quality, not at this speed)
 - Each amplified the other's strengths
-- Result: **Outsized productivity** 🚀
+- Result: **Outsized productivity**
 
 ---
 
@@ -323,8 +323,8 @@ This project demonstrates that **human-AI collaboration isn't just incrementally
 
 ```
 Idea → Research → Design → Implement → Test → Document → Ship
-       ↑______________________________________________|
-                     Feedback Loop (hours/days)
+ ↑______________________________________________|
+ Feedback Loop (hours/days)
 ```
 
 **Characteristics**:
@@ -348,8 +348,8 @@ Idea → Research → Design → Implement → Test → Document → Ship
 
 ```
 Idea → Implement + Test + Document (all simultaneous) → Validate → Iterate
-  ↑___________________________________________________________________|
-                     Feedback Loop (hours)
+ ↑___________________________________________________________________|
+ Feedback Loop (hours)
 ```
 
 **Characteristics**:
@@ -559,11 +559,11 @@ AI: "Implementing with tests..."
 - Resistance to iteration (collaboration required)
 
 **Our Project** (Perfect Fit):
-- Complex domain ✅ (financial theory + software engineering)
-- Expert available ✅ (Rick's 30+ years experience)
-- Heavy documentation ✅ (10 theory docs required)
-- Quality critical ✅ (retirement planning software!)
-- Rapid iteration valuable ✅ (explore 48 configurations)
+- Complex domain [OK] (financial theory + software engineering)
+- Expert available [OK] (Rick's 30+ years experience)
+- Heavy documentation [OK] (10 theory docs required)
+- Quality critical [OK] (retirement planning software!)
+- Rapid iteration valuable [OK] (explore 48 configurations)
 
 ---
 
@@ -594,24 +594,24 @@ AI: "Implementing with tests..."
 ### Qualitative Metrics
 
 **Clarity**:
-- Can new contributor understand theory? ✅
-- Are examples self-explanatory? ✅
-- Is architecture evident? ✅
+- Can new contributor understand theory? [OK]
+- Are examples self-explanatory? [OK]
+- Is architecture evident? [OK]
 
 **Consistency**:
-- Zero contradictions across docs? ✅
-- Naming conventions uniform? ✅
-- Concepts properly integrated? ✅
+- Zero contradictions across docs? [OK]
+- Naming conventions uniform? [OK]
+- Concepts properly integrated? [OK]
 
 **Usability**:
-- Can run examples from README? ✅
-- Are error messages helpful? ✅
-- Is installation straightforward? ✅
+- Can run examples from README? [OK]
+- Are error messages helpful? [OK]
+- Is installation straightforward? [OK]
 
 **Impact**:
-- Does it solve real problem? ✅
-- Would you use it yourself? ✅
-- **Could you retire on it? ✅✅✅**
+- Does it solve real problem? [OK]
+- Would you use it yourself? [OK]
+- **Could you retire on it? [OK][OK][OK]**
 
 ---
 
@@ -746,7 +746,7 @@ With AI assistance, capturing an insight takes **two seconds**, not two hours.
 
 **The Old Way**:
 ```
-Insight → "I should write this up" → 
+Insight → "I should write this up" →
 "Need to create document" →
 "Need proper structure" →
 "Need good prose" →
@@ -759,7 +759,7 @@ Insight → "I should write this up" →
 
 **The New Way**:
 ```
-Insight → "Capture this" → AI writes 5,000 words → 
+Insight → "Capture this" → AI writes 5,000 words →
 "Looks good" → **Done in 2 minutes**
 ```
 
@@ -839,7 +839,7 @@ Meta-level proof: Rick just had an insight about insight capture, and within min
 
 ### The Compounding Effect
 
-**First Insight Captured**: 
+**First Insight Captured**:
 - INVESTING_THEORY.md
 - "Sell at all-time highs only"
 - Documented with AI assistance
@@ -893,25 +893,25 @@ Meta-level proof: Rick just had an insight about insight capture, and within min
 **How This Works**:
 
 1. **Recognize the insight** (2 seconds of thought)
-   - "This is important"
-   - "Others should know this"
-   - "Future-me will need this"
+ - "This is important"
+ - "Others should know this"
+ - "Future-me will need this"
 
 2. **Capture it immediately** (2 seconds to request)
-   - "Document this insight about X"
-   - "Add this to the use case doc"
-   - "Create new section on Y"
+ - "Document this insight about X"
+ - "Add this to the use case doc"
+ - "Create new section on Y"
 
 3. **AI does the heavy lifting** (2 minutes of collaboration)
-   - Generates structure
-   - Adds context and examples
-   - Cross-references related work
-   - Produces publication-quality prose
+ - Generates structure
+ - Adds context and examples
+ - Cross-references related work
+ - Produces publication-quality prose
 
 4. **Review and refine** (2 minutes of validation)
-   - "Is this accurate?"
-   - "Add example Z"
-   - "Ship it"
+ - "Is this accurate?"
+ - "Add example Z"
+ - "Ship it"
 
 **Total time**: ~5 minutes from insight to permanent documentation
 
@@ -1001,11 +1001,11 @@ Meta-level proof: Rick just had an insight about insight capture, and within min
 
 **Next time you have an insight**:
 
-1. ❌ Don't think: "I should write this up eventually"
-2. ✅ Do think: "Let me spend 2 seconds capturing this"
-3. ✅ Request: "Document this insight: [your insight]"
-4. ✅ Validate: Review AI's output (2 minutes)
-5. ✅ Ship: Commit and move on
+1. [FAIL] Don't think: "I should write this up eventually"
+2. [OK] Do think: "Let me spend 2 seconds capturing this"
+3. [OK] Request: "Document this insight: [your insight]"
+4. [OK] Validate: Review AI's output (2 minutes)
+5. [OK] Ship: Commit and move on
 
 **The discipline**: Recognize insight → Capture immediately → Move forward
 
@@ -1099,8 +1099,8 @@ Meta-level proof: Rick just had an insight about insight capture, and within min
 
 ## Appendix: The Numbers
 
-**Project**: Synthetic Dividend Algorithm  
-**Duration**: 7 days (Oct 20-27, 2025)  
+**Project**: Synthetic Dividend Algorithm
+**Duration**: 7 days (Oct 20-27, 2025)
 **Team**: 1 human + 1 AI
 
 **Output**:
@@ -1129,16 +1129,16 @@ Meta-level proof: Rick just had an insight about insight capture, and within min
 - Architecture: Clean and extensible
 
 **Major Achievements**:
-1. ✅ Core algorithm (publication-quality, 317 lines)
-2. ✅ Account model (assets/liabilities separation)
-3. ✅ LIFO lot selection (tax-efficient unwinding)
-4. ✅ Tax strategy framework (account type determines algorithm)
-5. ✅ GitHub Pages (professional website, zero friction)
-6. ✅ Comprehensive theory (10K+ words of documentation)
+1. [OK] Core algorithm (publication-quality, 317 lines)
+2. [OK] Account model (assets/liabilities separation)
+3. [OK] LIFO lot selection (tax-efficient unwinding)
+4. [OK] Tax strategy framework (account type determines algorithm)
+5. [OK] GitHub Pages (professional website, zero friction)
+6. [OK] Comprehensive theory (10K+ words of documentation)
 
 **Outcome**: Production-ready retirement planning software with professional web presence
 
-**Verdict**: **Outsized productivity achieved** ✅
+**Verdict**: **Outsized productivity achieved** [OK]
 
 ---
 
@@ -1335,20 +1335,20 @@ With AI assistance, pseudo-code transforms from **documentation burden** → **a
 
 ```python
 class SyntheticDividendAlgorithm(AlgorithmBase):
-    """Volatility harvesting algorithm that generates synthetic dividends.
+ """Volatility harvesting algorithm that generates synthetic dividends.
 
-    This algorithm exploits mean reversion by systematically buying on dips and
-    selling on rises within a symmetrically-spaced bracket system.
+ This algorithm exploits mean reversion by systematically buying on dips and
+ selling on rises within a symmetrically-spaced bracket system.
 
-    Parameters:
-        rebalance_size: Bracket spacing as decimal (e.g., 0.0915 = 9.15% brackets)
-        profit_sharing: Trade size as fraction of rebalance (e.g., 0.5 = 50%)
-        buyback_enabled: True for full algorithm, False for ATH-only baseline
+ Parameters:
+ rebalance_size: Bracket spacing as decimal (e.g., 0.0915 = 9.15% brackets)
+ profit_sharing: Trade size as fraction of rebalance (e.g., 0.5 = 50%)
+ buyback_enabled: True for full algorithm, False for ATH-only baseline
 
-    Examples:
-        Full: SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=True)
-        ATH-only: SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=False)
-    """
+ Examples:
+ Full: SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=True)
+ ATH-only: SyntheticDividendAlgorithm(0.0915, 0.5, buyback_enabled=False)
+ """
 ```
 
 **Analysis**: Accurate but incomplete. Doesn't explain:
@@ -1363,73 +1363,73 @@ class SyntheticDividendAlgorithm(AlgorithmBase):
 
 ```python
 class SyntheticDividendAlgorithm(AlgorithmBase):
-    """Volatility harvesting algorithm that generates synthetic dividends.
+ """Volatility harvesting algorithm that generates synthetic dividends.
 
-    PSEUDO-CODE OVERVIEW:
-    =====================
+ PSEUDO-CODE OVERVIEW:
+ =====================
 
-    Core Principle: "Treat volatility as a harvestable asset class"
+ Core Principle: "Treat volatility as a harvestable asset class"
 
-    Given:
-        - A volatile growth asset (NVDA, BTC, ETH, etc.)
-        - Rebalance trigger 'r' (e.g., 9.15% = one bracket)
-        - Profit sharing 's' (e.g., 50% = half position size)
+ Given:
+ - A volatile growth asset (NVDA, BTC, ETH, etc.)
+ - Rebalance trigger 'r' (e.g., 9.15% = one bracket)
+ - Profit sharing 's' (e.g., 50% = half position size)
 
-    On Initial Purchase:
-        anchor_price ← initial_price
-        all_time_high ← initial_price
-        buyback_stack ← empty
+ On Initial Purchase:
+ anchor_price ← initial_price
+ all_time_high ← initial_price
+ buyback_stack ← empty
 
-        Place symmetric limit orders:
-            buy_price  ← anchor / (1 + r)      # One bracket below
-            sell_price ← anchor × (1 + r)      # One bracket above
-            buy_qty    ← holdings × r × s
-            sell_qty   ← holdings × r × s / (1 + r)  # Geometric symmetry
+ Place symmetric limit orders:
+ buy_price ← anchor / (1 + r) # One bracket below
+ sell_price ← anchor × (1 + r) # One bracket above
+ buy_qty ← holdings × r × s
+ sell_qty ← holdings × r × s / (1 + r) # Geometric symmetry
 
-    Each Trading Day:
-        # Update all-time high
-        if today.high > all_time_high:
-            all_time_high ← today.high
+ Each Trading Day:
+ # Update all-time high
+ if today.high > all_time_high:
+ all_time_high ← today.high
 
-        # Check if price crossed any brackets (could cross multiple in one day)
-        while orders triggered by today's OHLC range:
+ # Check if price crossed any brackets (could cross multiple in one day)
+ while orders triggered by today's OHLC range:
 
-            if BUY order triggered:
-                # Price dropped - buy the dip
-                shares_bought ← execute_buy_at(buy_price)
-                holdings ← holdings + shares_bought
-                buyback_stack.push(shares_bought)
+ if BUY order triggered:
+ # Price dropped - buy the dip
+ shares_bought ← execute_buy_at(buy_price)
+ holdings ← holdings + shares_bought
+ buyback_stack.push(shares_bought)
 
-                # Measure volatility alpha (profit from mean reversion)
-                profit ← (last_sell_price - buy_price) × shares_bought
-                volatility_alpha ← profit / portfolio_value
+ # Measure volatility alpha (profit from mean reversion)
+ profit ← (last_sell_price - buy_price) × shares_bought
+ volatility_alpha ← profit / portfolio_value
 
-                # Reset anchor to new transaction price
-                anchor_price ← buy_price
+ # Reset anchor to new transaction price
+ anchor_price ← buy_price
 
-            if SELL order triggered:
-                # Price rose - take profits
-                shares_sold ← execute_sell_at(sell_price)
-                holdings ← holdings - shares_sold
+ if SELL order triggered:
+ # Price rose - take profits
+ shares_sold ← execute_sell_at(sell_price)
+ holdings ← holdings - shares_sold
 
-                if buyback_enabled:
-                    # Track unwinding of buyback stack (diagnostic)
-                    buyback_stack.pop(min(shares_sold, stack_size))
+ if buyback_enabled:
+ # Track unwinding of buyback stack (diagnostic)
+ buyback_stack.pop(min(shares_sold, stack_size))
 
-                # Reset anchor to new transaction price
-                anchor_price ← sell_price
+ # Reset anchor to new transaction price
+ anchor_price ← sell_price
 
-            # Place fresh orders from new anchor point
-            cancel_all_old_orders()
-            calculate_and_place_new_symmetric_orders(anchor_price)
+ # Place fresh orders from new anchor point
+ cancel_all_old_orders()
+ calculate_and_place_new_symmetric_orders(anchor_price)
 
-            # Anti-chatter: new orders can't execute same day
-            new_orders.earliest_execution ← tomorrow
+ # Anti-chatter: new orders can't execute same day
+ new_orders.earliest_execution ← tomorrow
 
-    Result: Volatility Alpha
-        Each buy-low/sell-high cycle extracts value from price oscillations.
-        Formula (theoretical minimum): α ≈ (trigger%)² / 2 × cycle_count
-        Reality: Actual alpha is 1.1x to 10.6x this formula due to gaps!
+ Result: Volatility Alpha
+ Each buy-low/sell-high cycle extracts value from price oscillations.
+ Formula (theoretical minimum): α ≈ (trigger%)² / 2 × cycle_count
+ Reality: Actual alpha is 1.1x to 10.6x this formula due to gaps!
 ```
 
 **Key Features**:
@@ -1452,10 +1452,10 @@ Full implementation: [src/algorithms/synthetic_dividend.py](../src/algorithms/sy
 #### Layer 1: Algorithm Flow (Executable Logic)
 ```
 On Initial Purchase:
-    anchor_price ← initial_price
-    Place symmetric limit orders:
-        buy_price  ← anchor / (1 + r)
-        sell_price ← anchor × (1 + r)
+ anchor_price ← initial_price
+ Place symmetric limit orders:
+ buy_price ← anchor / (1 + r)
+ sell_price ← anchor × (1 + r)
 ```
 
 This reads like theory while matching implementation structure.
@@ -1465,13 +1465,13 @@ This reads like theory while matching implementation structure.
 KEY INSIGHTS FROM THEORY:
 
 1. Dividend Illusion:
-   "There's no free money - every withdrawal has opportunity cost"
-   → We acknowledge this and measure opportunity cost vs buy-and-hold
+ "There's no free money - every withdrawal has opportunity cost"
+ → We acknowledge this and measure opportunity cost vs buy-and-hold
 
 2. Volatility as Asset Class:
-   "Traditional finance: volatility = risk to minimize"
-   "Our view: volatility = harvestable value"
-   → Empirical validation: +1% to +198% alpha over 3 years
+ "Traditional finance: volatility = risk to minimize"
+ "Our view: volatility = harvestable value"
+ → Empirical validation: +1% to +198% alpha over 3 years
 ```
 
 This connects code to foundational concepts in [theory/01-core-concepts.md](01-core-concepts.md).
@@ -1481,16 +1481,16 @@ This connects code to foundational concepts in [theory/01-core-concepts.md](01-c
 MATHEMATICAL FOUNDATION:
 
 Bracket Spacing (Geometric):
-    buy_price  = anchor / (1 + r)
-    sell_price = anchor × (1 + r)
+ buy_price = anchor / (1 + r)
+ sell_price = anchor × (1 + r)
 
 Trade Sizing (Profit Sharing):
-    buy_qty  = holdings × r × s
-    sell_qty = holdings × r × s / (1 + r)
+ buy_qty = holdings × r × s
+ sell_qty = holdings × r × s / (1 + r)
 
 Theoretical Minimum:
-    alpha_per_cycle ≈ (r)² / 2
-    total_alpha     ≈ cycle_count × (r)² / 2
+ alpha_per_cycle ≈ (r)² / 2
+ total_alpha ≈ cycle_count × (r)² / 2
 ```
 
 This provides the mathematical rigor from [theory/VOLATILITY_ALPHA_THESIS.md](VOLATILITY_ALPHA_THESIS.md).
@@ -1499,12 +1499,12 @@ This provides the mathematical rigor from [theory/VOLATILITY_ALPHA_THESIS.md](VO
 ```
 PERFORMANCE EXPECTATIONS:
 
-Asset     | Vol  | Algo | Expected Alpha (3yr)
+Asset | Vol | Algo | Expected Alpha (3yr)
 ----------|------|------|--------------------
-GLD       | 16%  | SD16 | ~1%   (minimal)
-BTC-USD   | 40%  | SD8  | ~27%  (moderate)
-NVDA      | 52%  | SD6  | ~77%  (explosive!) 🚀
-PLTR      | 68%  | SD6  | ~198% (extraordinary!) 🚀🚀
+GLD | 16% | SD16 | ~1% (minimal)
+BTC-USD | 40% | SD8 | ~27% (moderate)
+NVDA | 52% | SD6 | ~77% (explosive!)
+PLTR | 68% | SD6 | ~198% (extraordinary!)
 ```
 
 This grounds theory in reality with data from [experiments/volatility-alpha-validation/](../experiments/volatility-alpha-validation/).
@@ -1523,8 +1523,8 @@ Code has bug → Debug at implementation level → Fix code → Hope it's right
 **New Flow**:
 ```
 Code has bug → Check pseudo-code first →
-    If pseudo-code wrong: Fix concept, then update code
-    If pseudo-code right: Implementation bug, fix code
+ If pseudo-code wrong: Fix concept, then update code
+ If pseudo-code right: Implementation bug, fix code
 ```
 
 **Example from our work**:
@@ -1580,9 +1580,9 @@ Code has bug → Check pseudo-code first →
 **Maintenance workflow**:
 ```
 Change algorithm → Update pseudo-code in docstring →
-    Ask AI: "Does code match pseudo-code?" →
-    If no: Fix code or fix pseudo-code →
-    Commit both together
+ Ask AI: "Does code match pseudo-code?" →
+ If no: Fix code or fix pseudo-code →
+ Commit both together
 ```
 
 **Key insight**: With AI, keeping pseudo-code in sync costs **minutes**, not hours.
@@ -1642,15 +1642,15 @@ SEE ALSO:
 1. **Discover conceptual issue**: "Why do we divide sell qty by (1+r)?"
 2. **Check pseudo-code**: Does it explain geometric symmetry?
 3. **Update pseudo-code** if explanation unclear:
-   ```
-   # Before
-   sell_qty ← holdings × r × s / (1 + r)
+ ```
+ # Before
+ sell_qty ← holdings × r × s / (1 + r)
 
-   # After
-   sell_qty ← holdings × r × s / (1 + r)  # Geometric symmetry
-   # Ensures exact price unwinding: buy at P/(1+r), sell at P×(1+r)
-   # Example: Buy 10 shares @ $91, sell 9.2 shares @ $100 → same $910
-   ```
+ # After
+ sell_qty ← holdings × r × s / (1 + r) # Geometric symmetry
+ # Ensures exact price unwinding: buy at P/(1+r), sell at P×(1+r)
+ # Example: Buy 10 shares @ $91, sell 9.2 shares @ $100 → same $910
+ ```
 4. **Verify code matches** updated pseudo-code
 5. **Update theory docs** if needed (cross-reference chain)
 
@@ -1774,9 +1774,9 @@ The "SEE ALSO" section links to:
 
 The empirical validation table:
 ```
-GLD (16% vol):  1.1x formula  → predictable
-NVDA (52% vol): 5.7x formula  → explosive growth gaps! 🚀
-PLTR (68% vol): 10.6x formula → explosive growth gaps! 🚀
+GLD (16% vol): 1.1x formula → predictable
+NVDA (52% vol): 5.7x formula → explosive growth gaps!
+PLTR (68% vol): 10.6x formula → explosive growth gaps!
 ```
 
 **Why this matters**: Grounds abstract theory in measurable reality. Readers know what to expect.
@@ -1789,9 +1789,9 @@ The docstring includes runnable code:
 ```python
 # Full volatility harvesting
 algo = SyntheticDividendAlgorithm(
-    rebalance_size=0.0915,  # SD8: 9.15% brackets
-    profit_sharing=0.5,      # 50% extraction
-    buyback_enabled=True
+ rebalance_size=0.0915, # SD8: 9.15% brackets
+ profit_sharing=0.5, # 50% extraction
+ buyback_enabled=True
 )
 ```
 
@@ -1825,13 +1825,13 @@ shares_bought ← conditional_market_order_execution(buy_price, BUY)
 
 Good:
 ```
-sell_qty ← holdings × r × s / (1 + r)  # Geometric symmetry
+sell_qty ← holdings × r × s / (1 + r) # Geometric symmetry
 # Ensures exact price unwinding: buy at P/(1+r), sell at P×(1+r)
 ```
 
 Bad:
 ```
-sell_qty ← holdings × r × s / (1 + r)  # Calculate sell quantity
+sell_qty ← holdings × r × s / (1 + r) # Calculate sell quantity
 ```
 
 **Lesson**: Code shows WHAT. Comments show WHY. Don't duplicate information.
@@ -1845,8 +1845,8 @@ Good:
 Core Principle: "Treat volatility as a harvestable asset class"
 
 Given:
-    - A volatile growth asset (NVDA, BTC, ETH, etc.)
-    - Rebalance trigger 'r' (e.g., 9.15% = one bracket)
+ - A volatile growth asset (NVDA, BTC, ETH, etc.)
+ - Rebalance trigger 'r' (e.g., 9.15% = one bracket)
 ```
 
 This connects directly to theory/01-core-concepts.md: "Volatility as Asset Class"
@@ -1860,8 +1860,8 @@ This connects directly to theory/01-core-concepts.md: "Volatility as Asset Class
 Good:
 ```
 Reality Check (from empirical validation):
-    GLD (16% vol):  1.1x formula  → predictable
-    PLTR (68% vol): 10.6x formula → explosive growth gaps! 🚀
+ GLD (16% vol): 1.1x formula → predictable
+ PLTR (68% vol): 10.6x formula → explosive growth gaps!
 ```
 
 **Lesson**: Theory is great. Empirical validation is better. Include both.
@@ -1875,9 +1875,9 @@ Reality Check (from empirical validation):
 Bad:
 ```
 Execute rebalancing protocol:
-    For each price quantum transition:
-        Apply symmetric bracket adjustment heuristic
-        Reconcile portfolio state vector
+ For each price quantum transition:
+ Apply symmetric bracket adjustment heuristic
+ Reconcile portfolio state vector
 ```
 
 **Problem**: Sounds smart, means nothing. Use ordinary words.
@@ -1888,8 +1888,8 @@ Execute rebalancing protocol:
 
 Bad:
 ```
-buyback_stack.append(shares_bought)  # Python list append
-daily_values_df.loc[date, 'total'] = portfolio_value  # Pandas DataFrame
+buyback_stack.append(shares_bought) # Python list append
+daily_values_df.loc[date, 'total'] = portfolio_value # Pandas DataFrame
 ```
 
 **Problem**: Pseudo-code should be language-agnostic. Don't leak implementation.
@@ -1900,7 +1900,7 @@ daily_values_df.loc[date, 'total'] = portfolio_value  # Pandas DataFrame
 
 Bad:
 ```
-See also: theory/OLD_DOCUMENT.md  # <-- File no longer exists
+See also: theory/OLD_DOCUMENT.md # <-- File no longer exists
 ```
 
 **Problem**: Broken links destroy trust. AI can check these, but you have to ask.
@@ -1958,25 +1958,25 @@ This algorithm generates alpha through volatility harvesting.
 
 **When writing new algorithms**:
 
-1. ✅ Write pseudo-code FIRST (in docstring, before implementation)
-2. ✅ Use ordinary words with technical precision
-3. ✅ Link to theory documents (cross-reference network)
-4. ✅ Include empirical validation (if available)
-5. ✅ Show examples (executable code snippets)
+1. [OK] Write pseudo-code FIRST (in docstring, before implementation)
+2. [OK] Use ordinary words with technical precision
+3. [OK] Link to theory documents (cross-reference network)
+4. [OK] Include empirical validation (if available)
+5. [OK] Show examples (executable code snippets)
 
 **When modifying existing algorithms**:
 
-1. ✅ Read pseudo-code first (understand design intent)
-2. ✅ Update pseudo-code if needed (maintain sync)
-3. ✅ Verify code matches pseudo-code (ask AI to check)
-4. ✅ Commit together (code + docs in same PR)
+1. [OK] Read pseudo-code first (understand design intent)
+2. [OK] Update pseudo-code if needed (maintain sync)
+3. [OK] Verify code matches pseudo-code (ask AI to check)
+4. [OK] Commit together (code + docs in same PR)
 
 **When reviewing PRs**:
 
-1. ✅ Check pseudo-code changes (design-level review)
-2. ✅ Verify code matches pseudo-code (implementation review)
-3. ✅ Validate cross-references (links still work?)
-4. ✅ Confirm examples still run (executable docs)
+1. [OK] Check pseudo-code changes (design-level review)
+2. [OK] Verify code matches pseudo-code (implementation review)
+3. [OK] Validate cross-references (links still work?)
+4. [OK] Confirm examples still run (executable docs)
 
 ---
 
@@ -2076,15 +2076,15 @@ This algorithm generates alpha through volatility harvesting.
 **Knuth's vision**:
 ```
 Write documentation → Generate code from narrative →
-    Change code → Manually update narrative →
-    Hours of work → Only Knuth has discipline
+ Change code → Manually update narrative →
+ Hours of work → Only Knuth has discipline
 ```
 
 **New reality**:
 ```
 Write pseudo-code → AI helps implement →
-    Change code → AI updates pseudo-code →
-    Minutes of work → Everyone can do it
+ Change code → AI updates pseudo-code →
+ Minutes of work → Everyone can do it
 ```
 
 **The key insight**: We don't need special tools (WEB). We just need docstrings + AI assistance.
@@ -2158,27 +2158,27 @@ The algorithm uses the formula $\sum_{i=1}^{n} i^2 = n(n+1)(2n+1)/6$.
 
 @ @c
 int sum_of_squares(int n) {
-    return n * (n + 1) * (2 * n + 1) / 6;
+ return n * (n + 1) * (2 * n + 1) / 6;
 }
 ```
 
 **Our approach** (pseudo-code in docstring):
 ```python
 def calculate_volatility_alpha(holdings, fill_price, quantity):
-    """Calculate volatility alpha from a buy transaction.
+ """Calculate volatility alpha from a buy transaction.
 
-    Volatility alpha measures the profit from mean reversion as a percentage
-    of current portfolio value. It represents the "free money" extracted from
-    price oscillations.
+ Volatility alpha measures the profit from mean reversion as a percentage
+ of current portfolio value. It represents the "free money" extracted from
+ price oscillations.
 
-    Formula: alpha = (P_last - P_fill) × qty / (holdings × P_fill) × 100
+ Formula: alpha = (P_last - P_fill) × qty / (holdings × P_fill) × 100
 
-    This implements the core insight from theory/VOLATILITY_ALPHA_THESIS.md:
-    "Each buy-low/sell-high cycle extracts value that buy-and-hold misses."
-    """
-    current_value = holdings * fill_price
-    profit = (self.last_transaction_price - fill_price) * quantity
-    return (profit / current_value) * 100 if current_value != 0 else 0.0
+ This implements the core insight from theory/VOLATILITY_ALPHA_THESIS.md:
+ "Each buy-low/sell-high cycle extracts value that buy-and-hold misses."
+ """
+ current_value = holdings * fill_price
+ profit = (self.last_transaction_price - fill_price) * quantity
+ return (profit / current_value) * 100 if current_value != 0 else 0.0
 ```
 
 **Similarities**:
@@ -2332,11 +2332,11 @@ We found a better way. This is our story—told by both of us.
 
 **A Case Study in Human-AI Collaboration on Text Processing**
 
-**Date**: November 4, 2025  
-**Context**: Final cleanup for cross-platform compatibility  
-**Challenge**: Replace Windows-specific executable references in documentation  
-**Solution**: Iterative regex refinement through collaboration  
-**Outcome**: Clean, platform-independent examples  
+**Date**: November 4, 2025
+**Context**: Final cleanup for cross-platform compatibility
+**Challenge**: Replace Windows-specific executable references in documentation
+**Solution**: Iterative regex refinement through collaboration
+**Outcome**: Clean, platform-independent examples
 **Meta-Insight**: Even AI struggles with regex quoting—proving we're both human
 
 ---
@@ -2357,11 +2357,11 @@ We found a better way. This is our story—told by both of us.
 
 **A Case Study in Human-AI Collaboration on Text Processing**
 
-**Date**: November 4, 2025  
-**Context**: Final cleanup for cross-platform compatibility  
-**Challenge**: Replace Windows-specific executable references in documentation  
-**Solution**: Iterative regex refinement through collaboration  
-**Outcome**: Clean, platform-independent examples  
+**Date**: November 4, 2025
+**Context**: Final cleanup for cross-platform compatibility
+**Challenge**: Replace Windows-specific executable references in documentation
+**Solution**: Iterative regex refinement through collaboration
+**Outcome**: Clean, platform-independent examples
 **Meta-Insight**: Even AI struggles with regex quoting—proving we're both human
 
 ---
@@ -2426,14 +2426,14 @@ We found a better way. This is our story—told by both of us.
 
 **My Thought**: "Python's simple string replacement should work regardless of regex complexity."
 
-**Command Sent**: 
+**Command Sent**:
 ```bash
 python3 -c "
 with open('docs/EXAMPLES.md', 'r') as f:
-    content = f.read()
+ content = f.read()
 content = content.replace('.\sd.bat', 'sd')
 with open('docs/EXAMPLES.md', 'w') as f:
-    f.write(content)
+ f.write(content)
 "
 ```
 

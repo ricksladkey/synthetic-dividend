@@ -1,7 +1,7 @@
 # Return Adjustment Framework
 
-**Author**: Rick Sladkey  
-**Date**: October 27, 2025  
+**Author**: Rick Sladkey
+**Date**: October 27, 2025
 **Purpose**: Standardize how returns are displayed across all tool subcommands with inflation and market adjustments
 
 ---
@@ -38,11 +38,11 @@ nominal_dollars = final_value - initial_investment
 **Example**:
 ```
 Initial: $10,000
-Final:   $15,000
+Final: $15,000
 Nominal Return: +50.0% ($5,000 gain)
 ```
 
-**Pros**: Simple, matches bank statements  
+**Pros**: Simple, matches bank statements
 **Cons**: Ignores purchasing power, ignores opportunity cost
 
 ---
@@ -54,10 +54,10 @@ Nominal Return: +50.0% ($5,000 gain)
 **Calculation**:
 ```
 Using CPI (Consumer Price Index):
-  cpi_multiplier = CPI_end / CPI_start
-  inflation_adjusted_value = final_value / cpi_multiplier
-  real_return = (inflation_adjusted_value - initial_investment) / initial_investment
-  real_dollars = inflation_adjusted_value - initial_investment
+ cpi_multiplier = CPI_end / CPI_start
+ inflation_adjusted_value = final_value / cpi_multiplier
+ real_return = (inflation_adjusted_value - initial_investment) / initial_investment
+ real_dollars = inflation_adjusted_value - initial_investment
 ```
 
 **Use Cases**:
@@ -69,7 +69,7 @@ Using CPI (Consumer Price Index):
 **Example**:
 ```
 Initial: $10,000 (Jan 2020, CPI = 257.97)
-Final:   $15,000 (Jan 2024, CPI = 308.42)
+Final: $15,000 (Jan 2024, CPI = 308.42)
 CPI multiplier: 308.42 / 257.97 = 1.1955
 
 Nominal: +50.0% ($5,000 gain)
@@ -79,7 +79,7 @@ Real Return: +25.5% ($2,548 real gain)
 Interpretation: Made $5,000 nominal, but $2,452 lost to inflation
 ```
 
-**Pros**: Reflects purchasing power, meaningful for long horizons  
+**Pros**: Reflects purchasing power, meaningful for long horizons
 **Cons**: CPI methodology debates, regional variations
 
 ---
@@ -91,9 +91,9 @@ Interpretation: Made $5,000 nominal, but $2,452 lost to inflation
 **Calculation**:
 ```
 Using market benchmark (e.g., S&P 500 via VOO):
-  benchmark_return = (benchmark_end - benchmark_start) / benchmark_start
-  market_adjusted_return = portfolio_return - benchmark_return
-  market_adjusted_dollars = portfolio_gain - (initial_investment × benchmark_return)
+ benchmark_return = (benchmark_end - benchmark_start) / benchmark_start
+ market_adjusted_return = portfolio_return - benchmark_return
+ market_adjusted_dollars = portfolio_gain - (initial_investment × benchmark_return)
 ```
 
 **Use Cases**:
@@ -105,13 +105,13 @@ Using market benchmark (e.g., S&P 500 via VOO):
 **Example**:
 ```
 Initial: $10,000
-Final:   $15,000
+Final: $15,000
 Portfolio Return: +50.0%
 
 S&P 500 (VOO):
-  Start: $400
-  End:   $560
-  Market Return: +40.0%
+ Start: $400
+ End: $560
+ Market Return: +40.0%
 
 Market-Adjusted Return: 50% - 40% = +10.0%
 Market-Adjusted Dollars: $5,000 - $4,000 = +$1,000
@@ -119,7 +119,7 @@ Market-Adjusted Dollars: $5,000 - $4,000 = +$1,000
 Interpretation: Beat market by 10%, earned $1,000 alpha
 ```
 
-**Pros**: Contextualizes performance, measures opportunity cost  
+**Pros**: Contextualizes performance, measures opportunity cost
 **Cons**: Benchmark selection matters, doesn't account for risk differences
 
 ---
@@ -130,13 +130,13 @@ Interpretation: Beat market by 10%, earned $1,000 alpha
 
 **Return Adjustment Flags**:
 ```bash
---adjust-inflation           # Show inflation-adjusted returns
---adjust-market              # Show market-adjusted returns  
---adjust-both                # Show both adjustments
+--adjust-inflation # Show inflation-adjusted returns
+--adjust-market # Show market-adjusted returns
+--adjust-both # Show both adjustments
 
 # Data source specifications:
---inflation-ticker CPI       # Ticker for inflation data (default: CPI)
---market-ticker VOO          # Ticker for market benchmark (default: VOO for S&P 500)
+--inflation-ticker CPI # Ticker for inflation data (default: CPI)
+--market-ticker VOO # Ticker for market benchmark (default: VOO for S&P 500)
 ```
 
 **Alternative Benchmark Tickers**:
@@ -155,21 +155,21 @@ Since we already have `Asset("VOO")` and can add `Asset("CPI")`, the adjustment 
 ```python
 # In backtest or analysis code:
 if args.adjust_inflation:
-    cpi_asset = Asset("CPI")
-    cpi_prices = cpi_asset.get_prices(start_date, end_date)
-    # Calculate adjustment...
+ cpi_asset = Asset("CPI")
+ cpi_prices = cpi_asset.get_prices(start_date, end_date)
+ # Calculate adjustment...
 
 if args.adjust_market:
-    market_asset = Asset(args.market_ticker)  # default "VOO"
-    market_prices = market_asset.get_prices(start_date, end_date)
-    # Calculate adjustment...
+ market_asset = Asset(args.market_ticker) # default "VOO"
+ market_prices = market_asset.get_prices(start_date, end_date)
+ # Calculate adjustment...
 ```
 
 This approach:
-✅ Zero new data fetching logic (reuses `Asset` system)  
-✅ Works with any ticker (flexibility)  
-✅ Supports future providers (e.g., FRED for official CPI)  
-✅ Consistent caching behavior
+[OK] Zero new data fetching logic (reuses `Asset` system)
+[OK] Works with any ticker (flexibility)
+[OK] Supports future providers (e.g., FRED for official CPI)
+[OK] Consistent caching behavior
 
 ---
 
@@ -189,24 +189,24 @@ RETURN BREAKDOWN
 ======================================================================
 
 Nominal Return:
-  Total Return:                    +50.0%
-  Dollar Gain:                 $5,000.00
-  Initial Investment:         $10,000.00
-  Final Value:                $15,000.00
+ Total Return: +50.0%
+ Dollar Gain: $5,000.00
+ Initial Investment: $10,000.00
+ Final Value: $15,000.00
 
 Inflation-Adjusted Return (CPI):
-  Real Return:                     +25.5%
-  Real Dollar Gain:            $2,548.00
-  Purchasing Power Lost:       $2,452.00
-  CPI Multiplier:                   1.196
-  Period Inflation:                +19.6%
+ Real Return: +25.5%
+ Real Dollar Gain: $2,548.00
+ Purchasing Power Lost: $2,452.00
+ CPI Multiplier: 1.196
+ Period Inflation: +19.6%
 
 Market-Adjusted Return (vs VOO):
-  Alpha:                           +10.0%
-  Alpha Dollars:               $1,000.00
-  Portfolio Return:                +50.0%
-  Market Return:                   +40.0%
-  Outperformance:               $1,000.00
+ Alpha: +10.0%
+ Alpha Dollars: $1,000.00
+ Portfolio Return: +50.0%
+ Market Return: +40.0%
+ Outperformance: $1,000.00
 
 ======================================================================
 ```
@@ -230,15 +230,15 @@ synthetic-dividend-tool backtest --ticker NVDA --start 2024-01-01 --end 2024-12-
 
 # With inflation adjustment
 synthetic-dividend-tool backtest --ticker NVDA --start 2024-01-01 --end 2024-12-31 \
-    --adjust-inflation
+ --adjust-inflation
 
 # With market adjustment (vs custom benchmark)
 synthetic-dividend-tool backtest --ticker GLD --start 2024-01-01 --end 2024-12-31 \
-    --adjust-market --market-ticker SPY
+ --adjust-market --market-ticker SPY
 
 # Both adjustments
 synthetic-dividend-tool backtest --ticker NVDA --start 2024-01-01 --end 2024-12-31 \
-    --adjust-both --market-ticker QQQ
+ --adjust-both --market-ticker QQQ
 ```
 
 ### research optimal-rebalancing
@@ -246,10 +246,10 @@ synthetic-dividend-tool backtest --ticker NVDA --start 2024-01-01 --end 2024-12-
 ```bash
 # Add adjusted returns to output CSV
 synthetic-dividend-tool research optimal-rebalancing \
-    --start 2024-01-01 --end 2024-12-31 \
-    --output results.csv \
-    --adjust-both
-    
+ --start 2024-01-01 --end 2024-12-31 \
+ --output results.csv \
+ --adjust-both
+
 # Output CSV will include: nominal_return, real_return, alpha columns
 ```
 
@@ -258,11 +258,11 @@ synthetic-dividend-tool research optimal-rebalancing \
 ```bash
 # Compare with all three return perspectives
 synthetic-dividend-tool compare batch \
-    --tickers NVDA AAPL GLD \
-    --strategies sd8 sd16 buyhold \
-    --start 2024-01-01 --end 2024-12-31 \
-    --adjust-both \
-    --output comparison.csv
+ --tickers NVDA AAPL GLD \
+ --strategies sd8 sd16 buyhold \
+ --start 2024-01-01 --end 2024-12-31 \
+ --adjust-both \
+ --output comparison.csv
 ```
 
 ### analyze volatility-alpha
@@ -270,9 +270,9 @@ synthetic-dividend-tool compare batch \
 ```bash
 # Auto-suggest SD parameter with inflation-adjusted analysis
 synthetic-dividend-tool analyze volatility-alpha \
-    --ticker NVDA --start 2024-01-01 --end 2024-12-31 \
-    --adjust-inflation \
-    --plot
+ --ticker NVDA --start 2024-01-01 --end 2024-12-31 \
+ --adjust-inflation \
+ --plot
 ```
 
 ---
@@ -284,17 +284,17 @@ synthetic-dividend-tool analyze volatility-alpha \
 **Option 1: Use CPI ETF Proxy** (Quick implementation)
 ```python
 # Map "CPI" to inflation-tracking ETF
-Asset("CPI")  → Asset("VTIP")  # Vanguard Short-Term Inflation-Protected Securities
+Asset("CPI") → Asset("VTIP") # Vanguard Short-Term Inflation-Protected Securities
 ```
 
 **Option 2: FRED Data Provider** (Accurate, requires new provider)
 ```python
 # Custom provider for Federal Reserve Economic Data
 class FREDAssetProvider(AssetProvider):
-    def get_prices(self, start, end):
-        # Fetch CPI-U (Consumer Price Index - All Urban Consumers)
-        # Series: CPIAUCSL
-        ...
+ def get_prices(self, start, end):
+ # Fetch CPI-U (Consumer Price Index - All Urban Consumers)
+ # Series: CPIAUCSL
+ ...
 ```
 
 **Option 3: Manual CSV** (Offline, reproducible)
@@ -338,13 +338,13 @@ class FREDAssetProvider(AssetProvider):
 
 ```bash
 synthetic-dividend-tool backtest \
-    --ticker VOO \
-    --start 1995-01-01 \
-    --end 2025-01-01 \
-    --initial-qty 1000 \
-    --sd-n 8 \
-    --adjust-inflation \
-    --verbose
+ --ticker VOO \
+ --start 1995-01-01 \
+ --end 2025-01-01 \
+ --initial-qty 1000 \
+ --sd-n 8 \
+ --adjust-inflation \
+ --verbose
 ```
 
 **Expected Output**:
@@ -353,8 +353,8 @@ Nominal Return: +1,240% ($124,000)
 Real Return: +523% ($52,300)
 Purchasing Power Lost to Inflation: $71,700 (58% erosion)
 
-Conclusion: Strategy significantly beat inflation but shows 
-            importance of accounting for purchasing power.
+Conclusion: Strategy significantly beat inflation but shows
+ importance of accounting for purchasing power.
 ```
 
 ---
@@ -365,12 +365,12 @@ Conclusion: Strategy significantly beat inflation but shows
 
 ```bash
 synthetic-dividend-tool compare batch \
-    --tickers NVDA AAPL MSFT \
-    --strategies sd8 buyhold \
-    --start 2024-01-01 --end 2024-12-31 \
-    --adjust-market \
-    --market-ticker VOO \
-    --output vs_voo.csv
+ --tickers NVDA AAPL MSFT \
+ --strategies sd8 buyhold \
+ --start 2024-01-01 --end 2024-12-31 \
+ --adjust-market \
+ --market-ticker VOO \
+ --output vs_voo.csv
 ```
 
 **Expected CSV Output**:
@@ -392,11 +392,11 @@ AAPL,buyhold,25.1,-7.8
 
 ```bash
 synthetic-dividend-tool backtest \
-    --ticker GLD \
-    --start 2021-01-01 \
-    --end 2023-12-31 \
-    --adjust-both \
-    --market-ticker VOO
+ --ticker GLD \
+ --start 2021-01-01 \
+ --end 2023-12-31 \
+ --adjust-both \
+ --market-ticker VOO
 ```
 
 **Expected Output**:
@@ -406,7 +406,7 @@ Real Return: -5.2% (inflation ate 20.2% of purchasing power)
 Alpha vs VOO: +22.1% (gold outperformed stocks during inflation)
 
 Conclusion: Lost purchasing power nominally, but beat equity market.
-            Gold hedge worked relative to stocks but not absolute.
+ Gold hedge worked relative to stocks but not absolute.
 ```
 
 ---
@@ -417,22 +417,22 @@ Conclusion: Lost purchasing power nominally, but beat equity market.
 
 ```bash
 synthetic-dividend-tool compare batch \
-    --tickers NVDA GLD BIL AGG VOO \
-    --strategies sd8 \
-    --start 2024-01-01 --end 2024-12-31 \
-    --adjust-both \
-    --market-ticker VOO \
-    --output all_metrics.csv
+ --tickers NVDA GLD BIL AGG VOO \
+ --strategies sd8 \
+ --start 2024-01-01 --end 2024-12-31 \
+ --adjust-both \
+ --market-ticker VOO \
+ --output all_metrics.csv
 ```
 
 **Expected Output**:
 ```
-Asset  Nominal  Real  Alpha_vs_VOO  Winner_Dimension
-NVDA   +150%   +135%    +110%       All three
-GLD    +8%     -5%      -32%        None (lost real value)
-BIL    +4.5%   -8%      -35%        None (cash drag)
-AGG    +3%     -10%     -37%        None (bonds struggled)
-VOO    +40%    +27%      0%         Benchmark
+Asset Nominal Real Alpha_vs_VOO Winner_Dimension
+NVDA +150% +135% +110% All three
+GLD +8% -5% -32% None (lost real value)
+BIL +4.5% -8% -35% None (cash drag)
+AGG +3% -10% -37% None (bonds struggled)
+VOO +40% +27% 0% Benchmark
 ```
 
 **Conclusion**: Tech (NVDA) dominated all dimensions. GLD/BIL/AGG lost real value despite nominal gains.
@@ -517,11 +517,11 @@ alpha = nominal_return - market_return
 
 This framework provides:
 
-✅ **Three return perspectives**: Nominal, Real, Alpha  
-✅ **Unified CLI interface**: Same flags across all subcommands  
-✅ **Argument consistency**: Standard names eliminate confusion  
-✅ **Flexible benchmarks**: Any ticker as inflation/market reference  
-✅ **Extensible design**: Reuses Asset provider system  
-✅ **Clear use cases**: Retirement, evaluation, comparison, analysis  
+[OK] **Three return perspectives**: Nominal, Real, Alpha
+[OK] **Unified CLI interface**: Same flags across all subcommands
+[OK] **Argument consistency**: Standard names eliminate confusion
+[OK] **Flexible benchmarks**: Any ticker as inflation/market reference
+[OK] **Extensible design**: Reuses Asset provider system
+[OK] **Clear use cases**: Retirement, evaluation, comparison, analysis
 
 **Core Insight**: Returns are multi-dimensional. Show all dimensions, let users decide which matters most for their goals.

@@ -1,7 +1,7 @@
 # Experiment 004: Optimal Withdrawal Rate Discovery
 
-**Date**: October 27, 2025  
-**Status**: ✅ Complete  
+**Date**: October 27, 2025
+**Status**: [OK] Complete
 **Commit**: TBD
 
 ## Executive Summary
@@ -61,7 +61,7 @@ This "balance score" captures both:
 
 **Assets Tested**:
 1. **NVDA 2023**: Bull market (+245.9% return)
-2. **VOO 2019**: Moderate bull (+28.6% return)  
+2. **VOO 2019**: Moderate bull (+28.6% return)
 3. **SPY 2022**: Bear market (-19.5% return)
 
 **Algorithm**: SD9 (9.05% rebalance threshold, 50% profit sharing)
@@ -107,31 +107,31 @@ Lower is better - represents how close to perfectly balanced.
 ```python
 # Core optimization function
 def find_optimal_withdrawal_rate(
-    ticker, start_date, end_date, algorithm_name,
-    min_rate=0.01, max_rate=0.20, step=0.01
+ ticker, start_date, end_date, algorithm_name,
+ min_rate=0.01, max_rate=0.20, step=0.01
 ):
-    results = []
-    for rate in np.arange(min_rate, max_rate + step, step):
-        _, summary = run_retirement_backtest(
-            df, ticker, initial_qty, start_date, end_date, algo,
-            annual_withdrawal_rate=rate,
-            withdrawal_frequency='monthly',
-            cpi_adjust=True,
-            simple_mode=True
-        )
-        
-        result = WithdrawalRateResult(
-            withdrawal_rate=rate,
-            mean_bank=summary['bank_avg'],
-            abs_mean_bank=abs(summary['bank_avg']),
-            balance_score=abs(summary['bank_avg']) + 0.5 * std(bank),
-            margin_usage_pct=negative_days / total_days * 100,
-            # ... other metrics
-        )
-        results.append(result)
-    
-    # Sort by balance score (lower is better)
-    return sorted(results, key=lambda r: r.balance_score)
+ results = []
+ for rate in np.arange(min_rate, max_rate + step, step):
+ _, summary = run_retirement_backtest(
+ df, ticker, initial_qty, start_date, end_date, algo,
+ annual_withdrawal_rate=rate,
+ withdrawal_frequency='monthly',
+ cpi_adjust=True,
+ simple_mode=True
+ )
+
+ result = WithdrawalRateResult(
+ withdrawal_rate=rate,
+ mean_bank=summary['bank_avg'],
+ abs_mean_bank=abs(summary['bank_avg']),
+ balance_score=abs(summary['bank_avg']) + 0.5 * std(bank),
+ margin_usage_pct=negative_days / total_days * 100,
+ # ... other metrics
+ )
+ results.append(result)
+
+ # Sort by balance score (lower is better)
+ return sorted(results, key=lambda r: r.balance_score)
 ```
 
 ---
@@ -279,23 +279,23 @@ def find_optimal_withdrawal_rate(
 ### Key Observations
 
 1. **Optimal rate correlates with volatility, not just returns**:
-   - SPY 2022 had -19.5% return but still supports 10% withdrawals
-   - Volatility harvesting works even in bear markets
-   - Alpha comes from mean reversion, not directional moves
+ - SPY 2022 had -19.5% return but still supports 10% withdrawals
+ - Volatility harvesting works even in bear markets
+ - Alpha comes from mean reversion, not directional moves
 
 2. **Mean bank trends toward zero at optimal rates**:
-   - NVDA: $61k (still harvesting excess)
-   - VOO: $3.6k (nearly balanced)
-   - SPY: **$0.7k (essentially perfect balance)** ⭐
+ - NVDA: $61k (still harvesting excess)
+ - VOO: $3.6k (nearly balanced)
+ - SPY: **$0.7k (essentially perfect balance)** ⭐
 
 3. **Margin usage emerges at true balance point**:
-   - NVDA/VOO: 0% margin (conservative optimal point)
-   - SPY: 30.8% margin (true balance point where buffer used ~50% of time)
+ - NVDA/VOO: 0% margin (conservative optimal point)
+ - SPY: 30.8% margin (true balance point where buffer used ~50% of time)
 
 4. **The 30.8% margin finding validates the theory**:
-   - Single asset: ~30% margin usage
-   - Buffer used ~70% of time
-   - This is the predicted "zero point" for uncorrelated positions
+ - Single asset: ~30% margin usage
+ - Buffer used ~70% of time
+ - This is the predicted "zero point" for uncorrelated positions
 
 ### Diversification Math
 
@@ -328,65 +328,65 @@ def find_optimal_withdrawal_rate(
 ### Primary Findings
 
 1. **Optimal Withdrawal Rate Can Be Calculated**:
-   - Minimize `abs(mean(bank))` to find balance point
-   - This represents maximum sustainable withdrawal
-   - Works across all market conditions
+ - Minimize `abs(mean(bank))` to find balance point
+ - This represents maximum sustainable withdrawal
+ - Works across all market conditions
 
 2. **SPY 2022 Is The Perfect Example** ⭐:
-   - Mean bank of $701 (essentially zero)
-   - 10% withdrawal rate sustainable in bear market
-   - 30.8% margin usage ≈ 50% buffer point (as theorized)
-   - Proves volatility harvesting works even when markets crash
+ - Mean bank of $701 (essentially zero)
+ - 10% withdrawal rate sustainable in bear market
+ - 30.8% margin usage ≈ 50% buffer point (as theorized)
+ - Proves volatility harvesting works even when markets crash
 
 3. **Diversification Is The Key**:
-   - Single asset: 30.8% margin usage
-   - 10 assets: 9.7% margin usage (√10 reduction)
-   - Enables 2-sigma confidence (~95% no margin)
-   - Makes 10% withdrawals sustainable with high probability
+ - Single asset: 30.8% margin usage
+ - 10 assets: 9.7% margin usage (√10 reduction)
+ - Enables 2-sigma confidence (~95% no margin)
+ - Makes 10% withdrawals sustainable with high probability
 
 4. **Market Conditions Affect Optimal Rate**:
-   - Bull (NVDA +246%): 30% sustainable
-   - Moderate (VOO +29%): 15% sustainable
-   - Bear (SPY -20%): 10% sustainable
-   - But all are **self-sustaining from volatility alpha alone**
+ - Bull (NVDA +246%): 30% sustainable
+ - Moderate (VOO +29%): 15% sustainable
+ - Bear (SPY -20%): 10% sustainable
+ - But all are **self-sustaining from volatility alpha alone**
 
 ### Theoretical Validation
 
-✅ **Hypothesis Confirmed**: Withdrawal rates can be optimized by minimizing bank balance variance
+[OK] **Hypothesis Confirmed**: Withdrawal rates can be optimized by minimizing bank balance variance
 
-✅ **Balance Point Exists**: Mean bank approaches zero at optimal rates
+[OK] **Balance Point Exists**: Mean bank approaches zero at optimal rates
 
-✅ **Buffer Usage Validated**: ~30% margin usage at true balance point (single asset)
+[OK] **Buffer Usage Validated**: ~30% margin usage at true balance point (single asset)
 
-✅ **Diversification Benefits Confirmed**: Margin usage scales by √N factor
+[OK] **Diversification Benefits Confirmed**: Margin usage scales by √N factor
 
-✅ **Bear Market Resilience**: 10% withdrawals sustainable even in -20% crash
+[OK] **Bear Market Resilience**: 10% withdrawals sustainable even in -20% crash
 
 ### Strategic Implications
 
 1. **Retirement Planning**:
-   - 10% withdrawal rate is achievable with volatility harvesting
-   - Far exceeds traditional 4% "safe withdrawal rate"
-   - Requires diversification (10+ uncorrelated assets)
-   - Works across bull, moderate, and bear markets
+ - 10% withdrawal rate is achievable with volatility harvesting
+ - Far exceeds traditional 4% "safe withdrawal rate"
+ - Requires diversification (10+ uncorrelated assets)
+ - Works across bull, moderate, and bear markets
 
 2. **Portfolio Construction**:
-   - Target 10+ uncorrelated assets
-   - Each harvests volatility alpha independently
-   - Portfolio bank balance has √N lower volatility
-   - 95% confidence of no margin with proper diversification
+ - Target 10+ uncorrelated assets
+ - Each harvests volatility alpha independently
+ - Portfolio bank balance has √N lower volatility
+ - 95% confidence of no margin with proper diversification
 
 3. **Risk Management**:
-   - Monitor `mean(bank)` as early warning signal
-   - Positive mean: Excess alpha being harvested (can increase withdrawals)
-   - Negative mean: Insufficient alpha (reduce withdrawals)
-   - Near zero: Perfectly balanced (optimal efficiency)
+ - Monitor `mean(bank)` as early warning signal
+ - Positive mean: Excess alpha being harvested (can increase withdrawals)
+ - Negative mean: Insufficient alpha (reduce withdrawals)
+ - Near zero: Perfectly balanced (optimal efficiency)
 
 4. **Volatility Alpha Is The Engine**:
-   - Not dependent on bull markets
-   - Works in bear markets too (SPY 2022 proof)
-   - Mean reversion is the source, not directional moves
-   - Sustainable as long as markets exhibit volatility
+ - Not dependent on bull markets
+ - Works in bear markets too (SPY 2022 proof)
+ - Mean reversion is the source, not directional moves
+ - Sustainable as long as markets exhibit volatility
 
 ### Limitations
 
@@ -399,29 +399,29 @@ def find_optimal_withdrawal_rate(
 ### Future Research
 
 1. **Multi-Year Optimization**:
-   - Test optimal rates over 5, 10, 20 year periods
-   - Check if optimal rate is stable or varies
-   - Measure long-term sustainability
+ - Test optimal rates over 5, 10, 20 year periods
+ - Check if optimal rate is stable or varies
+ - Measure long-term sustainability
 
 2. **Algorithm Sensitivity**:
-   - Test SD7, SD8, SD9, SD10 to see if optimal rate changes
-   - Find universal optimal rate across algorithms
-   - Understand profit-sharing impact
+ - Test SD7, SD8, SD9, SD10 to see if optimal rate changes
+ - Find universal optimal rate across algorithms
+ - Understand profit-sharing impact
 
 3. **Asset Correlation Study**:
-   - Measure actual correlation between candidate assets
-   - Test if diversification benefits hold in practice
-   - Find truly uncorrelated asset combinations
+ - Measure actual correlation between candidate assets
+ - Test if diversification benefits hold in practice
+ - Find truly uncorrelated asset combinations
 
 4. **Realistic Mode Testing**:
-   - Re-run with `simple_mode=False`
-   - Include opportunity costs and risk-free gains
-   - Measure impact on optimal rates
+ - Re-run with `simple_mode=False`
+ - Include opportunity costs and risk-free gains
+ - Measure impact on optimal rates
 
 5. **Finer-Grained Search**:
-   - SPY optimal is 10% - test 9.0% to 11.0% in 0.1% steps
-   - Find precise optimal to within 0.1%
-   - Map entire curve of mean(bank) vs withdrawal rate
+ - SPY optimal is 10% - test 9.0% to 11.0% in 0.1% steps
+ - Find precise optimal to within 0.1%
+ - Map entire curve of mean(bank) vs withdrawal rate
 
 ---
 
@@ -471,7 +471,7 @@ The SPY 2022 finding (mean bank = $701, margin 30.8%) is the **smoking gun** tha
 
 ## Next Steps
 
-1. ✅ Document this eureka moment (this file)
+1. [OK] Document this eureka moment (this file)
 2. 🔄 Run finer-grained search on SPY (9-11% in 0.1% steps)
 3. 🔄 Test multi-year periods for stability
 4. 🔄 Create visualization of mean(bank) vs withdrawal rate curve

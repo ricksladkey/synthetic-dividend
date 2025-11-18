@@ -4,128 +4,128 @@ Analysis of which asset classes work with Yahoo Finance vs. requiring alternativ
 
 ## Yahoo Finance Coverage (via yfinance library)
 
-### ✅ WORKS - No Additional API Needed
+### [OK] WORKS - No Additional API Needed
 
-#### 1. **Mutual Funds** ✅
+#### 1. **Mutual Funds** [OK]
 - **Example**: `VFINX` (Vanguard 500 Index Fund)
 - **Status**: WORKS - daily NAV prices available
-- **Quirks**: 
-  - Volume always 0 (mutual funds trade at NAV, not on exchange)
-  - Only one price per day (NAV calculated after market close)
-  - Has `Capital Gains` column (mutual fund specific)
+- **Quirks**:
+ - Volume always 0 (mutual funds trade at NAV, not on exchange)
+ - Only one price per day (NAV calculated after market close)
+ - Has `Capital Gains` column (mutual fund specific)
 - **Dividends**: Available via `.dividends` property
-- **Provider**: YahooAssetProvider ✅
+- **Provider**: YahooAssetProvider [OK]
 
-#### 2. **Cryptocurrency** ✅
+#### 2. **Cryptocurrency** [OK]
 - **Example**: `AVNT-USD`, `BTC-USD`, `ETH-USD`
 - **Status**: WORKS - extensive crypto coverage
 - **Quirks**:
-  - 24/7 trading (weekends have data)
-  - Timezone is UTC (+00:00) vs. US Eastern for stocks
-  - High volatility in OHLC spreads
+ - 24/7 trading (weekends have data)
+ - Timezone is UTC (+00:00) vs. US Eastern for stocks
+ - High volatility in OHLC spreads
 - **Dividends**: None (crypto doesn't pay dividends)
-- **Provider**: YahooAssetProvider ✅
+- **Provider**: YahooAssetProvider [OK]
 
-#### 3. **Market Indexes (Total Return)** ✅
+#### 3. **Market Indexes (Total Return)** [OK]
 - **Example**: `^SP500TR` (S&P 500 Total Return)
 - **Other indexes**: `^GSPC` (S&P 500 Price), `^DJI` (Dow Jones), `^IXIC` (NASDAQ)
 - **Status**: WORKS - comprehensive index coverage
 - **Note**: TR (Total Return) indexes include dividend reinvestment
 - **Quirks**: Cannot trade indexes directly (use ETFs like VOO, SPY instead)
-- **Provider**: YahooAssetProvider ✅
+- **Provider**: YahooAssetProvider [OK]
 - **Use Case**: Benchmark comparison, not tradeable positions
 
-#### 4. **Commodity Futures** ✅
-- **Examples**: 
-  - `GC=F` (Gold Futures)
-  - `CL=F` (Crude Oil)
-  - `SI=F` (Silver)
-  - `HG=F` (Copper)
-  - `NG=F` (Natural Gas)
+#### 4. **Commodity Futures** [OK]
+- **Examples**:
+ - `GC=F` (Gold Futures)
+ - `CL=F` (Crude Oil)
+ - `SI=F` (Silver)
+ - `HG=F` (Copper)
+ - `NG=F` (Natural Gas)
 - **Status**: WORKS - front-month futures contracts
 - **Quirks**:
-  - Futures roll over (contract expiration issues)
-  - Gaps in data when contracts roll
-  - Not suitable for long-term backtests without handling rollovers
-  - Different trading hours than equities
+ - Futures roll over (contract expiration issues)
+ - Gaps in data when contracts roll
+ - Not suitable for long-term backtests without handling rollovers
+ - Different trading hours than equities
 - **Alternative**: Use commodity ETFs (GLD, USO, SLV) for easier backtesting
-- **Provider**: YahooAssetProvider ✅ (with caveats)
+- **Provider**: YahooAssetProvider [OK] (with caveats)
 
-#### 5. **OTC Markets** ✅
+#### 5. **OTC Markets** [OK]
 - **Example**: `BKYI` (BIO-key International - OTC)
 - **Status**: WORKS - coverage for major OTC stocks
 - **Quirks**:
-  - Lower volume, wider spreads
-  - Some very small OTC stocks may have gaps
-  - Less reliable than exchange-listed stocks
-- **Provider**: YahooAssetProvider ✅
+ - Lower volume, wider spreads
+ - Some very small OTC stocks may have gaps
+ - Less reliable than exchange-listed stocks
+- **Provider**: YahooAssetProvider [OK]
 
-#### 6. **ETFs** ✅
+#### 6. **ETFs** [OK]
 - **Examples**: `VOO`, `VTI`, `SPY`, `QQQ`, `GLD`, `BIL`
 - **Status**: WORKS PERFECTLY - best asset class for Yahoo Finance
 - **Why**: Traded on exchanges, high liquidity, comprehensive data
 - **Dividends**: Available (quarterly/monthly distributions)
-- **Provider**: YahooAssetProvider ✅
+- **Provider**: YahooAssetProvider [OK]
 
-#### 7. **Foreign Stocks (with ADR)** ✅
+#### 7. **Foreign Stocks (with ADR)** [OK]
 - **Examples**: `TSM` (Taiwan Semi ADR), `BABA` (Alibaba ADR)
 - **Status**: WORKS - ADRs trade on US exchanges
-- **Provider**: YahooAssetProvider ✅
+- **Provider**: YahooAssetProvider [OK]
 
-#### 8. **Bonds (via ETFs)** ✅
+#### 8. **Bonds (via ETFs)** [OK]
 - **Examples**: `TLT` (20+ Year Treasury), `AGG` (Aggregate Bond)
 - **Status**: WORKS - bond ETFs widely available
 - **Note**: Individual bonds NOT available, use ETFs
-- **Provider**: YahooAssetProvider ✅
+- **Provider**: YahooAssetProvider [OK]
 
 ---
 
-## ❌ REQUIRES ALTERNATIVE APIs
+## [FAIL] REQUIRES ALTERNATIVE APIs
 
 ### 1. **Individual Bonds**
 - **Examples**: CUSIP-based bonds, US Treasuries (individual securities)
 - **Yahoo Status**: NOT AVAILABLE
 - **Alternative APIs**:
-  - **FINRA/TRACE**: Corporate bond transaction data (requires registration)
-  - **TreasuryDirect API**: US government bonds (free, REST API)
-  - **Bloomberg API**: Comprehensive bond data (expensive, $$$)
-  - **Interactive Brokers API**: Bond prices via brokerage (requires account)
+ - **FINRA/TRACE**: Corporate bond transaction data (requires registration)
+ - **TreasuryDirect API**: US government bonds (free, REST API)
+ - **Bloomberg API**: Comprehensive bond data (expensive, $$$)
+ - **Interactive Brokers API**: Bond prices via brokerage (requires account)
 - **Workaround**: Use bond ETFs (TLT, AGG, BND) instead
 - **Provider Needed**: `BondAssetProvider` (future enhancement)
 
 ### 2. **Foreign Stocks (Direct, Non-ADR)**
 - **Examples**: Japanese stocks on TSE, European stocks on LSE/Euronext
 - **Yahoo Status**: LIMITED - some work with exchange suffix (e.g., `7203.T` for Toyota)
-- **Quirks**: 
-  - Inconsistent coverage
-  - Currency conversion issues
-  - Timezone complexities
+- **Quirks**:
+ - Inconsistent coverage
+ - Currency conversion issues
+ - Timezone complexities
 - **Alternative APIs**:
-  - **Alpha Vantage**: Global stock data (free tier available)
-  - **Polygon.io**: Multi-exchange support (free tier available)
-  - **IEX Cloud**: International stocks (limited free tier)
+ - **Alpha Vantage**: Global stock data (free tier available)
+ - **Polygon.io**: Multi-exchange support (free tier available)
+ - **IEX Cloud**: International stocks (limited free tier)
 - **Workaround**: Use ADRs or country ETFs (EWJ, EWG, etc.)
 - **Provider Needed**: Could extend YahooAssetProvider or create `InternationalAssetProvider`
 
 ### 3. **Options**
 - **Yahoo Status**: PARTIALLY - option chains available but awkward API
-- **Issues**: 
-  - Expiration handling complex
-  - Greeks not provided
-  - Historical option prices unreliable
+- **Issues**:
+ - Expiration handling complex
+ - Greeks not provided
+ - Historical option prices unreliable
 - **Alternative APIs**:
-  - **CBOE DataShop**: Official options data (paid)
-  - **Interactive Brokers API**: Real-time options via brokerage
-  - **Tradier API**: Options market data (REST API, free tier)
-  - **TDAmeritrade API**: Options chains (free with account)
+ - **CBOE DataShop**: Official options data (paid)
+ - **Interactive Brokers API**: Real-time options via brokerage
+ - **Tradier API**: Options market data (REST API, free tier)
+ - **TDAmeritrade API**: Options chains (free with account)
 - **Provider Needed**: `OptionsAssetProvider` (complex, future enhancement)
 
 ### 4. **Real Estate (Direct Properties)**
 - **Yahoo Status**: NOT AVAILABLE
 - **Alternative APIs**:
-  - **Zillow API**: Residential real estate (limited access)
-  - **Redfin API**: Property data (scrapers available, no official REST API)
-  - **ATTOM Data**: Property analytics (paid)
+ - **Zillow API**: Residential real estate (limited access)
+ - **Redfin API**: Property data (scrapers available, no official REST API)
+ - **ATTOM Data**: Property analytics (paid)
 - **Workaround**: Use REITs (VNQ, SCHH) for real estate exposure
 - **Provider Needed**: Not practical for backtesting
 
@@ -139,10 +139,10 @@ Analysis of which asset classes work with Yahoo Finance vs. requiring alternativ
 - **Examples**: Physical gold, silver, oil (spot prices)
 - **Yahoo Status**: NOT DIRECTLY - futures available but not true spot
 - **Alternative APIs**:
-  - **Quandl/Nasdaq Data Link**: Commodity spot prices (free tier)
-  - **Metal Prices API**: Precious metals (free)
-  - **EIA API**: Oil/gas spot prices (free, government data)
-  - **World Bank Commodity Prices**: Historical commodity data (free)
+ - **Quandl/Nasdaq Data Link**: Commodity spot prices (free tier)
+ - **Metal Prices API**: Precious metals (free)
+ - **EIA API**: Oil/gas spot prices (free, government data)
+ - **World Bank Commodity Prices**: Historical commodity data (free)
 - **Workaround**: Use commodity ETFs (GLD, SLV) or futures (GC=F)
 - **Provider Needed**: `CommodityAssetProvider` using Quandl or similar
 
@@ -162,10 +162,10 @@ AssetRegistry.register("USD", CashAssetProvider, priority=1)
 AssetRegistry.register("*", YahooAssetProvider, priority=9)
 
 # Future Extensions:
-AssetRegistry.register("*.T", YahooAssetProvider, priority=2)     # Japanese stocks
-AssetRegistry.register("*.L", YahooAssetProvider, priority=2)     # London stocks
-AssetRegistry.register("CUSTOM-*", ManualAssetProvider, priority=3)  # User-supplied data
-AssetRegistry.register("BOND-*", BondAssetProvider, priority=3)   # Individual bonds
+AssetRegistry.register("*.T", YahooAssetProvider, priority=2) # Japanese stocks
+AssetRegistry.register("*.L", YahooAssetProvider, priority=2) # London stocks
+AssetRegistry.register("CUSTOM-*", ManualAssetProvider, priority=3) # User-supplied data
+AssetRegistry.register("BOND-*", BondAssetProvider, priority=3) # Individual bonds
 AssetRegistry.register("OPT-*", OptionsAssetProvider, priority=3) # Options contracts
 ```
 
@@ -174,31 +174,31 @@ AssetRegistry.register("OPT-*", OptionsAssetProvider, priority=3) # Options cont
 ## Summary & Recommendations
 
 ### **Use Yahoo Finance (YahooAssetProvider) for:**
-✅ US stocks & ETFs (best coverage)
-✅ Mutual funds (VFINX works great)
-✅ Crypto (BTC-USD, ETH-USD, AVNT-USD)
-✅ Market indexes (^SP500TR for benchmarks)
-✅ OTC stocks (most work)
-✅ ADRs (foreign stocks via US exchanges)
-✅ Commodity ETFs (GLD, SLV, USO instead of futures)
+[OK] US stocks & ETFs (best coverage)
+[OK] Mutual funds (VFINX works great)
+[OK] Crypto (BTC-USD, ETH-USD, AVNT-USD)
+[OK] Market indexes (^SP500TR for benchmarks)
+[OK] OTC stocks (most work)
+[OK] ADRs (foreign stocks via US exchanges)
+[OK] Commodity ETFs (GLD, SLV, USO instead of futures)
 
 ### **Avoid or Use Alternatives for:**
-❌ Individual bonds → Use Treasury Direct API or bond ETFs
-❌ Foreign stocks (direct) → Use ADRs or Alpha Vantage
-❌ Options → Use Tradier/TDAmeritrade APIs
-❌ Commodity spot prices → Use Quandl or commodity ETFs
-❌ Money market funds → Use CashAssetProvider or BIL ETF
+[FAIL] Individual bonds → Use Treasury Direct API or bond ETFs
+[FAIL] Foreign stocks (direct) → Use ADRs or Alpha Vantage
+[FAIL] Options → Use Tradier/TDAmeritrade APIs
+[FAIL] Commodity spot prices → Use Quandl or commodity ETFs
+[FAIL] Money market funds → Use CashAssetProvider or BIL ETF
 
 ### **Best Practice for Your Use Cases:**
 
-1. **Mutual Funds**: ✅ Yahoo works (`VFINX`, `VTSAX`, etc.)
-2. **Obscure Crypto**: ✅ Yahoo works (`AVNT-USD`)
-3. **S&P 500 TR**: ✅ Yahoo works (`^SP500TR`) - but prefer `VOO` for tradeable backtest
-4. **Commodities**: 
-   - With ETF: ✅ Yahoo (`GLD`, `SLV`, `DBC`)
-   - Spot prices: ❌ Need Quandl/World Bank API
-   - Futures: ⚠️ Yahoo works (`GC=F`) but has rollover issues
-5. **OTC Markets**: ✅ Yahoo works (major OTC stocks like `BKYI`)
+1. **Mutual Funds**: [OK] Yahoo works (`VFINX`, `VTSAX`, etc.)
+2. **Obscure Crypto**: [OK] Yahoo works (`AVNT-USD`)
+3. **S&P 500 TR**: [OK] Yahoo works (`^SP500TR`) - but prefer `VOO` for tradeable backtest
+4. **Commodities**:
+ - With ETF: [OK] Yahoo (`GLD`, `SLV`, `DBC`)
+ - Spot prices: [FAIL] Need Quandl/World Bank API
+ - Futures: WARNING: Yahoo works (`GC=F`) but has rollover issues
+5. **OTC Markets**: [OK] Yahoo works (major OTC stocks like `BKYI`)
 
 **Recommended**: Stick with Yahoo Finance via YahooAssetProvider for 95% of use cases. It's free, reliable, and covers all major asset classes via ETFs/ADRs.
 

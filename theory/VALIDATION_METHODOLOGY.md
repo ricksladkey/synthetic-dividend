@@ -143,26 +143,26 @@
 ```python
 # Calculate from 10 years of data
 daily_returns = {
-    'VOO': μ=0.05%, σ=1.2%,
-    'BIL': μ=0.01%, σ=0.05%,
-    'BTC': μ=0.15%, σ=4.5%
+ 'VOO': μ=0.05%, σ=1.2%,
+ 'BIL': μ=0.01%, σ=0.05%,
+ 'BTC': μ=0.15%, σ=4.5%
 }
 correlation_matrix = [[1.0, 0.1, 0.3],
-                      [0.1, 1.0, 0.0],
-                      [0.3, 0.0, 1.0]]
+ [0.1, 1.0, 0.0],
+ [0.3, 0.0, 1.0]]
 ```
 
 **Step 2**: Generate synthetic paths
 ```python
 for i in range(1000):
-    # Sample returns with replacement
-    synthetic_returns = bootstrap_sample(historical_returns)
+ # Sample returns with replacement
+ synthetic_returns = bootstrap_sample(historical_returns)
 
-    # Apply correlations
-    correlated_returns = cholesky_decomp(correlation_matrix) @ synthetic_returns
+ # Apply correlations
+ correlated_returns = cholesky_decomp(correlation_matrix) @ synthetic_returns
 
-    # Run strategy
-    alpha[i] = run_synthetic_dividend(synthetic_portfolio)
+ # Run strategy
+ alpha[i] = run_synthetic_dividend(synthetic_portfolio)
 ```
 
 **Step 3**: Statistical analysis
@@ -373,9 +373,9 @@ Each test year uses only past data for calibration.
 2. **Document results** with full statistical analysis
 3. **Compare to traditional 60/40** rebalancing (quarterly)
 4. **Test robustness** by varying:
-   - Portfolio allocations (50/40/10, 70/20/10)
-   - Rebalancing triggers (sd6, sd8, sd10)
-   - Profit sharing ratios (25%, 50%, 75%)
+ - Portfolio allocations (50/40/10, 70/20/10)
+ - Rebalancing triggers (sd6, sd8, sd10)
+ - Profit sharing ratios (25%, 50%, 75%)
 5. **If rolling windows succeed**, implement Monte Carlo bootstrapping
 6. **If bootstrapping succeeds**, attempt mathematical proof
 

@@ -15,10 +15,10 @@ The Synthetic Dividend Algorithm comes in four variants, each providing differen
 
 | Variant | Buybacks | Sell Triggers | Risk Profile | Best For |
 |---------|----------|---------------|--------------|----------|
-| Buy-and-Hold | ❌ | Never | Lowest | Traditional investors |
-| ATH-Only | ❌ | New ATHs only | Low | Conservative profit-taking |
-| Standard SD | ✅ | ATHs + brackets | Medium | Balanced growth + income |
-| **ATH-Sell** | ✅ | New ATHs only | Medium-High | Maximum compounding |
+| Buy-and-Hold | [FAIL] | Never | Lowest | Traditional investors |
+| ATH-Only | [FAIL] | New ATHs only | Low | Conservative profit-taking |
+| Standard SD | [OK] | ATHs + brackets | Medium | Balanced growth + income |
+| **ATH-Sell** | [OK] | New ATHs only | Medium-High | Maximum compounding |
 
 **Key Innovation**: The ATH-Sell variant (new) combines aggressive dip-buying with conservative ATH-only selling for maximum long-term compounding during recovery periods.
 
@@ -200,9 +200,9 @@ Volatility Alpha: +4.5% (vs +26% for Standard SD)
 
 ```
 Buy-and-Hold: ■■■□□□□□□□ (Low risk, low income)
-ATH-Only:     ■■■■□□□□□□ (Low risk, moderate income)
-Standard SD:  ■■■■■■■□□□ (Medium risk, high income)
-ATH-Sell:     ■■■■■■■■□□ (Higher risk, highest income potential)
+ATH-Only: ■■■■□□□□□□ (Low risk, moderate income)
+Standard SD: ■■■■■■■□□□ (Medium risk, high income)
+ATH-Sell: ■■■■■■■■□□ (Higher risk, highest income potential)
 ```
 
 ### 5.2 Cash Flow Characteristics
@@ -241,9 +241,9 @@ ATH-Sell:     ■■■■■■■■□□ (Higher risk, highest income potent
 ### 6.2 Factory Naming Convention
 
 ```
-sd-9.05,50           # Standard SD: 9.05% trigger, 50% profit sharing
-sd-ath-only-9.05,50  # ATH-Only variant
-sd-ath-sell-9.05,50  # ATH-Sell variant (new)
+sd-9.05,50 # Standard SD: 9.05% trigger, 50% profit sharing
+sd-ath-only-9.05,50 # ATH-Only variant
+sd-ath-sell-9.05,50 # ATH-Sell variant (new)
 ```
 
 ### 6.3 Backtesting Considerations

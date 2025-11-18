@@ -64,7 +64,7 @@ Create a file `launch_calculator.pyw` (note the `.pyw` extension):
 from src.tools.order_calculator_gui import main
 
 if __name__ == "__main__":
-    main()
+ main()
 ```
 
 **Usage**:
@@ -79,9 +79,9 @@ if __name__ == "__main__":
 
 1. Right-click on Desktop → New → Shortcut
 2. Enter target:
-   ```
-   C:\path\to\.venv\Scripts\pythonw.exe -m src.tools.order_calculator_gui
-   ```
+ ```
+ C:\path\to\.venv\Scripts\pythonw.exe -m src.tools.order_calculator_gui
+ ```
 3. Name it "Synthetic Dividend Order Calculator"
 4. Optionally: Right-click → Properties → Change Icon
 
@@ -95,9 +95,9 @@ pip install pyinstaller
 
 # Build GUI exe (--windowed = no console)
 pyinstaller --name "SD-Calculator" \
-            --windowed \
-            --onefile \
-            src/tools/order_calculator_gui.py
+ --windowed \
+ --onefile \
+ src/tools/order_calculator_gui.py
 
 # Output in dist/SD-Calculator.exe
 ```
@@ -115,16 +115,16 @@ pyinstaller --name "SD-Calculator" \
 
 **As of November 2024**:
 
-✅ **WORKING**: setuptools >= 75.0 is now required in `pyproject.toml`
-✅ **Configured**: `[project.gui-scripts]` creates console-less executables
-✅ **Verified**: `sd-calc-orders.exe` uses Windows GUI subsystem (no console)
+[OK] **WORKING**: setuptools >= 75.0 is now required in `pyproject.toml`
+[OK] **Configured**: `[project.gui-scripts]` creates console-less executables
+[OK] **Verified**: `sd-calc-orders.exe` uses Windows GUI subsystem (no console)
 
 ## Recommended User Instructions
 
 **Primary Method** (Simplest - No Console):
 ```bash
 pip install -e ".[gui]"
-sd-calc-orders  # Launches GUI without console!
+sd-calc-orders # Launches GUI without console!
 ```
 
 **Alternative Methods**:
@@ -175,15 +175,15 @@ To verify if an executable uses GUI subsystem:
 import struct
 
 with open('sd-calc-orders.exe', 'rb') as f:
-    # Find PE header
-    f.seek(0x3C)
-    pe_offset = struct.unpack('<I', f.read(4))[0]
+ # Find PE header
+ f.seek(0x3C)
+ pe_offset = struct.unpack('<I', f.read(4))[0]
 
-    # Read subsystem field
-    f.seek(pe_offset + 24 + 68)
-    subsystem = struct.unpack('<H', f.read(2))[0]
+ # Read subsystem field
+ f.seek(pe_offset + 24 + 68)
+ subsystem = struct.unpack('<H', f.read(2))[0]
 
-    print("GUI subsystem" if subsystem == 2 else "Console subsystem")
+ print("GUI subsystem" if subsystem == 2 else "Console subsystem")
 ```
 
 ## References

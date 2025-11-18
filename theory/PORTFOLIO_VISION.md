@@ -18,16 +18,16 @@
 ```
 Initial: $100,000
 
-Cash Reserve:    $10,000 (10%)  ← Tactical buyback buffer
-Stock Positions: $90,000 (90%)  ← Diversified across assets
+Cash Reserve: $10,000 (10%) ← Tactical buyback buffer
+Stock Positions: $90,000 (90%) ← Diversified across assets
 
 Example:
-- NVDA:  $20,000 (20%)
-- VOO:   $30,000 (30%)  ← Index baseline
-- GOOG:  $15,000 (15%)
-- MSFT:  $15,000 (15%)
-- BTC:   $10,000 (10%)
-- Cash:  $10,000 (10%)
+- NVDA: $20,000 (20%)
+- VOO: $30,000 (30%) ← Index baseline
+- GOOG: $15,000 (15%)
+- MSFT: $15,000 (15%)
+- BTC: $10,000 (10%)
+- Cash: $10,000 (10%)
 ```
 
 ### How It Works
@@ -40,11 +40,11 @@ Example:
 
 **2. Shared Cash Pool**
 ```
-Day 0:  Cash = $10,000
-Day 5:  NVDA sells $2,000 → Cash = $12,000
-Day 8:  GOOG buys $1,500  → Cash = $10,500
+Day 0: Cash = $10,000
+Day 5: NVDA sells $2,000 → Cash = $12,000
+Day 8: GOOG buys $1,500 → Cash = $10,500
 Day 12: MSFT sells $3,000 → Cash = $13,500
-Day 15: BTC buys $4,000   → Cash = $9,500
+Day 15: BTC buys $4,000 → Cash = $9,500
 ```
 
 **3. Portfolio Rebalancing Triggers**

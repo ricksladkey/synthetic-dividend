@@ -12,13 +12,13 @@ The multi-bracket gap fix reveals that **gap bonus amplifies volatility alpha fa
 
 | Asset | sd_n | Theoretical Txns | Actual Txns | Multiplier |
 |-------|------|-----------------|-------------|------------|
-| MSTR  | sd12 | 12 | **2,815** | **234.6x** |
-| MSTR  | sd10 | 10 | **1,908** | **190.8x** |
-| MSTR  | sd8  | 8  | **979**   | **122.4x** |
+| MSTR | sd12 | 12 | **2,815** | **234.6x** |
+| MSTR | sd10 | 10 | **1,908** | **190.8x** |
+| MSTR | sd8 | 8 | **979** | **122.4x** |
 | ETH-USD | sd10 | 10 | **1,004** | **100.4x** |
-| BTC-USD | sd10 | 10 | **555**   | **55.5x** |
-| NVDA  | sd12 | 12 | **453**   | **37.8x** |
-| NVDA  | sd8  | 8  | **76**    | **9.5x** |
+| BTC-USD | sd10 | 10 | **555** | **55.5x** |
+| NVDA | sd12 | 12 | **453** | **37.8x** |
+| NVDA | sd8 | 8 | **76** | **9.5x** |
 
 **Low-volatility assets:** ~1-3x multiplier (SPY, GLD, DIA)
 
@@ -35,7 +35,7 @@ Transaction count is a strong predictor of volatility alpha, which makes sense:
 
 **High vs Low Volatility Assets:**
 - High volatility avg: **703 transactions**
-- Low volatility avg: **8 transactions**  
+- Low volatility avg: **8 transactions**
 - **Amplification: 86x**
 
 This is WILDLY higher than the algorithm was originally designed for.
@@ -56,7 +56,7 @@ The algorithm was validated assuming **gradual price movements only**:
 
 With gap bonus correctly implemented, we see:
 
-**MSTR:** 
+**MSTR:**
 - sd12 generates **234.6x** more transactions than theory
 - Why? Frequent intraday volatility + overnight gaps spanning multiple brackets
 - Each gap can trigger 3-5+ transactions in ONE day
@@ -79,8 +79,8 @@ With gap bonus correctly implemented, we see:
 
 1. **More gap events detected:** sd12 (5.95% brackets) detects 2x more gaps than sd6 (12.25% brackets)
 2. **More transactions PER gap:** A 20% overnight gap triggers:
-   - sd6: 1-2 transactions
-   - sd12: 3-4 transactions
+ - sd6: 1-2 transactions
+ - sd12: 3-4 transactions
 3. **Multiplicative effect:** 2x gap frequency × 2x txns/gap = **4x total transactions**
 
 **Actual data confirms this:** MSTR sd12 has **8.3x** more transactions than MSTR sd6 (2,815 vs 338).
@@ -134,49 +134,49 @@ Example: An asset with 10% annual volatility but frequent small gaps might outpe
 ### Immediate (validate gap bonus mechanism)
 
 1. **Measure gap frequency and magnitude:**
-   - Parse price data to identify gaps (high/low ranges not overlapping day-to-day)
-   - Calculate gap distribution by asset class
-   - Correlate gap metrics with observed transaction counts
+ - Parse price data to identify gaps (high/low ranges not overlapping day-to-day)
+ - Calculate gap distribution by asset class
+ - Correlate gap metrics with observed transaction counts
 
 2. **Verify gap bonus formula:**
-   - For a known gap size (e.g., 20% with sd8), verify we get 2 transactions
-   - Test edge cases: gaps exactly on bracket boundaries
-   - Confirm iteration counter in transaction notes matches expectations
+ - For a known gap size (e.g., 20% with sd8), verify we get 2 transactions
+ - Test edge cases: gaps exactly on bracket boundaries
+ - Confirm iteration counter in transaction notes matches expectations
 
 3. **Profit sharing sensitivity:**
-   - Re-run optimal_rebalancing with profit_pct = [25, 50, 75, 100]
-   - Check if gap bonus changes optimal profit sharing for volatile assets
+ - Re-run optimal_rebalancing with profit_pct = [25, 50, 75, 100]
+ - Check if gap bonus changes optimal profit sharing for volatile assets
 
 ### Medium-term (optimize sd_n framework)
 
 4. **Gap-adjusted sd_n recommendations:**
-   - Develop formula: `optimal_sd_n = f(base_volatility, gap_frequency, gap_magnitude)`
-   - Test on historical data: does this predict observed alpha better than volatility alone?
-   - Create lookup table by asset characteristics
+ - Develop formula: `optimal_sd_n = f(base_volatility, gap_frequency, gap_magnitude)`
+ - Test on historical data: does this predict observed alpha better than volatility alone?
+ - Create lookup table by asset characteristics
 
 5. **Transaction cost modeling:**
-   - Add realistic transaction costs (commission + slippage)
-   - Find optimal sd_n where gap bonus exceeds transaction costs
-   - This may reduce extreme cases (MSTR sd12: 2,815 txns)
+ - Add realistic transaction costs (commission + slippage)
+ - Find optimal sd_n where gap bonus exceeds transaction costs
+ - This may reduce extreme cases (MSTR sd12: 2,815 txns)
 
 6. **Backtest longer periods:**
-   - Current data: 1 year (2023-10-23 to 2024-10-23)
-   - Test: 3 years, 5 years, full history
-   - Verify gap bonus is consistent, not a 1-year anomaly
+ - Current data: 1 year (2023-10-23 to 2024-10-23)
+ - Test: 3 years, 5 years, full history
+ - Verify gap bonus is consistent, not a 1-year anomaly
 
 ### Long-term (theoretical framework)
 
 7. **Gap bonus mathematics:**
-   - Derive closed-form formula for expected gap bonus
-   - Input: gap frequency distribution + sd_n
-   - Output: expected transaction count multiplier
-   - This becomes the new theoretical foundation
+ - Derive closed-form formula for expected gap bonus
+ - Input: gap frequency distribution + sd_n
+ - Output: expected transaction count multiplier
+ - This becomes the new theoretical foundation
 
 8. **Asset classification system:**
-   - Category 1: Smooth (SPY, GLD) - minimal gap bonus
-   - Category 2: Choppy (NVDA, PLTR) - moderate gap bonus
-   - Category 3: Explosive (MSTR, BTC) - extreme gap bonus
-   - Different sd_n recommendations for each category
+ - Category 1: Smooth (SPY, GLD) - minimal gap bonus
+ - Category 2: Choppy (NVDA, PLTR) - moderate gap bonus
+ - Category 3: Explosive (MSTR, BTC) - extreme gap bonus
+ - Different sd_n recommendations for each category
 
 ## Conclusion
 
@@ -206,7 +206,7 @@ When a price gaps down 2+ brackets in a single day, we face a design choice:
 - Problem: Breaks stack symmetry when unwinding
 - Example: If we later gap up 2 brackets, we'd sell at 2 different prices but have only 1 stack entry
 
-**Option B: Separate Transactions Per Bracket** ✅ (Our Implementation)
+**Option B: Separate Transactions Per Bracket** [OK] (Our Implementation)
 - Record: Buy 100 shares @ $91.62, then buy 101 shares @ $83.94
 - Advantage: Perfect stack symmetry when unwinding (LIFO)
 - Example: Later gap up unwinds stack entries one-at-a-time at matching bracket prices
@@ -216,17 +216,17 @@ When a price gaps down 2+ brackets in a single day, we face a design choice:
 The algorithm handles multi-bracket gaps through **iteration**:
 
 1. **Iteration 1**: Buy order at $91.62 triggers (price hit $78)
-   - Fill at theoretical bracket price: $91.62
-   - Add stack entry: `($91.62, 100 shares)`
-   - Place new orders based on $91.62
+ - Fill at theoretical bracket price: $91.62
+ - Add stack entry: `($91.62, 100 shares)`
+ - Place new orders based on $91.62
 
 2. **Iteration 2**: New buy order at $83.94 triggers (price still at $78)
-   - Fill at theoretical bracket price: $83.94
-   - Add stack entry: `($83.94, 101 shares)`
-   - Place new orders based on $83.94
+ - Fill at theoretical bracket price: $83.94
+ - Add stack entry: `($83.94, 101 shares)`
+ - Place new orders based on $83.94
 
 3. **Iteration 3**: New buy order at $76.91 doesn't trigger (price=$78 > $76.91)
-   - Stop iterating
+ - Stop iterating
 
 **Result**: Two separate "normal-sized" stack entries, each indistinguishable for selling purposes.
 
@@ -240,9 +240,9 @@ When we later gap UP 2 brackets:
 Each bracket crossing (up or down) creates/unwinds exactly **one stack entry** at the **theoretical bracket price**.
 
 This ensures:
-- ✅ Buy-back stack unwinding is **exactly symmetrical**
-- ✅ No accumulation of "odd lots" from gap slippage
-- ✅ Clean stack accounting even across multi-bracket gaps (LIFO semantics)
+- [OK] Buy-back stack unwinding is **exactly symmetrical**
+- [OK] No accumulation of "odd lots" from gap slippage
+- [OK] Clean stack accounting even across multi-bracket gaps (LIFO semantics)
 
 ### Technical Note
 
@@ -252,5 +252,4 @@ This required changing `Order.get_execution_price()` to **always fill limit orde
 1. The symmetry benefits outweigh the minor inaccuracy
 2. In practice, limit orders often fill near their limit during volatile gaps
 3. The alternative (slippage model) breaks stack symmetry permanently
-
 

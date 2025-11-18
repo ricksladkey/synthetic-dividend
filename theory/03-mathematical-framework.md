@@ -142,7 +142,7 @@ Total Alpha ≥ (Number of cycles) × (trigger%)² / 2
 
 ### 3.2 Overnight Gaps
 
-**Mechanism**: 
+**Mechanism**:
 - **Gap down**: Buy at lower price than previous close
 - **Gap up**: Sell at higher price than previous close
 

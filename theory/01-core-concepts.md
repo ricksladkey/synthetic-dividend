@@ -24,11 +24,11 @@ These principles explain why systematic rebalancing with buybacks generates meas
 ### What This Is NOT
 
 **NO derivatives required:**
-- ❌ No options (covered calls, puts, spreads, collars)
-- ❌ No futures or swaps
-- ❌ No VIX products or volatility ETFs
-- ❌ No leverage or margin
-- ✅ **Just spot asset + limit orders**
+- [FAIL] No options (covered calls, puts, spreads, collars)
+- [FAIL] No futures or swaps
+- [FAIL] No VIX products or volatility ETFs
+- [FAIL] No leverage or margin
+- [OK] **Just spot asset + limit orders**
 
 **Key differentiator**: We extract returns from volatility using only **direct ownership** of the underlying asset. No options premiums, no decay, no counterparty risk. Just buy low, sell high, systematically.
 

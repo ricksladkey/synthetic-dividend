@@ -1,6 +1,6 @@
 # Synthetic Dividend Tool - Primary Use Cases
 
-**Quick Reference Guide**  
+**Quick Reference Guide**
 **Last Updated**: October 27, 2025
 
 ---
@@ -33,10 +33,10 @@
 
 ```bash
 synthetic-dividend-tool backtest \
-    --ticker NVDA \
-    --start 2024-01-01 \
-    --end 2024-12-31 \
-    --initial-qty 100
+ --ticker NVDA \
+ --start 2024-01-01 \
+ --end 2024-12-31 \
+ --initial-qty 100
 ```
 
 **Output**: Transaction log, final portfolio value, return percentage
@@ -51,13 +51,13 @@ synthetic-dividend-tool backtest \
 
 ```bash
 synthetic-dividend-tool analyze volatility-alpha \
-    --ticker GLD \
-    --start 2024-01-01 \
-    --end 2024-12-31 \
-    --plot
+ --ticker GLD \
+ --start 2024-01-01 \
+ --end 2024-12-31 \
+ --plot
 ```
 
-**Output**: 
+**Output**:
 - Recommended SD-N based on asset volatility
 - Volatility alpha analysis
 - Price chart with recommended brackets (if --plot)
@@ -73,10 +73,10 @@ synthetic-dividend-tool analyze volatility-alpha \
 
 ```bash
 synthetic-dividend-tool compare algorithms \
-    --ticker SPY \
-    --start 2023-01-01 \
-    --end 2024-12-31 \
-    --adjust-market
+ --ticker SPY \
+ --start 2023-01-01 \
+ --end 2024-12-31 \
+ --adjust-market
 ```
 
 **Output**: Side-by-side comparison with alpha metrics
@@ -91,11 +91,11 @@ synthetic-dividend-tool compare algorithms \
 
 ```bash
 synthetic-dividend-tool compare batch \
-    --tickers NVDA AAPL GLD BIL AGG \
-    --strategies sd8 sd16 buyhold \
-    --start 2024-01-01 \
-    --end 2024-12-31 \
-    --output results.csv
+ --tickers NVDA AAPL GLD BIL AGG \
+ --strategies sd8 sd16 buyhold \
+ --start 2024-01-01 \
+ --end 2024-12-31 \
+ --output results.csv
 ```
 
 **Output**: CSV with returns for each ticker × strategy combination
@@ -110,9 +110,9 @@ synthetic-dividend-tool compare batch \
 
 ```bash
 synthetic-dividend-tool research optimal-rebalancing \
-    --start 2024-01-01 \
-    --end 2024-12-31 \
-    --output optimal_sd.csv
+ --start 2024-01-01 \
+ --end 2024-12-31 \
+ --output optimal_sd.csv
 ```
 
 **Output**: CSV showing SD-4 through SD-32 performance for multiple assets
@@ -127,16 +127,16 @@ synthetic-dividend-tool research optimal-rebalancing \
 
 ```bash
 synthetic-dividend-tool order \
-    --ticker NVDA \
-    --holdings 1000 \
-    --last-price 125.00 \
-    --sd-n 8 \
-    --profit-pct 50
+ --ticker NVDA \
+ --holdings 1000 \
+ --last-price 125.00 \
+ --sd-n 8 \
+ --profit-pct 50
 ```
 
-**Output**: 
+**Output**:
 ```
-Buy Order:  900 shares @ $114.53 (dip buying)
+Buy Order: 900 shares @ $114.53 (dip buying)
 Sell Order: 825 shares @ $136.44 (profit taking)
 ```
 
@@ -150,11 +150,11 @@ Sell Order: 825 shares @ $136.44 (profit taking)
 
 ```bash
 synthetic-dividend-tool backtest \
-    --ticker VOO \
-    --start 1995-01-01 \
-    --end 2025-01-01 \
-    --adjust-inflation \
-    --verbose
+ --ticker VOO \
+ --start 1995-01-01 \
+ --end 2025-01-01 \
+ --adjust-inflation \
+ --verbose
 ```
 
 **Output**:
@@ -174,11 +174,11 @@ Purchasing Power Lost: $71,700 (58% inflation erosion)
 
 ```bash
 synthetic-dividend-tool backtest \
-    --ticker AAPL \
-    --start 2024-01-01 \
-    --end 2024-12-31 \
-    --adjust-market \
-    --market-ticker VOO
+ --ticker AAPL \
+ --start 2024-01-01 \
+ --end 2024-12-31 \
+ --adjust-market \
+ --market-ticker VOO
 ```
 
 **Output**:
@@ -198,12 +198,12 @@ Alpha: -4.4% (underperformed market)
 
 ```bash
 synthetic-dividend-tool backtest \
-    --ticker NVDA \
-    --start 2024-01-01 \
-    --end 2024-12-31 \
-    --adjust-both \
-    --market-ticker QQQ \
-    --verbose
+ --ticker NVDA \
+ --start 2024-01-01 \
+ --end 2024-12-31 \
+ --adjust-both \
+ --market-ticker QQQ \
+ --verbose
 ```
 
 **Output**:
@@ -213,9 +213,9 @@ Real Return: +135.2% ($13,520) [CPI adjustment]
 Alpha vs QQQ: +18.3% ($1,830) [Market adjustment]
 
 Income Classification:
-  Universal (Dividends): $175 (1.75%)
-  Primary (ATH Selling): $4,825 (48.25%)
-  Secondary (Vol Alpha): $175 (1.75%)
+ Universal (Dividends): $175 (1.75%)
+ Primary (ATH Selling): $4,825 (48.25%)
+ Secondary (Vol Alpha): $175 (1.75%)
 ```
 
 **When to use**: Comprehensive analysis, research papers, client reports
@@ -228,8 +228,8 @@ Income Classification:
 
 ```bash
 synthetic-dividend-tool analyze gap-bonus \
-    --input research_results.csv \
-    --output gap_analysis.csv
+ --input research_results.csv \
+ --output gap_analysis.csv
 ```
 
 **Output**: Breakdown of alpha from single vs multi-bracket gaps
@@ -244,10 +244,10 @@ synthetic-dividend-tool analyze gap-bonus \
 
 ```bash
 synthetic-dividend-tool research asset-classes \
-    --start 2024-01-01 \
-    --end 2024-12-31 \
-    --output by_class.csv \
-    --adjust-both
+ --start 2024-01-01 \
+ --end 2024-12-31 \
+ --output by_class.csv \
+ --adjust-both
 ```
 
 **Output**: CSV grouping results by asset class (tech, commodity, bonds, etc.)
@@ -262,7 +262,7 @@ synthetic-dividend-tool research asset-classes \
 
 ```bash
 synthetic-dividend-tool compare table \
-    --input batch_results.csv
+ --input batch_results.csv
 ```
 
 **Output**: Formatted markdown/ASCII table for reports
@@ -278,25 +278,25 @@ synthetic-dividend-tool compare table \
 ```bash
 # Step 1: Find optimal SD-N for each asset
 synthetic-dividend-tool research optimal-rebalancing \
-    --start 2024-01-01 --end 2024-12-31 \
-    --output step1_optimal.csv
+ --start 2024-01-01 --end 2024-12-31 \
+ --output step1_optimal.csv
 
 # Step 2: Run batch comparison with optimal parameters
 synthetic-dividend-tool compare batch \
-    --tickers NVDA AAPL GLD \
-    --strategies sd8 sd16 buyhold \
-    --start 2024-01-01 --end 2024-12-31 \
-    --adjust-both \
-    --output step2_comparison.csv
+ --tickers NVDA AAPL GLD \
+ --strategies sd8 sd16 buyhold \
+ --start 2024-01-01 --end 2024-12-31 \
+ --adjust-both \
+ --output step2_comparison.csv
 
 # Step 3: Analyze gap bonus contribution
 synthetic-dividend-tool analyze gap-bonus \
-    --input step2_comparison.csv \
-    --output step3_gap_analysis.csv
+ --input step2_comparison.csv \
+ --output step3_gap_analysis.csv
 
 # Step 4: Generate formatted table
 synthetic-dividend-tool compare table \
-    --input step3_gap_analysis.csv
+ --input step3_gap_analysis.csv
 ```
 
 ---
@@ -306,21 +306,21 @@ synthetic-dividend-tool compare table \
 ```bash
 # Morning: Analyze which assets need rebalancing
 for ticker in NVDA AAPL MSFT; do
-    synthetic-dividend-tool order \
-        --ticker $ticker \
-        --holdings <your_quantity> \
-        --last-price <current_price> \
-        --sd-n 8
+ synthetic-dividend-tool order \
+ --ticker $ticker \
+ --holdings <your_quantity> \
+ --last-price <current_price> \
+ --sd-n 8
 done
 
 # Place limit orders based on output
 
 # Evening: Backtest actual day's transactions
 synthetic-dividend-tool backtest \
-    --ticker NVDA \
-    --start 2024-12-01 \
-    --end 2024-12-31 \
-    --verbose
+ --ticker NVDA \
+ --start 2024-12-01 \
+ --end 2024-12-31 \
+ --verbose
 ```
 
 ---
@@ -334,7 +334,7 @@ synthetic-dividend-tool backtest --ticker NVDA --start 2024-01-01 --end 2024-12-
 ```
 ```
 Nominal: +150% (made money)
-Real: +135% (beat inflation)  
+Real: +135% (beat inflation)
 Alpha: +110% (crushed market)
 → Winner on all dimensions
 ```
@@ -386,18 +386,18 @@ Alpha: -31% (stocks also fell but less)
 ## Best Practices
 
 ### DO:
-✅ Always use `--adjust-both` for comprehensive analysis  
-✅ Standardize on argument names (`--ticker`, never `--symbol`)  
-✅ Save CSV outputs for reproducibility (`--output results.csv`)  
-✅ Use `--verbose` when you need detailed breakdowns  
-✅ Specify custom benchmarks when appropriate (`--market-ticker QQQ`)  
+[OK] Always use `--adjust-both` for comprehensive analysis
+[OK] Standardize on argument names (`--ticker`, never `--symbol`)
+[OK] Save CSV outputs for reproducibility (`--output results.csv`)
+[OK] Use `--verbose` when you need detailed breakdowns
+[OK] Specify custom benchmarks when appropriate (`--market-ticker QQQ`)
 
 ### DON'T:
-❌ Mix argument names across commands (breaks scripts)  
-❌ Ignore inflation on multi-year backtests  
-❌ Use default VOO benchmark for non-equity assets  
-❌ Forget to specify `--initial-qty` (default 1000 may not match reality)  
-❌ Run backtests without checking data availability first  
+[FAIL] Mix argument names across commands (breaks scripts)
+[FAIL] Ignore inflation on multi-year backtests
+[FAIL] Use default VOO benchmark for non-equity assets
+[FAIL] Forget to specify `--initial-qty` (default 1000 may not match reality)
+[FAIL] Run backtests without checking data availability first
 
 ---
 
@@ -425,9 +425,9 @@ synthetic-dividend-tool backtest --ticker NVDA --adjust-inflation --inflation-ti
 ### "Benchmark ticker VOO not appropriate for gold"
 ```bash
 # Solution: Use gold benchmark or no market adjustment
-synthetic-dividend-tool backtest --ticker GLD --adjust-inflation  # Skip market adjustment
+synthetic-dividend-tool backtest --ticker GLD --adjust-inflation # Skip market adjustment
 # OR use gold benchmark:
-synthetic-dividend-tool backtest --ticker GLD --adjust-market --market-ticker GLD  # Self-benchmark
+synthetic-dividend-tool backtest --ticker GLD --adjust-market --market-ticker GLD # Self-benchmark
 ```
 
 ### "Different results from web tools"
@@ -442,10 +442,10 @@ synthetic-dividend-tool backtest --ticker GLD --adjust-market --market-ticker GL
 
 The synthetic-dividend-tool provides:
 
-📊 **Three return perspectives**: Nominal, Real (inflation-adjusted), Alpha (market-adjusted)  
-🎯 **Unified interface**: Same arguments across all subcommands  
-🔧 **Flexible analysis**: Quick backtests to deep research studies  
-📈 **Live trading support**: Order calculation and rebalancing tools  
-📝 **Complete documentation**: Theory, use cases, and examples  
+ **Three return perspectives**: Nominal, Real (inflation-adjusted), Alpha (market-adjusted)
+ **Unified interface**: Same arguments across all subcommands
+ **Flexible analysis**: Quick backtests to deep research studies
+ **Live trading support**: Order calculation and rebalancing tools
+📝 **Complete documentation**: Theory, use cases, and examples
 
 **Core Philosophy**: Show returns in their full economic context. A 50% nominal return means nothing without knowing inflation and market performance.

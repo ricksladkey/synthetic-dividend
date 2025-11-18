@@ -129,11 +129,11 @@ NAV: $100 (fixed during drawdown)
 Price: $100 → $91 → $83 → $91 → $100 → $109
 
 Actions:
-  @ $91: BUY (9% discount to NAV)
-  @ $83: BUY (17% discount to NAV)
-  @ $91: No action (unwinding starts as price approaches NAV)
-  @ $100: SELL (unwind first buyback at 0% profit)
-  @ $109: SELL (unwind second buyback at 31% profit)
+ @ $91: BUY (9% discount to NAV)
+ @ $83: BUY (17% discount to NAV)
+ @ $91: No action (unwinding starts as price approaches NAV)
+ @ $100: SELL (unwind first buyback at 0% profit)
+ @ $109: SELL (unwind second buyback at 31% profit)
 ```
 
 **Outcome:** Classic buy-low-sell-high, profit from volatility
@@ -168,7 +168,7 @@ Bank: Accumulates incremental profits from cycles
 
 **Use Case:** Determine if current market price is at premium/discount to historical high
 
-**Advantage:** 
+**Advantage:**
 - Works for ANY asset (doesn't require fundamental analysis)
 - Self-adjusting based on market behavior
 - Captures momentum (higher highs = higher NAV)
@@ -269,7 +269,7 @@ Much clearer!
 
 **Traditional:** "Volatility alpha of 95% from 1,908 transactions"
 
-**NAV terms:** 
+**NAV terms:**
 - "Captured $X in discount reversions (bought below NAV, sold at NAV)"
 - "Captured $Y in premium realizations (sold above NAV)"
 - "Captured $Z in gap bonuses (multiple premium levels per day)"
@@ -327,42 +327,42 @@ We SELL because the market is offering a premium. Then we update NAV to $109,000
 
 **Current implementation** (implicit NAV via ATH):
 ```python
-self.ath = 100.0  # This IS our NAV
-self.next_sell_price = self.ath * (1 + self.alpha)  # Premium threshold
-self.next_buy_price = self.ath / (1 + self.alpha)   # Discount threshold
+self.ath = 100.0 # This IS our NAV
+self.next_sell_price = self.ath * (1 + self.alpha) # Premium threshold
+self.next_buy_price = self.ath / (1 + self.alpha) # Discount threshold
 
 if high >= self.next_sell_price:
-    # Market is paying premium to NAV
-    sell_at_premium()
-    self.ath = self.next_sell_price  # Update NAV
+ # Market is paying premium to NAV
+ sell_at_premium()
+ self.ath = self.next_sell_price # Update NAV
 
 if low <= self.next_buy_price:
-    # Market is offering discount to NAV
-    buy_at_discount()
-    # NAV stays fixed (no new high)
+ # Market is offering discount to NAV
+ buy_at_discount()
+ # NAV stays fixed (no new high)
 ```
 
 **Potential explicit NAV tracking** (future):
 ```python
-self.nav = 100.0  # Explicit NAV property
-self.premium_threshold = 0.0905  # 9.05% for sd8
+self.nav = 100.0 # Explicit NAV property
+self.premium_threshold = 0.0905 # 9.05% for sd8
 self.discount_threshold = 0.0905
 
 def get_nav_premium(self, price):
-    """Return premium % relative to NAV."""
-    return (price - self.nav) / self.nav
+ """Return premium % relative to NAV."""
+ return (price - self.nav) / self.nav
 
 def get_nav_discount(self, price):
-    """Return discount % relative to NAV."""
-    return (self.nav - price) / self.nav
+ """Return discount % relative to NAV."""
+ return (self.nav - price) / self.nav
 
 if get_nav_premium(high) >= self.premium_threshold:
-    sell_at_premium()
-    self.nav = high  # Update NAV to new high
+ sell_at_premium()
+ self.nav = high # Update NAV to new high
 
 if get_nav_discount(low) >= self.discount_threshold:
-    buy_at_discount()
-    # NAV unchanged
+ buy_at_discount()
+ # NAV unchanged
 ```
 
 This makes the NAV concept explicit in the code, improving readability.
@@ -383,7 +383,7 @@ Portfolio NAV = Σ(shares_i × NAV_i) for all assets i
 
 **Traditional rebalancing:** Maintain fixed allocation percentages
 
-**NAV-based rebalancing:** 
+**NAV-based rebalancing:**
 - Sell assets trading at large premiums to NAV
 - Buy assets trading at large discounts to NAV
 - This naturally rebalances toward undervalued assets

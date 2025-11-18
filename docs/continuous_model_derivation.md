@@ -24,9 +24,9 @@ Daily OHLC data shows: Open, High, Low, Close
 Example: Price range $100-$110 on single day with sd32 (2.19% = $2.19 brackets)
 - Spans ~4-5 brackets
 - Possible paths:
-  - Monotonic: $100 → $110 (4 sells)
-  - V-shaped: $100 → $95 → $110 (buys then sells)
-  - Choppy: Multiple up/down oscillations (many transactions)
+ - Monotonic: $100 → $110 (4 sells)
+ - V-shaped: $100 → $95 → $110 (buys then sells)
+ - Choppy: Multiple up/down oscillations (many transactions)
 - **OHLC doesn't distinguish these!**
 
 ### 3. Need for Higher Frequency Data
@@ -71,12 +71,12 @@ S(t) = S(0) · exp((μ - σ²/2)t + σ W(t))
 Exponentially-spaced brackets with parameter n:
 
 ```
-δ = 2^(1/n) - 1    (bracket spacing as fraction)
+δ = 2^(1/n) - 1 (bracket spacing as fraction)
 ```
 
 Bracket levels in log-space:
 ```
-y_k = y_0 + k · Δ    where Δ = log(1 + δ) ≈ δ  (for small δ)
+y_k = y_0 + k · Δ where Δ = log(1 + δ) ≈ δ (for small δ)
 ```
 
 Price levels:
@@ -93,9 +93,9 @@ Define state variables:
 
 Initial conditions:
 ```
-H(0) = H_0    (initial shares)
-B(0) = 0      (no stack initially)
-C(0) = 0      (no initial cash)
+H(0) = H_0 (initial shares)
+B(0) = 0 (no stack initially)
+C(0) = 0 (no initial cash)
 ```
 
 ---
@@ -122,20 +122,20 @@ This is **arithmetic Brownian motion** with:
 For Brownian motion with drift, the mean time between crossings is:
 
 ```
-E[τ] = Δ / |μ̃|    if |μ̃| > 0  (trending market)
-E[τ] = ∞           if μ̃ = 0    (pure diffusion)
+E[τ] = Δ / |μ̃| if |μ̃| > 0 (trending market)
+E[τ] = ∞ if μ̃ = 0 (pure diffusion)
 ```
 
 But this is only for **one-directional** crossings. For **both directions** (buys and sells):
 
 The local time density gives crossing rate:
 ```
-Rate of crossings ≈ σ / (π Δ)    (from local time theory)
+Rate of crossings ≈ σ / (π Δ) (from local time theory)
 ```
 
 **For small Δ** (tight brackets):
 ```
-λ(Δ) = c · σ / Δ    where c is a constant
+λ(Δ) = c · σ / Δ where c is a constant
 ```
 
 Since `Δ = δ ≈ 1/(n · log(2))` for SDN parameter n:
@@ -225,19 +225,19 @@ Value_holdings = H_total · S_K
 After some algebra:
 ```
 Value_holdings = D · [(1+δ)^{K+1} - 1] / δ · S_0 · (1+δ)^{-K}
-              = D · [(1+δ) - (1+δ)^{-K}] / δ
+ = D · [(1+δ) - (1+δ)^{-K}] / δ
 ```
 
 For large K (price → 0):
 ```
-Value_holdings ≈ D · (1+δ) / δ ≈ D / δ  (for small δ)
+Value_holdings ≈ D · (1+δ) / δ ≈ D / δ (for small δ)
 ```
 
 ### Net Position
 
 ```
 Net = Value_holdings - C_spent
-    ≈ D/δ - D(K+1)
+ ≈ D/δ - D(K+1)
 ```
 
 Wait, this grows without bound as K increases! Let me reconsider...
@@ -316,7 +316,7 @@ dB/dt = (Buy rate) - (Sell rate)
 
 For GBM with positive drift (uptrend):
 ```
-λ_buy > λ_sell  ⟹  dB/dt > 0  ⟹  Stack grows!
+λ_buy > λ_sell ⟹ dB/dt > 0 ⟹ Stack grows!
 ```
 
 ### Equilibrium Stack Size
@@ -341,7 +341,7 @@ There exists a critical bracket spacing δ* such that:
 
 **Hypothesis**:
 ```
-δ* ≈ σ² / (2μ)    (ratio of variance to drift)
+δ* ≈ σ² / (2μ) (ratio of variance to drift)
 ```
 
 For NVDA 2023: μ ≈ 150%, σ ≈ 40% (annualized)
@@ -350,10 +350,10 @@ For NVDA 2023: μ ≈ 150%, σ ≈ 40% (annualized)
 ```
 
 Comparing to bracket spacings:
-- sd4: δ = 18.9% > δ* ✓ (manageable)
-- sd8: δ = 9.05% > δ* ✓ (manageable)
-- sd16: δ = 4.43% < δ* ✗ (marginal)
-- sd32: δ = 2.19% << δ* ✗ (catastrophic)
+- sd4: δ = 18.9% > δ* [OK] (manageable)
+- sd8: δ = 9.05% > δ* [OK] (manageable)
+- sd16: δ = 4.43% < δ* [FAIL] (marginal)
+- sd32: δ = 2.19% << δ* [FAIL] (catastrophic)
 
 This predicts the transition around **sd16** where stack begins to grow!
 
@@ -370,7 +370,7 @@ Alpha = (S₂ - S₁) / S₁ = δ
 
 For one complete cycle (buy → sell):
 ```
-Profit = D · δ    (where D is transaction size)
+Profit = D · δ (where D is transaction size)
 ```
 
 ### Total Realized Alpha
@@ -398,8 +398,8 @@ Alpha_realized = (N_cycles · D · δ) / V_0
 Substituting N_cycles ≈ c σ² n² T / 2:
 ```
 Alpha_realized ≈ (c σ² n² T · D · δ) / (2 V_0)
-                ≈ (c σ² n² T · D) / (2 n log(2) V_0)
-                ≈ k σ² n T    where k is a constant
+ ≈ (c σ² n² T · D) / (2 n log(2) V_0)
+ ≈ k σ² n T where k is a constant
 ```
 
 **Prediction**: Realized alpha should scale **linearly** with n!
@@ -457,8 +457,8 @@ where Stack_penalty(n) → 1 as n → ∞
 ### Optimal SDN
 ```
 n* ≈ argmax_n { Alpha_bankable(n) }
-   ≈ 1 / (δ* log(2))
-   ≈ 2μ / (σ² log(2))
+ ≈ 1 / (δ* log(2))
+ ≈ 2μ / (σ² log(2))
 ```
 
 For NVDA 2023 (μ ≈ 1.5, σ ≈ 0.4):

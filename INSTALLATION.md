@@ -1,6 +1,6 @@
 # Installation Guide
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -38,7 +38,7 @@ pip install -e .
 
 ---
 
-## 📦 Installation Options
+## Installation Options
 
 All dependencies are managed through `pyproject.toml` (modern Python standard). Choose the installation that fits your needs:
 
@@ -94,7 +94,7 @@ pip install -e ".[all]"
 
 ---
 
-## 🛠️ Development Workflow
+## Development Workflow
 
 ### Using Make (Unix/Linux/macOS/WSL)
 
@@ -105,37 +105,37 @@ The Makefile provides convenient commands for all common tasks:
 make help
 
 # Installation
-make install           # Core package only
-make install-dev       # With dev dependencies
-make install-gui       # With GUI dependencies
-make install-all       # Everything
+make install # Core package only
+make install-dev # With dev dependencies
+make install-gui # With GUI dependencies
+make install-all # Everything
 
 # Testing
-make test-checks       # Fast tests only (CI mode)
-make test-all          # All tests including network tests
-make test-parallel     # Fast tests in parallel
+make test-checks # Fast tests only (CI mode)
+make test-all # All tests including network tests
+make test-parallel # Fast tests in parallel
 make test-all-parallel # All tests in parallel
-make test              # Both test-checks and test-all
+make test # Both test-checks and test-all
 
 # Code Quality
-make format            # Auto-format with black and isort
-make lint              # Run all linters (black, isort, flake8, mypy)
-make check             # Format, lint, and test (full CI check)
+make format # Auto-format with black and isort
+make lint # Run all linters (black, isort, flake8, mypy)
+make check # Format, lint, and test (full CI check)
 
 # Build & Deploy
-make clean             # Remove build artifacts and cache
-make build             # Build distribution packages
-make publish           # Publish to PyPI
-make examples          # Re-generate all experiment data
+make clean # Remove build artifacts and cache
+make build # Build distribution packages
+make publish # Publish to PyPI
+make examples # Re-generate all experiment data
 ```
 
 ### Using Python Directly (Cross-Platform)
 
 ```bash
 # Run tests
-python -m pytest -q                           # All tests
-python -m pytest -q -m "not slow"             # Fast tests only
-python -m pytest -q -n auto                   # Parallel execution
+python -m pytest -q # All tests
+python -m pytest -q -m "not slow" # Fast tests only
+python -m pytest -q -n auto # Parallel execution
 
 # Format code
 python -m black .
@@ -163,7 +163,7 @@ sd-calc-orders
 
 ---
 
-## 🐍 Virtual Environment Management
+## Virtual Environment Management
 
 ### Creating a Virtual Environment
 
@@ -207,54 +207,54 @@ if (Test-Path ".venv\Scripts\Activate.ps1") { .\.venv\Scripts\Activate.ps1 }
 
 ---
 
-## 🐳 WSL Setup (Windows Users)
+## WSL Setup (Windows Users)
 
 Windows Subsystem for Linux provides a better development experience:
 
 ### Benefits
-- ✅ True Unix environment (bash, make, symlinks)
-- ✅ Faster package installation
-- ✅ Better Docker compatibility
-- ✅ Consistent Git line endings
-- ✅ No PowerShell execution policy issues
+- [OK] True Unix environment (bash, make, symlinks)
+- [OK] Faster package installation
+- [OK] Better Docker compatibility
+- [OK] Consistent Git line endings
+- [OK] No PowerShell execution policy issues
 
 ### Setup Steps
 
 1. **Install WSL2**:
-   ```powershell
-   # Run in PowerShell as Administrator
-   wsl --install -d Ubuntu-22.04
-   # Restart computer
-   ```
+ ```powershell
+ # Run in PowerShell as Administrator
+ wsl --install -d Ubuntu-22.04
+ # Restart computer
+ ```
 
 2. **Install VS Code WSL Extension**:
-   - Install extension: `ms-vscode-remote.remote-wsl`
-   - Click green icon (bottom-left) → "New WSL Window"
+ - Install extension: `ms-vscode-remote.remote-wsl`
+ - Click green icon (bottom-left) → "New WSL Window"
 
 3. **Setup Python in WSL**:
-   ```bash
-   # In WSL terminal
-   sudo apt update
-   sudo apt install python3.11 python3.11-venv python3-pip make
+ ```bash
+ # In WSL terminal
+ sudo apt update
+ sudo apt install python3.11 python3.11-venv python3-pip make
 
-   # Navigate to your Windows project
-   cd /mnt/c/build/synthetic-dividend
+ # Navigate to your Windows project
+ cd /mnt/c/build/synthetic-dividend
 
-   # Create virtual environment
-   python3.11 -m venv .venv
-   source .venv/bin/activate
+ # Create virtual environment
+ python3.11 -m venv .venv
+ source .venv/bin/activate
 
-   # Install with all dependencies
-   make install-all
-   ```
+ # Install with all dependencies
+ make install-all
+ ```
 
 4. **File Access**:
-   - Windows: `C:\build\synthetic-dividend`
-   - WSL: `/mnt/c/build/synthetic-dividend`
+ - Windows: `C:\build\synthetic-dividend`
+ - WSL: `/mnt/c/build/synthetic-dividend`
 
 ---
 
-## 📦 Building Distribution Packages
+## Building Distribution Packages
 
 ### Build Wheel and Source Distribution
 
@@ -281,7 +281,7 @@ pip install dist/synthetic_dividend-0.1.0-py3-none-any.whl
 
 ---
 
-## 🌍 Publishing to PyPI
+## Publishing to PyPI
 
 ### Test Publishing (TestPyPI)
 
@@ -322,7 +322,7 @@ password = pypi-YOUR-TEST-API-TOKEN-HERE
 
 ---
 
-## 📋 Dependency Management
+## Dependency Management
 
 ### Modern Standard: pyproject.toml
 
@@ -331,12 +331,12 @@ All dependencies are defined in `pyproject.toml` following [PEP 621](https://pep
 **Core dependencies**:
 ```toml
 dependencies = [
-    "pandas>=1.0",
-    "matplotlib>=3.0",
-    "yfinance>=0.2.0",
-    "pandas-datareader>=0.10",
-    "lxml>=4.9",
-    "simpy>=4.0",
+ "pandas>=1.0",
+ "matplotlib>=3.0",
+ "yfinance>=0.2.0",
+ "pandas-datareader>=0.10",
+ "lxml>=4.9",
+ "simpy>=4.0",
 ]
 ```
 
@@ -345,7 +345,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "mypy>=1.0", "black>=23.0", ...]
 gui = ["markdown>=3.4", "tkinterweb>=3.15", "tkcalendar>=1.6"]
-all = [...]  # Combines dev + gui
+all = [...] # Combines dev + gui
 ```
 
 ### No More requirements.txt Files
@@ -353,11 +353,11 @@ all = [...]  # Combines dev + gui
 The old `requirements.txt` and `requirements-dev.txt` files have been **removed**. All dependency management is now in `pyproject.toml`.
 
 **Migration guide**:
-- ❌ Old: `pip install -r requirements.txt`
-- ✅ New: `pip install -e .`
+- [FAIL] Old: `pip install -r requirements.txt`
+- [OK] New: `pip install -e .`
 
-- ❌ Old: `pip install -r requirements-dev.txt`
-- ✅ New: `pip install -e ".[dev]"`
+- [FAIL] Old: `pip install -r requirements-dev.txt`
+- [OK] New: `pip install -e ".[dev]"`
 
 ### Viewing Installed Dependencies
 
@@ -374,7 +374,7 @@ pip freeze > current_env.txt
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### "Module not found" errors
 
@@ -391,8 +391,8 @@ pip install -e .
 
 **Solution**: Use parallel execution:
 ```bash
-make test-parallel          # Fast tests in parallel
-make test-all-parallel      # All tests in parallel
+make test-parallel # Fast tests in parallel
+make test-all-parallel # All tests in parallel
 ```
 
 ### Cache directory issues
@@ -420,35 +420,35 @@ Or use WSL instead (no execution policy restrictions).
 
 ---
 
-## 🎯 Package Structure
+## Package Structure
 
 ```
 synthetic-dividend/
-├── src/                    # Source code (importable package)
-│   ├── __init__.py
-│   ├── cli.py              # Main CLI entry point
-│   ├── data/               # Data providers and caching
-│   ├── models/             # Backtesting and simulation
-│   ├── compare/            # Batch comparison tools
-│   ├── research/           # Research modules
-│   ├── tools/              # GUI and utilities
-│   └── paths.py            # Centralized path management
-├── tests/                  # Test suite
-│   ├── test_backtest.py
-│   ├── test_portfolio_algorithms.py
-│   └── ...
-├── cache/                  # Downloaded price data (auto-created)
-├── data/                   # Persistent data (e.g., best_sdn.json)
-├── experiments/            # Reproducible experiments
-├── pyproject.toml          # All package configuration (modern standard)
-├── Makefile                # Unix/WSL dev commands
-├── LICENSE                 # MIT License
-└── README.md               # User documentation
+├── src/ # Source code (importable package)
+│ ├── __init__.py
+│ ├── cli.py # Main CLI entry point
+│ ├── data/ # Data providers and caching
+│ ├── models/ # Backtesting and simulation
+│ ├── compare/ # Batch comparison tools
+│ ├── research/ # Research modules
+│ ├── tools/ # GUI and utilities
+│ └── paths.py # Centralized path management
+├── tests/ # Test suite
+│ ├── test_backtest.py
+│ ├── test_portfolio_algorithms.py
+│ └── ...
+├── cache/ # Downloaded price data (auto-created)
+├── data/ # Persistent data (e.g., best_sdn.json)
+├── experiments/ # Reproducible experiments
+├── pyproject.toml # All package configuration (modern standard)
+├── Makefile # Unix/WSL dev commands
+├── LICENSE # MIT License
+└── README.md # User documentation
 ```
 
 ---
 
-## 🔑 Key Benefits
+## Key Benefits
 
 1. **Modern Standards** - Uses `pyproject.toml` (PEP 517/518/621 compliant)
 2. **Editable Install** - Changes immediately available with `pip install -e .`
@@ -459,7 +459,7 @@ synthetic-dividend/
 
 ---
 
-## 📚 Further Reading
+## Further Reading
 
 - [Python Packaging Guide](https://packaging.python.org/)
 - [PEP 621 - Storing project metadata in pyproject.toml](https://peps.python.org/pep-0621/)

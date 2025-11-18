@@ -23,7 +23,7 @@ In `SyntheticDividendAlgorithm.on_day()`, the method returned immediately after 
 ```python
 # OLD (BUGGY) CODE:
 if high >= next_sell_price:
-    return Transaction(action="SELL", ...)  # ❌ Returns immediately!
+ return Transaction(action="SELL", ...) # [FAIL] Returns immediately!
 ```
 
 This meant that even if the price crossed 3 bracket levels in one day, only the first bracket would trigger a transaction.
@@ -47,24 +47,24 @@ iteration = 0
 max_iterations = 20
 
 while iteration < max_iterations:
-    iteration += 1
-    
-    # Check for sell trigger
-    if high >= next_sell_price:
-        tx = Transaction(action="SELL", ...)
-        transactions.append(tx)
-        # Update state and continue loop
-        continue
-    
-    # Check for buy trigger
-    if low <= next_buy_price:
-        tx = Transaction(action="BUY", ...)
-        transactions.append(tx)
-        # Update state and continue loop
-        continue
-    
-    # No more triggers - exit loop
-    break
+ iteration += 1
+
+ # Check for sell trigger
+ if high >= next_sell_price:
+ tx = Transaction(action="SELL", ...)
+ transactions.append(tx)
+ # Update state and continue loop
+ continue
+
+ # Check for buy trigger
+ if low <= next_buy_price:
+ tx = Transaction(action="BUY", ...)
+ transactions.append(tx)
+ # Update state and continue loop
+ continue
+
+ # No more triggers - exit loop
+ break
 
 return transactions
 ```
@@ -79,15 +79,15 @@ As part of this fix, also refactored transactions from strings to proper objects
 ```python
 @dataclass
 class Transaction:
-    action: str              # 'BUY', 'SELL', 'DIVIDEND', 'WITHDRAWAL', 'SKIP BUY'
-    qty: int
-    notes: str = ""
-    transaction_date: Optional[date] = None
-    price: float = 0.0
-    ticker: str = ""
-    
-    def to_string(self) -> str:
-        # Human-readable formatting
+ action: str # 'BUY', 'SELL', 'DIVIDEND', 'WITHDRAWAL', 'SKIP BUY'
+ qty: int
+ notes: str = ""
+ transaction_date: Optional[date] = None
+ price: float = 0.0
+ ticker: str = ""
+
+ def to_string(self) -> str:
+ # Human-readable formatting
 ```
 
 **Benefits:**
@@ -100,11 +100,11 @@ class Transaction:
 
 Created comprehensive test suite in `tests/test_multi_bracket_gaps.py`:
 
-1. **Single-bracket gap:** 10% gap (1.1 brackets) → 1 sell on gap day ✅
-2. **Double-bracket gap:** 20% gap (2.2 brackets) → 2 sells on gap day ✅
-3. **Triple-bracket gap:** 30% gap (3.3 brackets) → 3 sells on gap day ✅
-4. **Gap down crash:** 20% crash → 2 buys on crash day ✅
-5. **Gap vs gradual:** Same endpoints, gap path has better alpha ✅
+1. **Single-bracket gap:** 10% gap (1.1 brackets) → 1 sell on gap day [OK]
+2. **Double-bracket gap:** 20% gap (2.2 brackets) → 2 sells on gap day [OK]
+3. **Triple-bracket gap:** 30% gap (3.3 brackets) → 3 sells on gap day [OK]
+4. **Gap down crash:** 20% crash → 2 buys on crash day [OK]
+5. **Gap vs gradual:** Same endpoints, gap path has better alpha [OK]
 
 All 53 tests passing after updating existing tests to use Transaction objects.
 
@@ -178,7 +178,7 @@ The transaction count increase directly correlates with gap frequency and magnit
 
 ### Next Steps
 
-1. ✅ Regenerate Phase 1 research (complete)
+1. [OK] Regenerate Phase 1 research (complete)
 2. ⏭️ Update VOLATILITY_ALPHA_THESIS.md with gap bonus explanation
 3. ⏭️ Analyze new data for optimal sdN recommendations by asset class
 4. ⏭️ Consider if Coverage Ratio calculations need updating (likely not - gap bonus increases numerator proportionally)

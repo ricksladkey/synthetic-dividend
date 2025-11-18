@@ -116,7 +116,7 @@ where Growth_factor = compounding of withdrawn cash.
 
 With bracket spacing δ, you sell at prices:
 ```
-S_k = S_0 (1+δ)^k  for k = 1, 2, ..., n
+S_k = S_0 (1+δ)^k for k = 1, 2, ..., n
 ```
 
 where n = number of ATHs crossed.
@@ -152,10 +152,10 @@ For typical growth stocks:
 
 | SDN | Realized α | Stack | Margin | Practical? |
 |-----|-----------|-------|--------|------------|
-| sd4 | 0% | 0 | $0 | ✅ |
-| sd8 | 1.98% | 4 | $0 | ✅ |
-| sd16 | 18.6% | 116 | $0 | ⚠️ |
-| sd32 | 32.8% | 11K | -$4.1M | ❌ |
+| sd4 | 0% | 0 | $0 | [OK] |
+| sd8 | 1.98% | 4 | $0 | [OK] |
+| sd16 | 18.6% | 116 | $0 | WARNING: |
+| sd32 | 32.8% | 11K | -$4.1M | [FAIL] |
 
 **Conclusion**: sd8 wins (captures gaps, manageable transactions)
 
@@ -165,8 +165,8 @@ Hypothetical results:
 
 | SDN | ATHs Hit | Avg Sale Price | Shares Sold | Total Withdrawn | Remaining Value | **Total** |
 |-----|----------|----------------|-------------|-----------------|-----------------|-----------|
-| sd2 | 4 | $42 | 10% | $16,800 | $134,670 | **$151,470** ✅ |
-| sd4 | 8 | $38 | 20% | $30,400 | $118,816 | **$149,216** ✅ |
+| sd2 | 4 | $42 | 10% | $16,800 | $134,670 | **$151,470** [OK] |
+| sd4 | 8 | $38 | 20% | $30,400 | $118,816 | **$149,216** [OK] |
 | sd8 | 16 | $32 | 40% | $51,200 | $89,112 | **$140,312** |
 | sd16 | 32 | $26 | 60% | $62,400 | $59,408 | **$121,808** |
 
@@ -314,31 +314,31 @@ Optimal: sd4 or sd2
 ### For ATH-Only Strategy
 
 1. **Default to sd4** (18.9% spacing)
-   - Aligns with 25% rebalancing rule
-   - ~8-10 sales per year (very manageable)
-   - Captures most geometric growth
+ - Aligns with 25% rebalancing rule
+ - ~8-10 sales per year (very manageable)
+ - Captures most geometric growth
 
 2. **Consider sd3** (25.7% spacing) or **sd2** (41.4% spacing)
-   - For very strong trends (μ >> σ)
-   - Even fewer transactions
-   - Maximum geometric capture
+ - For very strong trends (μ >> σ)
+ - Even fewer transactions
+ - Maximum geometric capture
 
 3. **Avoid sd8+** for ATH-only
-   - Sells too frequently
-   - Misses compounding
-   - Doesn't harvest volatility (no buybacks)
-   - Worst of both worlds!
+ - Sells too frequently
+ - Misses compounding
+ - Doesn't harvest volatility (no buybacks)
+ - Worst of both worlds!
 
 ### For Full Algorithm
 
 1. **Default to sd8** (as established)
-   - Captures gaps
-   - Harvests volatility
-   - Manageable transactions
+ - Captures gaps
+ - Harvests volatility
+ - Manageable transactions
 
 2. **Use sd4** if volatility extreme
-   - σ > 60%
-   - Or if you want ATH-only simplicity
+ - σ > 60%
+ - Or if you want ATH-only simplicity
 
 ---
 
@@ -381,8 +381,8 @@ For typical growth stock:
 Correcting for geometric progression:
 ```
 δ_optimal ≈ √(1 + μ/n_ATHs) - 1
-          ≈ √(1 + 0.5/4) - 1
-          ≈ 0.06 ≈ 6%
+ ≈ √(1 + 0.5/4) - 1
+ ≈ 0.06 ≈ 6%
 ```
 
 Hmm, this suggests **sd16**... but wait!
@@ -468,4 +468,4 @@ Each layer of realism shifts the optimum **wider**.
 
 **Markets reward patience, not hyperactivity.**
 
-**For ATH-only: sd4 or lower. Period.** ✅
+**For ATH-only: sd4 or lower. Period.** [OK]

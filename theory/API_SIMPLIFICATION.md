@@ -1,6 +1,6 @@
 # API Simplification Analysis
 
-**Status**: INVESTIGATION  
+**Status**: INVESTIGATION
 **Date**: October 27, 2025
 
 ## Current State: What We Have
@@ -11,21 +11,21 @@
 
 ```python
 class HistoryFetcher:
-    def __init__(self, cache_dir: Optional[str] = None)
-    def get_history(ticker, start_date, end_date) -> pd.DataFrame  # OHLC
-    def get_dividends(ticker, start_date, end_date) -> pd.Series   # Dividends
-    def get_multiple_histories(tickers, start, end) -> Dict[str, DataFrame]
-    def get_multiple_dividends(tickers, start, end) -> Dict[str, Series]
-    
-    # Internal implementation (hacky):
-    def _cache_path(ticker) -> str
-    def _dividend_cache_path(ticker) -> str
-    def _load_cache(ticker) -> Optional[DataFrame]
-    def _save_cache(ticker, df)
-    def _load_dividend_cache(ticker) -> Optional[Series]
-    def _save_dividend_cache(ticker, series)
-    def _download(ticker, start, end) -> DataFrame
-    def _download_dividends(ticker) -> Series
+ def __init__(self, cache_dir: Optional[str] = None)
+ def get_history(ticker, start_date, end_date) -> pd.DataFrame # OHLC
+ def get_dividends(ticker, start_date, end_date) -> pd.Series # Dividends
+ def get_multiple_histories(tickers, start, end) -> Dict[str, DataFrame]
+ def get_multiple_dividends(tickers, start, end) -> Dict[str, Series]
+
+ # Internal implementation (hacky):
+ def _cache_path(ticker) -> str
+ def _dividend_cache_path(ticker) -> str
+ def _load_cache(ticker) -> Optional[DataFrame]
+ def _save_cache(ticker, df)
+ def _load_dividend_cache(ticker) -> Optional[Series]
+ def _save_dividend_cache(ticker, series)
+ def _download(ticker, start, end) -> DataFrame
+ def _download_dividends(ticker) -> Series
 ```
 
 **Issues**:
@@ -43,17 +43,17 @@ class HistoryFetcher:
 ```python
 @dataclass
 class Stock:
-    ticker: str
-    quantity: int = 0
-    
-    def get_ticker() -> str
-    def get_quantity() -> int
-    def calculate_investment_value(current_price) -> float
-    def value_series(price_series) -> Series
-    def buy(amount: int)
-    def sell(amount: int)
-    def to_dict() -> dict
-    def __str__() -> str
+ ticker: str
+ quantity: int = 0
+
+ def get_ticker() -> str
+ def get_quantity() -> int
+ def calculate_investment_value(current_price) -> float
+ def value_series(price_series) -> Series
+ def buy(amount: int)
+ def sell(amount: int)
+ def to_dict() -> dict
+ def __str__() -> str
 ```
 
 **Issues**:
@@ -130,24 +130,24 @@ We already have the right model:
 
 ```python
 class Asset:
-    """Single ticker, handles both prices and dividends."""
-    
-    def __init__(self, ticker: str, cache_dir: str = "cache"):
-        self.ticker = ticker
-        self.cache_path = f"{cache_dir}/{ticker}.json"
-    
-    def get_prices(self, start: date, end: date) -> pd.DataFrame:
-        """OHLC data for range. Downloads if needed, extends cache."""
-        # Load cache (JSON)
-        # Check range coverage
-        # Download missing data
-        # Update cache
-        # Return requested range
-    
-    def get_dividends(self, start: date, end: date) -> pd.Series:
-        """Dividend/interest history. Downloads once, caches forever."""
-        # Same cache file has both OHLC + dividends
-        # Dividends rarely change (historical), so clone-once strategy works
+ """Single ticker, handles both prices and dividends."""
+
+ def __init__(self, ticker: str, cache_dir: str = "cache"):
+ self.ticker = ticker
+ self.cache_path = f"{cache_dir}/{ticker}.json"
+
+ def get_prices(self, start: date, end: date) -> pd.DataFrame:
+ """OHLC data for range. Downloads if needed, extends cache."""
+ # Load cache (JSON)
+ # Check range coverage
+ # Download missing data
+ # Update cache
+ # Return requested range
+
+ def get_dividends(self, start: date, end: date) -> pd.Series:
+ """Dividend/interest history. Downloads once, caches forever."""
+ # Same cache file has both OHLC + dividends
+ # Dividends rarely change (historical), so clone-once strategy works
 ```
 
 **Benefits**:
@@ -160,13 +160,13 @@ class Asset:
 
 ```python
 class HistoryFetcher:
-    """Multi-ticker fetcher with clean JSON caching."""
-    
-    def get_asset_data(self, ticker: str, start: date, end: date) -> AssetData:
-        """Returns OHLC + dividends in one call."""
-        # Load from {ticker}.json (not .pkl)
-        # Extend if needed
-        # Return structured data
+ """Multi-ticker fetcher with clean JSON caching."""
+
+ def get_asset_data(self, ticker: str, start: date, end: date) -> AssetData:
+ """Returns OHLC + dividends in one call."""
+ # Load from {ticker}.json (not .pkl)
+ # Extend if needed
+ # Return structured data
 ```
 
 **Benefits**:
@@ -174,7 +174,7 @@ class HistoryFetcher:
 - Fix persistence layer (JSON not pickle)
 - Combine OHLC + dividends fetch
 
-## Design Decisions ✅
+## Design Decisions [OK]
 
 ### 1. Dual Caching Strategy
 
@@ -192,8 +192,8 @@ class HistoryFetcher:
 **Implementation**:
 ```python
 # Save cache:
-df.to_pickle(f"{ticker}.pkl")     # Fast internal format
-df.to_csv(f"{ticker}.csv")        # Human-readable export
+df.to_pickle(f"{ticker}.pkl") # Fast internal format
+df.to_csv(f"{ticker}.csv") # Human-readable export
 
 # Load cache (prefer fast):
 df = pd.read_pickle(f"{ticker}.pkl")
@@ -222,16 +222,16 @@ df = pd.read_pickle(f"{ticker}.pkl")
 
 ```python
 class Asset:
-    def __init__(self, ticker: str, cache_dir: str = "cache")
-    
-    def get_prices(self, start: date, end: date) -> pd.DataFrame:
-        """OHLC data. Fast path: pickle cache. Miss: download, save both formats."""
-    
-    def get_dividends(self, start: date, end: date) -> pd.Series:
-        """Dividend/interest history. Same cache file, different columns."""
-    
-    def clear_cache(self):
-        """Remove both .pkl and .csv cache files."""
+ def __init__(self, ticker: str, cache_dir: str = "cache")
+
+ def get_prices(self, start: date, end: date) -> pd.DataFrame:
+ """OHLC data. Fast path: pickle cache. Miss: download, save both formats."""
+
+ def get_dividends(self, start: date, end: date) -> pd.Series:
+ """Dividend/interest history. Same cache file, different columns."""
+
+ def clear_cache(self):
+ """Remove both .pkl and .csv cache files."""
 ```
 
 **Benefits**:
@@ -260,76 +260,76 @@ Stock.py was pre-architecture. We've moved beyond it.
 
 ## Implementation Plan
 
-### Phase 1: New Asset Class ✅
+### Phase 1: New Asset Class [OK]
 
 Create `src/data/asset.py`:
 
 ```python
 class Asset:
-    """Single ticker data provider with dual-format caching.
-    
-    Cache files:
-    - {ticker}.pkl - Fast binary format for backtests
-    - {ticker}.csv - Human-readable for Excel/inspection
-    
-    Both files written on cache save, pickle preferred for reads.
-    """
-    
-    def __init__(self, ticker: str, cache_dir: str = "cache"):
-        self.ticker = ticker.upper()
-        self.cache_dir = cache_dir
-        self.pkl_path = f"{cache_dir}/{self.ticker}.pkl"
-        self.csv_path = f"{cache_dir}/{self.ticker}.csv"
-        
-        # Fail fast if yfinance not available
-        if yf is None:
-            raise RuntimeError("yfinance not installed")
-    
-    def get_prices(self, start: date, end: date) -> pd.DataFrame:
-        """OHLC data for date range.
-        
-        Strategy:
-        1. Try load from pickle cache
-        2. If miss or incomplete: download full range
-        3. Save both pkl + csv
-        4. Return requested range
-        """
-        cached = self._load_pickle_cache()
-        
-        if self._cache_covers_range(cached, start, end):
-            return self._filter_range(cached, start, end)
-        
-        # Cache miss or incomplete: download full range
-        df = self._download_ohlc(start, end)
-        self._save_dual_cache(df)
-        return df
-    
-    def get_dividends(self, start: date, end: date) -> pd.Series:
-        """Dividend/interest history.
-        
-        Strategy: Download complete dividend history once, cache forever.
-        Dividends are immutable (historical) so no incremental updates needed.
-        """
-        cached_divs = self._load_dividend_cache()
-        
-        if cached_divs is not None:
-            return self._filter_dividends(cached_divs, start, end)
-        
-        # Download complete dividend history
-        divs = self._download_dividends()
-        self._save_dividend_cache(divs)
-        return self._filter_dividends(divs, start, end)
-    
-    def _save_dual_cache(self, df: pd.DataFrame):
-        """Save both pickle (fast) and CSV (readable)."""
-        df.to_pickle(self.pkl_path)
-        df.to_csv(self.csv_path)
-    
-    def _load_pickle_cache(self) -> Optional[pd.DataFrame]:
-        """Load from fast pickle cache."""
-        if os.path.exists(self.pkl_path):
-            return pd.read_pickle(self.pkl_path)
-        return None
+ """Single ticker data provider with dual-format caching.
+
+ Cache files:
+ - {ticker}.pkl - Fast binary format for backtests
+ - {ticker}.csv - Human-readable for Excel/inspection
+
+ Both files written on cache save, pickle preferred for reads.
+ """
+
+ def __init__(self, ticker: str, cache_dir: str = "cache"):
+ self.ticker = ticker.upper()
+ self.cache_dir = cache_dir
+ self.pkl_path = f"{cache_dir}/{self.ticker}.pkl"
+ self.csv_path = f"{cache_dir}/{self.ticker}.csv"
+
+ # Fail fast if yfinance not available
+ if yf is None:
+ raise RuntimeError("yfinance not installed")
+
+ def get_prices(self, start: date, end: date) -> pd.DataFrame:
+ """OHLC data for date range.
+
+ Strategy:
+ 1. Try load from pickle cache
+ 2. If miss or incomplete: download full range
+ 3. Save both pkl + csv
+ 4. Return requested range
+ """
+ cached = self._load_pickle_cache()
+
+ if self._cache_covers_range(cached, start, end):
+ return self._filter_range(cached, start, end)
+
+ # Cache miss or incomplete: download full range
+ df = self._download_ohlc(start, end)
+ self._save_dual_cache(df)
+ return df
+
+ def get_dividends(self, start: date, end: date) -> pd.Series:
+ """Dividend/interest history.
+
+ Strategy: Download complete dividend history once, cache forever.
+ Dividends are immutable (historical) so no incremental updates needed.
+ """
+ cached_divs = self._load_dividend_cache()
+
+ if cached_divs is not None:
+ return self._filter_dividends(cached_divs, start, end)
+
+ # Download complete dividend history
+ divs = self._download_dividends()
+ self._save_dividend_cache(divs)
+ return self._filter_dividends(divs, start, end)
+
+ def _save_dual_cache(self, df: pd.DataFrame):
+ """Save both pickle (fast) and CSV (readable)."""
+ df.to_pickle(self.pkl_path)
+ df.to_csv(self.csv_path)
+
+ def _load_pickle_cache(self) -> Optional[pd.DataFrame]:
+ """Load from fast pickle cache."""
+ if os.path.exists(self.pkl_path):
+ return pd.read_pickle(self.pkl_path)
+ return None
 ```
 
 ### Phase 2: Migrate HistoryFetcher Usages
@@ -366,20 +366,20 @@ data = {ticker: Asset(ticker).get_prices(start, end) for ticker in tickers}
 
 ```python
 class HistoryFetcher:
-    """Legacy compatibility wrapper around Asset class."""
-    
-    def get_history(self, ticker, start, end):
-        return Asset(ticker, self.cache_dir).get_prices(start, end)
-    
-    def get_dividends(self, ticker, start, end):
-        return Asset(ticker, self.cache_dir).get_dividends(start, end)
+ """Legacy compatibility wrapper around Asset class."""
+
+ def get_history(self, ticker, start, end):
+ return Asset(ticker, self.cache_dir).get_prices(start, end)
+
+ def get_dividends(self, ticker, start, end):
+ return Asset(ticker, self.cache_dir).get_dividends(start, end)
 ```
 
 Allows gradual migration without breaking existing code.
 
 ## Next Steps
 
-1. ✅ **Design decisions documented** (this file)
+1. [OK] **Design decisions documented** (this file)
 2. **Create `src/data/asset.py`** - Clean Asset class with dual caching
 3. **Test dual caching** - Verify pkl + csv both written/readable
 4. **Migrate one usage** - Update backtest.py to use Asset

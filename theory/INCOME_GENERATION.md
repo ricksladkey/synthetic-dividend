@@ -35,9 +35,9 @@ This document explains the mechanics, mathematics, and economic intuition behind
 
 ### 1.1 Traditional Income: You Rent Out Your Assets
 
-**Dividends**: Company pays you to hold stock  
-**Bonds**: Borrower pays you interest  
-**Real Estate**: Tenant pays you rent  
+**Dividends**: Company pays you to hold stock
+**Bonds**: Borrower pays you interest
+**Real Estate**: Tenant pays you rent
 
 All follow the same pattern: **Asset produces income, you consume some, reinvest the rest.**
 
@@ -119,7 +119,7 @@ For a price that moves from PΓéÇ ΓåÆ PΓéü ΓåÆ PΓéÇ:
 
 **Buy-and-hold return**: 0% (no net change)
 
-**Synthetic dividend return**: 
+**Synthetic dividend return**:
 ```
 Shares sold at PΓéü: nΓéü = Holdings * (PΓéü - PΓéÇ) / PΓéü
 Revenue from sale: nΓéü * PΓéü = Holdings * (PΓéü - PΓéÇ)
@@ -236,12 +236,12 @@ Income: Good (volatility is high)
 
 ```python
 if bank_balance >= monthly_withdrawal:
-    withdraw_from_bank()
+ withdraw_from_bank()
 else:
-    # Only sell shares if we must
-    shares_needed = (withdrawal - bank) / current_price
-    sell_shares(shares_needed)
-    withdraw_from_bank()
+ # Only sell shares if we must
+ shares_needed = (withdrawal - bank) / current_price
+ sell_shares(shares_needed)
+ withdraw_from_bank()
 ```
 
 **Why This Works**:
@@ -253,13 +253,13 @@ else:
 **Empirical Evidence** (experiments 001-003):
 
 - **SPY**: Generated 497% of 4% withdrawal needs
-  - Translation: Only needed to sell shares in 20% of periods
-  
-- **QQQ**: Generated 201% of withdrawal needs  
-  - Translation: Only sold shares in 50% of periods
-  
+ - Translation: Only needed to sell shares in 20% of periods
+
+- **QQQ**: Generated 201% of withdrawal needs
+ - Translation: Only sold shares in 50% of periods
+
 - **NVDA**: Generated 73-110% of withdrawal needs
-  - Translation: Slightly better than buy-and-hold (100%)
+ - Translation: Slightly better than buy-and-hold (100%)
 
 ---
 
@@ -275,14 +275,14 @@ The coverage ratio measures how effectively your volatility harvesting covers yo
 **Components**:
 
 1. **Synthetic Dividends Generated** (numerator):
-   - Cash from profit-taking at all-time highs (ATH sales)
-   - Cash from selling buybacks after recovery (stack unwinding)
-   - Does NOT include cash from forced share sales to meet withdrawals
-   
+ - Cash from profit-taking at all-time highs (ATH sales)
+ - Cash from selling buybacks after recovery (stack unwinding)
+ - Does NOT include cash from forced share sales to meet withdrawals
+
 2. **Withdrawals Requested** (denominator):
-   - Total cash withdrawn over the measurement period
-   - Based on your withdrawal policy (e.g., 4% annual)
-   - Includes regular distributions for living expenses
+ - Total cash withdrawn over the measurement period
+ - Based on your withdrawal policy (e.g., 4% annual)
+ - Includes regular distributions for living expenses
 
 **Interpretation Table**:
 
@@ -298,24 +298,24 @@ The coverage ratio measures how effectively your volatility harvesting covers yo
 **What This Means**:
 
 - **Coverage > 1.0**: Your volatility harvesting generates MORE cash than you need
-  - Bank balance grows over time
-  - You never sell shares for withdrawals
-  - You could increase withdrawal rate or accumulate buffer
+ - Bank balance grows over time
+ - You never sell shares for withdrawals
+ - You could increase withdrawal rate or accumulate buffer
 
 - **Coverage = 1.0**: Your volatility harvesting exactly matches your needs
-  - Bank oscillates but doesn't deplete
-  - Zero net forced share sales over long term
-  - Optimal sustainable equilibrium
+ - Bank oscillates but doesn't deplete
+ - Zero net forced share sales over long term
+ - Optimal sustainable equilibrium
 
 - **Coverage 0.7-1.0**: Volatility covers MOST of your needs
-  - Occasional forced share sales during calm periods
-  - Still much better than pure buy-and-hold (which always sells)
-  - 70-90% reduction in forced sales
+ - Occasional forced share sales during calm periods
+ - Still much better than pure buy-and-hold (which always sells)
+ - 70-90% reduction in forced sales
 
 - **Coverage < 0.7**: Volatility helps but doesn't fully cover
-  - Regular forced share sales still needed
-  - Better than buy-and-hold but not ideal
-  - Consider: lower withdrawal rate or higher volatility asset
+ - Regular forced share sales still needed
+ - Better than buy-and-hold but not ideal
+ - Consider: lower withdrawal rate or higher volatility asset
 
 **Real-World Examples** (from empirical testing):
 
@@ -395,7 +395,7 @@ Over 30 years: Substantial cumulative income
 
 **Our Framework**: "Higher volatility = higher income potential"
 
-**The Resolution**: 
+**The Resolution**:
 
 Both are true, but for different goals:
 
@@ -496,12 +496,12 @@ dividends = fetcher.get_dividends(ticker, start, end)
 
 # Backtest automatically credits dividends to bank on ex-date
 result = run_portfolio_backtest(
-    allocations={ticker: 1.0},
-    start_date=date(2024, 1, 1),
-    end_date=date(2024, 12, 31),
-    portfolio_algo="per-asset:sd8",
-    dividend_data={ticker: dividends},  # Real dividends tracked here
-    # ... other parameters
+ allocations={ticker: 1.0},
+ start_date=date(2024, 1, 1),
+ end_date=date(2024, 12, 31),
+ portfolio_algo="per-asset:sd8",
+ dividend_data={ticker: dividends}, # Real dividends tracked here
+ # ... other parameters
 )
 ```
 
@@ -555,13 +555,13 @@ Problem: Huge one-time tax bill
 **Strategy B - Synthetic Dividends Over 5 Years**:
 ```
 Buy $100K of NVDA in 2020
-Sell in increments: 
-  2020: $5K profit ΓåÆ $750 tax
-  2021: $8K profit ΓåÆ $1,200 tax
-  2022: $4K profit ΓåÆ $600 tax (market down)
-  2023: $12K profit ΓåÆ $1,800 tax
-  2024: $15K profit ΓåÆ $2,250 tax
-  2025: $10K profit ΓåÆ $1,500 tax
+Sell in increments:
+ 2020: $5K profit ΓåÆ $750 tax
+ 2021: $8K profit ΓåÆ $1,200 tax
+ 2022: $4K profit ΓåÆ $600 tax (market down)
+ 2023: $12K profit ΓåÆ $1,800 tax
+ 2024: $15K profit ΓåÆ $2,250 tax
+ 2025: $10K profit ΓåÆ $1,500 tax
 
 Total profit: $54K
 Total tax: $8,100
@@ -748,7 +748,7 @@ Problems:
 
 **Synthetic Dividend Approach**:
 ```
-Year 1: 
+Year 1:
 - Generate $60K from volatility harvesting
 - Withdraw $40K from bank
 - Bank balance: +$20K
@@ -809,33 +809,33 @@ Benefits:
 **Key Metrics to Track**:
 
 1. **Cash Flow Coverage Ratio**:
-   ```
-   Coverage = Cash Generated / Withdrawal Needs
-   
-   > 200%: Excellent (bank growing)
-   100-200%: Good (sustainable)
-   < 100%: Warning (depleting shares)
-   ```
+ ```
+ Coverage = Cash Generated / Withdrawal Needs
+
+ > 200%: Excellent (bank growing)
+ 100-200%: Good (sustainable)
+ < 100%: Warning (depleting shares)
+ ```
 
 2. **Transaction Frequency**:
-   ```
-   Sweet spot: 10-20 per year
-   Too high (>30): Consider wider trigger
-   Too low (<5): Consider tighter trigger or different asset
-   ```
+ ```
+ Sweet spot: 10-20 per year
+ Too high (>30): Consider wider trigger
+ Too low (<5): Consider tighter trigger or different asset
+ ```
 
 3. **Bank Balance Trend**:
-   ```
-   Growing: Strategy generating excess cash Γ£à
-   Stable: Perfect balance Γ£à
-   Shrinking: May need to sell shares soon ΓÜá∩╕Å
-   ```
+ ```
+ Growing: Strategy generating excess cash Γ£à
+ Stable: Perfect balance Γ£à
+ Shrinking: May need to sell shares soon ΓÜá∩╕Å
+ ```
 
 4. **Withdrawal Source Ratio**:
-   ```
-   % from bank vs % from share sales
-   Goal: >80% from bank
-   ```
+ ```
+ % from bank vs % from share sales
+ Goal: >80% from bank
+ ```
 
 ---
 
@@ -907,34 +907,34 @@ Benefits:
 **Ideal Candidates**:
 
 1. **Retirees with Growth Stocks**:
-   - Accumulated AAPL/MSFT/QQQ over career
-   - Need income but don't want to switch to bonds
-   - Comfortable with moderate volatility
-   - **Key insight**: With 50% profit-sharing, you'll reach the same wealth endpoint as buy-and-hold, just on a 2x timeframe while generating income along the way
+ - Accumulated AAPL/MSFT/QQQ over career
+ - Need income but don't want to switch to bonds
+ - Comfortable with moderate volatility
+ - **Key insight**: With 50% profit-sharing, you'll reach the same wealth endpoint as buy-and-hold, just on a 2x timeframe while generating income along the way
 
 2. **RSU/Stock Comp Employees**:
-   - Concentrated position in employer stock (GOOGL, AMZN, etc.)
-   - Need to extract cash without selling entire position
-   - Want systematic approach
-   - **Time machine effect**: Convert future growth into current cash flow at a controlled rate
+ - Concentrated position in employer stock (GOOGL, AMZN, etc.)
+ - Need to extract cash without selling entire position
+ - Want systematic approach
+ - **Time machine effect**: Convert future growth into current cash flow at a controlled rate
 
 3. **Roth IRA Optimizers**:
-   - Young investors with decades to compound
-   - Want growth + income with zero taxes
-   - Comfortable with active management
-   - **Perfect use case**: Even 0.5% annual volatility alpha compounds massively over 30-40 years
+ - Young investors with decades to compound
+ - Want growth + income with zero taxes
+ - Comfortable with active management
+ - **Perfect use case**: Even 0.5% annual volatility alpha compounds massively over 30-40 years
 
 4. **Dividend Yield Chasers** (who want growth):
-   - Frustrated with 2-4% dividend yields
-   - Want exposure to growth stocks
-   - Willing to accept variable income for upside
-   - **Reality**: You have to sell shares to generate income anyway - might as well do it systematically at optimal times
+ - Frustrated with 2-4% dividend yields
+ - Want exposure to growth stocks
+ - Willing to accept variable income for upside
+ - **Reality**: You have to sell shares to generate income anyway - might as well do it systematically at optimal times
 
 5. **Covered Call Sellers** (seeking simpler approach):
-   - Like income from volatility
-   - Tired of options complexity
-   - Want unlimited upside potential
-   - **Advantage**: No time decay, bidirectional profits, simpler execution
+ - Like income from volatility
+ - Tired of options complexity
+ - Want unlimited upside potential
+ - **Advantage**: No time decay, bidirectional profits, simpler execution
 
 **The Fundamental Truth**:
 You cannot generate cash flow without reducing your position. The question is HOW you do it:
@@ -984,25 +984,25 @@ Volatility = Fuel for income engine
 **Areas for Further Research**:
 
 1. **Optimal Trigger by Asset Class**:
-   - Does SPY want 8%, but NVDA want 15%?
-   - Volatility-adjusted trigger sizing
+ - Does SPY want 8%, but NVDA want 15%?
+ - Volatility-adjusted trigger sizing
 
 2. **Dynamic Withdrawal Rates**:
-   - Adjust withdrawal based on coverage ratio
-   - Take more when coverage >300%, less when <150%
+ - Adjust withdrawal based on coverage ratio
+ - Take more when coverage >300%, less when <150%
 
 3. **Multi-Asset Portfolios**:
-   - Run SD on 60% of portfolio (SPY+QQQ)
-   - Keep 40% in bonds/dividends
-   - Diversify income sources
+ - Run SD on 60% of portfolio (SPY+QQQ)
+ - Keep 40% in bonds/dividends
+ - Diversify income sources
 
 4. **Machine Learning Optimization**:
-   - Predict optimal trigger based on realized volatility
-   - Adaptive profit sharing based on tax situation
+ - Predict optimal trigger based on realized volatility
+ - Adaptive profit sharing based on tax situation
 
 5. **Tax-Lot Optimization**:
-   - Sell highest-cost lots first (HIFO) to minimize gains
-   - Save lowest-cost lots for long-term hold
+ - Sell highest-cost lots first (HIFO) to minimize gains
+ - Save lowest-cost lots for long-term hold
 
 ---
 
@@ -1015,7 +1015,7 @@ Our experiments show:
 - **QQQ**: 201% coverage, +0.09% positive alpha Γ¡ÉΓ¡É
 - **Strategy works across different market regimes**
 
-**The fundamental insight**: 
+**The fundamental insight**:
 
 > Volatility is not your enemy. It's your income stream.
 
@@ -1037,7 +1037,7 @@ By systematically harvesting price fluctuations through mechanical rebalancing, 
 
 ---
 
-**Document Status**: Foundation complete  
-**Next Reading**: theory/USE_CASES.md, WITHDRAWAL_POLICY.md  
-**Related Experiments**: 001 (NVDA), 002 (SPY), 003 (QQQ)  
+**Document Status**: Foundation complete
+**Next Reading**: theory/USE_CASES.md, WITHDRAWAL_POLICY.md
+**Related Experiments**: 001 (NVDA), 002 (SPY), 003 (QQQ)
 **Last Updated**: October 25, 2025

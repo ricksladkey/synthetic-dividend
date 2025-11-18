@@ -265,9 +265,9 @@ Market Data → Algorithm.on_day() → Orders Generated → Backtest Execution �
 ### 9.1 Naming Convention
 
 ```
-sd-{rebalance_size},{profit_sharing}              # Standard SD
-sd-ath-only-{rebalance_size},{profit_sharing}     # ATH-Only
-sd-ath-sell-{rebalance_size},{profit_sharing}     # ATH-Sell (new)
+sd-{rebalance_size},{profit_sharing} # Standard SD
+sd-ath-only-{rebalance_size},{profit_sharing} # ATH-Only
+sd-ath-sell-{rebalance_size},{profit_sharing} # ATH-Sell (new)
 ```
 
 **Examples**:

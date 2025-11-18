@@ -1,51 +1,51 @@
 # Quick Reference Card
 
-**Last Updated**: October 25, 2025  
-**Status**: ✅ All systems operational (39/39 tests passing)
+**Last Updated**: October 25, 2025
+**Status**: [OK] All systems operational (39/39 tests passing)
 
 ---
 
-## 🎯 Core Concepts (30-second refresh)
+## Core Concepts (30-second refresh)
 
-**Volatility Alpha**: `algorithm_return - buy_and_hold_return`  
-**Rebalance Trigger**: sd8 = 9.05% (8th root of 2)  
-**Profit Sharing**: 50% = balanced (sell half of profit, keep half)  
+**Volatility Alpha**: `algorithm_return - buy_and_hold_return`
+**Rebalance Trigger**: sd8 = 9.05% (8th root of 2)
+**Profit Sharing**: 50% = balanced (sell half of profit, keep half)
 **Bracket Position**: 1.0 × (1.0905)^n for sd8
 
 ---
 
-## 🔧 Key Parameters
+## Key Parameters
 
 ### Backtest Engine
 ```python
 run_algorithm_backtest(
-    df=price_data,                  # OHLC DataFrame
-    ticker="NVDA",                  # Symbol
-    initial_qty=1000,               # Shares to start
-    start_date=date(2020, 1, 1),    # Begin
-    end_date=date(2024, 1, 1),      # End
-    algo=SyntheticDividendAlgorithm(
-        rebalance_size_pct=9.05,    # sd8 trigger
-        profit_sharing_pct=50.0,    # 50% balanced
-        buyback_enabled=True,       # Full vs ATH-only
-    ),
-    # Optional enhancements
-    normalize_prices=False,          # Deterministic brackets
-    withdrawal_rate_pct=0.0,         # 4% = retirement
-    withdrawal_frequency_days=30,    # Monthly
-    simple_mode=False,               # Clean testing
+ df=price_data, # OHLC DataFrame
+ ticker="NVDA", # Symbol
+ initial_qty=1000, # Shares to start
+ start_date=date(2020, 1, 1), # Begin
+ end_date=date(2024, 1, 1), # End
+ algo=SyntheticDividendAlgorithm(
+ rebalance_size_pct=9.05, # sd8 trigger
+ profit_sharing_pct=50.0, # 50% balanced
+ buyback_enabled=True, # Full vs ATH-only
+ ),
+ # Optional enhancements
+ normalize_prices=False, # Deterministic brackets
+ withdrawal_rate_pct=0.0, # 4% = retirement
+ withdrawal_frequency_days=30, # Monthly
+ simple_mode=False, # Clean testing
 )
 ```
 
 ### Order Calculator
 ```bash
 python -m src.tools.order_calculator \
-    --ticker NVDA \
-    --holdings 1000 \
-    --last-price 120.50 \
-    --current-price 125.30 \
-    --sdn 8 \
-    --profit 50
+ --ticker NVDA \
+ --holdings 1000 \
+ --last-price 120.50 \
+ --current-price 125.30 \
+ --sdn 8 \
+ --profit 50
 ```
 
 ### Order Calculator GUI
@@ -63,7 +63,7 @@ python -m src.tools.order_calculator_gui
 
 ---
 
-## 📊 Return Metrics (What to Look At)
+## Return Metrics (What to Look At)
 
 **Primary Metrics** (these matter most):
 - `total_return` - Overall gain/loss
@@ -100,7 +100,7 @@ pytest tests/test_withdrawal_policy.py::test_withdrawal_from_bank_balance -v
 
 ---
 
-## 📚 Theory Documents (Where to Find Answers)
+## Theory Documents (Where to Find Answers)
 
 | Question | Document |
 |----------|----------|
@@ -143,7 +143,7 @@ cat theory/INVESTING_THEORY.md theory/VOLATILITY_ALPHA_THESIS.md | less
 
 ---
 
-## 🎨 Code Style Guide
+## Code Style Guide
 
 **Variable Naming**:
 - `rebalance_size` = decimal (0.0905)
@@ -164,7 +164,7 @@ cat theory/INVESTING_THEORY.md theory/VOLATILITY_ALPHA_THESIS.md | less
 
 ---
 
-## 🚀 Common Tasks
+## Common Tasks
 
 ### Add a New Feature
 1. Write theory document first
@@ -193,26 +193,26 @@ cat theory/INVESTING_THEORY.md theory/VOLATILITY_ALPHA_THESIS.md | less
 
 ```
 src/
-├── models/backtest.py          # Core engine (423 lines, 78% covered)
-├── tools/order_calculator.py   # Manual trading tool (CLI)
+├── models/backtest.py # Core engine (423 lines, 78% covered)
+├── tools/order_calculator.py # Manual trading tool (CLI)
 ├── tools/order_calculator_gui.py # Manual trading tool (GUI)
 └── research/
-    ├── strategy_comparison.py  # Multi-strategy experiments
-    └── volatility_alpha.py     # Alpha validation
+ ├── strategy_comparison.py # Multi-strategy experiments
+ └── volatility_alpha.py # Alpha validation
 
 tests/
-├── test_buyback_stack.py       # 11 tests - core algorithm
-├── test_synthetic_dividend.py  # 8 tests - symmetry
-├── test_volatility_alpha_*.py  # 13 tests - alpha generation
+├── test_buyback_stack.py # 11 tests - core algorithm
+├── test_synthetic_dividend.py # 8 tests - symmetry
+├── test_volatility_alpha_*.py # 13 tests - alpha generation
 ├── test_price_normalization.py # 5 tests - deterministic brackets
-└── test_withdrawal_policy.py   # 3 tests - orthogonal design
+└── test_withdrawal_policy.py # 3 tests - orthogonal design
 
 theory/
-├── README.md                   # Index
-├── INVESTING_THEORY.md         # Why
-├── VOLATILITY_ALPHA_THESIS.md  # Math
-├── PRICE_NORMALIZATION.md      # Brackets
-├── WITHDRAWAL_POLICY.md        # Withdrawals
+├── README.md # Index
+├── INVESTING_THEORY.md # Why
+├── VOLATILITY_ALPHA_THESIS.md # Math
+├── PRICE_NORMALIZATION.md # Brackets
+├── WITHDRAWAL_POLICY.md # Withdrawals
 └── ... (8 total documents)
 ```
 
@@ -223,10 +223,10 @@ theory/
 **Rebalance Trigger**:
 ```
 trigger = (2^(1/N) - 1) × 100
-sd4  = 18.92%
-sd6  = 12.25%
-sd8  =  9.05%
-sd16 =  4.43%
+sd4 = 18.92%
+sd6 = 12.25%
+sd8 = 9.05%
+sd16 = 4.43%
 ```
 
 **Buy/Sell Prices**:
@@ -244,12 +244,12 @@ normalized_price = 1.0 × (1 + trigger)^round(n)
 **Volatility Alpha**:
 ```
 alpha = (final_value_algo - start_value) / start_value
-      - (final_value_buyhold - start_value) / start_value
+ - (final_value_buyhold - start_value) / start_value
 ```
 
 ---
 
-## 💡 Design Principles (Remember These)
+## TIP: Design Principles (Remember These)
 
 1. **Orthogonality**: Features should be independent (withdrawals ≠ strategy)
 2. **Test Behavior**: Test economic outcomes, not implementation details
@@ -261,16 +261,16 @@ alpha = (final_value_algo - start_value) / start_value
 
 ## ⚡ Performance Notes
 
-**Typical Backtest**: 1-5 seconds for 4 years daily data  
-**Test Suite**: ~5 seconds for all 39 tests  
-**Memory**: Minimal (<100MB for typical backtest)  
+**Typical Backtest**: 1-5 seconds for 4 years daily data
+**Test Suite**: ~5 seconds for all 39 tests
+**Memory**: Minimal (<100MB for typical backtest)
 **Bottleneck**: DataFrame operations (already optimized)
 
 **Not optimized for**: Real-time trading, high-frequency data
 
 ---
 
-## 🎯 Success Criteria
+## Success Criteria
 
 **Feature is Complete When**:
 - [ ] Theory document written

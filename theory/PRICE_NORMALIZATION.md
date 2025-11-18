@@ -31,7 +31,7 @@ Price normalization converts real historical prices to a standard $100 starting 
 
 **Normalization factor**:
 ```python
-first_price = df.iloc[0]['Close']  # First historical price
+first_price = df.iloc[0]['Close'] # First historical price
 normalization_factor = 100.0 / first_price
 ```
 
@@ -61,7 +61,7 @@ from data.fetcher import load_data
 
 # Automatic normalization
 df = load_data('BTC-USD', start_date, end_date)
-# df['Close'][0] == 100.0  (always!)
+# df['Close'][0] == 100.0 (always!)
 
 # Run backtest with normalized prices
 result = run_portfolio_backtest(allocations={'BTC-USD': 1.0}, ...)
@@ -74,10 +74,10 @@ from tools.order_calculator import calculate_orders
 
 # Normalizes prices internally
 orders = calculate_orders(
-    symbol='NVDA',
-    start_date='2024-01-01',
-    current_shares=100,
-    current_price=450.0  # Will be normalized to $100 baseline
+ symbol='NVDA',
+ start_date='2024-01-01',
+ current_shares=100,
+ current_price=450.0 # Will be normalized to $100 baseline
 )
 ```
 
@@ -126,15 +126,15 @@ real_price = normalized_price / normalization_factor
 
 ```python
 def normalize_prices_to_100(df: pd.DataFrame) -> pd.DataFrame:
-    first_close = df.iloc[0]['Close']
-    factor = 100.0 / first_close
-    
-    df['Close'] *= factor
-    df['Open'] *= factor
-    df['High'] *= factor
-    df['Low'] *= factor
-    
-    return df
+ first_close = df.iloc[0]['Close']
+ factor = 100.0 / first_close
+
+ df['Close'] *= factor
+ df['Open'] *= factor
+ df['High'] *= factor
+ df['Low'] *= factor
+
+ return df
 ```
 
 **Backward compatibility**: All existing code works unchanged (normalization applied at data load)

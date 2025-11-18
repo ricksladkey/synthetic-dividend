@@ -210,7 +210,7 @@
 
 **Vision**: Single cash reserve shared across multiple assets
 
-**Benefits**: 
+**Benefits**:
 - Smoother income streams
 - Reduced asset-specific risk
 - Cross-asset cash flow optimization

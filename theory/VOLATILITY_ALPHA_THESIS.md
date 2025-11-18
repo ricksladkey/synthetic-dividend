@@ -43,7 +43,7 @@ This formula provides a **conservative estimate** that can be calculated by simp
 
 **Example** (100 shares @ $100):
 ```
-Day 1:  $100 → $120 (ATH) → Sell 10 shares @ $120 = $1,200 cash
+Day 1: $100 → $120 (ATH) → Sell 10 shares @ $120 = $1,200 cash
 Day 30: $120 → $140 (ATH) → Sell 9 shares @ $140 = $1,260 cash
 Day 60: $140 → $110 (drawdown) → HOLD (no action)
 Day 90: $110 → $150 (new ATH) → Sell 8 shares @ $150 = $1,200 cash
@@ -51,7 +51,7 @@ Day 90: $110 → $150 (new ATH) → Sell 8 shares @ $150 = $1,200 cash
 Final: 73 shares + $3,660 cash
 ```
 
-**Strength**: Simple, path-independent, guaranteed total return formula  
+**Strength**: Simple, path-independent, guaranteed total return formula
 **Weakness**: Misses profit opportunities during volatility
 
 ### Strategy B: Volatility-Enhanced (ATH + Buybacks)
@@ -71,7 +71,7 @@ Final: 73 shares + $3,660 cash
 
 **Example** (100 shares @ $100, same price path):
 ```
-Day 1:  $100 → $120 (ATH) → Sell 10 shares @ $120 = $1,200 cash
+Day 1: $100 → $120 (ATH) → Sell 10 shares @ $120 = $1,200 cash
 Day 30: $120 → $140 (ATH) → Sell 9 shares @ $140 = $1,260 cash
 Day 60: $140 → $110 (drawdown) → BUY BACK 10 shares @ $110 = -$1,100 cash
 Day 90: $110 → $150 (new ATH) → Sell 11 shares @ $150 = $1,650 cash
@@ -82,7 +82,7 @@ But wait - we can sell again on next dip-recovery cycle!
 This repeats potentially dozens of times over years.
 ```
 
-**Strength**: Capitalizes on volatility, higher total returns  
+**Strength**: Capitalizes on volatility, higher total returns
 **Weakness**: More complex, requires precise execution
 
 ---
@@ -102,26 +102,26 @@ This is the **pure excess return** attributable to the buyback mechanism. It iso
 **Four Sources of Volatility Alpha**:
 
 1. **Price Path Exploitation**
-   - ATH-only: ignores all price movements except upward ATH breaks
-   - Enhanced: profits from every drawdown-recovery cycle
-   - Each volatility wave = additional profit opportunity
+ - ATH-only: ignores all price movements except upward ATH breaks
+ - Enhanced: profits from every drawdown-recovery cycle
+ - Each volatility wave = additional profit opportunity
 
 2. **Drawdown Recycling**
-   - 50% drawdown with 9.05% trigger → ~8 rebalancing steps down
-   - Each step: buy shares at lower price
-   - Recovery creates 8 opportunities to resell at profit
-   - Formula: Buy count ≈ log₂(drawdown%) / log₂(1 + trigger%)
+ - 50% drawdown with 9.05% trigger → ~8 rebalancing steps down
+ - Each step: buy shares at lower price
+ - Recovery creates 8 opportunities to resell at profit
+ - Formula: Buy count ≈ log₂(drawdown%) / log₂(1 + trigger%)
 
 3. **Compounding Effect**
-   - Profits from early cycles increase capital available for later cycles
-   - Larger position → larger absolute profits on subsequent cycles
-   - Effect compounds over years, especially in sideways/volatile markets
+ - Profits from early cycles increase capital available for later cycles
+ - Larger position → larger absolute profits on subsequent cycles
+ - Effect compounds over years, especially in sideways/volatile markets
 
 4. **Gap Arbitrage**
-   - Market gaps up → sell at higher price than expected
-   - Market gaps down → buy at lower price than expected
-   - Gaps create "free money" beyond the theoretical minimum
-   - High volatility assets have more gaps → bonus alpha
+ - Market gaps up → sell at higher price than expected
+ - Market gaps down → buy at lower price than expected
+ - Gaps create "free money" beyond the theoretical minimum
+ - High volatility assets have more gaps → bonus alpha
 
 ---
 
@@ -152,10 +152,10 @@ Profit calculation:
 
 For small percentages (t << 1):
 ```
-Return ≈ t / (1 - t) 
-       ≈ t × (1 + t + t² + ...)
-       ≈ t + t²
-       ≈ t²/2  (for small t, the quadratic term dominates after summing)
+Return ≈ t / (1 - t)
+ ≈ t × (1 + t + t² + ...)
+ ≈ t + t²
+ ≈ t²/2 (for small t, the quadratic term dominates after summing)
 ```
 
 **Examples**:
@@ -218,20 +218,20 @@ Result: **Actual alpha typically exceeds formula** by 1.1x to 10.6x depending on
 
 | Asset | Volatility | Years | Buys | Predicted | Actual | Multiplier |
 |-------|-----------|-------|------|-----------|--------|------------|
-| **GLD** | 16% | 3 | 10 | 1.0% | 1.06% | **1.1x** ✅ |
+| **GLD** | 16% | 3 | 10 | 1.0% | 1.06% | **1.1x** [OK] |
 | **ETH-USD** | 54% | 3 | 39 | 29.3% | 45.94% | **1.6x** |
 | **BTC-USD** | 40% | 3 | 34 | 13.9% | 27.11% | **1.9x** |
 | **MSTR** | 90% | 3 | 68 | 51.0% | 109.37% | **2.1x** |
-| **NVDA** | 52% | 3 | 18 | 13.5% | 76.78% | **5.7x** 🚀 |
-| **PLTR** | 68% | 3 | 25 | 18.75% | 198.40% | **10.6x** 🚀 |
+| **NVDA** | 52% | 3 | 18 | 13.5% | 76.78% | **5.7x** |
+| **PLTR** | 68% | 3 | 25 | 18.75% | 198.40% | **10.6x** |
 
 ### Key Findings
 
 **1. Formula Accuracy with Realistic Execution**
-- **Low volatility** (GLD): Actual matches predicted (1.1x multiplier) ✅
+- **Low volatility** (GLD): Actual matches predicted (1.1x multiplier) [OK]
 - **Crypto** (BTC, ETH): 1.6-1.9x multiplier from moderate gaps
 - **Extreme volatility** (MSTR): 2.1x multiplier despite high frequency
-- **Explosive growth** (NVDA, PLTR): **5.7-10.6x multiplier** from gap-fill execution! 🚀
+- **Explosive growth** (NVDA, PLTR): **5.7-10.6x multiplier** from gap-fill execution!
 
 **Critical Insight**: Realistic gap-fill execution (orders fill at actual open price during gaps) creates ENORMOUS alpha for stocks with explosive growth phases and large gaps. The formula is still a valid lower bound, but explosive growth stocks can show 5-10x that minimum!
 
@@ -239,12 +239,12 @@ Result: **Actual alpha typically exceeds formula** by 1.1x to 10.6x depending on
 Clear relationship between asset volatility AND growth phase and alpha:
 - 16% volatility (GLD): 1.1% alpha over 3 years (smooth)
 - 40% volatility (BTC): 27% alpha over 3 years (moderate gaps)
-- 68% volatility (PLTR): **198% alpha over 3 years (explosive growth)** 🚀
+- 68% volatility (PLTR): **198% alpha over 3 years (explosive growth)**
 - 90% volatility (MSTR): 109% alpha over 3 years (extreme frequency)
 
 **3. Time Compounding**
 Longer timeframes show **super-linear** alpha growth:
-- **PLTR**: 1yr (16.4%) → 2yr (58.2%, 3.6x) → 3yr (198.4%, 3.4x) 🚀
+- **PLTR**: 1yr (16.4%) → 2yr (58.2%, 3.6x) → 3yr (198.4%, 3.4x)
 - **MSTR**: 1yr (6.9%) → 2yr (69.7%, 10.1x) → 3yr (109.4%, 1.6x)
 - **NVDA**: 1yr (5.4%) → 2yr (19.6%, 3.6x) → 3yr (76.8%, 3.9x)
 
@@ -265,21 +265,21 @@ This suggests volatility cycles compound over time!
 - Buybacks: 10 cycles
 - Predicted: 10 × 0.10% = 1.0%
 - Actual: 1.06%
-- **Result**: Formula matches reality! ✅
+- **Result**: Formula matches reality! [OK]
 
 **Volatile Trading (MSTR, 3 years)**:
 - Algorithm: SD6 (12.25% trigger)
 - Buybacks: 68 cycles
 - Predicted: 68 × 0.75% = 51.0%
 - Actual: 109.37%
-- **Result**: 2.1x formula from extreme frequency! 🚀
+- **Result**: 2.1x formula from extreme frequency!
 
 **Explosive Growth (PLTR, 3 years)**:
 - Algorithm: SD6 (12.25% trigger)
 - Buybacks: 25 cycles
 - Predicted: 25 × 0.75% = 18.75%
 - Actual: 198.40%
-- **Result**: 10.6x formula from gap-fill execution during explosive growth! 🚀🚀🚀
+- **Result**: 10.6x formula from gap-fill execution during explosive growth!
 
 ---
 
@@ -313,21 +313,21 @@ Each step is geometrically equal - the same percentage gain/loss.
 **Match trigger to asset volatility**:
 
 1. **Calculate annualized volatility**:
-   ```
-   σ = std(daily_returns) × √252
-   ```
+ ```
+ σ = std(daily_returns) × √252
+ ```
 
 2. **Choose sdN**:
-   - σ > 80%: SD4 or SD6 (aggressive, high frequency)
-   - σ = 50-80%: SD6 or SD8 (moderate-high)
-   - σ = 30-50%: SD8 or SD10 (balanced)
-   - σ = 20-30%: SD12 or SD16 (conservative)
-   - σ < 20%: SD16 or SD20 (very conservative)
+ - σ > 80%: SD4 or SD6 (aggressive, high frequency)
+ - σ = 50-80%: SD6 or SD8 (moderate-high)
+ - σ = 30-50%: SD8 or SD10 (balanced)
+ - σ = 20-30%: SD12 or SD16 (conservative)
+ - σ < 20%: SD16 or SD20 (very conservative)
 
 3. **Why this matters**:
-   - Too aggressive (low sdN on low vol): Whipsaws, excessive trades
-   - Too conservative (high sdN on high vol): Miss opportunities
-   - Optimal: Trigger captures natural volatility waves
+ - Too aggressive (low sdN on low vol): Whipsaws, excessive trades
+ - Too conservative (high sdN on high vol): Miss opportunities
+ - Optimal: Trigger captures natural volatility waves
 
 **Rule of thumb**: Higher volatility → lower sdN → more cycles → more alpha
 
@@ -464,29 +464,29 @@ Time_to_goal ≈ Buy_and_hold_time × (1 / (1 - profit_sharing_ratio))
 ### Open Questions
 
 1. **Optimal sdN per asset class?**
-   - Current: Manual selection based on volatility
-   - Goal: Algorithmic optimization for each asset
-   - Method: Sweep sdN parameters, maximize risk-adjusted alpha
+ - Current: Manual selection based on volatility
+ - Goal: Algorithmic optimization for each asset
+ - Method: Sweep sdN parameters, maximize risk-adjusted alpha
 
 2. **Portfolio-level volatility alpha?**
-   - Current: Single-asset backtests
-   - Goal: Multi-asset portfolio with shared cash pool
-   - Hypothesis: Uncorrelated assets → smoother alpha generation
+ - Current: Single-asset backtests
+ - Goal: Multi-asset portfolio with shared cash pool
+ - Hypothesis: Uncorrelated assets → smoother alpha generation
 
 3. **Machine learning for trigger optimization?**
-   - Current: Fixed exponential scaling (2^(1/N))
-   - Goal: Adaptive triggers based on market regime
-   - Potential: Dynamic sdN that adjusts to volatility changes
+ - Current: Fixed exponential scaling (2^(1/N))
+ - Goal: Adaptive triggers based on market regime
+ - Potential: Dynamic sdN that adjusts to volatility changes
 
 4. **Transaction cost impact?**
-   - Current: Ignores commissions and slippage
-   - Goal: Net alpha after realistic costs
-   - Method: Deduct $0.01/share + 0.05% slippage
+ - Current: Ignores commissions and slippage
+ - Goal: Net alpha after realistic costs
+ - Method: Deduct $0.01/share + 0.05% slippage
 
 5. **Tax-loss harvesting integration?**
-   - Current: Algorithm agnostic to tax consequences
-   - Goal: Coordinate buybacks with tax-loss selling
-   - Benefit: Alpha + tax savings = compounding advantage
+ - Current: Algorithm agnostic to tax consequences
+ - Goal: Coordinate buybacks with tax-loss selling
+ - Benefit: Alpha + tax savings = compounding advantage
 
 ### Next Experiments
 
@@ -526,11 +526,11 @@ This "balance score" finds the withdrawal rate where:
 **SPY 2022 Bear Market** (-19.5% return) ⭐ **GOLD STANDARD**:
 ```
 Optimal Withdrawal Rate: 10% annually
-Mean Bank Balance:        $701 (essentially zero!)
-Margin Usage:            30.8% of days  
-Bank Min:                -$19,709
-Bank Max:                +$18,188
-Interpretation:          Perfect balance achieved
+Mean Bank Balance: $701 (essentially zero!)
+Margin Usage: 30.8% of days
+Bank Min: -$19,709
+Bank Max: +$18,188
+Interpretation: Perfect balance achieved
 ```
 
 **Key Discovery**: Even in a **bear market crash**, volatility harvesting enables **10% sustainable withdrawals** with mean bank essentially at zero. This is the theorized "zero point" where buffer is used ~50% of the time.
@@ -584,41 +584,41 @@ Interpretation:          Perfect balance achieved
 
 ### Theoretical Validation
 
-✅ **Balance Point Exists**: Mean bank approaches zero at optimal rates
+[OK] **Balance Point Exists**: Mean bank approaches zero at optimal rates
 
-✅ **Market Agnostic**: Works in bull, moderate, and bear markets (alpha from mean reversion, not direction)
+[OK] **Market Agnostic**: Works in bull, moderate, and bear markets (alpha from mean reversion, not direction)
 
-✅ **Diversification Benefits Confirmed**: Margin usage scales by √N factor
+[OK] **Diversification Benefits Confirmed**: Margin usage scales by √N factor
 
-✅ **Bear Market Resilience**: 10% sustainable even in -20% crash (SPY 2022 proof)
+[OK] **Bear Market Resilience**: 10% sustainable even in -20% crash (SPY 2022 proof)
 
-✅ **Not Dependent on Bull Markets**: Volatility provides alpha regardless of market direction
+[OK] **Not Dependent on Bull Markets**: Volatility provides alpha regardless of market direction
 
 ### Strategic Implications for Retirement
 
 1. **10% Sustainable Withdrawal**:
-   - Far exceeds traditional 4% "safe withdrawal rate"
-   - Requires diversification (10+ uncorrelated assets)
-   - Self-sustaining from volatility alpha alone
-   - No capital depletion required
+ - Far exceeds traditional 4% "safe withdrawal rate"
+ - Requires diversification (10+ uncorrelated assets)
+ - Self-sustaining from volatility alpha alone
+ - No capital depletion required
 
 2. **Portfolio Construction**:
-   - Target 10+ uncorrelated assets
-   - Each harvests volatility alpha independently
-   - Portfolio bank balance has √N lower volatility
-   - 95% confidence of no margin with proper diversification
+ - Target 10+ uncorrelated assets
+ - Each harvests volatility alpha independently
+ - Portfolio bank balance has √N lower volatility
+ - 95% confidence of no margin with proper diversification
 
 3. **Risk Management**:
-   - Monitor `mean(bank)` as early warning signal
-   - Positive mean: Excess alpha (can increase withdrawals)
-   - Negative mean: Insufficient alpha (reduce withdrawals)
-   - Near zero: Perfectly balanced (optimal efficiency)
+ - Monitor `mean(bank)` as early warning signal
+ - Positive mean: Excess alpha (can increase withdrawals)
+ - Negative mean: Insufficient alpha (reduce withdrawals)
+ - Near zero: Perfectly balanced (optimal efficiency)
 
 4. **Volatility Alpha Is The Engine**:
-   - Works in bear markets (SPY 2022 proof point)
-   - Mean reversion is the source, not directional moves
-   - Sustainable as long as markets exhibit volatility
-   - Independent of traditional return sources
+ - Works in bear markets (SPY 2022 proof point)
+ - Mean reversion is the source, not directional moves
+ - Sustainable as long as markets exhibit volatility
+ - Independent of traditional return sources
 
 ### Data and Reproducibility
 
@@ -650,11 +650,11 @@ python -m src.research.optimal_withdrawal_rate
 The formula `Alpha ≈ (trigger%)² / 2 × buy_count` provides a **conservative lower bound** that you can estimate just by looking at a price chart. Actual alpha typically exceeds this by 1.1x (smooth assets) to 10.6x (explosive growth stocks) depending on gap characteristics and growth phase.
 
 **Core thesis validated** (re-validated October 31, 2025 with realistic execution):
-- ✅ Formula works as conservative lower bound (tested across 18 scenarios)
-- ✅ Higher volatility → higher alpha (strong correlation)
-- ✅ Explosive growth → ENORMOUS alpha (5-10x formula for PLTR, NVDA)
-- ✅ Longer timeframes → compounding alpha (super-linear growth)
-- ✅ Gap bonus multiplier (1.1x to 10.6x based on asset class and growth phase)
+- [OK] Formula works as conservative lower bound (tested across 18 scenarios)
+- [OK] Higher volatility → higher alpha (strong correlation)
+- [OK] Explosive growth → ENORMOUS alpha (5-10x formula for PLTR, NVDA)
+- [OK] Longer timeframes → compounding alpha (super-linear growth)
+- [OK] Gap bonus multiplier (1.1x to 10.6x based on asset class and growth phase)
 
 **Key insights**:
 1. **Volatility is opportunity**, not just risk
@@ -683,14 +683,14 @@ This is the foundation for turning **any growth asset** into a **predictable inc
 ### Algorithm Fixes That Required Re-validation
 
 1. **Realistic Market Execution** (gap-through fills):
-   - **Before**: Orders filling during gaps used theoretical limit price
-   - **After**: Orders fill at actual market open price (more realistic)
-   - **Impact**: MASSIVE increase in alpha for explosive growth stocks (PLTR +157%, NVDA +126%)
+ - **Before**: Orders filling during gaps used theoretical limit price
+ - **After**: Orders fill at actual market open price (more realistic)
+ - **Impact**: MASSIVE increase in alpha for explosive growth stocks (PLTR +157%, NVDA +126%)
 
 2. **Anti-Chatter Fix** (same-day execution prevention):
-   - **Before**: Orders placed and executed on same day (artificial)
-   - **After**: Orders placed on day D execute on D+1 (realistic)
-   - **Impact**: Prevents unrealistic same-day round-trip trades
+ - **Before**: Orders placed and executed on same day (artificial)
+ - **After**: Orders placed on day D execute on D+1 (realistic)
+ - **Impact**: Prevents unrealistic same-day round-trip trades
 
 ### Generation Script
 
@@ -703,8 +703,8 @@ This is the foundation for turning **any growth asset** into a **predictable inc
 2. Calculates annualized volatility: `σ = std(daily_returns) × √252`
 3. Auto-suggests SD parameter based on volatility
 4. Runs two backtests per scenario:
-   - **Full Strategy**: Synthetic Dividend with buybacks enabled
-   - **ATH-Only**: Synthetic Dividend with buybacks disabled
+ - **Full Strategy**: Synthetic Dividend with buybacks enabled
+ - **ATH-Only**: Synthetic Dividend with buybacks disabled
 5. Calculates volatility alpha: `Full Return - ATH-Only Return`
 6. Outputs CSV with all metrics
 
@@ -747,18 +747,18 @@ This is the foundation for turning **any growth asset** into a **predictable inc
 **Algorithm** (in script):
 ```python
 def suggest_sd_parameter(volatility: float) -> int:
-    vol_pct = volatility * 100
+ vol_pct = volatility * 100
 
-    if vol_pct >= 50:
-        return 6   # SD6: 12.25% trigger
-    elif vol_pct >= 30:
-        return 8   # SD8: 9.05% trigger
-    elif vol_pct >= 20:
-        return 10  # SD10: 7.18% trigger
-    elif vol_pct >= 10:
-        return 16  # SD16: 4.43% trigger
-    else:
-        return 20  # SD20: 3.53% trigger
+ if vol_pct >= 50:
+ return 6 # SD6: 12.25% trigger
+ elif vol_pct >= 30:
+ return 8 # SD8: 9.05% trigger
+ elif vol_pct >= 20:
+ return 10 # SD10: 7.18% trigger
+ elif vol_pct >= 10:
+ return 16 # SD16: 4.43% trigger
+ else:
+ return 20 # SD20: 3.53% trigger
 ```
 
 ### Backtest Configuration

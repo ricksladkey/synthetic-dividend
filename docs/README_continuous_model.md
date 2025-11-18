@@ -124,10 +124,10 @@ All formulas validated against NVDA 2023 backtest:
 
 | SDN | δ | δ* | Predicted | Actual Stack | Predicted α | Actual α |
 |-----|---|----|-----------| ------------|-------------|----------|
-| sd4 | 18.9% | 5.3% | Stable | 0 shares ✓ | 0-2% | 0% ✓ |
-| sd8 | 9.05% | 5.3% | Stable | 4 shares ✓ | 2-5% | 1.98% ✓ |
-| sd16 | 4.43% | 5.3% | Marginal | 116 shares ✓ | 15-20% | 18.6% ✓ |
-| sd32 | 2.19% | 5.3% | Catastrophic | 11,230 shares ✓ | 30-40% | 32.8% ✓ |
+| sd4 | 18.9% | 5.3% | Stable | 0 shares [OK] | 0-2% | 0% [OK] |
+| sd8 | 9.05% | 5.3% | Stable | 4 shares [OK] | 2-5% | 1.98% [OK] |
+| sd16 | 4.43% | 5.3% | Marginal | 116 shares [OK] | 15-20% | 18.6% [OK] |
+| sd32 | 2.19% | 5.3% | Catastrophic | 11,230 shares [OK] | 30-40% | 32.8% [OK] |
 
 **Excellent agreement** - the continuous model captures all key behaviors!
 
@@ -171,23 +171,23 @@ Minimum shares = 10 · (Transaction size) / (δ · Price)
 
 ```python
 def calculate_optimal_sdn(mu_annual, sigma_annual):
-    """Calculate optimal SDN range from historical returns."""
+ """Calculate optimal SDN range from historical returns."""
 
-    # Critical spacing
-    delta_star = sigma_annual**2 / (2 * mu_annual)
+ # Critical spacing
+ delta_star = sigma_annual**2 / (2 * mu_annual)
 
-    # Convert to SDN parameter
-    sdn_critical = 1 / (delta_star * np.log(2))
+ # Convert to SDN parameter
+ sdn_critical = 1 / (delta_star * np.log(2))
 
-    # Recommendations by Sharpe ratio
-    sharpe = mu_annual / sigma_annual
+ # Recommendations by Sharpe ratio
+ sharpe = mu_annual / sigma_annual
 
-    if sharpe > 1:
-        return "sd4-sd8 (strong trend)"
-    elif sharpe > 0.5:
-        return "sd8-sd16 (moderate)"
-    else:
-        return "sd16-sd32 (choppy)"
+ if sharpe > 1:
+ return "sd4-sd8 (strong trend)"
+ elif sharpe > 0.5:
+ return "sd8-sd16 (moderate)"
+ else:
+ return "sd16-sd32 (choppy)"
 ```
 
 ### 2. Position Sizing
@@ -195,9 +195,9 @@ def calculate_optimal_sdn(mu_annual, sigma_annual):
 **Avoid quantization** with:
 ```python
 def minimum_shares(price, sdn, transaction_size=100):
-    """Calculate minimum shares for Q > 10."""
-    delta = 2**(1/sdn) - 1
-    return 10 * transaction_size / (delta * price)
+ """Calculate minimum shares for Q > 10."""
+ delta = 2**(1/sdn) - 1
+ return 10 * transaction_size / (delta * price)
 ```
 
 **Or use fractional shares**:
@@ -206,17 +206,17 @@ def minimum_shares(price, sdn, transaction_size=100):
 shares = int(dollar_amount / price)
 
 # Use:
-shares = dollar_amount / price  # Keep as float
+shares = dollar_amount / price # Keep as float
 ```
 
 ### 3. Data Requirements
 
 | SDN | Daily Data Adequate? | Recommended Frequency |
 |-----|----------------------|----------------------|
-| sd4-sd8 | ✅ Yes (<5% error) | Daily OHLC |
-| sd16 | ⚠️ Marginal (±20%) | Hourly bars |
-| sd32 | ❌ No (±30-50%) | 15-minute bars |
-| sd64+ | ❌ No | 1-minute bars |
+| sd4-sd8 | [OK] Yes (<5% error) | Daily OHLC |
+| sd16 | WARNING: Marginal (±20%) | Hourly bars |
+| sd32 | [FAIL] No (±30-50%) | 15-minute bars |
+| sd64+ | [FAIL] No | 1-minute bars |
 
 **Trade-off**: Daily data is free and unlimited. Intraday data has limited history.
 
@@ -229,7 +229,7 @@ When using daily OHLC for sd16+, provide **confidence intervals**:
 N_min = np.ceil((high - low) / delta) - 1
 
 # Expected crossings (stochastic model)
-N_expected = N_min * 1.5  # Empirical multiplier
+N_expected = N_min * 1.5 # Empirical multiplier
 
 # Uncertainty
 uncertainty_pct = 20 if sdn <= 16 else 30
@@ -247,9 +247,9 @@ print(f"Alpha: {alpha:.1f}% ± {alpha * uncertainty_pct/100:.1f}%")
 Adapt δ based on realized Sharpe ratio:
 ```
 if estimated_SR > 1:
-    widen_brackets()  # Prevent stack accumulation
+ widen_brackets() # Prevent stack accumulation
 elif estimated_SR < 0.5:
-    tighten_brackets()  # Capture more volatility
+ tighten_brackets() # Capture more volatility
 ```
 
 ### 2. Multi-Asset Portfolios
@@ -257,7 +257,7 @@ elif estimated_SR < 0.5:
 Does diversification stabilize stack dynamics?
 ```
 Hypothesis: Uncorrelated assets allow tighter brackets
-           (one asset's uptrend offset by another's downtrend)
+ (one asset's uptrend offset by another's downtrend)
 ```
 
 ### 3. Transaction Costs
@@ -281,9 +281,9 @@ Sideways (|μ| << σ): Use sd16-sd32
 Exact continuous model:
 ```python
 class FractionalSyntheticDividend(SyntheticDividendAlgorithm):
-    def calculate_transaction_size(self, price):
-        # Return fractional shares (float, not int)
-        return self.dollar_amount / price
+ def calculate_transaction_size(self, price):
+ # Return fractional shares (float, not int)
+ return self.dollar_amount / price
 ```
 
 ---
@@ -296,8 +296,8 @@ class FractionalSyntheticDividend(SyntheticDividendAlgorithm):
 from src.research.optimal_sdn import calculate_optimal_parameters
 
 # Historical data
-mu = 0.15  # 15% annual return
-sigma = 0.40  # 40% annual volatility
+mu = 0.15 # 15% annual return
+sigma = 0.40 # 40% annual volatility
 
 # Get recommendations
 params = calculate_optimal_parameters(mu, sigma)
@@ -316,19 +316,19 @@ from scripts.test_quantization_convergence import run_convergence_test
 
 # Test convergence with different position sizes
 results = run_convergence_test(
-    ticker='NVDA',
-    year=2023,
-    position_sizes=[100, 1000, 10000],
-    sdn_values=[8, 16, 32]
+ ticker='NVDA',
+ year=2023,
+ position_sizes=[100, 1000, 10000],
+ sdn_values=[8, 16, 32]
 )
 
 # Check for convergence
 for sdn in [8, 16, 32]:
-    alphas = [r['realized_alpha'] for r in results if r['sdn'] == sdn]
-    alpha_range = max(alphas) - min(alphas)
+ alphas = [r['realized_alpha'] for r in results if r['sdn'] == sdn]
+ alpha_range = max(alphas) - min(alphas)
 
-    print(f"sd{sdn}: α range = {alpha_range:.2f}%", end="")
-    print(" ✓ Converged" if alpha_range < 1 else " ✗ Not converged")
+ print(f"sd{sdn}: α range = {alpha_range:.2f}%", end="")
+ print(" [OK] Converged" if alpha_range < 1 else " [FAIL] Not converged")
 ```
 
 ---
@@ -337,15 +337,15 @@ for sdn in [8, 16, 32]:
 
 The continuous model provides a **complete theoretical framework** for understanding the synthetic dividend algorithm:
 
-✅ **Predictive**: Calculate optimal δ from (μ, σ) without backtesting
+[OK] **Predictive**: Calculate optimal δ from (μ, σ) without backtesting
 
-✅ **Rigorous**: Closed-form formulas derived from stochastic calculus
+[OK] **Rigorous**: Closed-form formulas derived from stochastic calculus
 
-✅ **Validated**: Matches empirical results within error bounds
+[OK] **Validated**: Matches empirical results within error bounds
 
-✅ **Practical**: Clear guidance for parameter selection
+[OK] **Practical**: Clear guidance for parameter selection
 
-✅ **Extensible**: Foundation for future research
+[OK] **Extensible**: Foundation for future research
 
 **Key insight**: The algorithm has a **phase transition** at δ* = σ²/(2μ). Below this spacing, stack accumulates unboundedly in trending markets. This explains why sd32 fails catastrophically despite showing high "realized alpha" - the alpha is trapped in an unmovable position.
 

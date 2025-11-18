@@ -1,8 +1,8 @@
 # Withdrawal Policy: The Optimal Rate Framework
 
-**Author**: Synthetic Dividend Project  
-**Created**: October 2025  
-**Status**: Active Research  
+**Author**: Synthetic Dividend Project
+**Created**: October 2025
+**Status**: Active Research
 **Related**: [Experiment 004](../experiments/EXPERIMENT_004_OPTIMAL_WITHDRAWAL_RATE.md), [Volatility Alpha Thesis](VOLATILITY_ALPHA_THESIS.md)
 
 ---
@@ -48,20 +48,20 @@ balance_score = abs(mean(bank)) + 0.5 × std(bank)
 ### The Three Regimes
 
 ```
-Below Optimal:  mean(bank) > 0
-    ↳ Excess alpha, portfolio grows
-    ↳ Buffer rarely used
-    ↳ Can increase withdrawals
+Below Optimal: mean(bank) > 0
+ ↳ Excess alpha, portfolio grows
+ ↳ Buffer rarely used
+ ↳ Can increase withdrawals
 
-At Optimal:     mean(bank) ≈ 0
-    ↳ Perfect balance
-    ↳ Buffer used ~50% of time
-    ↳ Self-sustaining indefinitely
+At Optimal: mean(bank) ≈ 0
+ ↳ Perfect balance
+ ↳ Buffer used ~50% of time
+ ↳ Self-sustaining indefinitely
 
-Above Optimal:  mean(bank) < 0
-    ↳ Insufficient alpha
-    ↳ Increasing margin usage
-    ↳ Must decrease withdrawals
+Above Optimal: mean(bank) < 0
+ ↳ Insufficient alpha
+ ↳ Increasing margin usage
+ ↳ Must decrease withdrawals
 ```
 
 ---
@@ -86,15 +86,15 @@ We tested 51 different withdrawal rates across 3 market conditions:
 
 **Optimal Result** (10% withdrawal):
 ```
-Mean Bank Balance:        $701
-Standard Deviation:       $10,583
-Absolute Mean Bank:       $701
-Bank Min:                -$19,709
-Bank Max:                +$18,188
-Margin Usage:            30.8% of days
-Days in Margin:          78 days (out of 253)
-Annual Withdrawal:       $20,000 (10% of $200k)
-Balance Score:           5,992
+Mean Bank Balance: $701
+Standard Deviation: $10,583
+Absolute Mean Bank: $701
+Bank Min: -$19,709
+Bank Max: +$18,188
+Margin Usage: 30.8% of days
+Days in Margin: 78 days (out of 253)
+Annual Withdrawal: $20,000 (10% of $200k)
+Balance Score: 5,992
 ```
 
 **Interpretation**:
@@ -161,9 +161,9 @@ Where:
 ### Correlation Requirements
 
 For diversification benefits to apply, assets must be **uncorrelated** in their volatility patterns:
-- ✅ **Good**: Tech (NVDA), Healthcare (JNJ), Energy (XLE), International (VWO)
-- ⚠️ **Moderate**: Large-cap (SPY, VOO, QQQ) - somewhat correlated
-- ❌ **Poor**: Leveraged ETFs of same underlying (TQQQ, QQQ)
+- [OK] **Good**: Tech (NVDA), Healthcare (JNJ), Energy (XLE), International (VWO)
+- WARNING: **Moderate**: Large-cap (SPY, VOO, QQQ) - somewhat correlated
+- [FAIL] **Poor**: Leveraged ETFs of same underlying (TQQQ, QQQ)
 
 **Open Research**: How much correlation degrades the √N benefit?
 
@@ -227,17 +227,17 @@ For diversification benefits to apply, assets must be **uncorrelated** in their 
 from src.research.optimal_withdrawal_rate import find_optimal_withdrawal_rate
 
 results = find_optimal_withdrawal_rate(
-    ticker="SPY",
-    start_date="2022-01-01",
-    end_date="2022-12-31",
-    algorithm_name="SD8",
-    min_rate=0.01,
-    max_rate=0.20,
-    step=0.01
+ ticker="SPY",
+ start_date="2022-01-01",
+ end_date="2022-12-31",
+ algorithm_name="SD8",
+ min_rate=0.01,
+ max_rate=0.20,
+ step=0.01
 )
 
 # Look for minimum abs(mean_bank)
-optimal = results[0]  # Sorted by balance_score
+optimal = results[0] # Sorted by balance_score
 print(f"Optimal rate: {optimal.withdrawal_rate * 100}%")
 print(f"Mean bank: ${optimal.mean_bank:,.0f}")
 print(f"Margin usage: {optimal.margin_usage_pct:.1f}%")
@@ -292,29 +292,29 @@ portfolio_optimal_rate = single_asset_optimal_rate
 **Key Metrics to Track**:
 
 1. **Mean Bank Balance** (monthly average):
-   - **> +5% of capital**: Excess alpha → can increase withdrawals
-   - **-5% to +5%**: Balanced → maintain current rate
-   - **< -5% of capital**: Insufficient alpha → reduce withdrawals
+ - **> +5% of capital**: Excess alpha → can increase withdrawals
+ - **-5% to +5%**: Balanced → maintain current rate
+ - **< -5% of capital**: Insufficient alpha → reduce withdrawals
 
 2. **Margin Usage Frequency**:
-   - **< 10%**: Very safe (2σ+ confidence)
-   - **10-35%**: Expected range (1-2σ confidence)
-   - **> 35%**: Warning sign (reduce withdrawals)
+ - **< 10%**: Very safe (2σ+ confidence)
+ - **10-35%**: Expected range (1-2σ confidence)
+ - **> 35%**: Warning sign (reduce withdrawals)
 
 3. **Individual Asset Performance**:
-   - Remove assets that consistently fail to harvest alpha
-   - Add new assets to maintain diversification
-   - Rebalance allocations if imbalances grow
+ - Remove assets that consistently fail to harvest alpha
+ - Add new assets to maintain diversification
+ - Rebalance allocations if imbalances grow
 
 **Dynamic Adjustment Example**:
 ```
 if mean_bank < -5% of capital for 3 months:
-    reduce withdrawal_rate by 1%
-    re-test for optimal balance
+ reduce withdrawal_rate by 1%
+ re-test for optimal balance
 
 if mean_bank > +10% of capital for 6 months:
-    consider increasing withdrawal_rate by 0.5%
-    test impact over 3 months
+ consider increasing withdrawal_rate by 0.5%
+ test impact over 3 months
 ```
 
 ---
@@ -324,28 +324,28 @@ if mean_bank > +10% of capital for 6 months:
 ### Known Risks
 
 1. **Correlation Risk**:
-   - Assets become correlated during market stress (2008, 2020)
-   - Diversification benefit degrades
-   - Mitigation: Include truly uncorrelated assets (gold, bonds, international)
+ - Assets become correlated during market stress (2008, 2020)
+ - Diversification benefit degrades
+ - Mitigation: Include truly uncorrelated assets (gold, bonds, international)
 
 2. **Volatility Regime Shifts**:
-   - Low volatility periods reduce alpha generation
-   - Optimal rate may shift lower
-   - Mitigation: Monitor mean(bank) and adjust proactively
+ - Low volatility periods reduce alpha generation
+ - Optimal rate may shift lower
+ - Mitigation: Monitor mean(bank) and adjust proactively
 
 3. **Sequence-of-Returns Risk**:
-   - Still applies (withdrawals during drawdowns deplete capital faster)
-   - Volatility harvesting partially mitigates via mean reversion
-   - Mitigation: Higher cash buffer during known bear markets
+ - Still applies (withdrawals during drawdowns deplete capital faster)
+ - Volatility harvesting partially mitigates via mean reversion
+ - Mitigation: Higher cash buffer during known bear markets
 
 4. **Algorithm Failure**:
-   - SD algorithm might fail to harvest alpha in certain conditions
-   - Mitigation: Diversify across multiple algorithms (SD7, SD8, SD9)
+ - SD algorithm might fail to harvest alpha in certain conditions
+ - Mitigation: Diversify across multiple algorithms (SD7, SD8, SD9)
 
 5. **Margin Call Risk**:
-   - Even with 10 assets, 5% chance of margin usage
-   - Extreme events (3σ+) could force liquidation
-   - Mitigation: Maintain emergency cash reserve (6-12 months expenses)
+ - Even with 10 assets, 5% chance of margin usage
+ - Extreme events (3σ+) could force liquidation
+ - Mitigation: Maintain emergency cash reserve (6-12 months expenses)
 
 ### Safety Mechanisms
 
@@ -361,12 +361,12 @@ if mean_bank > +10% of capital for 6 months:
 **Stop-Loss Rules**:
 ```
 IF margin_usage > 50% for 5 consecutive days:
-    → Reduce withdrawals by 20% immediately
-    → Reassess optimal rate
+ → Reduce withdrawals by 20% immediately
+ → Reassess optimal rate
 
 IF mean_bank < -10% of capital for 2 months:
-    → Reduce withdrawals to 4% (traditional safe rate)
-    → Investigate algorithm failure
+ → Reduce withdrawals to 4% (traditional safe rate)
+ → Investigate algorithm failure
 ```
 
 ---
@@ -376,56 +376,56 @@ IF mean_bank < -10% of capital for 2 months:
 ### Near-Term (Next 6 Months)
 
 1. **Multi-Year Stability**:
-   - Is 10% optimal for SPY stable over 5, 10, 20 year periods?
-   - Or was 2022 an outlier?
-   - **Test**: Run 10-year rolling windows on SPY, VOO, QQQ
+ - Is 10% optimal for SPY stable over 5, 10, 20 year periods?
+ - Or was 2022 an outlier?
+ - **Test**: Run 10-year rolling windows on SPY, VOO, QQQ
 
 2. **Algorithm Sensitivity**:
-   - Does optimal rate vary significantly between SD7, SD8, SD9, SD10?
-   - **Test**: Repeat SPY 2022 with all four algorithms
+ - Does optimal rate vary significantly between SD7, SD8, SD9, SD10?
+ - **Test**: Repeat SPY 2022 with all four algorithms
 
 3. **Finer Granularity**:
-   - Is true SPY 2022 optimal exactly 10%, or somewhere between 9-11%?
-   - **Test**: 0.1% increments in 9-11% range
+ - Is true SPY 2022 optimal exactly 10%, or somewhere between 9-11%?
+ - **Test**: 0.1% increments in 9-11% range
 
 4. **Realistic Mode**:
-   - How do opportunity costs and risk-free gains affect optimal rate?
-   - **Test**: Re-run with `simple_mode=False`
+ - How do opportunity costs and risk-free gains affect optimal rate?
+ - **Test**: Re-run with `simple_mode=False`
 
 ### Medium-Term (6-12 Months)
 
 5. **Actual Portfolio Test**:
-   - Build real 10-asset portfolio and test empirically
-   - Validate √N diversification benefit
-   - **Test**: Historical backtest with 10 assets over multiple years
+ - Build real 10-asset portfolio and test empirically
+ - Validate √N diversification benefit
+ - **Test**: Historical backtest with 10 assets over multiple years
 
 6. **Correlation Limits**:
-   - What level of correlation breaks diversification?
-   - **Test**: Simulate portfolios with varying correlation (0.0, 0.3, 0.5, 0.7, 0.9)
+ - What level of correlation breaks diversification?
+ - **Test**: Simulate portfolios with varying correlation (0.0, 0.3, 0.5, 0.7, 0.9)
 
 7. **Dynamic Withdrawal**:
-   - Can withdrawals auto-adjust based on mean(bank) signal?
-   - **Test**: Implement adaptive algorithm that modulates rate monthly
+ - Can withdrawals auto-adjust based on mean(bank) signal?
+ - **Test**: Implement adaptive algorithm that modulates rate monthly
 
 8. **Tax Impact**:
-   - How do capital gains taxes affect net withdrawals?
-   - Does tax drag change optimal rate?
-   - **Test**: Model with realistic tax assumptions
+ - How do capital gains taxes affect net withdrawals?
+ - Does tax drag change optimal rate?
+ - **Test**: Model with realistic tax assumptions
 
 ### Long-Term (1-2 Years)
 
 9. **Live Trading Validation**:
-   - Paper trade or small capital live test
-   - Validate theory holds in real-time execution
-   - **Test**: 12-month live paper trading experiment
+ - Paper trade or small capital live test
+ - Validate theory holds in real-time execution
+ - **Test**: 12-month live paper trading experiment
 
 10. **International Markets**:
-    - Does optimal rate differ for non-US markets?
-    - **Test**: Repeat on EFA, EEM, VWO, etc.
+ - Does optimal rate differ for non-US markets?
+ - **Test**: Repeat on EFA, EEM, VWO, etc.
 
 11. **Alternative Algorithms**:
-    - Would different volatility harvesting methods change optimal rate?
-    - **Test**: Bollinger Bands, Keltner Channels, ATR-based strategies
+ - Would different volatility harvesting methods change optimal rate?
+ - **Test**: Bollinger Bands, Keltner Channels, ATR-based strategies
 
 ---
 
@@ -433,15 +433,15 @@ IF mean_bank < -10% of capital for 2 months:
 
 ### Key Findings
 
-✅ **10% Sustainable Withdrawal Rate**: Proven in SPY 2022 bear market (-19.5% return) with mean bank balance of $701 (essentially zero)
+[OK] **10% Sustainable Withdrawal Rate**: Proven in SPY 2022 bear market (-19.5% return) with mean bank balance of $701 (essentially zero)
 
-✅ **2.5× Improvement Over Traditional**: Volatility harvesting enables 10% vs traditional 4% safe withdrawal rate
+[OK] **2.5× Improvement Over Traditional**: Volatility harvesting enables 10% vs traditional 4% safe withdrawal rate
 
-✅ **Market Agnostic**: Works in bull (+246%), moderate (+29%), and bear (-19.5%) markets—alpha from mean reversion, not direction
+[OK] **Market Agnostic**: Works in bull (+246%), moderate (+29%), and bear (-19.5%) markets—alpha from mean reversion, not direction
 
-✅ **Diversification Scales by √N**: With 10 uncorrelated assets, margin usage drops from 30.8% to 9.7% (95% confidence)
+[OK] **Diversification Scales by √N**: With 10 uncorrelated assets, margin usage drops from 30.8% to 9.7% (95% confidence)
 
-✅ **Self-Sustaining**: Portfolio oscillates around zero (no capital depletion required)
+[OK] **Self-Sustaining**: Portfolio oscillates around zero (no capital depletion required)
 
 ### Strategic Implications
 
@@ -491,6 +491,6 @@ Traditional retirement planning assumes:
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: October 2025  
+**Document Version**: 1.0
+**Last Updated**: October 2025
 **Next Review**: After multi-year stability experiments complete

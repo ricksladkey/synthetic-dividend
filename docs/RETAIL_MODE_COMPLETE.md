@@ -1,6 +1,6 @@
 # Realistic Retail Mode - Complete Implementation
 
-**Status**: ✅ Fully implemented and tested (November 2025)
+**Status**: [OK] Fully implemented and tested (November 2025)
 
 This document summarizes the complete implementation of realistic retail trading constraints for the synthetic dividend algorithm, transforming it from an academic exercise with unlimited margin into a practical tool for retail investors.
 
@@ -24,15 +24,15 @@ This document summarizes the complete implementation of realistic retail trading
 ```python
 # Old behavior (unlimited margin)
 run_portfolio_simulation(
-    allocations={"NVDA": 1.0},
-    allow_margin=True,  # sd32 could borrow -2874% margin!
+ allocations={"NVDA": 1.0},
+ allow_margin=True, # sd32 could borrow -2874% margin!
 )
 
 # New behavior (realistic retail)
 run_portfolio_simulation(
-    allocations={"NVDA": 1.0},
-    # allow_margin defaults to False
-    # sd32 now safely prevented from catastrophic margin use
+ allocations={"NVDA": 1.0},
+ # allow_margin defaults to False
+ # sd32 now safely prevented from catastrophic margin use
 )
 ```
 
@@ -55,10 +55,10 @@ run_portfolio_simulation(
 ```python
 # Warren Buffett's 90/10 portfolio
 run_portfolio_simulation(
-    allocations={
-        "SPY": 0.90,   # 90% stocks
-        "CASH": 0.10,  # 10% cash reserve
-    },
+ allocations={
+ "SPY": 0.90, # 90% stocks
+ "CASH": 0.10, # 10% cash reserve
+ },
 )
 # CASH stays in bank, available for buying dips
 ```
@@ -77,10 +77,10 @@ run_portfolio_simulation(
 **How It Works**:
 1. When "CASH" in allocations, automatically fetch BIL price and dividend data
 2. On each BIL dividend date (monthly), calculate interest:
-   ```
-   equivalent_shares = cash_balance / BIL_price
-   interest = BIL_dividend_per_share × equivalent_shares
-   ```
+ ```
+ equivalent_shares = cash_balance / BIL_price
+ interest = BIL_dividend_per_share × equivalent_shares
+ ```
 3. Add interest to bank balance
 4. Record as "INTEREST" transaction (distinct from "DIVIDEND")
 
@@ -91,9 +91,9 @@ BIL price: $91.55
 BIL dividend: $0.375/share (monthly)
 
 Calculation:
-  equivalent_shares = 100,000 / 91.55 = 1,092.30 shares
-  monthly_interest = 0.375 × 1,092.30 = $409.61
-  annual_yield = (409.61 × 12) / 100,000 = 4.92%
+ equivalent_shares = 100,000 / 91.55 = 1,092.30 shares
+ monthly_interest = 0.375 × 1,092.30 = $409.61
+ annual_yield = (409.61 × 12) / 100,000 = 4.92%
 ```
 
 **Benefits**:
@@ -111,12 +111,12 @@ Calculation:
 **File**: `scripts/test_cash_unit.py`
 
 All 6 tests passing:
-- ✅ CASH ticker filtering from data fetching
-- ✅ `allow_margin=False` is default
-- ✅ Cash reserve calculation
-- ✅ Margin check logic (blocks buys when cash insufficient)
-- ✅ Backwards compatibility (old allocations still work)
-- ✅ BIL interest calculation (4-5% APY)
+- [OK] CASH ticker filtering from data fetching
+- [OK] `allow_margin=False` is default
+- [OK] Cash reserve calculation
+- [OK] Margin check logic (blocks buys when cash insufficient)
+- [OK] Backwards compatibility (old allocations still work)
+- [OK] BIL interest calculation (4-5% APY)
 
 ### Integration Tests
 
@@ -136,12 +136,12 @@ Verifies end-to-end:
 
 ```
 ┌──────┬──────────┬──────────┬──────────────────┐
-│ SDN  │ Return   │ Margin   │ Risk             │
+│ SDN │ Return │ Margin │ Risk │
 ├──────┼──────────┼──────────┼──────────────────┤
-│ sd4  │ +180%    │ +12%     │ Low              │
-│ sd8  │ +220%    │ +45%     │ Moderate         │
-│ sd16 │ +185%    │ +342%    │ High (!)         │
-│ sd32 │ +180%    │ -2874%   │ CATASTROPHIC!    │
+│ sd4 │ +180% │ +12% │ Low │
+│ sd8 │ +220% │ +45% │ Moderate │
+│ sd16 │ +185% │ +342% │ High (!) │
+│ sd32 │ +180% │ -2874% │ CATASTROPHIC! │
 └──────┴──────────┴──────────┴──────────────────┘
 ```
 
@@ -155,21 +155,21 @@ Problems:
 
 ```
 ┌──────┬──────────┬──────────┬──────────────────┬─────────────┐
-│ SDN  │ Return   │ Margin   │ Skipped Buys     │ BIL Interest│
+│ SDN │ Return │ Margin │ Skipped Buys │ BIL Interest│
 ├──────┼──────────┼──────────┼──────────────────┼─────────────┤
-│ sd4  │ +185%    │ 0%       │ 0                │ +$4,200     │
-│ sd8  │ +225%    │ 0%       │ 2-5              │ +$4,500     │
-│ sd16 │ +165%    │ 0%       │ 15-20            │ +$3,800     │
-│ sd32 │ +120%    │ 0%       │ 50-80 (!)        │ +$3,200     │
+│ sd4 │ +185% │ 0% │ 0 │ +$4,200 │
+│ sd8 │ +225% │ 0% │ 2-5 │ +$4,500 │
+│ sd16 │ +165% │ 0% │ 15-20 │ +$3,800 │
+│ sd32 │ +120% │ 0% │ 50-80 (!) │ +$3,200 │
 └──────┴──────────┴──────────┴──────────────────┴─────────────┘
 ```
 
 Improvements:
-- ✅ No catastrophic margin use
-- ✅ sd8 remains optimal (gap capture + safety)
-- ✅ sd32's weakness exposed (too many skipped buys)
-- ✅ CASH earns 4-5% instead of 0%
-- ✅ Realistic for retail portfolios
+- [OK] No catastrophic margin use
+- [OK] sd8 remains optimal (gap capture + safety)
+- [OK] sd32's weakness exposed (too many skipped buys)
+- [OK] CASH earns 4-5% instead of 0%
+- [OK] Realistic for retail portfolios
 
 **Key Insight**: The optimal sdN doesn't change much (still sd8), but the RISK is dramatically reduced!
 
@@ -185,15 +185,15 @@ from datetime import date
 
 # 90/10 portfolio with synthetic dividends
 result = run_portfolio_simulation(
-    allocations={
-        "SPY": 0.90,
-        "CASH": 0.10,
-    },
-    initial_investment=1_000_000,
-    # allow_margin defaults to False (safe!)
-    start_date=date(2023, 1, 1),
-    end_date=date(2023, 12, 31),
-    portfolio_algo="per-asset:sd8",
+ allocations={
+ "SPY": 0.90,
+ "CASH": 0.10,
+ },
+ initial_investment=1_000_000,
+ # allow_margin defaults to False (safe!)
+ start_date=date(2023, 1, 1),
+ end_date=date(2023, 12, 31),
+ portfolio_algo="per-asset:sd8",
 )
 
 txns, stats = result
@@ -208,16 +208,16 @@ print(f"Skipped buys: {stats.get('skipped_buys', 0)}")
 ```python
 # Diversified portfolio
 result = run_portfolio_simulation(
-    allocations={
-        "NVDA": 0.40,   # 40% growth tech
-        "GLD": 0.30,    # 30% gold
-        "SPY": 0.20,    # 20% broad market
-        "CASH": 0.10,   # 10% safety reserve
-    },
-    initial_investment=1_000_000,
-    start_date=date(2023, 1, 1),
-    end_date=date(2023, 12, 31),
-    portfolio_algo="per-asset:sd8",
+ allocations={
+ "NVDA": 0.40, # 40% growth tech
+ "GLD": 0.30, # 30% gold
+ "SPY": 0.20, # 20% broad market
+ "CASH": 0.10, # 10% safety reserve
+ },
+ initial_investment=1_000_000,
+ start_date=date(2023, 1, 1),
+ end_date=date(2023, 12, 31),
+ portfolio_algo="per-asset:sd8",
 )
 
 # Assets compete for finite cash
@@ -230,14 +230,14 @@ result = run_portfolio_simulation(
 ```python
 # Aggressive/defensive barbell
 result = run_portfolio_simulation(
-    allocations={
-        "BTC-USD": 0.50,  # 50% Bitcoin (high risk)
-        "CASH": 0.50,     # 50% cash (zero risk)
-    },
-    initial_investment=1_000_000,
-    start_date=date(2023, 1, 1),
-    end_date=date(2023, 12, 31),
-    portfolio_algo="per-asset:sd8",
+ allocations={
+ "BTC-USD": 0.50, # 50% Bitcoin (high risk)
+ "CASH": 0.50, # 50% cash (zero risk)
+ },
+ initial_investment=1_000_000,
+ start_date=date(2023, 1, 1),
+ end_date=date(2023, 12, 31),
+ portfolio_algo="per-asset:sd8",
 )
 
 # CASH grows to 70% in BTC uptrend (natural rebalancing)
@@ -275,16 +275,16 @@ This is **exactly** how professional portfolio managers think about cash allocat
 
 ## Comparison to Academic Model
 
-| Feature                          | Academic Model         | Retail Mode            |
+| Feature | Academic Model | Retail Mode |
 |----------------------------------|------------------------|------------------------|
-| **Margin allowed**               | Unlimited              | No (default)           |
-| **Cash earning**                 | 0%                     | 4-5% (BIL)             |
-| **sd32 margin use**              | -2874% (!)             | Blocked                |
-| **Skipped buys**                 | Never                  | When cash insufficient |
-| **Catastrophic loss possible**   | Yes                    | No                     |
-| **Realistic for retail**         | No                     | Yes                    |
-| **Optimal sdN**                  | sd8-sd16               | sd8 (more confident)   |
-| **Mental model**                 | Complex                | Simple                 |
+| **Margin allowed** | Unlimited | No (default) |
+| **Cash earning** | 0% | 4-5% (BIL) |
+| **sd32 margin use** | -2874% (!) | Blocked |
+| **Skipped buys** | Never | When cash insufficient |
+| **Catastrophic loss possible** | Yes | No |
+| **Realistic for retail** | No | Yes |
+| **Optimal sdN** | sd8-sd16 | sd8 (more confident) |
+| **Mental model** | Complex | Simple |
 
 ---
 
@@ -292,54 +292,54 @@ This is **exactly** how professional portfolio managers think about cash allocat
 
 ### Core Implementation
 - `src/models/simulation.py` (modified)
-  - Line 36: Changed allow_margin default to False
-  - Lines 119-134: Filter CASH from data fetching
-  - Lines 131-186: Fetch BIL data for CASH interest
-  - Line 337: Store bil_price_data in state
-  - Lines 354-359: Skip CASH in initial purchase
-  - Lines 979-1019: Calculate BIL interest on CASH
+ - Line 36: Changed allow_margin default to False
+ - Lines 119-134: Filter CASH from data fetching
+ - Lines 131-186: Fetch BIL data for CASH interest
+ - Line 337: Store bil_price_data in state
+ - Lines 354-359: Skip CASH in initial purchase
+ - Lines 979-1019: Calculate BIL interest on CASH
 
 ### Testing
 - `scripts/test_cash_unit.py` (created)
-  - 6 unit tests (all passing)
+ - 6 unit tests (all passing)
 - `scripts/test_bil_interest.py` (created)
-  - Integration test for BIL interest
+ - Integration test for BIL interest
 - `scripts/test_cash_no_margin.py` (created)
-  - Integration test scaffold
+ - Integration test scaffold
 
 ### Analysis Tools
 - `scripts/volatility_alpha_curves_retail.py` (created)
-  - Compares sdN parameters under retail constraints
-  - Tracks skipped buys, BIL interest, margin use
+ - Compares sdN parameters under retail constraints
+ - Tracks skipped buys, BIL interest, margin use
 
 ### Documentation
 - `docs/no_margin_cash_barbell.md` (modified)
-  - Complete implementation guide
-  - Usage examples
-  - Barbell strategy explanation
+ - Complete implementation guide
+ - Usage examples
+ - Barbell strategy explanation
 - `docs/RETAIL_MODE_COMPLETE.md` (this file)
-  - Summary of all changes
-  - Expected impact analysis
-  - Comparison tables
+ - Summary of all changes
+ - Expected impact analysis
+ - Comparison tables
 
 ---
 
 ## Commits
 
 1. **"Implement realistic retail constraints: no-margin + CASH ticker support"** (commit 1413c23)
-   - Core infrastructure
-   - CASH ticker support
-   - Testing framework
+ - Core infrastructure
+ - CASH ticker support
+ - Testing framework
 
 2. **"Add BIL interest on CASH balances (sweep account feature)"** (commit 8e33033)
-   - BIL data fetching
-   - Interest calculation
-   - Transaction recording
+ - BIL data fetching
+ - Interest calculation
+ - Transaction recording
 
 3. **"Add retail-constrained volatility alpha curves script"** (commit dbbffa7)
-   - Analysis tool
-   - Expected results documentation
-   - Comparison framework
+ - Analysis tool
+ - Expected results documentation
+ - Comparison framework
 
 ---
 
@@ -348,29 +348,29 @@ This is **exactly** how professional portfolio managers think about cash allocat
 While the core implementation is complete, potential enhancements include:
 
 1. **Dynamic cash rebalancing**
-   - Automatically adjust CASH % based on market conditions
-   - Increase reserves in high volatility
-   - Decrease reserves in strong trends
+ - Automatically adjust CASH % based on market conditions
+ - Increase reserves in high volatility
+ - Decrease reserves in strong trends
 
 2. **Multiple cash tiers**
-   - CASH1: BIL (ultra-short, ~4-5%)
-   - CASH2: SHY (1-3 year Treasuries, ~4-6%)
-   - CASH3: TLT (long-term Treasuries, ~4-8%)
+ - CASH1: BIL (ultra-short, ~4-5%)
+ - CASH2: SHY (1-3 year Treasuries, ~4-6%)
+ - CASH3: TLT (long-term Treasuries, ~4-8%)
 
 3. **Tax-aware cash management**
-   - Track taxable vs. tax-deferred accounts
-   - Optimize interest income location
-   - Consider municipal bonds for high brackets
+ - Track taxable vs. tax-deferred accounts
+ - Optimize interest income location
+ - Consider municipal bonds for high brackets
 
 4. **Margin optimization mode**
-   - Allow limited margin (e.g., max 20%)
-   - Risk-adjusted optimal leverage
-   - Stress testing under margin calls
+ - Allow limited margin (e.g., max 20%)
+ - Risk-adjusted optimal leverage
+ - Stress testing under margin calls
 
 5. **Multi-currency cash**
-   - USD, EUR, JPY cash pools
-   - Forex yield arbitrage
-   - Currency hedge modeling
+ - USD, EUR, JPY cash pools
+ - Forex yield arbitrage
+ - Currency hedge modeling
 
 ---
 
@@ -379,18 +379,18 @@ While the core implementation is complete, potential enhancements include:
 The realistic retail mode transforms the synthetic dividend algorithm from an academic exercise into a **practical tool for retail investors**.
 
 **Key Achievements**:
-- ✅ Prevents catastrophic margin abuse (goodbye sd32 -2874%!)
-- ✅ Cash earns realistic yields (4-5% BIL, not 0%)
-- ✅ Barbell strategy emerges naturally
-- ✅ sd8 confirmed as optimal (with higher confidence)
-- ✅ Fully backwards compatible
-- ✅ Simple mental model for users
+- [OK] Prevents catastrophic margin abuse (goodbye sd32 -2874%!)
+- [OK] Cash earns realistic yields (4-5% BIL, not 0%)
+- [OK] Barbell strategy emerges naturally
+- [OK] sd8 confirmed as optimal (with higher confidence)
+- [OK] Fully backwards compatible
+- [OK] Simple mental model for users
 
 **Bottom Line**:
-Warren Buffett's 90/10 portfolio recommendation (90% stocks, 10% short-term bonds) is now fully implemented and realistic for retail use! 🎯
+Warren Buffett's 90/10 portfolio recommendation (90% stocks, 10% short-term bonds) is now fully implemented and realistic for retail use!
 
 ---
 
 **Implementation Date**: November 2025
 **Branch**: `claude/research-continuous-model-011CUqRKzBbBy3Vu6X1PKq54`
-**Status**: ✅ Complete and tested
+**Status**: [OK] Complete and tested

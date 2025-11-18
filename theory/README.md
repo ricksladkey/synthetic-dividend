@@ -18,7 +18,7 @@ The Synthetic Dividend Algorithm transforms any volatile asset into a predictabl
 
 ---
 
-## 📚 Primary Reading Path (Recommended for Learning)
+## Primary Reading Path (Recommended for Learning)
 
 The numbered files (01-07) form a **structured learning path** covering all core concepts:
 
@@ -121,7 +121,7 @@ These files provide comprehensive coverage of specific topics. Read after comple
 **[CASH_AS_HOLDING.md](CASH_AS_HOLDING.md)** - Cash Tracking Model
 - Account = Portfolio + Debt framework
 - Solution to margin/cash tracking
-- Implementation complete ✅
+- Implementation complete [OK]
 
 **[API_SIMPLIFICATION.md](API_SIMPLIFICATION.md)** - Code Analysis
 - Data fetcher complexity analysis
@@ -179,7 +179,7 @@ These files provide comprehensive coverage of specific topics. Read after comple
 
 **[RISK_FREE_GAINS_FEATURE.md](RISK_FREE_GAINS_FEATURE.md)** - Cash Returns
 - Implementation details
-- Feature complete ✅
+- Feature complete [OK]
 - Implementation log
 
 ### Meta & Process (Development Documentation)
@@ -228,10 +228,10 @@ These files provide comprehensive coverage of specific topics. Read after comple
 
 | Variant | Buybacks | Sell Triggers | Risk Profile | Best For |
 |---------|----------|---------------|--------------|----------|
-| Buy-and-Hold | ❌ | Never | Lowest | Traditional investors |
-| ATH-Only | ❌ | New ATHs only | Low | Conservative profit-taking |
-| Standard SD | ✅ | ATHs + brackets | Medium | Balanced growth + income |
-| **ATH-Sell** | ✅ | New ATHs only | Medium-High | Maximum compounding |
+| Buy-and-Hold | [FAIL] | Never | Lowest | Traditional investors |
+| ATH-Only | [FAIL] | New ATHs only | Low | Conservative profit-taking |
+| Standard SD | [OK] | ATHs + brackets | Medium | Balanced growth + income |
+| **ATH-Sell** | [OK] | New ATHs only | Medium-High | Maximum compounding |
 
 ### Core Mathematical Insights
 
@@ -275,10 +275,10 @@ cat 0[1-7]-*.md VOLATILITY_ALPHA_THESIS.md > complete_context.md
 **Last Updated**: October 31, 2025
 
 **Recent Changes**:
-- ✅ Re-validated empirical data (Oct 31) after realistic execution fixes
-- ✅ Added comprehensive methodology appendix to VOLATILITY_ALPHA_THESIS.md
-- ✅ Updated all claims with corrected numbers (PLTR 198% alpha, NVDA 77% alpha)
-- ✅ Consolidated README to clear primary path vs reference library structure
+- [OK] Re-validated empirical data (Oct 31) after realistic execution fixes
+- [OK] Added comprehensive methodology appendix to VOLATILITY_ALPHA_THESIS.md
+- [OK] Updated all claims with corrected numbers (PLTR 198% alpha, NVDA 77% alpha)
+- [OK] Consolidated README to clear primary path vs reference library structure
 
 **Structure**:
 - **Primary Path** (01-07): Structured learning guide (~2,500 lines)

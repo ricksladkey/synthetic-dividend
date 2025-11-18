@@ -1,7 +1,7 @@
 # Experiment 001: NVDA Bull Market Withdrawal Sustainability
 
-**Date**: 2025-01-02  
-**Researcher**: Synthetic Dividend Research Team  
+**Date**: 2025-01-02
+**Researcher**: Synthetic Dividend Research Team
 **Status**: Completed
 
 ---
@@ -54,11 +54,11 @@
 ### Detailed Findings
 
 **1. Buy-and-Hold (Baseline)**
-- ✓ Highest unrealized gains: $1,342,900
-- ✗ Generated NEGATIVE cash (initial purchase only)
-- ✗ Zero withdrawal coverage
-- ✗ Requires selling ~370 shares/year for $50K expenses
-- ✗ Forced selling compounds negatively over time
+- [OK] Highest unrealized gains: $1,342,900
+- [FAIL] Generated NEGATIVE cash (initial purchase only)
+- [FAIL] Zero withdrawal coverage
+- [FAIL] Requires selling ~370 shares/year for $50K expenses
+- [FAIL] Forced selling compounds negatively over time
 
 **2. SD8 Full (Buybacks Enabled)**
 - Final value: $610,999 (45% of buy-and-hold)
@@ -86,7 +86,7 @@
 
 ## Evaluation: Do Results Make Sense?
 
-### ✅ Expected Behaviors Confirmed
+### [OK] Expected Behaviors Confirmed
 
 1. **Buy-and-Hold Wins on Paper**: In strong bull markets, passive strategies maximize unrealized gains. This is expected and correct.
 
@@ -96,14 +96,14 @@
 
 4. **Buyback Premium**: SD8 Full outperformed ATH-Only by 4.53%/year, confirming that embracing downside volatility (buying dips) adds value even in bull markets.
 
-### ⚠️ Surprising Findings
+### WARNING: Surprising Findings
 
 1. **Withdrawal Coverage Not 100%**: Expected higher coverage in such a strong bull market. This reveals that even with 2139% stock gains, the algorithm's profit-sharing (50%) and rebalancing strategy can't fully fund $50K/year from a $60K initial position.
 
 2. **Low Positive Cash Years**: Only 3 out of 5-6 years had positive cash flow. This suggests:
-   - Early years: Net buyer (building position during dips)
-   - Later years: Net seller (taking profits at highs)
-   - Pattern is lumpy, not smooth
+ - Early years: Net buyer (building position during dips)
+ - Later years: Net seller (taking profits at highs)
+ - Pattern is lumpy, not smooth
 
 3. **Algorithm Internal Alpha**: The 31.33% internal volatility alpha is interesting - this is separate from the comparison vs buy-and-hold. It represents pure trading profit from the buy-low-sell-high cycles.
 
@@ -157,10 +157,10 @@
 2. **Portfolio optimization**: What mix of buy-and-hold + SD8 Full + SD8 ATH maximizes cash flow while preserving growth?
 
 3. **Market regime dependency**: How do results vary across:
-   - Strong bull (NVDA 2020-2025) ✓ Completed
-   - Choppy sideways (SPY 2015-2020)
-   - Bear market recovery (2008-2010)
-   - High volatility (tech stocks 2020-2023)
+ - Strong bull (NVDA 2020-2025) [OK] Completed
+ - Choppy sideways (SPY 2015-2020)
+ - Bear market recovery (2008-2010)
+ - High volatility (tech stocks 2020-2023)
 
 4. **Time horizon effects**: How do 3-year, 5-year, and 10-year horizons affect cash generation patterns?
 
@@ -176,9 +176,9 @@
 
 ## Experiment Artifacts
 
-**Code**: `src/research/strategy_comparison.py`  
-**Batch File**: `src/research/compare-strategies.bat`  
-**Raw Data**: `output/strategy_comparison.csv`  
+**Code**: `src/research/strategy_comparison.py`
+**Batch File**: `src/research/compare-strategies.bat`
+**Raw Data**: `output/strategy_comparison.csv`
 **Command**: `python -m src.research.strategy_comparison NVDA 2020-01-01 2025-01-01`
 
 **Git Commit**: [To be added after check-in]
@@ -191,34 +191,32 @@
 STRATEGY COMPARISON SUMMARY
 ================================================================================
 
-Strategy                       Ann. Return  Txns/Yr    Final Value     Final Shares
+Strategy Ann. Return Txns/Yr Final Value Final Shares
 ------------------------------ ------------ ---------- --------------- ------------
-Buy and Hold (Baseline)        86.29%       0.0        $1,342,900      10,000
-SD8 Full (Buybacks Enabled)    59.13%       36.4       $610,999        2,493
-SD8 ATH-Only (LTCG Only)       54.60%       7.2        $528,952        2,140
-
+Buy and Hold (Baseline) 86.29% 0.0 $1,342,900 10,000
+SD8 Full (Buybacks Enabled) 59.13% 36.4 $610,999 2,493
+SD8 ATH-Only (LTCG Only) 54.60% 7.2 $528,952 2,140
 
 CASH FLOW ANALYSIS (For Withdrawal Planning)
 ================================================================================
 
-Strategy                       Avg Yearly      Total Generated    Positive Years
+Strategy Avg Yearly Total Generated Positive Years
 ------------------------------ --------------- ------------------ ---------------
-Buy and Hold (Baseline)        $-9,996         $-59,978           0/1
-SD8 Full (Buybacks Enabled)    $36,039         $216,236           3/5
-SD8 ATH-Only (LTCG Only)       $30,266         $181,594           3/4
-
+Buy and Hold (Baseline) $-9,996 $-59,978 0/1
+SD8 Full (Buybacks Enabled) $36,039 $216,236 3/5
+SD8 ATH-Only (LTCG Only) $30,266 $181,594 3/4
 
 WITHDRAWAL SUSTAINABILITY (Assuming $50K/year expenses)
 ================================================================================
 
-Strategy                       Cash Generated     Needed          Coverage     Surplus/Deficit
+Strategy Cash Generated Needed Coverage Surplus/Deficit
 ------------------------------ ------------------ --------------- ------------ ------------------
-Buy and Hold (Baseline)        $-59,978           $249,829        -24.0%       -$309,806
-SD8 Full (Buybacks Enabled)    $216,236           $249,829        86.6%        -$33,593
-SD8 ATH-Only (LTCG Only)       $181,594           $249,829        72.7%        -$68,235
+Buy and Hold (Baseline) $-59,978 $249,829 -24.0% -$309,806
+SD8 Full (Buybacks Enabled) $216,236 $249,829 86.6% -$33,593
+SD8 ATH-Only (LTCG Only) $181,594 $249,829 72.7% -$68,235
 ```
 
 ---
 
-**Document Version**: 1.0  
+**Document Version**: 1.0
 **Last Updated**: 2025-01-02

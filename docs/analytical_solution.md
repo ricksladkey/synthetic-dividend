@@ -20,8 +20,8 @@ We derive closed-form expressions for:
 ### Dynamics
 
 ```
-dS = μS dt + σS dW     (price process)
-dH = dN_buy - dN_sell  (holdings change)
+dS = μS dt + σS dW (price process)
+dH = dN_buy - dN_sell (holdings change)
 dB = dN_buy - dN_unwind (stack accumulation)
 dC = -S dN_buy + S dN_sell (cash flow)
 ```
@@ -42,7 +42,7 @@ dY = (μ - σ²/2) dt + σ dW
 The rate of crossing equally-spaced levels Δ = log(1+δ) ≈ δ is given by **local time theory**:
 
 ```
-λ_total = |σ| / (√(2π) Δ)     (crossings per unit time)
+λ_total = |σ| / (√(2π) Δ) (crossings per unit time)
 ```
 
 ### Directional Bias from Drift
@@ -85,8 +85,8 @@ Define Sharpe ratio: SR = μ/σ
 
 ```
 dB/dt = λ_down - λ_up
-      = λ_total · [Φ(-μ̃/σ) - Φ(μ̃/σ)]
-      = -λ_total · tanh(μ̃ · √(π/2) / σ)
+ = λ_total · [Φ(-μ̃/σ) - Φ(μ̃/σ)]
+ = -λ_total · tanh(μ̃ · √(π/2) / σ)
 ```
 
 **Simplification** for small δ:
@@ -99,8 +99,8 @@ dB/dt ≈ -(σ/δ) · tanh(μ · √(π/2) / σ)
 Stack is stable (dB/dt ≈ 0) when:
 ```
 |μ̃| << σ
-⟹  |μ| << σ
-⟹  |SR| << 1
+⟹ |μ| << σ
+⟹ |SR| << 1
 ```
 
 **For NVDA 2023**: SR = 3.75 >> 1
@@ -115,7 +115,7 @@ B(T) = B(0) - (σT/δ) · tanh(μ · √(π/2) / σ)
 
 For strong uptrend (μ >> σ):
 ```
-B(T) ≈ -(σT/δ)     (grows as 1/δ!)
+B(T) ≈ -(σT/δ) (grows as 1/δ!)
 ```
 
 **This explains the sd32 catastrophe!**
@@ -140,7 +140,7 @@ Fractional return:
 
 Number of **complete cycles**:
 ```
-N_cycles = min(N_buy, N_sell) ≈ λ_up · T     (limited by sells)
+N_cycles = min(N_buy, N_sell) ≈ λ_up · T (limited by sells)
 ```
 
 For strong uptrend:
@@ -152,8 +152,8 @@ N_cycles ≈ (σ/δ) · Φ(μ/σ) · T
 
 ```
 Alpha_realized = N_cycles · α_cycle
-               = (σ/δ) · Φ(μ/σ) · T · δ
-               = σ · Φ(μ/σ) · T
+ = (σ/δ) · Φ(μ/σ) · T · δ
+ = σ · Φ(μ/σ) · T
 ```
 
 **Critical insight:** Realized alpha is **independent of δ** in the continuous limit!
@@ -233,7 +233,7 @@ Parameters:
 
 ```
 δ* = (0.4)²/(2 × 1.5) = 0.053 = 5.3%
-δ_min = (0.4 × 1)/(1.0) = 0.4 = 40%  (if tanh ≈ 1)
+δ_min = (0.4 × 1)/(1.0) = 0.4 = 40% (if tanh ≈ 1)
 ```
 
 ⟹ δ_opt ≈ **40%** (very wide!)
@@ -263,9 +263,9 @@ lim_{δ→0} Alpha(δ) = σ · Φ(μ/σ) · T
 **For NVDA 2023**:
 ```
 Alpha_∞ = 0.4 · Φ(1.5/0.4) · 1
-        = 0.4 · Φ(3.75) · 1
-        ≈ 0.4 · 0.9999 · 1
-        ≈ 40%
+ = 0.4 · Φ(3.75) · 1
+ ≈ 0.4 · 0.9999 · 1
+ ≈ 40%
 ```
 
 **But:** This assumes infinite liquidity to unwind stack!
@@ -289,8 +289,8 @@ Negative bankable alpha! The stack costs more in margin than the trading gains.
 ### Corrected Prediction
 
 ```
-Alpha_bankable,∞ = min(σ · Φ(μ/σ) · T, 0)     if |μ/σ| > 1
-                 = σ · T / 2                   if |μ/σ| << 1
+Alpha_bankable,∞ = min(σ · Φ(μ/σ) · T, 0) if |μ/σ| > 1
+ = σ · T / 2 if |μ/σ| << 1
 ```
 
 Strong trends **kill bankable alpha** despite high transaction counts.
@@ -396,7 +396,7 @@ Would eliminate quantization completely. Algorithm modification:
 shares = int(dollar_amount / price)
 
 # Fractional:
-shares = dollar_amount / price  # Keep as float
+shares = dollar_amount / price # Keep as float
 ```
 
 Benefits:
@@ -416,10 +416,10 @@ Drawbacks:
 
 | SDN | Predicted α | Actual α | Stack Predicted | Stack Actual |
 |-----|-------------|----------|-----------------|--------------|
-| sd4 | 0-2% | 0% | Stable | 0 shares ✓ |
-| sd8 | 2-5% | 1.98% | Stable | 4 shares ✓ |
-| sd16 | 15-20% | 18.6% | Marginal | 116 shares ✓ |
-| sd32 | 30-40% | 32.8% | Catastrophic | 11230 shares ✓ |
+| sd4 | 0-2% | 0% | Stable | 0 shares [OK] |
+| sd8 | 2-5% | 1.98% | Stable | 4 shares [OK] |
+| sd16 | 15-20% | 18.6% | Marginal | 116 shares [OK] |
+| sd32 | 30-40% | 32.8% | Catastrophic | 11230 shares [OK] |
 
 **Excellent agreement!** The continuous model captures all key behaviors.
 

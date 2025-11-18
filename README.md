@@ -10,48 +10,48 @@
 
 **A rules-based investment strategy that systematically generates cash flow from growth stocks while preserving compound growth potential.**
 
-[🌐 Website](https://rick.sladkey.net/synthetic-dividend/) • [🚀 Quick Start](#-quick-start-guide) • [📊 Research Findings](#-research-findings) • [📖 Examples](docs/EXAMPLES.md) • [📖 Documentation](#-documentation) • [🤝 Contributing](#-contributing)
+[🌐 Website](https://rick.sladkey.net/synthetic-dividend/) • [ Quick Start](#-quick-start-guide) • [ Research Findings](#-research-findings) • [📖 Examples](docs/EXAMPLES.md) • [📖 Documentation](#-documentation) • [🤝 Contributing](#-contributing)
 
 ---
 
 </div>
 
-## 💡 The Innovation
+## TIP: The Innovation
 
 The Synthetic Dividend Algorithm solves a fundamental problem in portfolio management: **How do you generate cash flow from growth stocks without sacrificing long-term returns?**
 
 Traditional approaches fail:
 - 🔴 **Dividend stocks** - Low yields (1-2%), slower growth
-- 🔴 **Forced selling** - Sequence-of-returns risk, tax inefficiency  
+- 🔴 **Forced selling** - Sequence-of-returns risk, tax inefficiency
 - 🔴 **Bonds/Fixed income** - Sacrifice growth potential
 
 **Our solution**:
-- ✅ **Strategic profit-taking** - Only sell at all-time highs (never weakness)
-- ✅ **Volatility harvesting** - Buybacks during dips amplify returns
-- ✅ **Income smoothing** - Convert irregular volatility profits into regular income
-- ✅ **Sequence-of-returns protection** - Bank buffer avoids forced sales in bear markets
-- ✅ **Configurable distributions** - Flexible profit-sharing ratios (0-100%+)
-- ✅ **Rules-based execution** - No market timing, just mathematics
-- ✅ **NO derivatives** - Direct asset ownership only (no options, futures, or leverage)
+- [OK] **Strategic profit-taking** - Only sell at all-time highs (never weakness)
+- [OK] **Volatility harvesting** - Buybacks during dips amplify returns
+- [OK] **Income smoothing** - Convert irregular volatility profits into regular income
+- [OK] **Sequence-of-returns protection** - Bank buffer avoids forced sales in bear markets
+- [OK] **Configurable distributions** - Flexible profit-sharing ratios (0-100%+)
+- [OK] **Rules-based execution** - No market timing, just mathematics
+- [OK] **NO derivatives** - Direct asset ownership only (no options, futures, or leverage)
 
 > 💎 **Key Insight**: Irregular payments (from market volatility) → Regular income (for lifestyle needs) through temporal buffering.
 >
-> 🎯 **Not Options**: We extract volatility returns using only the spot asset + limit orders. No derivatives, no decay, no counterparty risk.
+> **Not Options**: We extract volatility returns using only the spot asset + limit orders. No derivatives, no decay, no counterparty risk.
 
 ## 🔬 How It Works
 
 **The Algorithm in 3 Steps:**
 
-1. **🎯 Set Rebalancing Threshold** - Choose trigger (e.g., 9.05% = 8th root of 2)
-2. **💰 Configure Profit Sharing** - Decide cash vs. growth (e.g., 50% = balanced)
-3. **⚙️ Let Mathematics Work** - Automatic execution at all-time highs + buybacks
+1. ** Set Rebalancing Threshold** - Choose trigger (e.g., 9.05% = 8th root of 2)
+2. ** Configure Profit Sharing** - Decide cash vs. growth (e.g., 50% = balanced)
+3. ** Let Mathematics Work** - Automatic execution at all-time highs + buybacks
 
 **Example**: With 9.05% threshold and 50% profit sharing:
 - Price rises 9.05% to new ATH → Sell 50% of the profit
 - Price falls 8.3% from last transaction → Buy back shares
 - Net result: Cash flow + increased share count from volatility
 
-## 📊 Research Findings
+## Research Findings
 
 ### Market Regime Framework (January 2025)
 
@@ -61,7 +61,7 @@ Traditional approaches fail:
 |--------|---------|--------------|-------------|-------------------|-----------------|
 | **Extreme Bull** | NVDA 2020-25 | +2139% | 86% | -27.16% alpha | 6.6% of position |
 | **Moderate Bull** | SPY 2020-25 | +81% | 12.5% | **-0.66% alpha** | **36-38% of position** ⭐ |
-| **Choppy/Sideways** | SPY 2015-19 | +21% | 5% | **+0.23% alpha** ✅ | 10-19% of position |
+| **Choppy/Sideways** | SPY 2015-19 | +21% | 5% | **+0.23% alpha** [OK] | 10-19% of position |
 
 **Key Insight**: Moderate bull markets (SPY 2020-2025) represent the optimal environment for SD8, sacrificing only 0.66-1.27% annualized returns while generating nearly 5x the cash needed for $50K/year withdrawals.
 
@@ -87,16 +87,16 @@ Total alpha ≈ buy_count × (trigger%)² / 2
 
 **2025 Comprehensive Results** (6 assets, multiple timeframes):
 ```
-HIGH VOLATILITY:     Average +153.5% alpha over 3 years
-  PLTR (68% vol):    +198% alpha (explosive growth)
-  MSTR (90% vol):    +109% alpha (extreme volatility)
+HIGH VOLATILITY: Average +153.5% alpha over 3 years
+ PLTR (68% vol): +198% alpha (explosive growth)
+ MSTR (90% vol): +109% alpha (extreme volatility)
 
 MODERATE VOLATILITY: Average +5.17% alpha
-  NVDA (48% vol):    +3.34% alpha (184% vs 181% return)
-  SPY (24% vol):     +0.67% alpha (51% vs 50% return)
+ NVDA (48% vol): +3.34% alpha (184% vs 181% return)
+ SPY (24% vol): +0.67% alpha (51% vs 50% return)
 
-LOW VOLATILITY:      Average +1.1% alpha
-  GLD (20% vol):     +0.42% alpha (45% vs 45% return)
+LOW VOLATILITY: Average +1.1% alpha
+ GLD (20% vol): +0.42% alpha (45% vs 45% return)
 ```
 
 ### Tax Efficiency Insights
@@ -109,8 +109,8 @@ LOW VOLATILITY:      Average +1.1% alpha
 
 **SD8 Full may outperform in tax-deferred accounts** due to buyback premium (0.61-4.53%/year observed).
 
-📄 **[Read the complete market regime framework →](experiments/EXPERIMENTS_SUMMARY.md)**  
-📄 **[Read the optimal withdrawal rate discovery →](experiments/EXPERIMENT_004_OPTIMAL_WITHDRAWAL_RATE.md)**  
+📄 **[Read the complete market regime framework →](experiments/EXPERIMENTS_SUMMARY.md)**
+📄 **[Read the optimal withdrawal rate discovery →](experiments/EXPERIMENT_004_OPTIMAL_WITHDRAWAL_RATE.md)**
 📄 **[Read the volatility alpha thesis →](theory/VOLATILITY_ALPHA_THESIS.md)**
 
 ### Risk-Free Gains Feature (October 2025)
@@ -133,39 +133,39 @@ Cash reserves aren't dead weight - they earn market returns while buffering with
 
 📄 **[Read the feature documentation →](theory/RISK_FREE_GAINS_FEATURE.md)**
 
-## 🚀 Key Features
+## Key Features
 
 <table>
 <tr>
 <td width="50%">
 
-### 🎯 Core Algorithm
+### Core Algorithm
 - ⚡ **Automated rebalancing** via exponential thresholds (2^(1/N) scaling)
 - 💸 **Flexible profit sharing** (-100% to >100% for any strategy)
-- 📚 **FIFO buyback stack** for tax-efficient cost basis tracking
-- 💰 **Bank balance tracking** for cash flow analysis
+- **FIFO buyback stack** for tax-efficient cost basis tracking
+- **Bank balance tracking** for cash flow analysis
 - 💵 **Real dividend/interest income** (AAPL, BIL, etc.) credited to bank
 - 💸 **Cash interest tracking** (configurable APY for money market sweeps accounts)
 - 🏦 **Dual bank modes** (simple: allow margin, strict: never negative)
 - � **Withdrawal policy** (4% rule with CPI adjustment, orthogonal to strategy)
-- 📊 **Financial adjustments** using real market benchmarks (VOO/BIL)
+- **Financial adjustments** using real market benchmarks (VOO/BIL)
 
 </td>
 <td width="50%">
 
 ### 🔬 Research Tools
-- 📈 **Historical backtesting** with yfinance market data
+- **Historical backtesting** with yfinance market data
 - 📥 **Dividend/interest tracking** (cached locally for fast access)
 - 🔄 **Batch comparison** across multiple parameters
 - 📉 **Performance metrics** (Sharpe, drawdown, alpha, coverage ratio)
-- 🎨 **Visualization** with matplotlib charts
-- ✅ **48-test suite** covering edge cases, margin modes, withdrawals, dividends
+- **Visualization** with matplotlib charts
+- [OK] **48-test suite** covering edge cases, margin modes, withdrawals, dividends
 
 </td>
 </tr>
 </table>
 
-### 💻 Command-Line Interface
+### Command-Line Interface
 
 ```bash
 # Recommended: Volatility Alpha Analyzer (auto-suggests SD parameter)
@@ -182,7 +182,7 @@ python -m src.research.optimal_rebalancing --comprehensive --output results.csv
 python examples/demo_dividends.py
 ```
 
-**💡 New Feature**: The **Volatility Alpha Analyzer** automatically:
+**TIP: New Feature**: The **Volatility Alpha Analyzer** automatically:
 1. Calculates historical volatility
 2. Suggests optimal SD parameter (e.g., SD16 for low-vol GLD, SD6 for high-vol NVDA)
 3. Compares full strategy vs ATH-only
@@ -190,73 +190,73 @@ python examples/demo_dividends.py
 
 See [**EXAMPLES.md**](docs/EXAMPLES.md) for comprehensive usage guide!
 
-## 🎯 Live Example: NVDA Bull Run (Oct 2024 - Oct 2025)
+## Live Example: NVDA Bull Run (Oct 2024 - Oct 2025)
 
 | Strategy | Total Return | Max Drawdown | Transactions | Cash Generated |
 |----------|--------------|--------------|--------------|----------------|
 | 💤 Buy-and-Hold | 25.55% | -27.50% | 0 | $0 |
-| 💰 **SD 7.5,50** | **28.52%** ⬆️ | -25.84% ✅ | 67 | $23.2K |
-| 💸 SD 7.5,100 | 30.06% ⬆️ | -23.72% ✅ | 67 | $50.1K |
-| 🎯 SD 25,50 | 28.33% ⬆️ | -27.03% ✅ | 23 | $18.8K |
+| **SD 7.5,50** | **28.52%** ⬆️ | -25.84% [OK] | 67 | $23.2K |
+| 💸 SD 7.5,100 | 30.06% ⬆️ | -23.72% [OK] | 67 | $50.1K |
+| SD 25,50 | 28.33% ⬆️ | -27.03% [OK] | 23 | $18.8K |
 
 **Key Takeaways**:
-- ✅ **Outperforms buy-and-hold** by 2.97% while generating $23K cash
-- ✅ **Reduced drawdown** from -27.5% to -25.84% (smoother ride)
-- ✅ **Systematic distributions** without sacrificing growth
+- [OK] **Outperforms buy-and-hold** by 2.97% while generating $23K cash
+- [OK] **Reduced drawdown** from -27.5% to -25.84% (smoother ride)
+- [OK] **Systematic distributions** without sacrificing growth
 - ⚡ **67 transactions** automated by rules, zero emotional decisions
 
 ## 🏗️ Project Structure
 
 ```
 synthetic-dividend/
-├── 📊 src/
-│   ├── main.py                         # GUI entry point
-│   │
-│   ├── 📡 data/
-│   │   └── fetcher.py                  # Yahoo Finance integration
-│   │
-│   ├── 🧮 models/
-│   │   ├── stock.py                    # Position tracking & P/L
-│   │   └── backtest.py                 # Algorithm engine (800+ lines)
-│   │
-│   ├── 🔬 research/
-│   │   ├── optimal_rebalancing.py      # Phase 1: Parameter optimization
-│   │   └── volatility_alpha.py         # Phase 1b: Enhanced vs ATH-only
-│   │
-│   ├── 🛠️ tools/
-│   │   └── order_calculator.py         # Manual trading order calculator
-│   │
-│   ├── 📊 compare/
-│   │   ├── batch_comparison.py         # Multi-strategy analysis
-│   │   ├── plotter.py                  # Matplotlib visualizations
-│   │   ├── runner.py                   # Parallel execution
-│   │   └── table.py                    # Results formatting
-│   │
-│   ├── 🖥️ gui/
-│   │   └── layout.py                   # Tkinter interface
-│   │
-│   └── 🛠️ utils/
-│       └── date_utils.py               # Date parsing utilities
+├── src/
+│ ├── main.py # GUI entry point
+│ │
+│ ├── 📡 data/
+│ │ └── fetcher.py # Yahoo Finance integration
+│ │
+│ ├── 🧮 models/
+│ │ ├── stock.py # Position tracking & P/L
+│ │ └── backtest.py # Algorithm engine (800+ lines)
+│ │
+│ ├── 🔬 research/
+│ │ ├── optimal_rebalancing.py # Phase 1: Parameter optimization
+│ │ └── volatility_alpha.py # Phase 1b: Enhanced vs ATH-only
+│ │
+│ ├── tools/
+│ │ └── order_calculator.py # Manual trading order calculator
+│ │
+│ ├── compare/
+│ │ ├── batch_comparison.py # Multi-strategy analysis
+│ │ ├── plotter.py # Matplotlib visualizations
+│ │ ├── runner.py # Parallel execution
+│ │ └── table.py # Results formatting
+│ │
+│ ├── 🖥️ gui/
+│ │ └── layout.py # Tkinter interface
+│ │
+│ └── utils/
+│ └── date_utils.py # Date parsing utilities
 │
 ├── 🧪 tests/
-│   ├── test_buyback_stack.py           # FIFO unwinding validation
-│   ├── test_synthetic_dividend.py      # Core algorithm tests
-│   └── test_volatility_alpha_synthetic.py  # Synthetic data tests
+│ ├── test_buyback_stack.py # FIFO unwinding validation
+│ ├── test_synthetic_dividend.py # Core algorithm tests
+│ └── test_volatility_alpha_synthetic.py # Synthetic data tests
 │
-├── 📚 Documentation/
-│   ├── README.md                       # You are here! 👋
-│   ├── CODING_PHILOSOPHY.md            # Code quality standards
-│   ├── INVESTING_THEORY.md             # Strategy deep dive
-│   ├── VOLATILITY_ALPHA_THESIS.md      # Buyback enhancement theory
-│   └── TODO.md                         # Development roadmap
+├── Documentation/
+│ ├── README.md # You are here! 👋
+│ ├── CODING_PHILOSOPHY.md # Code quality standards
+│ ├── INVESTING_THEORY.md # Strategy deep dive
+│ ├── VOLATILITY_ALPHA_THESIS.md # Buyback enhancement theory
+│ └── TODO.md # Development roadmap
 │
-└── ⚙️ Configuration/
-    └── pyproject.toml                  # All package config & dependencies (modern standard)
+└── Configuration/
+ └── pyproject.toml # All package config & dependencies (modern standard)
 ```
 
-## 🚀 Quick Start Guide
+## Quick Start Guide
 
-### 🔧 Unified CLI Tool (Recommended)
+### Unified CLI Tool (Recommended)
 
 The **Synthetic Dividend CLI** provides a comprehensive interface to all functionality:
 
@@ -264,10 +264,10 @@ The **Synthetic Dividend CLI** provides a comprehensive interface to all functio
 # Show all available commands and options
 synthetic-dividend --help
 
-# 📚 List all available portfolio algorithms with detailed descriptions
+# List all available portfolio algorithms with detailed descriptions
 synthetic-dividend --list-algorithms
 
-# 📋 List all available named portfolios with allocations
+# List all available named portfolios with allocations
 synthetic-dividend --list-portfolios
 
 # Run single-asset backtest
@@ -317,7 +317,7 @@ REM Still available for backward compatibility
 run-model.bat NVDA 10/22/2024 10/22/2025 sd-9.05,50
 ```
 
-> 💡 **Note**: The new Python-based CLI with `--list-algorithms` and `--list-portfolios` provides comprehensive help that was previously only available in the original `synthetic-dividend-tool`. The cross-platform CLI and shell scripts are recommended for all new workflows.
+> TIP: **Note**: The new Python-based CLI with `--list-algorithms` and `--list-portfolios` provides comprehensive help that was previously only available in the original `synthetic-dividend-tool`. The cross-platform CLI and shell scripts are recommended for all new workflows.
 
 ### 🎬 Installation
 
@@ -366,7 +366,7 @@ source .venv/bin/activate
 ```
 </details>
 
-### 📊 Cache Management
+### Cache Management
 
 **Refresh Historical Price Data**:
 
@@ -386,7 +386,7 @@ python scripts/populate_cache.py --tickers NVDA SPY VOO
 python scripts/populate_cache.py --list
 ```
 
-> 💡 **Tip**: Run cache refresh periodically to ensure you have the latest market data for backtesting and analysis.
+> TIP: **Tip**: Run cache refresh periodically to ensure you have the latest market data for backtesting and analysis.
 
 ### 🔍 Your First Backtest
 
@@ -398,25 +398,25 @@ synthetic-dividend backtest NVDA 2023-10-23 2024-10-23 sd8 --qty 10000
 
 **Output**:
 ```
-📊 Backtest Results: NVDA (2023-10-23 to 2024-10-23)
+ Backtest Results: NVDA (2023-10-23 to 2024-10-23)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Strategy: sd8 (9.05% trigger, 50% profit sharing)
 Initial Investment: $450,500.00 (10,000 shares @ $45.05)
 
-💰 Final Results:
-   Holdings: 4,246 shares @ $119.62 = $507,865.52
-   Bank: $729,433.76
-   Total: $1,237,299.28
-   
-📈 Performance:
-   Total Return: 174.59%
-   Transactions: 38
-   Volatility Alpha: 9.59% vs ATH-only
+ Final Results:
+ Holdings: 4,246 shares @ $119.62 = $507,865.52
+ Bank: $729,433.76
+ Total: $1,237,299.28
 
-✅ OUTPERFORMED buy-and-hold by 25.46%!
+ Performance:
+ Total Return: 174.59%
+ Transactions: 38
+ Volatility Alpha: 9.59% vs ATH-only
+
+[OK] OUTPERFORMED buy-and-hold by 25.46%!
 ```
 
-### 🎯 Multi-Asset Portfolio Backtesting
+### Multi-Asset Portfolio Backtesting
 
 **Run diversified portfolios with algorithmic strategies:**
 
@@ -464,20 +464,20 @@ Period: 2019-01-01 to 2024-12-31
 Initial investment: $1,000,000
 Algorithm: auto
 Allocations:
-  VOO: 60.0%
-  BIL: 30.0%
-  BTC-USD: 10.0%
+ VOO: 60.0%
+ BIL: 30.0%
+ BTC-USD: 10.0%
 
 Building portfolio algorithm from name: auto
-  -> Auto-selecting strategies per asset based on historical volatility
-    VOO: sd8 (index - standard)
-    BIL: buy-and-hold (bond/cash)
-    BTC-USD: sd4 (crypto - high volatility)
+ -> Auto-selecting strategies per asset based on historical volatility
+ VOO: sd8 (index - standard)
+ BIL: buy-and-hold (bond/cash)
+ BTC-USD: sd4 (crypto - high volatility)
 
 Fetching data for 3 assets...
-  - VOO... OK (1509 days)
-  - BIL... OK (1509 days)
-  - BTC-USD... OK (1509 days)
+ - VOO... OK (1509 days)
+ - BIL... OK (1509 days)
+ - BTC-USD... OK (1509 days)
 Common trading days: 1509 (2019-01-01 to 2024-12-31)
 
 RESULTS:
@@ -486,25 +486,25 @@ Total return: 424.68%
 Annualized return: 39.09%
 
 Asset breakdown:
-  VOO: $3,124,521 (420.75%)
-  BIL: $1,234,567 (2.47%)
-  BTC-USD: $887,748 (787.75%)
+ VOO: $3,124,521 (420.75%)
+ BIL: $1,234,567 (2.47%)
+ BTC-USD: $887,748 (787.75%)
 ```
 
 **Key Features**:
 <<<<<<< Updated upstream
-- ✅ **Named portfolios** with parameterization (e.g., `classic-70,30`)
-- ✅ **Unified interface** for both simple buy-and-hold and algorithmic portfolios
-- ✅ **Multi-asset coordination** with proper date alignment
-- ✅ **All algorithm features** (dividends, withdrawals, margin, etc.) available
-- ✅ **Backward compatible** - existing `simulate_portfolio` calls still work
-- ✅ **CLI and programmatic** access through `run_portfolio_backtest()`
+- [OK] **Named portfolios** with parameterization (e.g., `classic-70,30`)
+- [OK] **Unified interface** for both simple buy-and-hold and algorithmic portfolios
+- [OK] **Multi-asset coordination** with proper date alignment
+- [OK] **All algorithm features** (dividends, withdrawals, margin, etc.) available
+- [OK] **Backward compatible** - existing `simulate_portfolio` calls still work
+- [OK] **CLI and programmatic** access through `run_portfolio_backtest()`
 =======
-- ✅ **Auto algorithm** intelligently selects optimal per-asset strategies based on volatility
-- ✅ **+120% volatility alpha** proven across withdrawal rates (see [VALIDATION_RESULTS.md](docs/VALIDATION_RESULTS.md))
-- ✅ **Multi-asset coordination** with shared cash pool and proper date alignment
-- ✅ **Portfolio-level algorithms** (quarterly-rebalance, monthly-rebalance, etc.)
-- ✅ **Per-asset algorithms** with unified syntax (per-asset:sd8, per-asset:buy-and-hold)
+- [OK] **Auto algorithm** intelligently selects optimal per-asset strategies based on volatility
+- [OK] **+120% volatility alpha** proven across withdrawal rates (see [VALIDATION_RESULTS.md](docs/VALIDATION_RESULTS.md))
+- [OK] **Multi-asset coordination** with shared cash pool and proper date alignment
+- [OK] **Portfolio-level algorithms** (quarterly-rebalance, monthly-rebalance, etc.)
+- [OK] **Per-asset algorithms** with unified syntax (per-asset:sd8, per-asset:buy-and-hold)
 >>>>>>> Stashed changes
 
 ### 🧮 Calculate Orders for Manual Trading
@@ -514,31 +514,31 @@ Asset breakdown:
 ```bash
 # Calculate buy/sell orders based on current position
 python -m src.tools.order_calculator \
-    --ticker NVDA \
-    --holdings 1000 \
-    --last-price 120.50 \
-    --current-price 125.30 \
-    --sdn 8 \
-    --profit 50
+ --ticker NVDA \
+ --holdings 1000 \
+ --last-price 120.50 \
+ --current-price 125.30 \
+ --sdn 8 \
+ --profit 50
 ```
 
 **Output** (ready to copy/paste into your broker):
 ```
 ╔══════════════════════════════════════════════════════════════╗
-║           SYNTHETIC DIVIDEND ORDER CALCULATOR                ║
+║ SYNTHETIC DIVIDEND ORDER CALCULATOR ║
 ╚══════════════════════════════════════════════════════════════╝
 
-📊 CURRENT POSITION - NVDA
-  Holdings:         1,000 shares
-  Last Transaction: $120.50
-  Current Price:    $125.30
-  
-🎯 LIMIT ORDERS TO PLACE
+ CURRENT POSITION - NVDA
+ Holdings: 1,000 shares
+ Last Transaction: $120.50
+ Current Price: $125.30
 
-  BUY  NVDA     45 @ $110.50  (LIMIT GTC)
-  SELL NVDA     41 @ $131.41  (LIMIT GTC)
+ LIMIT ORDERS TO PLACE
 
-💡 TIP: Set both orders as GTC, cancel and replace when either executes
+ BUY NVDA 45 @ $110.50 (LIMIT GTC)
+ SELL NVDA 41 @ $131.41 (LIMIT GTC)
+
+TIP: TIP: Set both orders as GTC, cancel and replace when either executes
 ```
 
 **Quick shortcut** (Windows):
@@ -562,10 +562,10 @@ python -m src.research.optimal_rebalancing --comprehensive --output results.csv
 
 ```bash
 python -m src.research.volatility_alpha --ticker NVDA \
-    --start 10/23/2023 --end 10/23/2024 --output volatility_alpha.csv
+ --start 10/23/2023 --end 10/23/2024 --output volatility_alpha.csv
 ```
 
-## ⚙️ Strategy Configuration Guide
+## Strategy Configuration Guide
 
 ### 📐 Rebalancing Triggers (sdN format)
 
@@ -583,25 +583,25 @@ The `sdN` format uses **exponential scaling** based on the Nth root of 2:
 **Formula**: `trigger_pct = (2^(1/N) - 1) × 100`
 
 **Choosing your trigger**:
-- 🔥 **Higher volatility** → Lower N (sd4-sd6) → Wider triggers
-- 📊 **Lower volatility** → Higher N (sd10-sd16) → Tighter triggers
-- 🎯 **Sweet spot**: sd8 works well for most growth stocks
+- **Higher volatility** → Lower N (sd4-sd6) → Wider triggers
+- **Lower volatility** → Higher N (sd10-sd16) → Tighter triggers
+- **Sweet spot**: sd8 works well for most growth stocks
 
-### 💰 Profit Sharing Ratios
+### Profit Sharing Ratios
 
 Controls the balance between **cash flow** and **position growth**:
 
 | Ratio | Strategy | Effect | Use Case |
 |-------|----------|--------|----------|
-| **-25% to 0%** | 📈 Accumulation | Buy MORE on strength | Building position |
+| **-25% to 0%** | Accumulation | Buy MORE on strength | Building position |
 | **25% to 50%** | ⚖️ Balanced | Half cash, half growth | Most investors |
-| **50%** | 🎯 **Sweet Spot** | Perfect balance | Recommended default |
+| **50%** | **Sweet Spot** | Perfect balance | Recommended default |
 | **75% to 100%** | 💸 Distribution | Maximum cash flow | Income focus |
 | **>100%** | 🛡️ De-risking | Reduce position | Risk management |
 
 **Example**: `sd8,75` = 9.05% trigger with 75% profit sharing (high distributions)
 
-### 🎨 Custom Configurations
+### Custom Configurations
 
 ```bash
 # Format: sd-<trigger_pct>,<profit_pct>
@@ -619,11 +619,11 @@ This project maintains **rigorous engineering standards**:
 
 | Tool | Status | Coverage |
 |------|--------|----------|
-| ✅ **pytest** | 44 tests | Core algorithm, buyback stack, margin modes, withdrawals, edge cases |
-| ✅ **mypy** | Type checking | 100% clean, strict mode |
-| ✅ **flake8** | Linting | 0 warnings |
-| ✅ **black** | Formatting | 100 char lines, consistent style |
-| ✅ **isort** | Import sorting | Organized, deterministic |
+| [OK] **pytest** | 44 tests | Core algorithm, buyback stack, margin modes, withdrawals, edge cases |
+| [OK] **mypy** | Type checking | 100% clean, strict mode |
+| [OK] **flake8** | Linting | 0 warnings |
+| [OK] **black** | Formatting | 100 char lines, consistent style |
+| [OK] **isort** | Import sorting | Organized, deterministic |
 
 ### 🧬 Test Coverage
 
@@ -633,16 +633,16 @@ pytest tests/ -v
 
 # Run specific test suite
 pytest tests/test_synthetic_dividend.py -v
-pytest tests/test_margin_modes.py -v  # New: Bank management modes
+pytest tests/test_margin_modes.py -v # New: Bank management modes
 
 # Run with coverage report
 pytest --cov=src tests/
 ```
 
 **Test Categories**:
-- 🔧 **Unit tests**: Algorithm logic, FIFO stack, profit calculations
-- 📊 **Integration tests**: Full backtests with synthetic data
-- 🎯 **Edge cases**: 0% profit sharing, 100% profit sharing, gap scenarios
+- **Unit tests**: Algorithm logic, FIFO stack, profit calculations
+- **Integration tests**: Full backtests with synthetic data
+- **Edge cases**: 0% profit sharing, 100% profit sharing, gap scenarios
 - 🏦 **Bank modes**: Margin vs strict mode, withdrawal coverage
 - 💵 **Withdrawal policy**: 4% rule, CPI adjustment, bank-first approach
 
@@ -662,25 +662,25 @@ isort src/ tests/
 
 📖 **[Read coding philosophy →](CODING_PHILOSOPHY.md)**
 
-## 📚 Documentation
+## Documentation
 
 | Document | Description |
 |----------|-------------|
 | 📖 **[INVESTING_THEORY.md](theory/INVESTING_THEORY.md)** | Comprehensive investment strategy explanation, profit-sharing mathematics, and financial adjustment theory |
 | 💎 **[VOLATILITY_ALPHA_THESIS.md](theory/VOLATILITY_ALPHA_THESIS.md)** | How buybacks during drawdowns create extra returns beyond ATH-only selling |
-| 💰 **[INCOME_GENERATION.md](theory/INCOME_GENERATION.md)** | How volatility becomes cash flow - the core income mechanism, practical implementation guide |
+| **[INCOME_GENERATION.md](theory/INCOME_GENERATION.md)** | How volatility becomes cash flow - the core income mechanism, practical implementation guide |
 | � **[INCOME_SMOOTHING.md](theory/INCOME_SMOOTHING.md)** | ⭐ NEW: Irregular → regular payment transformation, sequence-of-returns protection, never sell at loss principle |
 | 🏦 **[WITHDRAWAL_POLICY.md](theory/WITHDRAWAL_POLICY.md)** | Orthogonal withdrawal dimension, bank-first approach, 4% rule with CPI adjustment |
-| �💻 **[CODING_PHILOSOPHY.md](theory/CODING_PHILOSOPHY.md)** | Code quality standards, functional programming principles, and development best practices |
-| 📚 **[theory/README.md](theory/README.md)** | Complete theoretical framework overview and system prompt usage guide |
-| 📋 **[TODO.md](TODO.md)** | Development roadmap, completed features, and future plans |
+| � **[CODING_PHILOSOPHY.md](theory/CODING_PHILOSOPHY.md)** | Code quality standards, functional programming principles, and development best practices |
+| **[theory/README.md](theory/README.md)** | Complete theoretical framework overview and system prompt usage guide |
+| **[TODO.md](TODO.md)** | Development roadmap, completed features, and future plans |
 | 🎓 **[EXAMPLES.md](EXAMPLES.md)** | ⭐ **Comprehensive usage guide** - command examples, real-world scenarios, volatility analyzer walkthrough |
-| 📊 **[EXPERIMENTS_SUMMARY.md](experiments/EXPERIMENTS_SUMMARY.md)** | Market regime framework - SD8 performance across bull, moderate, and choppy market conditions |
-| 💰 **[EXPERIMENT_004_OPTIMAL_WITHDRAWAL_RATE.md](experiments/EXPERIMENT_004_OPTIMAL_WITHDRAWAL_RATE.md)** | Optimal withdrawal rate discovery - 10% sustainable withdrawals with diversification |
+| **[EXPERIMENTS_SUMMARY.md](experiments/EXPERIMENTS_SUMMARY.md)** | Market regime framework - SD8 performance across bull, moderate, and choppy market conditions |
+| **[EXPERIMENT_004_OPTIMAL_WITHDRAWAL_RATE.md](experiments/EXPERIMENT_004_OPTIMAL_WITHDRAWAL_RATE.md)** | Optimal withdrawal rate discovery - 10% sustainable withdrawals with diversification |
 
 ## 🗺️ Roadmap
 
-### ✅ Completed (Phase 1-2)
+### [OK] Completed (Phase 1-2)
 - [x] Core synthetic dividend algorithm with buyback stack
 - [x] Optimal rebalancing parameter research (48 backtests)
 - [x] Volatility alpha discovery and measurement
@@ -705,7 +705,7 @@ isort src/ tests/
 - [ ] Web dashboard for interactive analysis
 - [ ] Real-time trading integration (paper trading)
 
-📋 **[See full roadmap →](TODO.md)**
+ **[See full roadmap →](TODO.md)**
 
 ## 🤝 Contributing
 
@@ -716,8 +716,8 @@ Contributions are welcome! This project values **rigorous engineering** and **ma
 1. 🍴 **Fork the repository**
 2. 🌿 **Create a feature branch** (`git checkout -b feature/new-feature`)
 3. 📝 **Follow code quality standards** (see [CODING_PHILOSOPHY.md](CODING_PHILOSOPHY.md))
-4. ✅ **Run the full test suite** (`pytest tests/ -v`)
-5. 🎨 **Run linting and formatting** (`mypy src/`, `flake8 src/`, `black src/`)
+4. [OK] **Run the full test suite** (`pytest tests/ -v`)
+5. **Run linting and formatting** (`mypy src/`, `flake8 src/`, `black src/`)
 6. 💬 **Commit with descriptive messages** (`git commit -m 'Add new feature'`)
 7. 📤 **Push to your branch** (`git push origin feature/new-feature`)
 8. 🔄 **Open a Pull Request** with detailed description
@@ -725,19 +725,19 @@ Contributions are welcome! This project values **rigorous engineering** and **ma
 ### Areas Where We Need Help
 
 - � **Debug volatility alpha test failures** - Help investigate negative alpha in synthetic scenarios
-- 📊 **Statistical analysis** - Add Sharpe ratio, drawdown calculations, significance testing
-- 🎨 **Visualizations** - Create interactive dashboards with Plotly or Streamlit
-- 📚 **Documentation** - Improve docstrings, add tutorials, create video walkthroughs
+- **Statistical analysis** - Add Sharpe ratio, drawdown calculations, significance testing
+- **Visualizations** - Create interactive dashboards with Plotly or Streamlit
+- **Documentation** - Improve docstrings, add tutorials, create video walkthroughs
 - 🧪 **Testing** - Expand test coverage, add integration tests, stress testing
 
 ### Code Quality Requirements
 
 All contributions must pass:
-- ✅ Type checking with `mypy --strict`
-- ✅ Linting with `flake8` (0 warnings)
-- ✅ Formatting with `black` (100 char lines)
-- ✅ All existing tests (`pytest tests/`)
-- ✅ New tests for new features (maintain >80% coverage)
+- [OK] Type checking with `mypy --strict`
+- [OK] Linting with `flake8` (0 warnings)
+- [OK] Formatting with `black` (100 char lines)
+- [OK] All existing tests (`pytest tests/`)
+- [OK] New tests for new features (maintain >80% coverage)
 
 ---
 
@@ -751,10 +751,10 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 🙏 Acknowledgments
 
-- 📈 **Market data** provided by [yfinance](https://github.com/ranaroussi/yfinance) (Yahoo Finance API)
-- 🐍 **Built with** Python, NumPy, Pandas, and Matplotlib
-- 🤖 **Proudly developed in collaboration with AI** - See [CONTRIBUTORS.md](docs/CONTRIBUTORS.md) for the full story
-- 💡 **Inspired by** the need for systematic cash flow from growth portfolios
+- **Market data** provided by [yfinance](https://github.com/ranaroussi/yfinance) (Yahoo Finance API)
+- **Built with** Python, NumPy, Pandas, and Matplotlib
+- **Proudly developed in collaboration with AI** - See [CONTRIBUTORS.md](docs/CONTRIBUTORS.md) for the full story
+- TIP: **Inspired by** the need for systematic cash flow from growth portfolios
 - 🎓 **Mathematical foundation** based on exponential rebalancing theory (2^(1/N) scaling)
 - 🔬 **Research methodology** influenced by systematic trading and quantitative finance principles
 
@@ -766,8 +766,8 @@ Special thanks to the open-source community for excellent tools that made this p
 
 ## 📧 Contact & Links
 
-**Author**: Rick Sladkey  
-**GitHub**: [@ricksladkey](https://github.com/ricksladkey)  
+**Author**: Rick Sladkey
+**GitHub**: [@ricksladkey](https://github.com/ricksladkey)
 **Project**: [synthetic-dividend](https://github.com/ricksladkey/synthetic-dividend)
 
 ### 🔗 Quick Links
@@ -783,11 +783,11 @@ Special thanks to the open-source community for excellent tools that made this p
 
 <div align="center">
 
-### ⚠️ Important Disclaimer
+### WARNING: Important Disclaimer
 
 **This software is for educational and research purposes only.**
 
-- 📚 Not financial advice
+- Not financial advice
 - 🔬 No guarantees of future performance
 - 💼 Always consult a qualified financial advisor
 - ⚖️ Past performance ≠ future results

@@ -23,30 +23,30 @@
 
 | Feature | Single-Ticker | Portfolio | Notes |
 |---------|---------------|-----------|-------|
-| **Core Engine** | ✅ | ✅ | Both iterate days, execute trades |
-| **Initial investment** | ✅ | ✅ | Both support dollar-based entry |
-| **Margin control** | ✅ | ✅ | `allow_margin` parameter |
-| **Withdrawals** | ✅ | ✅ | Both support periodic withdrawals |
-| **Cash interest** | ❌ | ✅ | Portfolio has `cash_interest_rate_pct` |
-| **Dividends** | ✅ | ✅ | Both support dividends (single-ticker: `dividend_series`, portfolio: `dividend_data`) |
-| **Reference asset** | ✅ | ✅ | Both support market-adjusted returns |
-| **Risk-free rate** | ✅ | ✅ | Both support opportunity cost modeling |
-| **CPI data** | ✅ | ✅ | Both support inflation adjustment |
-| **Price normalization** | ✅ | ✅ | Both support price normalization (implemented at data layer) |
-| **Multiple assets** | ❌ | ✅ | Portfolio handles N assets with shared bank |
+| **Core Engine** | [OK] | [OK] | Both iterate days, execute trades |
+| **Initial investment** | [OK] | [OK] | Both support dollar-based entry |
+| **Margin control** | [OK] | [OK] | `allow_margin` parameter |
+| **Withdrawals** | [OK] | [OK] | Both support periodic withdrawals |
+| **Cash interest** | [FAIL] | [OK] | Portfolio has `cash_interest_rate_pct` |
+| **Dividends** | [OK] | [OK] | Both support dividends (single-ticker: `dividend_series`, portfolio: `dividend_data`) |
+| **Reference asset** | [OK] | [OK] | Both support market-adjusted returns |
+| **Risk-free rate** | [OK] | [OK] | Both support opportunity cost modeling |
+| **CPI data** | [OK] | [OK] | Both support inflation adjustment |
+| **Price normalization** | [OK] | [OK] | Both support price normalization (implemented at data layer) |
+| **Multiple assets** | [FAIL] | [OK] | Portfolio handles N assets with shared bank |
 
 ---
 
 ## Missing in Portfolio (Must Port)
 
-**Status**: ✅ ALL FEATURES IMPLEMENTED
+**Status**: [OK] ALL FEATURES IMPLEMENTED
 
 The portfolio backtest now supports all single-ticker features:
-- ✅ Dividend/interest payments (via `dividend_data` parameter)
-- ✅ Reference asset support (via `reference_rate_ticker` parameter)  
-- ✅ Risk-free rate support (via `risk_free_rate_ticker` parameter)
-- ✅ CPI data support (via `inflation_rate_ticker` parameter)
-- ✅ Price normalization (implemented at data layer, not backtest level)
+- [OK] Dividend/interest payments (via `dividend_data` parameter)
+- [OK] Reference asset support (via `reference_rate_ticker` parameter)
+- [OK] Risk-free rate support (via `risk_free_rate_ticker` parameter)
+- [OK] CPI data support (via `inflation_rate_ticker` parameter)
+- [OK] Price normalization (implemented at data layer, not backtest level)
 
 **Date Completed**: November 4, 2025
 
@@ -54,21 +54,21 @@ The portfolio backtest now supports all single-ticker features:
 
 ## Consolidation Strategy (Hybrid Approach)
 
-### Phase 1: Port Missing Features to Portfolio ✅ COMPLETE
+### Phase 1: Port Missing Features to Portfolio [OK] COMPLETE
 
 **Goal**: Make portfolio backtest feature-complete
 
-**Status**: ✅ COMPLETED - All single-ticker features now supported in portfolio backtest
+**Status**: [OK] COMPLETED - All single-ticker features now supported in portfolio backtest
 
 **Actual effort**: Already implemented in current codebase
 
 **Date Completed**: November 4, 2025
 
-### Phase 2: Make Single-Ticker a Thin Wrapper ✅ COMPLETE
+### Phase 2: Make Single-Ticker a Thin Wrapper [OK] COMPLETE
 
 **Goal**: Eliminate code duplication without breaking changes
 
-**Status**: ✅ COMPLETED - Single-ticker function now calls portfolio backtest internally for supported cases
+**Status**: [OK] COMPLETED - Single-ticker function now calls portfolio backtest internally for supported cases
 
 **Implementation**: Added wrapper logic in `run_algorithm_backtest()` that:
 - Checks if portfolio wrapper can be used (`_can_use_portfolio_wrapper()`)
@@ -81,11 +81,11 @@ The portfolio backtest now supports all single-ticker features:
 
 **Code Reduction**: ~849 lines of duplicate backtest logic eliminated
 
-### Phase 3: Unified Tool Interface ✅ COMPLETE
+### Phase 3: Unified Tool Interface [OK] COMPLETE
 
 **Goal**: Provide one function that handles both single-ticker and multi-asset cases directly
 
-**Status**: ✅ COMPLETED - `run_algorithm_backtest()` now accepts both parameter patterns and routes internally
+**Status**: [OK] COMPLETED - `run_algorithm_backtest()` now accepts both parameter patterns and routes internally
 
 **Implementation**: Modified `run_algorithm_backtest()` to be a truly unified interface:
 - Accepts both single-ticker parameters (`df`, `ticker`, `algo`) and portfolio parameters (`allocations`, `portfolio_algo`)
@@ -123,12 +123,12 @@ After 6-12 months of stability:
 
 ## Success Criteria
 
-✅ **Phase 1 Complete**: Portfolio supports all single-ticker features
-✅ **Phase 2 Complete**: Single-ticker is <100 lines, calls portfolio internally
-✅ **Phase 3 Complete**: Unified interface handles both single-ticker and multi-asset cases
-✅ **Tests Pass**: All existing tests still pass
-✅ **No Breaking Changes**: All existing code continues working
-✅ **Documentation**: Updated backtest.py docstrings and consolidation plan
+[OK] **Phase 1 Complete**: Portfolio supports all single-ticker features
+[OK] **Phase 2 Complete**: Single-ticker is <100 lines, calls portfolio internally
+[OK] **Phase 3 Complete**: Unified interface handles both single-ticker and multi-asset cases
+[OK] **Tests Pass**: All existing tests still pass
+[OK] **No Breaking Changes**: All existing code continues working
+[OK] **Documentation**: Updated backtest.py docstrings and consolidation plan
 
 ---
 

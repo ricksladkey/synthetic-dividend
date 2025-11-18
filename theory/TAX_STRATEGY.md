@@ -22,50 +22,50 @@ The distinction between taxable and tax-advantaged accounts isn't just about pap
 ### Freedom to Harvest Volatility
 
 **No tax consequences for trading:**
-- ✅ Buy and sell with impunity
-- ✅ No distinction between STCG vs LTCG
-- ✅ No Form 8949 tracking nightmare
-- ✅ No wash sale complications
-- ✅ Full volatility harvesting enabled
+- [OK] Buy and sell with impunity
+- [OK] No distinction between STCG vs LTCG
+- [OK] No Form 8949 tracking nightmare
+- [OK] No wash sale complications
+- [OK] Full volatility harvesting enabled
 
 ### Why LIFO is Conceptually Correct
 
 **The buyback stack is literally a stack (LIFO data structure):**
 
 1. **Stack semantics**
-   - Price drops → push new shares onto stack
-   - Price rises → pop shares off stack (Last-In-First-Out)
-   - This is how the algorithm conceptually works
-   - The math and the code both think in LIFO terms
+ - Price drops → push new shares onto stack
+ - Price rises → pop shares off stack (Last-In-First-Out)
+ - This is how the algorithm conceptually works
+ - The math and the code both think in LIFO terms
 
 2. **Volatility alpha calculation assumes LIFO**
-   - When price recovers, newest buybacks unwind first
-   - Alpha boost = profit from recent volatility, not ancient positions
-   - Each buy-low/sell-high cycle is a complete stack push/pop
+ - When price recovers, newest buybacks unwind first
+ - Alpha boost = profit from recent volatility, not ancient positions
+ - Each buy-low/sell-high cycle is a complete stack push/pop
 
 3. **Portfolio pristine after recovery**
-   - Gap down → push shares onto stack at lower price
-   - Gap up → pop shares off stack (LIFO)
-   - Original position remains untouched
-   - This is what "synthetic dividend" means!
+ - Gap down → push shares onto stack at lower price
+ - Gap up → pop shares off stack (LIFO)
+ - Original position remains untouched
+ - This is what "synthetic dividend" means!
 
 4. **Profit sharing mechanics**
-   - 50% profit sharing = sell half of recent gain
-   - "Recent gain" = newest purchases appreciating
-   - LIFO directly captures this
+ - 50% profit sharing = sell half of recent gain
+ - "Recent gain" = newest purchases appreciating
+ - LIFO directly captures this
 
 **Example (tax-advantaged account):**
 ```
 Initial: 1000 shares @ $100
 
 Day 1: Gap down to $91.62 (−9.05% bracket)
-       → BUY 47 shares @ $91.62 (buyback)
-       Holdings: 1047 shares
+ → BUY 47 shares @ $91.62 (buyback)
+ Holdings: 1047 shares
 
 Day 2: Gap up to $100 (recovery)
-       → SELL 47 shares @ $100 (LIFO: unwind recent buyback)
-       → Profit: 47 × ($100 - $91.62) = $394
-       Holdings: 1000 shares (pristine!)
+ → SELL 47 shares @ $100 (LIFO: unwind recent buyback)
+ → Profit: 47 × ($100 - $91.62) = $394
+ Holdings: 1000 shares (pristine!)
 
 Tax impact: ZERO (tax-advantaged account)
 Alpha extracted: $394 "free money" from volatility
@@ -78,29 +78,29 @@ Alpha extracted: $394 "free money" from volatility
 ### Tax Friction Dominates
 
 **Every sell is a taxable event:**
-- ❌ Short-term capital gains (STCG) = ordinary income tax rate
-- ❌ Must hold >1 year for long-term capital gains (LTCG) benefit
-- ❌ Complex tracking required (cost basis, holding period, wash sales)
-- ❌ Form 8949 can have hundreds of lines
+- [FAIL] Short-term capital gains (STCG) = ordinary income tax rate
+- [FAIL] Must hold >1 year for long-term capital gains (LTCG) benefit
+- [FAIL] Complex tracking required (cost basis, holding period, wash sales)
+- [FAIL] Form 8949 can have hundreds of lines
 
 ### Why ATH-Only Makes Sense
 
 **Minimize tax events:**
 
 1. **Sell only at all-time highs**
-   - Selling at ATH likely means held for significant time
-   - Higher probability of LTCG treatment (lower tax rate)
-   - Fewer total sells = simpler tax return
+ - Selling at ATH likely means held for significant time
+ - Higher probability of LTCG treatment (lower tax rate)
+ - Fewer total sells = simpler tax return
 
 2. **No buybacks = no STCG risk**
-   - Never selling recently-purchased shares
-   - All sales are from original position
-   - Clean, simple cost basis tracking
+ - Never selling recently-purchased shares
+ - All sales are from original position
+ - Clean, simple cost basis tracking
 
 3. **Natural FIFO**
-   - Selling from original position = FIFO by definition
-   - Matches typical brokerage default
-   - No need to specify lot selection
+ - Selling from original position = FIFO by definition
+ - Matches typical brokerage default
+ - No need to specify lot selection
 
 **Example (taxable account):**
 ```
@@ -138,36 +138,36 @@ vs. sd8 full algorithm in taxable account:
 
 ```
 When selling shares:
-  1. Check all lots for holding period
-  2. LIFO on LTCG lots (held >1 year)
-     → These get favorable tax treatment
-     → Matches conceptual model
-  3. FIFO on remaining STCG lots
-     → Minimizes holding recent lots
-     → Reduces STCG exposure
+ 1. Check all lots for holding period
+ 2. LIFO on LTCG lots (held >1 year)
+ → These get favorable tax treatment
+ → Matches conceptual model
+ 3. FIFO on remaining STCG lots
+ → Minimizes holding recent lots
+ → Reduces STCG exposure
 ```
 
 **Example:**
 ```
 Portfolio state:
-  - 1000 shares @ $100 (bought 3 years ago) = LTCG eligible
-  - 50 shares @ $91 (bought 2 months ago) = STCG
+ - 1000 shares @ $100 (bought 3 years ago) = LTCG eligible
+ - 50 shares @ $91 (bought 2 months ago) = STCG
 
 Price rises to $105 → trigger sell of 23 shares
 
 Hybrid strategy:
-  1. Check: Do we have LTCG lots? Yes (1000 shares)
-  2. Sell from newest LTCG lot (LIFO on LTCG)
-     → 23 shares @ $100 cost basis
-     → Gain: 23 × $5 = $115
-     → Tax: LTCG rate (~15-20%)
-     → Tax owed: ~$17-23
+ 1. Check: Do we have LTCG lots? Yes (1000 shares)
+ 2. Sell from newest LTCG lot (LIFO on LTCG)
+ → 23 shares @ $100 cost basis
+ → Gain: 23 × $5 = $115
+ → Tax: LTCG rate (~15-20%)
+ → Tax owed: ~$17-23
 
 Pure LIFO would have sold:
-  → 23 shares @ $91 cost basis (STCG)
-  → Gain: 23 × $14 = $322
-  → Tax: Ordinary income rate (~30-50% combined)
-  → Tax owed: ~$97-161
+ → 23 shares @ $91 cost basis (STCG)
+ → Gain: 23 × $14 = $322
+ → Tax: Ordinary income rate (~30-50% combined)
+ → Tax owed: ~$97-161
 
 Savings: $74-138 per sale!
 ```
@@ -197,8 +197,8 @@ This is a real risk in highly volatile assets where you're constantly buying/sel
 ### You Chose sd8 = You're Already Committed
 
 **If you use full sd8 (with buybacks), you've implicitly stated:**
-- ✅ I'm in a tax-advantaged account, OR
-- ✅ I'm willing to handle the tax complexity
+- [OK] I'm in a tax-advantaged account, OR
+- [OK] I'm willing to handle the tax complexity
 
 **Therefore:**
 - LIFO is what's **conceptually happening** in the algorithm
@@ -227,10 +227,10 @@ The algorithm **thinks in LIFO**:
 **Configuration:**
 ```python
 algo = SyntheticDividendAlgorithm(
-    rebalance_size=0.0915,      # sd8 = 9.05% brackets
-    profit_sharing=0.5,          # 50% profit sharing
-    buyback_enabled=True,        # Full volatility harvesting
-    lot_selection="LIFO"         # Conceptually correct (default)
+ rebalance_size=0.0915, # sd8 = 9.05% brackets
+ profit_sharing=0.5, # 50% profit sharing
+ buyback_enabled=True, # Full volatility harvesting
+ lot_selection="LIFO" # Conceptually correct (default)
 )
 ```
 
@@ -247,10 +247,10 @@ algo = SyntheticDividendAlgorithm(
 **Configuration:**
 ```python
 algo = SyntheticDividendAlgorithm(
-    rebalance_size=0.0915,      # sd8 = 9.05% brackets
-    profit_sharing=0.5,          # 50% profit sharing
-    buyback_enabled=False,       # ATH-only mode
-    lot_selection="FIFO"         # Natural for ATH-only
+ rebalance_size=0.0915, # sd8 = 9.05% brackets
+ profit_sharing=0.5, # 50% profit sharing
+ buyback_enabled=False, # ATH-only mode
+ lot_selection="FIFO" # Natural for ATH-only
 )
 ```
 
@@ -264,7 +264,7 @@ algo = SyntheticDividendAlgorithm(
 
 **If you understand the tax implications and want full sd8:**
 
-⚠️ **Warning:** High tax complexity
+WARNING: **Warning:** High tax complexity
 - Must track every buy/sell for Form 8949
 - Many STCG events (taxed as ordinary income)
 - Wash sale rules complicate matters
@@ -313,11 +313,11 @@ algo = SyntheticDividendAlgorithm(
 Account Type → Algorithm → Lot Selection → Natural Fit
 ──────────────────────────────────────────────────────
 Tax-Advantaged → sd8 full → LIFO → Conceptual model
-Taxable        → ATH-only → FIFO → Tax efficiency
+Taxable → ATH-only → FIFO → Tax efficiency
 ```
 
 **You chose sd8 = you're in the tax-advantaged regime.**
 
 Therefore: LIFO is not just recommended—it's **what's actually happening** in the algorithm's conceptual model. The code now reflects this truth.
 
-**Trade freely. Harvest volatility. Pay no taxes.** That's the promise of the tax-advantaged regime. 🎯
+**Trade freely. Harvest volatility. Pay no taxes.** That's the promise of the tax-advantaged regime.

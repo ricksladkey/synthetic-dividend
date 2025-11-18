@@ -27,29 +27,29 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  DATA LAYER                                                 │
-│  - Business logic generates domain-specific data            │
-│  - Responsible for: calculations, aggregations, filtering   │
+│ DATA LAYER │
+│ - Business logic generates domain-specific data │
+│ - Responsible for: calculations, aggregations, filtering │
 └─────────────────────────────────────────────────────────────┘
-                           ↓
+ ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  CHART CONTRACT LAYER (NEW)                                 │
-│  - Transforms domain data → neutral chart data              │
-│  - Defines standard data contracts for each chart type      │
-│  - Example: series=[{"label": "VOO", "values": [...]}]      │
+│ CHART CONTRACT LAYER (NEW) │
+│ - Transforms domain data → neutral chart data │
+│ - Defines standard data contracts for each chart type │
+│ - Example: series=[{"label": "VOO", "values": [...]}] │
 └─────────────────────────────────────────────────────────────┘
-                           ↓
+ ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  VISUALIZATION LAYER (CLEANED)                              │
-│  - Pure chart rendering functions                           │
-│  - No business logic, no data transformation                │
-│  - No finance-specific terminology                          │
+│ VISUALIZATION LAYER (CLEANED) │
+│ - Pure chart rendering functions │
+│ - No business logic, no data transformation │
+│ - No finance-specific terminology │
 └─────────────────────────────────────────────────────────────┘
-                           ↓
+ ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  DISPLAY LAYER (UNIFIED)                                    │
-│  - Single mechanism for showing/saving charts               │
-│  - Platform-aware: shell execute on Windows, GUI on Linux   │
+│ DISPLAY LAYER (UNIFIED) │
+│ - Single mechanism for showing/saving charts │
+│ - Platform-aware: shell execute on Windows, GUI on Linux │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -64,27 +64,27 @@
 ```python
 @dataclass
 class StackedAreaData:
-    """Data for stacked area chart with optional positive/negative split."""
-    dates: List[datetime]  # X-axis
-    positive_series: List[SeriesData]  # Stacked above zero (bottom to top)
-    negative_series: List[SeriesData] = []  # Stacked below zero (top to bottom)
+ """Data for stacked area chart with optional positive/negative split."""
+ dates: List[datetime] # X-axis
+ positive_series: List[SeriesData] # Stacked above zero (bottom to top)
+ negative_series: List[SeriesData] = [] # Stacked below zero (top to bottom)
 
 @dataclass
 class SeriesData:
-    label: str  # Series name for legend
-    values: List[float]  # Y values (same length as dates)
-    color: Optional[str] = None  # Hex color (auto-assigned if None)
+ label: str # Series name for legend
+ values: List[float] # Y values (same length as dates)
+ color: Optional[str] = None # Hex color (auto-assigned if None)
 ```
 
 **Visual Layout**:
 ```
 ┌─────────────────────────────────┐
-│  BTC-USD (Crypto)               │  ← Top band (most volatile)
-│  VOO (Equities)                 │
-│  BIL (Bonds)                    │
-│  USD (Cash/Sweeps)              │  ← Bottom of positive (least volatile)
-├─────────────────────────────────┤  ← Zero line
-│  Withdrawals (spending power)   │  ← Negative band (below zero)
+│ BTC-USD (Crypto) │ ← Top band (most volatile)
+│ VOO (Equities) │
+│ BIL (Bonds) │
+│ USD (Cash/Sweeps) │ ← Bottom of positive (least volatile)
+├─────────────────────────────────┤ ← Zero line
+│ Withdrawals (spending power) │ ← Negative band (below zero)
 └─────────────────────────────────┘
 
 Total Horn Height = Sum(positive_series) + Sum(negative_series)
@@ -104,17 +104,17 @@ distinct from BIL position (Treasury bill holdings).
 **Example**:
 ```python
 data = StackedAreaData(
-    dates=[date(2024, 1, 1), date(2024, 2, 1), ...],
-    series=[
-        SeriesData(label="VOO", values=[60000, 61000, ...], color="#ff7f0e"),
-        SeriesData(label="BIL", values=[40000, 40500, ...], color="#2ca02c"),
-    ]
+ dates=[date(2024, 1, 1), date(2024, 2, 1), ...],
+ series=[
+ SeriesData(label="VOO", values=[60000, 61000, ...], color="#ff7f0e"),
+ SeriesData(label="BIL", values=[40000, 40500, ...], color="#2ca02c"),
+ ]
 )
 create_stacked_area_chart(
-    data=data,
-    title="Portfolio Composition",
-    y_label="Value ($)",
-    output="composition.png"
+ data=data,
+ title="Portfolio Composition",
+ y_label="Value ($)",
+ output="composition.png"
 )
 ```
 
@@ -125,17 +125,17 @@ create_stacked_area_chart(
 ```python
 @dataclass
 class LineWithMarkersData:
-    """Data for line chart with scatter points."""
-    dates: List[datetime]  # X-axis
-    line: SeriesData  # Main line plot
-    markers: List[MarkerData]  # Scatter points
+ """Data for line chart with scatter points."""
+ dates: List[datetime] # X-axis
+ line: SeriesData # Main line plot
+ markers: List[MarkerData] # Scatter points
 
 @dataclass
 class MarkerData:
-    date: datetime
-    value: float
-    label: str  # For legend grouping (e.g., "BUY", "SELL")
-    color: Optional[str] = None
+ date: datetime
+ value: float
+ label: str # For legend grouping (e.g., "BUY", "SELL")
+ color: Optional[str] = None
 ```
 
 **Use Cases**:
@@ -145,18 +145,18 @@ class MarkerData:
 **Example**:
 ```python
 data = LineWithMarkersData(
-    dates=[date(2024, 1, 1), ...],
-    line=SeriesData(label="NVDA Price", values=[120.0, 121.5, ...]),
-    markers=[
-        MarkerData(date(2024, 1, 15), 125.0, "BUY", "#ff0000"),
-        MarkerData(date(2024, 2, 10), 135.0, "SELL", "#00ff00"),
-    ]
+ dates=[date(2024, 1, 1), ...],
+ line=SeriesData(label="NVDA Price", values=[120.0, 121.5, ...]),
+ markers=[
+ MarkerData(date(2024, 1, 15), 125.0, "BUY", "#ff0000"),
+ MarkerData(date(2024, 2, 10), 135.0, "SELL", "#00ff00"),
+ ]
 )
 create_line_with_markers_chart(
-    data=data,
-    title="Price with Transactions",
-    y_label="Price ($)",
-    output="trades.png"
+ data=data,
+ title="Price with Transactions",
+ y_label="Price ($)",
+ output="trades.png"
 )
 ```
 
@@ -167,15 +167,15 @@ create_line_with_markers_chart(
 ```python
 @dataclass
 class MultiPanelData:
-    """Data for multi-panel chart."""
-    panels: List[PanelData]
-    layout: Tuple[int, int]  # (rows, cols)
+ """Data for multi-panel chart."""
+ panels: List[PanelData]
+ layout: Tuple[int, int] # (rows, cols)
 
 @dataclass
 class PanelData:
-    title: str
-    chart_type: str  # "line", "stacked_area", etc.
-    data: Any  # Type depends on chart_type
+ title: str
+ chart_type: str # "line", "stacked_area", etc.
+ data: Any # Type depends on chart_type
 ```
 
 **Use Cases**:
@@ -190,25 +190,25 @@ class PanelData:
 
 ```python
 def display_chart(output_file: str) -> None:
-    """Display chart using platform-appropriate method.
+ """Display chart using platform-appropriate method.
 
-    - Windows: shell execute (opens in default viewer)
-    - Linux: matplotlib.pyplot.show() in background thread
-    - Headless: no-op (file already saved)
-    """
-    if not os.path.exists(output_file):
-        raise FileNotFoundError(f"Chart file not found: {output_file}")
+ - Windows: shell execute (opens in default viewer)
+ - Linux: matplotlib.pyplot.show() in background thread
+ - Headless: no-op (file already saved)
+ """
+ if not os.path.exists(output_file):
+ raise FileNotFoundError(f"Chart file not found: {output_file}")
 
-    if sys.platform == "win32":
-        # Windows: shell execute
-        os.startfile(output_file)
-    elif os.environ.get("DISPLAY"):
-        # Linux with X11: show in GUI window
-        # (matplotlib already showed it, or we can re-open)
-        pass
-    else:
-        # Headless: just print path
-        print(f"Chart saved to: {output_file}")
+ if sys.platform == "win32":
+ # Windows: shell execute
+ os.startfile(output_file)
+ elif os.environ.get("DISPLAY"):
+ # Linux with X11: show in GUI window
+ # (matplotlib already showed it, or we can re-open)
+ pass
+ else:
+ # Headless: just print path
+ print(f"Chart saved to: {output_file}")
 ```
 
 ### Chart Creation Pattern
@@ -217,42 +217,42 @@ All chart functions follow this pattern:
 
 ```python
 def create_xxx_chart(
-    data: XxxData,
-    title: str,
-    y_label: str,
-    output: Optional[str] = None,
-    **kwargs
+ data: XxxData,
+ title: str,
+ y_label: str,
+ output: Optional[str] = None,
+ **kwargs
 ) -> str:
-    """Create xxx chart.
+ """Create xxx chart.
 
-    Args:
-        data: Chart data (type-checked dataclass)
-        title: Chart title
-        y_label: Y-axis label
-        output: Output file path (PNG/PDF). If None, generates temp file.
-        **kwargs: Additional matplotlib customization
+ Args:
+ data: Chart data (type-checked dataclass)
+ title: Chart title
+ y_label: Y-axis label
+ output: Output file path (PNG/PDF). If None, generates temp file.
+ **kwargs: Additional matplotlib customization
 
-    Returns:
-        Path to output file
-    """
-    # 1. Validate data
-    if not isinstance(data, XxxData):
-        raise TypeError(f"Expected XxxData, got {type(data)}")
+ Returns:
+ Path to output file
+ """
+ # 1. Validate data
+ if not isinstance(data, XxxData):
+ raise TypeError(f"Expected XxxData, got {type(data)}")
 
-    # 2. Create matplotlib figure
-    fig, ax = plt.subplots(...)
+ # 2. Create matplotlib figure
+ fig, ax = plt.subplots(...)
 
-    # 3. Render chart (pure visualization, no business logic)
-    ...
+ # 3. Render chart (pure visualization, no business logic)
+ ...
 
-    # 4. Save to file
-    if output is None:
-        output = tempfile.mktemp(suffix=".png")
-    plt.savefig(output, dpi=150, bbox_inches="tight")
-    plt.close(fig)
+ # 4. Save to file
+ if output is None:
+ output = tempfile.mktemp(suffix=".png")
+ plt.savefig(output, dpi=150, bbox_inches="tight")
+ plt.close(fig)
 
-    # 5. Return path (caller decides whether to display)
-    return output
+ # 5. Return path (caller decides whether to display)
+ return output
 ```
 
 ---
@@ -266,34 +266,34 @@ def create_xxx_chart(
 
 # Semantic color categories
 CHART_COLORS = {
-    "primary": "#1f77b4",
-    "secondary": "#ff7f0e",
-    "success": "#2ca02c",
-    "danger": "#d62728",
-    "warning": "#ff9800",
-    "info": "#17a2b8",
+ "primary": "#1f77b4",
+ "secondary": "#ff7f0e",
+ "success": "#2ca02c",
+ "danger": "#d62728",
+ "warning": "#ff9800",
+ "info": "#17a2b8",
 }
 
 # Asset-specific colors (optional, for backwards compatibility)
 ASSET_COLORS = {
-    "BTC-USD": "#f7931a",  # Bitcoin orange
-    "ETH-USD": "#627eea",  # Ethereum purple
-    "VOO": "#ff7f0e",
-    "BIL": "#2ca02c",
-    # ... etc
+ "BTC-USD": "#f7931a", # Bitcoin orange
+ "ETH-USD": "#627eea", # Ethereum purple
+ "VOO": "#ff7f0e",
+ "BIL": "#2ca02c",
+ # ... etc
 }
 
 def get_chart_color(index: int) -> str:
-    """Get color from standard palette by index."""
-    palette = [
-        "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728",
-        "#9467bd", "#8c564b", "#e377c2", "#7f7f7f",
-    ]
-    return palette[index % len(palette)]
+ """Get color from standard palette by index."""
+ palette = [
+ "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728",
+ "#9467bd", "#8c564b", "#e377c2", "#7f7f7f",
+ ]
+ return palette[index % len(palette)]
 
 def get_asset_color(ticker: str, fallback_index: int = 0) -> str:
-    """Get color for asset ticker, with fallback to palette."""
-    return ASSET_COLORS.get(ticker, get_chart_color(fallback_index))
+ """Get color for asset ticker, with fallback to palette."""
+ return ASSET_COLORS.get(ticker, get_chart_color(fallback_index))
 ```
 
 ---
@@ -346,14 +346,14 @@ def get_asset_color(ticker: str, fallback_index: int = 0) -> str:
 ### Before (Current)
 ```python
 # Caller must know DataFrame column naming conventions
-daily_values = result['daily_values']  # Has {ticker}_value columns
+daily_values = result['daily_values'] # Has {ticker}_value columns
 allocations = {'VOO': 0.6, 'BIL': 0.4}
 
 plot_portfolio_composition(
-    daily_values=daily_values,  # Finance-specific
-    allocations=allocations,     # Finance-specific
-    output_file="chart.png",
-    show_percentage=False
+ daily_values=daily_values, # Finance-specific
+ allocations=allocations, # Finance-specific
+ output_file="chart.png",
+ show_percentage=False
 )
 # Chart is saved, but not displayed automatically
 ```
@@ -362,19 +362,19 @@ plot_portfolio_composition(
 ```python
 # Caller transforms data to neutral format
 chart_data = StackedAreaData(
-    dates=result['dates'],
-    series=[
-        SeriesData("VOO", result['voo_values']),
-        SeriesData("BIL", result['bil_values']),
-    ]
+ dates=result['dates'],
+ series=[
+ SeriesData("VOO", result['voo_values']),
+ SeriesData("BIL", result['bil_values']),
+ ]
 )
 
 output = create_stacked_area_chart(
-    data=chart_data,
-    title="Portfolio Composition",
-    y_label="Value ($)"
+ data=chart_data,
+ title="Portfolio Composition",
+ y_label="Value ($)"
 )
-display_chart(output)  # Platform-aware display
+display_chart(output) # Platform-aware display
 ```
 
 ---
@@ -382,20 +382,20 @@ display_chart(output)  # Platform-aware display
 ## Open Questions
 
 1. **Should we use dataclasses or TypedDict?**
-   - Dataclasses: Better typing, validation
-   - TypedDict: More flexible, easier migration
+ - Dataclasses: Better typing, validation
+ - TypedDict: More flexible, easier migration
 
 2. **Should chart creation return path or display automatically?**
-   - Return path: More control, explicit display
-   - Auto-display: More convenient, less code
+ - Return path: More control, explicit display
+ - Auto-display: More convenient, less code
 
 3. **Should we support matplotlib figure customization?**
-   - Yes via kwargs: Flexible but leaky abstraction
-   - No: Clean but less powerful
+ - Yes via kwargs: Flexible but leaky abstraction
+ - No: Clean but less powerful
 
 4. **Should colors be in data or rendering?**
-   - In data (SeriesData.color): More control
-   - In rendering: More consistent, less duplication
+ - In data (SeriesData.color): More control
+ - In rendering: More consistent, less duplication
 
 ---
 

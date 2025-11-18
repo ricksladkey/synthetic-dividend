@@ -1,12 +1,12 @@
 # Order Calculator GUI - Requirements, Design & Architecture
 
-**Date**: November 13, 2025  
-**Status**: ✅ COMPLETE - First real trades executed successfully  
+**Date**: November 13, 2025
+**Status**: [OK] COMPLETE - First real trades executed successfully
 **Milestone**: $53,000 SOUN position managed with automated order calculation
 
 ---
 
-## 🎯 Mission Accomplished
+## Mission Accomplished
 
 **First Real Trades Executed**: Used the GUI to place 2 automated orders for SOUN position:
 - **Exposure**: $53,000 total position
@@ -18,21 +18,21 @@ This GUI transforms theoretical backtesting into practical trading reality.
 
 ---
 
-## 📋 Informal Requirements
+## Informal Requirements
 
 ### User Story
 **As a volatility harvesting trader**, I want an intuitive GUI that eliminates manual order calculation errors, provides visual market context, and remembers my preferences so I can focus on strategy rather than arithmetic.
 
 ### Core Requirements
 
-#### ✅ **Functional Requirements**
+#### [OK] **Functional Requirements**
 1. **Order Calculation**: Calculate buy/sell orders for SD-N volatility harvesting
 2. **Input Validation**: Handle financial formats ($1,234.56, 1,000 shares, etc.)
 3. **Persistent State**: Remember last ticker, form defaults, calculation history
 4. **Visual Context**: Logarithmic price charts with bracket annotations
 5. **Professional UX**: Tabbed interface, status updates, error handling
 
-#### ✅ **Non-Functional Requirements**
+#### [OK] **Non-Functional Requirements**
 1. **Performance**: Sub-second calculation and chart rendering
 2. **Reliability**: Graceful degradation when data unavailable
 3. **Usability**: Intuitive workflow, keyboard shortcuts, tooltips
@@ -40,10 +40,10 @@ This GUI transforms theoretical backtesting into practical trading reality.
 5. **Extensibility**: Easy to add new features or calculation methods
 
 ### Success Criteria
-- ✅ **Zero calculation errors** in live trading
-- ✅ **Sub-5-second workflow** from ticker entry to order placement
-- ✅ **100% test coverage** on critical paths
-- ✅ **Professional appearance** suitable for client presentations
+- [OK] **Zero calculation errors** in live trading
+- [OK] **Sub-5-second workflow** from ticker entry to order placement
+- [OK] **100% test coverage** on critical paths
+- [OK] **Professional appearance** suitable for client presentations
 
 ---
 
@@ -52,23 +52,23 @@ This GUI transforms theoretical backtesting into practical trading reality.
 ### System Architecture
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Tkinter GUI   │────│  OrderCalculator │────│   Asset Data    │
-│                 │    │                  │    │   (Yahoo/API)   │
-│ • Input Forms   │    │ • SD-N Logic     │    │                 │
-│ • Chart Display │    │ • Bracket Calc   │    │ • Price History │
-│ • History Mgmt  │    │ • Order Sizing   │    │ • Fallback Data │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-                    ┌────────────────────┐
-                    │  JSON Persistence  │
-                    │                    │
-                    │ • Calculation Hist │
-                    │ • Last Ticker      │
-                    │ • Form Defaults    │
-                    └────────────────────┘
+┌─────────────────┐ ┌──────────────────┐ ┌─────────────────┐
+│ Tkinter GUI │────│ OrderCalculator │────│ Asset Data │
+│ │ │ │ │ (Yahoo/API) │
+│ • Input Forms │ │ • SD-N Logic │ │ │
+│ • Chart Display │ │ • Bracket Calc │ │ • Price History │
+│ • History Mgmt │ │ • Order Sizing │ │ • Fallback Data │
+└─────────────────┘ └──────────────────┘ └─────────────────┘
+ │ │ │
+ └───────────────────────┼───────────────────────┘
+ │
+ ┌────────────────────┐
+ │ JSON Persistence │
+ │ │
+ │ • Calculation Hist │
+ │ • Last Ticker │
+ │ • Form Defaults │
+ └────────────────────┘
 ```
 
 ### Component Design
@@ -84,10 +84,10 @@ This GUI transforms theoretical backtesting into practical trading reality.
 
 **Key Methods:**
 ```python
-def __init__(self, root: tk.Tk)           # GUI construction
-def calculate_orders(self)                # Core calculation logic
-def update_chart(self, ...)               # Chart rendering
-def pre_fill_with_ticker(self, ticker)    # State restoration
+def __init__(self, root: tk.Tk) # GUI construction
+def calculate_orders(self) # Core calculation logic
+def update_chart(self, ...) # Chart rendering
+def pre_fill_with_ticker(self, ticker) # State restoration
 def load_history(self) -> Dict[str, Dict] # Persistence loading
 ```
 
@@ -106,8 +106,8 @@ def load_history(self) -> Dict[str, Dict] # Persistence loading
 
 **Key Functions:**
 ```python
-calculate_orders_for_manual_entry(...)    # Core SD-N algorithm
-format_order_display(...)                 # Human-readable output
+calculate_orders_for_manual_entry(...) # Core SD-N algorithm
+format_order_display(...) # Human-readable output
 ```
 
 #### 3. **Asset Data Provider** (`src/data/asset.py`)
@@ -122,8 +122,8 @@ format_order_display(...)                 # Human-readable output
 
 ```
 User Input → Input Validation → Calculation Engine → Result Formatting
-      ↓              ↓              ↓              ↓
-   GUI State →  Persistence  →  Chart Data  →  Visual Display
+ ↓ ↓ ↓ ↓
+ GUI State → Persistence → Chart Data → Visual Display
 ```
 
 ### State Management
@@ -131,23 +131,23 @@ User Input → Input Validation → Calculation Engine → Result Formatting
 #### Persistent State Schema
 ```json
 {
-  "last_ticker": "NVDA",
-  "NVDA": {
-    "holdings": 1000,
-    "last_price": 125.50,
-    "current_price": 142.30,
-    "sdn": 8,
-    "profit": 50.0,
-    "bracket_seed": 100.0
-  },
-  "AAPL": {
-    "holdings": 500,
-    "last_price": 175.25,
-    "current_price": 192.80,
-    "sdn": 8,
-    "profit": 50.0,
-    "bracket_seed": null
-  }
+ "last_ticker": "NVDA",
+ "NVDA": {
+ "holdings": 1000,
+ "last_price": 125.50,
+ "current_price": 142.30,
+ "sdn": 8,
+ "profit": 50.0,
+ "bracket_seed": 100.0
+ },
+ "AAPL": {
+ "holdings": 500,
+ "last_price": 175.25,
+ "current_price": 192.80,
+ "sdn": 8,
+ "profit": 50.0,
+ "bracket_seed": null
+ }
 }
 ```
 
@@ -172,27 +172,27 @@ User Input → Input Validation → Calculation Engine → Result Formatting
 
 ---
 
-## 🎨 User Experience Design
+## User Experience Design
 
 ### Interface Layout
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Order Calculator                    ┌─────────┐ ┌─────────┐ │
+│ Order Calculator ┌─────────┐ ┌─────────┐ │
 ├─────────────────────────────────────┼─────────┼───────────┼─┤
-│ Ticker: [NVDA ▼] Holdings: [1,000] │         │           │ │
-│ Last Price: [$125.50] Current: [$142.30]     │  Calc    │ │
-│ SDN: [8] Profit %: [50.0] Bracket: [ ]       │ Orders   │ │
-│                                     └─────────┘           │ │
+│ Ticker: [NVDA ▼] Holdings: [1,000] │ │ │ │
+│ Last Price: [$125.50] Current: [$142.30] │ Calc │ │
+│ SDN: [8] Profit %: [50.0] Bracket: [ ] │ Orders │ │
+│ └─────────┘ │ │
 ├─────────────────────────────────────────────────────────────┤
 │ ┌─ Order Details ──────────────────┐ ┌─ Price Chart ─────┐ │
-│ │ Buy Order: 900 shares @ $114.53 │ │                   │ │
+│ │ Buy Order: 900 shares @ $114.53 │ │ │ │
 │ │ Sell Order: 825 shares @ $136.44│ │ [Log scale chart] │ │
-│ │                                 │ │ [Bracket lines]   │ │
-│ │                                 │ │ [Annotations]     │ │
+│ │ │ │ [Bracket lines] │ │
+│ │ │ │ [Annotations] │ │
 │ └─────────────────────────────────┘ └───────────────────┘ │
 ├─────────────────────────────────────────────────────────────┤
-│ Ready - Calculated orders for NVDA                         │
+│ Ready - Calculated orders for NVDA │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -233,7 +233,7 @@ User Input → Input Validation → Calculation Engine → Result Formatting
 
 ---
 
-## 🔧 Implementation Details
+## Implementation Details
 
 ### Technology Stack
 
@@ -274,7 +274,7 @@ User Input → Input Validation → Calculation Engine → Result Formatting
 ```python
 # Only fetch chart data when needed
 if self.chart_tab_selected:
-    self.update_chart(...)
+ self.update_chart(...)
 ```
 
 #### 2. **Input Debouncing**
@@ -282,9 +282,9 @@ if self.chart_tab_selected:
 # Prevent excessive calculations during typing
 self.calc_timer = None
 def on_input_change(self):
-    if self.calc_timer:
-        self.root.after_cancel(self.calc_timer)
-    self.calc_timer = self.root.after(500, self.calculate_orders)
+ if self.calc_timer:
+ self.root.after_cancel(self.calc_timer)
+ self.calc_timer = self.root.after(500, self.calculate_orders)
 ```
 
 #### 3. **Data Caching**
@@ -292,7 +292,7 @@ def on_input_change(self):
 # Cache price data across sessions
 cache_file = f"price_cache_{ticker}_{start}_{end}.pkl"
 if os.path.exists(cache_file):
-    return pd.read_pickle(cache_file)
+ return pd.read_pickle(cache_file)
 ```
 
 ### Code Quality Measures
@@ -310,7 +310,7 @@ if os.path.exists(cache_file):
 
 ---
 
-## 📊 Testing & Validation
+## Testing & Validation
 
 ### Test Coverage
 
@@ -324,45 +324,45 @@ src/tools/order_calculator_gui.py
 #### 1. **Happy Path Testing**
 ```python
 def test_full_calculation_workflow(self):
-    """Test complete order calculation from input to display."""
-    # Setup GUI with test data
-    # Simulate user input
-    # Verify calculations
-    # Verify chart rendering
-    # Verify persistence
+ """Test complete order calculation from input to display."""
+ # Setup GUI with test data
+ # Simulate user input
+ # Verify calculations
+ # Verify chart rendering
+ # Verify persistence
 ```
 
 #### 2. **Error Handling**
 ```python
 def test_network_failure_graceful_degradation(self):
-    """Test behavior when Yahoo Finance is unavailable."""
-    # Mock network failure
-    # Verify calculation still works
-    # Verify chart shows "no data" message
-    # Verify error logged but not shown to user
+ """Test behavior when Yahoo Finance is unavailable."""
+ # Mock network failure
+ # Verify calculation still works
+ # Verify chart shows "no data" message
+ # Verify error logged but not shown to user
 ```
 
 #### 3. **Data Persistence**
 ```python
 def test_history_persistence_across_sessions(self):
-    """Test that settings persist between GUI restarts."""
-    # Create GUI, set values, close
-    # Create new GUI instance
-    # Verify values restored
+ """Test that settings persist between GUI restarts."""
+ # Create GUI, set values, close
+ # Create new GUI instance
+ # Verify values restored
 ```
 
 ### Performance Benchmarks
 
 | Operation | Target | Actual | Status |
 |-----------|--------|--------|--------|
-| GUI Startup | <2s | 0.8s | ✅ |
-| Order Calculation | <0.5s | 0.2s | ✅ |
-| Chart Rendering | <3s | 1.5s | ✅ |
-| History Load | <0.1s | 0.05s | ✅ |
+| GUI Startup | <2s | 0.8s | [OK] |
+| Order Calculation | <0.5s | 0.2s | [OK] |
+| Chart Rendering | <3s | 1.5s | [OK] |
+| History Load | <0.1s | 0.05s | [OK] |
 
 ---
 
-## 🚀 Future Roadmap
+## Future Roadmap
 
 ### Phase 1: Enhanced Features (Q1 2026)
 
@@ -433,10 +433,10 @@ def test_history_persistence_across_sessions(self):
 
 ---
 
-## 📈 Success Metrics
+## Success Metrics
 
 ### Quantitative Metrics
-- **Orders Placed**: 2 (first real trades completed ✅)
+- **Orders Placed**: 2 (first real trades completed [OK])
 - **Position Size**: $53,000 exposure managed
 - **Calculation Accuracy**: 100% (zero errors in live trading)
 - **User Productivity**: 5x faster than manual calculations
@@ -472,7 +472,7 @@ def test_history_persistence_across_sessions(self):
 
 ---
 
-## 📚 References & Resources
+## References & Resources
 
 ### Related Documentation
 - `docs/TOOL_USE_CASES.md` - Primary CLI tool use cases
@@ -497,5 +497,5 @@ def test_history_persistence_across_sessions(self):
 
 ---
 
-*This GUI transforms complex volatility harvesting mathematics into intuitive, professional trading tools. The first $53,000 managed with automated precision marks the transition from backtesting theory to live market execution.* 🚀</content>
+*This GUI transforms complex volatility harvesting mathematics into intuitive, professional trading tools. The first $53,000 managed with automated precision marks the transition from backtesting theory to live market execution.* </content>
 <parameter name="filePath">c:\build\synthetic-dividend\docs\ORDER_CALCULATOR_GUI.md

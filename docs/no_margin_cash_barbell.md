@@ -8,18 +8,18 @@ The codebase **already supports** `allow_margin` parameter:
 
 ```python
 # In simulation.py
-allow_margin: bool = True  # Default allows margin
+allow_margin: bool = True # Default allows margin
 
 # Logic in execute_transaction:
 if self.shared_bank >= cost or self.allow_margin:
-    self.shared_bank -= cost
-    # Execute buy
+ self.shared_bank -= cost
+ # Execute buy
 else:
-    # Skip buy, record as skipped
-    skipped_count += 1
+ # Skip buy, record as skipped
+ skipped_count += 1
 ```
 
-**Status**: ✅ Working, just needs to be set to `False` by default for retail mode.
+**Status**: [OK] Working, just needs to be set to `False` by default for retail mode.
 
 ---
 
@@ -32,12 +32,12 @@ else:
 initial_investment = 1_000_000
 
 # All goes to shared bank
-self.shared_bank = initial_investment  # $1M
+self.shared_bank = initial_investment # $1M
 
 # Buy assets based on allocation
-allocations = {"NVDA": 1.0}  # 100% to NVDA
-cost = qty * price  # Buy ~$1M worth of shares
-self.shared_bank -= cost  # Bank now ~$0
+allocations = {"NVDA": 1.0} # 100% to NVDA
+cost = qty * price # Buy ~$1M worth of shares
+self.shared_bank -= cost # Bank now ~$0
 ```
 
 **Result**: Starts with near-zero cash, immediately needs margin for first buy trigger!
@@ -47,18 +47,18 @@ self.shared_bank -= cost  # Bank now ~$0
 ```python
 # Start simulation with $1M
 initial_investment = 1_000_000
-initial_cash_pct = 0.10  # NEW PARAMETER
+initial_cash_pct = 0.10 # NEW PARAMETER
 
 # Reserve cash upfront
-cash_reserve = initial_investment * initial_cash_pct  # $100K
-investment_pool = initial_investment * (1 - initial_cash_pct)  # $900K
+cash_reserve = initial_investment * initial_cash_pct # $100K
+investment_pool = initial_investment * (1 - initial_cash_pct) # $900K
 
-self.shared_bank = cash_reserve  # Start with $100K cash
+self.shared_bank = cash_reserve # Start with $100K cash
 
 # Buy assets from investment pool (not total)
-allocations = {"NVDA": 1.0}  # 100% of investment pool
-cost = (investment_pool * alloc) / price  # Buy $900K worth
-self.shared_bank -= cost  # Bank now still has $0 (used investment pool)
+allocations = {"NVDA": 1.0} # 100% of investment pool
+cost = (investment_pool * alloc) / price # Buy $900K worth
+self.shared_bank -= cost # Bank now still has $0 (used investment pool)
 
 # Wait, this doesn't work...
 ```
@@ -71,17 +71,17 @@ initial_investment = 1_000_000
 initial_cash_pct = 0.10
 
 # Start with ALL capital in bank
-self.shared_bank = initial_investment  # $1M
+self.shared_bank = initial_investment # $1M
 
 # Allocations are of TOTAL capital (including cash)
-allocations = {"NVDA": 0.90, "CASH": 0.10}  # 90% stock, 10% cash
+allocations = {"NVDA": 0.90, "CASH": 0.10} # 90% stock, 10% cash
 
 # Buy assets
 for ticker, alloc_pct in allocations.items():
-    if ticker == "CASH":
-        continue  # Keep as cash
-    cost = (initial_investment * alloc_pct) / price
-    self.shared_bank -= cost
+ if ticker == "CASH":
+ continue # Keep as cash
+ cost = (initial_investment * alloc_pct) / price
+ self.shared_bank -= cost
 
 # Bank now has $100K left (the 10% cash allocation)
 ```
@@ -98,9 +98,9 @@ User specifies cash as part of allocations:
 
 ```python
 allocations = {
-    "NVDA": 0.60,  # 60% in NVDA
-    "PLTR": 0.30,  # 30% in PLTR
-    "CASH": 0.10,  # 10% in cash (not invested)
+ "NVDA": 0.60, # 60% in NVDA
+ "PLTR": 0.30, # 30% in PLTR
+ "CASH": 0.10, # 10% in cash (not invested)
 }
 
 # No code changes needed!
@@ -113,28 +113,28 @@ Add `initial_cash_pct` parameter:
 
 ```python
 def run_portfolio_simulation(
-    allocations: Dict[str, float],
-    initial_investment: float = 1_000_000,
-    initial_cash_pct: float = 0.0,  # NEW: Reserve this % as cash
-    allow_margin: bool = False,  # NEW: Default to no margin
-    **kwargs
+ allocations: Dict[str, float],
+ initial_investment: float = 1_000_000,
+ initial_cash_pct: float = 0.0, # NEW: Reserve this % as cash
+ allow_margin: bool = False, # NEW: Default to no margin
+ **kwargs
 ):
-    # Normalize allocations to (1 - initial_cash_pct)
-    investable_pct = 1.0 - initial_cash_pct
-    scaled_allocations = {
-        ticker: alloc * investable_pct
-        for ticker, alloc in allocations.items()
-    }
+ # Normalize allocations to (1 - initial_cash_pct)
+ investable_pct = 1.0 - initial_cash_pct
+ scaled_allocations = {
+ ticker: alloc * investable_pct
+ for ticker, alloc in allocations.items()
+ }
 
-    # Bank starts with full investment
-    self.shared_bank = initial_investment
+ # Bank starts with full investment
+ self.shared_bank = initial_investment
 
-    # Purchase assets using scaled allocations
-    for ticker, alloc_pct in scaled_allocations.items():
-        cost = (initial_investment * alloc_pct) / price
-        self.shared_bank -= cost
+ # Purchase assets using scaled allocations
+ for ticker, alloc_pct in scaled_allocations.items():
+ cost = (initial_investment * alloc_pct) / price
+ self.shared_bank -= cost
 
-    # Bank now has initial_cash_pct * initial_investment left
+ # Bank now has initial_cash_pct * initial_investment left
 ```
 
 ---
@@ -147,20 +147,20 @@ With two or more assets competing for limited cash:
 
 ```python
 allocations = {
-    "NVDA": 0.50,
-    "PLTR": 0.40,
-    "CASH": 0.10,  # Starting cash
+ "NVDA": 0.50,
+ "PLTR": 0.40,
+ "CASH": 0.10, # Starting cash
 }
 
 initial_investment = 1_000_000
-allow_margin = False  # Hard constraint!
+allow_margin = False # Hard constraint!
 ```
 
 **Scenario 1: Both want to buy simultaneously**
 ```
 Day 1: NVDA triggers buy @ $100 (needs $50K)
-       PLTR triggers buy @ $50 (needs $25K)
-       Cash available: $100K
+ PLTR triggers buy @ $50 (needs $25K)
+ Cash available: $100K
 
 Result: Both execute (sufficient cash)
 New cash: $100K - $50K - $25K = $25K
@@ -169,8 +169,8 @@ New cash: $100K - $50K - $25K = $25K
 **Scenario 2: Insufficient cash**
 ```
 Day 10: NVDA triggers buy (needs $60K)
-        PLTR triggers buy (needs $30K)
-        Cash available: $25K
+ PLTR triggers buy (needs $30K)
+ Cash available: $25K
 
 Result:
 - First in queue: NVDA buys $25K worth (partial fill or skip)
@@ -183,9 +183,9 @@ New cash: $0
 **Scenario 3: Uptrend builds cash (The Barbell Effect!)**
 ```
 Day 100: NVDA has been rising (many sells, no buys)
-         Cash accumulated: $200K (from selling into uptrend)
+ Cash accumulated: $200K (from selling into uptrend)
 
-         PLTR dips: triggers buy (needs $40K)
+ PLTR dips: triggers buy (needs $40K)
 
 Result: Buy executes easily (plenty of cash!)
 New cash: $200K - $40K = $160K
@@ -234,12 +234,12 @@ When one dips:
 ### 4. **Prevents sd32 Catastrophe**
 ```
 With margin:
-  sd32 borrows $4.1M → catastrophic
+ sd32 borrows $4.1M → catastrophic
 
 Without margin:
-  sd32 can't buy → skips transactions → NO MARGIN DEBT
-  Worse alpha? Maybe.
-  But NO RISK of bankruptcy!
+ sd32 can't buy → skips transactions → NO MARGIN DEBT
+ Worse alpha? Maybe.
+ But NO RISK of bankruptcy!
 ```
 
 ### 5. **Simple Mental Model**
@@ -259,34 +259,34 @@ Not:
 
 ```python
 result = run_portfolio_simulation(
-    allocations={"NVDA": 0.90, "CASH": 0.10},
-    initial_investment=1_000_000,
-    allow_margin=False,  # Hard constraint
-    start_date=date(2023, 1, 1),
-    end_date=date(2023, 12, 31),
-    portfolio_algo="sd8",
+ allocations={"NVDA": 0.90, "CASH": 0.10},
+ initial_investment=1_000_000,
+ allow_margin=False, # Hard constraint
+ start_date=date(2023, 1, 1),
+ end_date=date(2023, 12, 31),
+ portfolio_algo="sd8",
 )
 
 # Verify:
-assert result["skipped_buys"] > 0  # Some buys should be skipped
-assert result["bank_min"] >= 0  # Never goes negative
-assert result["bank_max"] > 100_000  # Cash accumulates in uptrend
+assert result["skipped_buys"] > 0 # Some buys should be skipped
+assert result["bank_min"] >= 0 # Never goes negative
+assert result["bank_max"] > 100_000 # Cash accumulates in uptrend
 ```
 
 ### Test 2: Multi-Asset Cash Competition
 
 ```python
 result = run_portfolio_simulation(
-    allocations={
-        "NVDA": 0.45,
-        "PLTR": 0.45,
-        "CASH": 0.10,
-    },
-    initial_investment=1_000_000,
-    allow_margin=False,
-    start_date=date(2023, 1, 1),
-    end_date=date(2023, 12, 31),
-    portfolio_algo="sd8",
+ allocations={
+ "NVDA": 0.45,
+ "PLTR": 0.45,
+ "CASH": 0.10,
+ },
+ initial_investment=1_000_000,
+ allow_margin=False,
+ start_date=date(2023, 1, 1),
+ end_date=date(2023, 12, 31),
+ portfolio_algo="sd8",
 )
 
 # Verify:
@@ -300,12 +300,12 @@ result = run_portfolio_simulation(
 ```python
 # Use NVDA 2023 (strong uptrend, 3.5× gain)
 result = run_portfolio_simulation(
-    allocations={"NVDA": 0.90, "CASH": 0.10},
-    initial_investment=1_000_000,
-    allow_margin=False,
-    portfolio_algo="sd8",
-    start_date=date(2023, 1, 1),
-    end_date=date(2023, 12, 31),
+ allocations={"NVDA": 0.90, "CASH": 0.10},
+ initial_investment=1_000_000,
+ allow_margin=False,
+ portfolio_algo="sd8",
+ start_date=date(2023, 1, 1),
+ end_date=date(2023, 12, 31),
 )
 
 # Expect:
@@ -319,13 +319,13 @@ result = run_portfolio_simulation(
 
 ## Implementation Checklist
 
-### Phase 1: Enable No-Margin Mode ✅ COMPLETED
+### Phase 1: Enable No-Margin Mode [OK] COMPLETED
 
 **IMPLEMENTED**: Changed default to `allow_margin=False`
 
 In `src/models/simulation.py` line 36:
 ```python
-allow_margin: bool = False,  # Default: no margin (realistic retail mode)
+allow_margin: bool = False, # Default: no margin (realistic retail mode)
 ```
 
 Existing logic handles this:
@@ -333,7 +333,7 @@ Existing logic handles this:
 - Skips buy if insufficient cash
 - Logs as `skipped_buys`
 
-### Phase 2: Add Cash Allocation ✅ COMPLETED
+### Phase 2: Add Cash Allocation [OK] COMPLETED
 
 **IMPLEMENTED**: Option A (explicit cash allocation)
 
@@ -346,48 +346,48 @@ real_tickers = [t for t in allocations.keys() if t != "CASH"]
 
 # Only fetch price data for real tickers
 for ticker in real_tickers:
-    df = fetcher.get_history(ticker, start_date, end_date)
-    price_data[ticker] = df
+ df = fetcher.get_history(ticker, start_date, end_date)
+ price_data[ticker] = df
 
 # Note CASH allocation if present
 if "CASH" in allocations:
-    cash_pct = allocations["CASH"] * 100
-    print(f"  - CASH: {cash_pct:.1f}% reserve (no data needed)")
+ cash_pct = allocations["CASH"] * 100
+ print(f" - CASH: {cash_pct:.1f}% reserve (no data needed)")
 ```
 
 2. **Skip CASH in dividend fetching** (line 142):
 ```python
-for ticker in real_tickers:  # Skip CASH
-    div_series = asset.get_dividends(start_date, end_date)
+for ticker in real_tickers: # Skip CASH
+ div_series = asset.get_dividends(start_date, end_date)
 ```
 
 3. **Skip CASH in initial purchase** (lines 354-359):
 ```python
 for ticker, alloc_pct in self.allocations.items():
-    # Skip CASH - it stays in the bank
-    if ticker == "CASH":
-        cash_reserve = self.initial_investment * alloc_pct
-        print(f"  {ticker}: ${cash_reserve:,.2f} reserve (kept in bank)")
-        continue
-    # ... rest of purchase logic
+ # Skip CASH - it stays in the bank
+ if ticker == "CASH":
+ cash_reserve = self.initial_investment * alloc_pct
+ print(f" {ticker}: ${cash_reserve:,.2f} reserve (kept in bank)")
+ continue
+ # ... rest of purchase logic
 ```
 
 **Benefits of this approach**:
-- ✅ Clearer intent (explicit allocation)
-- ✅ User controls exact percentages
-- ✅ Simpler implementation
-- ✅ Backwards compatible (old allocations still work)
+- [OK] Clearer intent (explicit allocation)
+- [OK] User controls exact percentages
+- [OK] Simpler implementation
+- [OK] Backwards compatible (old allocations still work)
 
-### Phase 3: Testing ✅ COMPLETED
+### Phase 3: Testing [OK] COMPLETED
 
 **Unit tests created**: `scripts/test_cash_unit.py`
 
 Tests verify:
-- ✅ CASH ticker filtering from data fetching
-- ✅ `allow_margin=False` is default
-- ✅ Cash reserve calculation
-- ✅ Margin check logic (skips buys when cash insufficient)
-- ✅ Backwards compatibility (old allocations work)
+- [OK] CASH ticker filtering from data fetching
+- [OK] `allow_margin=False` is default
+- [OK] Cash reserve calculation
+- [OK] Margin check logic (skips buys when cash insufficient)
+- [OK] Backwards compatibility (old allocations work)
 
 All unit tests pass!
 
@@ -441,14 +441,14 @@ Risky: NVDA, PLTR, MSTR (high growth, high volatility)
 Safe: Cash (zero volatility, available for buying)
 
 As risky assets rise:
-  → Sell incrementally
-  → Cash grows
-  → Barbell shifts toward "safe" end
+ → Sell incrementally
+ → Cash grows
+ → Barbell shifts toward "safe" end
 
 As risky assets fall:
-  → Buy incrementally
-  → Cash depletes
-  → Barbell shifts toward "risky" end
+ → Buy incrementally
+ → Cash depletes
+ → Barbell shifts toward "risky" end
 ```
 
 **Self-stabilizing system!**
@@ -459,12 +459,12 @@ As risky assets fall:
 Cash_pct(t) = Cash_pct(0) + ∫[sells - buys] dt
 
 For strong uptrend (μ >> 0):
-  sells >> buys
-  ⟹ Cash_pct(t) grows
+ sells >> buys
+ ⟹ Cash_pct(t) grows
 
 For downtrend (μ << 0):
-  buys >> sells
-  ⟹ Cash_pct(t) shrinks
+ buys >> sells
+ ⟹ Cash_pct(t) shrinks
 ```
 
 **Optimal cash range**: 10-30%
@@ -476,23 +476,23 @@ For downtrend (μ << 0):
 ## Implementation Priority
 
 1. **Immediate** (already works):
-   ```python
-   allow_margin=False
-   ```
+ ```python
+ allow_margin=False
+ ```
 
 2. **Short-term** (small code change):
-   - Support "CASH" in allocations dict
-   - Skip "CASH" ticker in purchase loop
+ - Support "CASH" in allocations dict
+ - Skip "CASH" ticker in purchase loop
 
 3. **Medium-term** (testing):
-   - Multi-asset cash competition tests
-   - Validate barbell dynamics
-   - Document skipped buy behavior
+ - Multi-asset cash competition tests
+ - Validate barbell dynamics
+ - Document skipped buy behavior
 
 4. **Long-term** (analysis):
-   - Optimal initial_cash_pct by market regime
-   - Multi-asset correlation effects
-   - Dynamic cash rebalancing strategies
+ - Optimal initial_cash_pct by market regime
+ - Multi-asset correlation effects
+ - Dynamic cash rebalancing strategies
 
 ---
 
@@ -505,16 +505,16 @@ from src.models.simulation import run_portfolio_simulation
 from datetime import date
 
 result = run_portfolio_simulation(
-    allocations={
-        "NVDA": 0.60,
-        "PLTR": 0.30,
-        "CASH": 0.10,  # 10% cash reserve
-    },
-    initial_investment=1_000_000,
-    allow_margin=False,  # Retail mode!
-    start_date=date(2023, 1, 1),
-    end_date=date(2023, 12, 31),
-    portfolio_algo="sd8",
+ allocations={
+ "NVDA": 0.60,
+ "PLTR": 0.30,
+ "CASH": 0.10, # 10% cash reserve
+ },
+ initial_investment=1_000_000,
+ allow_margin=False, # Retail mode!
+ start_date=date(2023, 1, 1),
+ end_date=date(2023, 12, 31),
+ portfolio_algo="sd8",
 )
 
 print(f"Final value: ${result['total']:,.0f}")
@@ -527,23 +527,23 @@ print(f"Max cash: ${result['bank_max']:,.0f}")
 
 ```python
 result = run_portfolio_simulation(
-    allocations={
-        "NVDA": 0.40,   # High beta tech
-        "PLTR": 0.30,   # Medium beta tech
-        "GOOG": 0.20,   # Lower beta mega-cap
-        "CASH": 0.10,   # Safety buffer
-    },
-    initial_investment=1_000_000,
-    allow_margin=False,
-    portfolio_algo="sd8",
-    start_date=date(2020, 1, 1),
-    end_date=date(2024, 12, 31),
+ allocations={
+ "NVDA": 0.40, # High beta tech
+ "PLTR": 0.30, # Medium beta tech
+ "GOOG": 0.20, # Lower beta mega-cap
+ "CASH": 0.10, # Safety buffer
+ },
+ initial_investment=1_000_000,
+ allow_margin=False,
+ portfolio_algo="sd8",
+ start_date=date(2020, 1, 1),
+ end_date=date(2024, 12, 31),
 )
 
 # Analyze cash dynamics
 cash_pct = [
-    result['daily_bank_values'][d] / result['daily_portfolio_values'][d]
-    for d in result['daily_portfolio_values'].keys()
+ result['daily_bank_values'][d] / result['daily_portfolio_values'][d]
+ for d in result['daily_portfolio_values'].keys()
 ]
 
 print(f"Cash %: min={min(cash_pct):.1%}, max={max(cash_pct):.1%}, avg={np.mean(cash_pct):.1%}")
@@ -555,49 +555,49 @@ print(f"Cash %: min={min(cash_pct):.1%}, max={max(cash_pct):.1%}, avg={np.mean(c
 
 **Your proposal is excellent!** It addresses:
 
-✅ **Realism**: No retail investor uses 28× margin
-✅ **Safety**: Can't go bankrupt (max loss = initial investment)
-✅ **Simplicity**: "I have $X cash, can I buy?" (binary decision)
-✅ **Barbell**: Cash accumulates naturally in uptrends
-✅ **Multi-asset**: Assets compete for finite capital (realistic!)
+[OK] **Realism**: No retail investor uses 28× margin
+[OK] **Safety**: Can't go bankrupt (max loss = initial investment)
+[OK] **Simplicity**: "I have $X cash, can I buy?" (binary decision)
+[OK] **Barbell**: Cash accumulates naturally in uptrends
+[OK] **Multi-asset**: Assets compete for finite capital (realistic!)
 
 **Implementation**:
-1. ✅ Margin control exists (`allow_margin=False`)
-2. ⚠️ Cash allocation needs small enhancement (support "CASH" ticker)
+1. [OK] Margin control exists (`allow_margin=False`)
+2. WARNING: Cash allocation needs small enhancement (support "CASH" ticker)
 3. ⏳ Testing multi-asset dynamics
 
 ---
 
-## Implementation Complete! ✅
+## Implementation Complete! [OK]
 
 **Status**: All core infrastructure implemented and tested.
 
 ### What Was Implemented
 
 1. **Default No-Margin Mode**
-   - Changed `allow_margin` default from `True` to `False`
-   - Retail-friendly: can't borrow more than you have
-   - Explicit opt-in required for margin trading
+ - Changed `allow_margin` default from `True` to `False`
+ - Retail-friendly: can't borrow more than you have
+ - Explicit opt-in required for margin trading
 
 2. **CASH Ticker Support**
-   - Can specify `"CASH": 0.10` in allocations dict
-   - Cash reserve automatically kept in bank (not "purchased")
-   - Skipped from price/dividend data fetching
-   - Fully backwards compatible with old allocations
+ - Can specify `"CASH": 0.10` in allocations dict
+ - Cash reserve automatically kept in bank (not "purchased")
+ - Skipped from price/dividend data fetching
+ - Fully backwards compatible with old allocations
 
-3. **BIL Interest on CASH (NEW!)** 🎯
-   - CASH balances automatically earn BIL (short-term Treasury) yields
-   - Models realistic brokerage sweep accounts
-   - Monthly interest payments (~4-5% APY in 2023)
-   - Interest calculated as: `(cash_balance / BIL_price) × BIL_dividend`
-   - Implements Warren Buffett's 90/10 portfolio recommendation
+3. **BIL Interest on CASH (NEW!)**
+ - CASH balances automatically earn BIL (short-term Treasury) yields
+ - Models realistic brokerage sweep accounts
+ - Monthly interest payments (~4-5% APY in 2023)
+ - Interest calculated as: `(cash_balance / BIL_price) × BIL_dividend`
+ - Implements Warren Buffett's 90/10 portfolio recommendation
 
 4. **Comprehensive Testing**
-   - Unit tests verify all logic changes
-   - Margin check logic tested
-   - Cash filtering tested
-   - BIL interest calculation tested
-   - Backwards compatibility verified
+ - Unit tests verify all logic changes
+ - Margin check logic tested
+ - Cash filtering tested
+ - BIL interest calculation tested
+ - Backwards compatibility verified
 
 ### Usage Example
 
@@ -607,26 +607,26 @@ from datetime import date
 
 # New retail-friendly mode (no margin, cash reserve)
 result = run_portfolio_simulation(
-    allocations={
-        "NVDA": 0.60,
-        "PLTR": 0.30,
-        "CASH": 0.10,  # Keep 10% in cash
-    },
-    initial_investment=1_000_000,
-    # allow_margin defaults to False now!
-    start_date=date(2023, 1, 1),
-    end_date=date(2023, 12, 31),
-    portfolio_algo="per-asset:sd8",
+ allocations={
+ "NVDA": 0.60,
+ "PLTR": 0.30,
+ "CASH": 0.10, # Keep 10% in cash
+ },
+ initial_investment=1_000_000,
+ # allow_margin defaults to False now!
+ start_date=date(2023, 1, 1),
+ end_date=date(2023, 12, 31),
+ portfolio_algo="per-asset:sd8",
 )
 
 # Old style still works (but now safer by default)
 result = run_portfolio_simulation(
-    allocations={"NVDA": 1.0},
-    initial_investment=1_000_000,
-    allow_margin=True,  # Must explicitly enable margin
-    start_date=date(2023, 1, 1),
-    end_date=date(2023, 12, 31),
-    portfolio_algo="per-asset:sd8",
+ allocations={"NVDA": 1.0},
+ initial_investment=1_000_000,
+ allow_margin=True, # Must explicitly enable margin
+ start_date=date(2023, 1, 1),
+ end_date=date(2023, 12, 31),
+ portfolio_algo="per-asset:sd8",
 )
 ```
 
@@ -638,4 +638,4 @@ While core infrastructure is complete, future enhancements could include:
 - Dynamic cash rebalancing strategies
 - Optimal initial cash percentage by market regime
 
-**The infrastructure is now complete and ready for realistic retail use! 🎯**
+**The infrastructure is now complete and ready for realistic retail use! **
