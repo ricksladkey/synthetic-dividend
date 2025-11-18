@@ -23,6 +23,8 @@ help:
 	@echo "  make install-dev   Install with development dependencies"
 	@echo "  make test-checks    Run tests (CI mode - quiet)"
 	@echo "  make test-all      Run all tests (quiet, includes network tests)"
+	@echo "  make test-parallel Run tests in parallel (requires pytest-xdist)"
+	@echo "  make test-all-parallel  Run all tests in parallel"
 	@echo "  make test          Run both CI-only and all tests (quiet)"
 	@echo "  make lint          Run all linters (black, isort, flake8, mypy)"
 	@echo "  make check         Run lint and test (simulates CI checks)"
@@ -43,6 +45,13 @@ test-checks:
 
 test-all:
 	$(PYTHON) -m pytest -q
+
+# Parallel test execution (requires pytest-xdist)
+test-parallel:
+	env CI=true $(PYTHON) -m pytest -q -m "not slow" -n auto
+
+test-all-parallel:
+	$(PYTHON) -m pytest -q -n auto
 
 test: test-checks test-all
 

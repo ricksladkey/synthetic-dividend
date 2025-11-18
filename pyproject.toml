@@ -33,6 +33,7 @@ dependencies = [
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
+    "pytest-xdist>=3.0",  # Parallel test execution
     "mypy>=1.0",
     "black>=23.0",
     "flake8>=6.0",
