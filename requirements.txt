@@ -1,7 +1,0 @@
-pandas>=1.0
-matplotlib
-yfinance
-pytest>=7.0
-pandas-datareader
-lxml
-simpy>=4.0

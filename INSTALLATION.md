@@ -1,97 +1,256 @@
-# Installation & Packaging Guide
+# Installation Guide
 
 ## 🚀 Quick Start
 
-### For Users (Install from GitHub)
+### Prerequisites
+
+- **Python 3.11 or 3.12** (required)
+- **pip** (usually comes with Python)
+- **Virtual environment** (recommended)
+
+### Basic Installation
 
 ```bash
-# Clone repository
+# Clone the repository
 git clone https://github.com/ricksladkey/synthetic-dividend.git
-cd synthetic-dividend/financial-modeling-app
+cd synthetic-dividend
 
-# Install in development mode (editable)
+# Create and activate virtual environment
+python -m venv .venv
+
+# Activate on Windows
+.\.venv\Scripts\Activate.ps1
+
+# Activate on Unix/Linux/macOS
+source .venv/bin/activate
+
+# Install core package in development mode
 pip install -e .
+```
 
-# Or install with dev tools
+**After installation**, these commands are available:
+- `sd` - Main CLI entry point
+- `sd-compare` - Batch strategy comparison
+- `sd-research` - Optimal rebalancing research
+- `sd-volatility-alpha` - Volatility alpha analysis
+- `sd-calc-orders` - Order calculator GUI
+- `sd-plotter` - Result visualization
+
+---
+
+## 📦 Installation Options
+
+All dependencies are managed through `pyproject.toml` (modern Python standard). Choose the installation that fits your needs:
+
+### 1. Core Package Only
+
+For running backtests and analysis:
+
+```bash
+pip install -e .
+```
+
+**Includes**:
+- pandas, matplotlib, yfinance
+- pandas-datareader, lxml (data sources)
+- simpy (simulation framework)
+
+### 2. Development Installation
+
+For contributing, testing, and code quality:
+
+```bash
 pip install -e ".[dev]"
 ```
 
-**After installation**, these commands become available globally:
-- `synthetic-dividend` - Unified CLI (recommended)
-- `sd-backtest` - Run single backtests
-- `sd-compare` - Compare multiple strategies
-- `sd-research` - Research optimal parameters
-- `sd-volatility-alpha` - Analyze volatility alpha
-- `sd-run-tests` - Run test suite
+**Includes** core package plus:
+- **Testing**: pytest, pytest-cov, pytest-xdist (parallel execution)
+- **Type checking**: mypy
+- **Linting**: flake8, pylint
+- **Formatting**: black, isort
 
-### Cross-Platform Scripts
+### 3. GUI Installation
 
-For convenience, we've also included shell scripts that work on Windows, macOS, and Linux:
+For using the interactive order calculator:
+
+```bash
+pip install -e ".[gui]"
+```
+
+**Includes** core package plus:
+- **markdown** - Rendering help documentation
+- **tkinterweb** - HTML/Markdown widgets for tkinter
+- **tkcalendar** - Date picker widgets
+
+### 4. Complete Installation
+
+Everything (recommended for developers):
+
+```bash
+pip install -e ".[all]"
+```
+
+**Includes**: All core, dev, and GUI dependencies.
+
+---
+
+## 🛠️ Development Workflow
+
+### Using Make (Unix/Linux/macOS/WSL)
+
+The Makefile provides convenient commands for all common tasks:
+
+```bash
+# See all available commands
+make help
+
+# Installation
+make install           # Core package only
+make install-dev       # With dev dependencies
+make install-gui       # With GUI dependencies
+make install-all       # Everything
+
+# Testing
+make test-checks       # Fast tests only (CI mode)
+make test-all          # All tests including network tests
+make test-parallel     # Fast tests in parallel
+make test-all-parallel # All tests in parallel
+make test              # Both test-checks and test-all
+
+# Code Quality
+make format            # Auto-format with black and isort
+make lint              # Run all linters (black, isort, flake8, mypy)
+make check             # Format, lint, and test (full CI check)
+
+# Build & Deploy
+make clean             # Remove build artifacts and cache
+make build             # Build distribution packages
+make publish           # Publish to PyPI
+make examples          # Re-generate all experiment data
+```
+
+### Using Python Directly (Cross-Platform)
+
+```bash
+# Run tests
+python -m pytest -q                           # All tests
+python -m pytest -q -m "not slow"             # Fast tests only
+python -m pytest -q -n auto                   # Parallel execution
+
+# Format code
+python -m black .
+python -m isort .
+
+# Type checking
+python -m mypy --explicit-package-bases --exclude "src/research|src/charts" src
+
+# Run linters
+python -m flake8 src tests --max-line-length=100 --extend-ignore=E203,W503
+```
+
+### Using the CLI
 
 ```bash
 # Run backtests
-./scripts/shell/run-model.sh NVDA 2024-10-22 2025-10-22 sd-9.05,50
+sd backtest NVDA 2024-01-01 2024-12-31 sd-4,50
 
-# Run tests
-./scripts/shell/run-tests.sh
+# Analyze volatility alpha
+sd analyze volatility-alpha --ticker NVDA --start 01/01/2024 --end 12/31/2024
 
-# Quick tests
-./scripts/shell/test-sd.sh
-./scripts/shell/test-buy-and-hold.sh
-./scripts/shell/test-batch-comparison.sh
+# Launch order calculator GUI
+sd-calc-orders
 ```
 
-### For Development
+---
 
-**Cross-Platform (Recommended)**:
-```bash
-# Install development dependencies
-pip install -e ".[dev]"
+## 🐍 Virtual Environment Management
 
-# Run tests
-python -m src.cli test
-
-# Or use convenience scripts
-./scripts/shell/run-tests.sh
-
-# Run backtests
-python -m src.cli backtest NVDA 2024-10-22 2025-10-22 sd-9.05,50
-./scripts/shell/run-model.sh NVDA 2024-10-22 2025-10-22 sd-9.05,50
-```
+### Creating a Virtual Environment
 
 **Windows (PowerShell)**:
 ```powershell
-# Install development dependencies
-pip install -e ".[dev]"
-
-# Run tests
-python -m src.cli test
-
-# Run backtests
-python -m src.cli backtest NVDA 2024-10-22 2025-10-22 sd-9.05,50
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
-**Unix/Linux/macOS (Make)**:
+**Unix/Linux/macOS**:
 ```bash
-# Install development dependencies
-make install-dev
-
-# Run tests
-make test
-
-# Run backtests
-python -m src.cli backtest NVDA 2024-10-22 2025-10-22 sd-9.05,50
+python -m venv .venv
+source .venv/bin/activate
 ```
 
-# Format code
-make format
+### Activation Best Practices
 
-# Run linters
-make lint
+#### Option 1: VS Code Python Extension (Recommended)
+1. Open Command Palette: `Ctrl+Shift+P` (Windows) or `Cmd+Shift+P` (Mac)
+2. Type: "Python: Select Interpreter"
+3. Choose: `.venv/Scripts/python.exe` (Windows) or `.venv/bin/python` (Unix)
+4. All new terminals will auto-activate the virtual environment
 
-# See all commands
-make help
+#### Option 2: Manual Activation
+Every time you open a new terminal, activate manually:
+- **Windows**: `.\.venv\Scripts\Activate.ps1`
+- **Unix**: `source .venv/bin/activate`
+
+#### Option 3: PowerShell Profile (Windows)
+Auto-activate when you `cd` into the project:
+```powershell
+# Edit your PowerShell profile
+notepad $PROFILE
+
+# Add this line:
+if (Test-Path ".venv\Scripts\Activate.ps1") { .\.venv\Scripts\Activate.ps1 }
+
+# Reload profile
+. $PROFILE
 ```
+
+---
+
+## 🐳 WSL Setup (Windows Users)
+
+Windows Subsystem for Linux provides a better development experience:
+
+### Benefits
+- ✅ True Unix environment (bash, make, symlinks)
+- ✅ Faster package installation
+- ✅ Better Docker compatibility
+- ✅ Consistent Git line endings
+- ✅ No PowerShell execution policy issues
+
+### Setup Steps
+
+1. **Install WSL2**:
+   ```powershell
+   # Run in PowerShell as Administrator
+   wsl --install -d Ubuntu-22.04
+   # Restart computer
+   ```
+
+2. **Install VS Code WSL Extension**:
+   - Install extension: `ms-vscode-remote.remote-wsl`
+   - Click green icon (bottom-left) → "New WSL Window"
+
+3. **Setup Python in WSL**:
+   ```bash
+   # In WSL terminal
+   sudo apt update
+   sudo apt install python3.11 python3.11-venv python3-pip make
+
+   # Navigate to your Windows project
+   cd /mnt/c/build/synthetic-dividend
+
+   # Create virtual environment
+   python3.11 -m venv .venv
+   source .venv/bin/activate
+
+   # Install with all dependencies
+   make install-all
+   ```
+
+4. **File Access**:
+   - Windows: `C:\build\synthetic-dividend`
+   - WSL: `/mnt/c/build/synthetic-dividend`
 
 ---
 
@@ -100,162 +259,24 @@ make help
 ### Build Wheel and Source Distribution
 
 ```bash
-# Install build tools
+# Install build tools (if not already installed)
 pip install build twine
 
-# Build packages (creates dist/ directory)
+# Build packages
 python -m build
 
-# Or use shortcuts
-make build        # Unix
-.\dev.ps1 build   # Windows
+# Or use Make
+make build
 ```
 
-This creates:
-- `dist/synthetic_dividend-0.1.0.tar.gz` (source distribution)
-- `dist/synthetic_dividend-0.1.0-py3-none-any.whl` (wheel)
+This creates in `dist/`:
+- `synthetic_dividend-0.1.0.tar.gz` (source distribution)
+- `synthetic_dividend-0.1.0-py3-none-any.whl` (wheel)
 
 ### Install from Local Build
 
 ```bash
 pip install dist/synthetic_dividend-0.1.0-py3-none-any.whl
-```
-
----
-
-## 🐳 Cross-Platform Development with WSL
-
-### Why WSL?
-
-Windows Subsystem for Linux provides:
-- **True Unix environment** - native bash, make, symlinks
-- **Better Python tooling** - fewer encoding issues, faster package installs
-- **Docker compatibility** - run containers natively
-- **Git line endings** - consistent LF without .gitattributes fights
-- **Zero dual-boot** - switch between Windows/Linux instantly
-
-### Setup WSL2 + VS Code Integration
-
-1. **Install WSL2**:
-   ```powershell
-   # Run in PowerShell as Administrator
-   wsl --install -d Ubuntu-22.04
-   
-   # Restart computer
-   ```
-
-2. **Install VS Code WSL Extension**:
-   - Open VS Code
-   - Install extension: `ms-vscode-remote.remote-wsl`
-   - Click green icon in bottom-left corner → "New WSL Window"
-
-3. **Setup Python in WSL**:
-   ```bash
-   # In WSL terminal
-   sudo apt update
-   sudo apt install python3.11 python3.11-venv python3-pip
-   
-   # Navigate to project
-   cd /mnt/c/Users/ricks/OneDrive/Documents/GenAI/profit-sharing/financial-modeling-app
-   
-   # Create venv
-   python3.11 -m venv .venv
-   source .venv/bin/activate
-   
-   # Install in dev mode
-   make install-dev
-   ```
-
-4. **VS Code will automatically**:
-   - Detect `.venv` in WSL
-   - Use correct Python interpreter
-   - Run terminals in WSL bash
-   - Git operations use Unix line endings
-
-### File Access
-
-Your Windows files are accessible at `/mnt/c/...`:
-```bash
-# Windows: C:\Users\ricks\OneDrive\...
-# WSL:     /mnt/c/Users/ricks/OneDrive/...
-```
-
----
-
-## 🔧 Fixing Environment Activation Issues
-
-### Problem: Virtual Environment "Lost" Between Commands
-
-**Root Cause**: PowerShell terminals are stateless - each new terminal starts fresh.
-
-**Solution 1: VS Code Python Extension** (Recommended)
-- Select Python interpreter once: `Ctrl+Shift+P` → "Python: Select Interpreter"
-- Choose `.venv/Scripts/python.exe`
-- All terminals auto-activate venv
-
-**Solution 2: PowerShell Profile Auto-Activation**
-```powershell
-# Edit profile
-notepad $PROFILE
-
-# Add this line:
-if (Test-Path ".venv\Scripts\Activate.ps1") { .\.venv\Scripts\Activate.ps1 }
-
-# Save and reload
-. $PROFILE
-```
-
-**Solution 3: Use WSL** (Best long-term)
-- WSL terminals stay activated
-- Better shell experience overall
-- No PowerShell execution policy issues
-
----
-
-## 📋 Development Workflow
-
-### Daily Development (Windows)
-
-```powershell
-# Activate venv (if not using VS Code Python extension)
-.\.venv\Scripts\Activate.ps1
-
-# Make code changes
-# ...
-
-# Format and lint before committing
-.\dev.ps1 format
-.\dev.ps1 lint
-
-# Run tests
-.\dev.ps1 test
-
-# Commit changes
-git add .
-git commit -m "Your message"
-git push
-```
-
-### Daily Development (WSL/Unix)
-
-```bash
-# Activate venv
-source .venv/bin/activate
-
-# Make code changes
-# ...
-
-# Format and lint
-make format
-make lint
-
-# Run tests
-make test
-
-# Commit
-git add .
-git commit -m "Your message"
-git push
 ```
 
 ---
@@ -266,7 +287,7 @@ git push
 
 ```bash
 # Build packages
-python -m build
+make build
 
 # Upload to TestPyPI
 python -m twine upload --repository testpypi dist/*
@@ -275,17 +296,15 @@ python -m twine upload --repository testpypi dist/*
 pip install --index-url https://test.pypi.org/simple/ synthetic-dividend
 ```
 
-### Production Publishing (PyPI)
+### Production Publishing
 
 ```bash
-# Build packages
+# Build and publish
+make publish
+
+# Or manually:
 python -m build
-
-# Upload to PyPI (requires API token)
 python -m twine upload dist/*
-
-# Users can now install with:
-# pip install synthetic-dividend
 ```
 
 ### Setup PyPI Credentials
@@ -303,49 +322,153 @@ password = pypi-YOUR-TEST-API-TOKEN-HERE
 
 ---
 
-## 🎯 Package Structure
+## 📋 Dependency Management
 
+### Modern Standard: pyproject.toml
+
+All dependencies are defined in `pyproject.toml` following [PEP 621](https://peps.python.org/pep-0621/). This is the modern Python standard.
+
+**Core dependencies**:
+```toml
+dependencies = [
+    "pandas>=1.0",
+    "matplotlib>=3.0",
+    "yfinance>=0.2.0",
+    "pandas-datareader>=0.10",
+    "lxml>=4.9",
+    "simpy>=4.0",
+]
 ```
-financial-modeling-app/
-├── src/                    # Source code (importable package)
-│   ├── __init__.py
-│   ├── synthetic_dividend_tool.py  # Unified CLI entry point
-│   ├── compare/
-│   │   └── batch_comparison.py  # Entry point: sd-compare
-│   └── research/
-│       └── optimal_rebalancing.py  # Entry point: sd-research
-├── tests/                  # Test suite
-├── pyproject.toml          # Modern package config (replaces setup.py)
-├── MANIFEST.in             # Include non-Python files in dist
-├── LICENSE                 # MIT License
-├── README.md               # User-facing documentation
-├── Makefile                # Unix dev commands
-├── dev.ps1                 # Windows dev commands
-└── requirements.txt        # Deprecated - use pyproject.toml instead
+
+**Optional dependencies** (install with `pip install -e ".[group]"`):
+```toml
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "mypy>=1.0", "black>=23.0", ...]
+gui = ["markdown>=3.4", "tkinterweb>=3.15", "tkcalendar>=1.6"]
+all = [...]  # Combines dev + gui
+```
+
+### No More requirements.txt Files
+
+The old `requirements.txt` and `requirements-dev.txt` files have been **removed**. All dependency management is now in `pyproject.toml`.
+
+**Migration guide**:
+- ❌ Old: `pip install -r requirements.txt`
+- ✅ New: `pip install -e .`
+
+- ❌ Old: `pip install -r requirements-dev.txt`
+- ✅ New: `pip install -e ".[dev]"`
+
+### Viewing Installed Dependencies
+
+```bash
+# List all installed packages
+pip list
+
+# Show specific package details
+pip show pandas
+
+# Export current environment (for reproducibility)
+pip freeze > current_env.txt
 ```
 
 ---
 
-## 🔑 Key Benefits of This Structure
+## 🔧 Troubleshooting
 
-1. **`pip install -e .`** - Editable install, changes immediately available
-2. **Entry points** - `synthetic-dividend`, `sd-compare`, `sd-research` work globally after install
-3. **`pyproject.toml`** - Single source of truth for all config (PEP 517/518 compliant)
-4. **Cross-platform** - Makefile (Unix) + dev.ps1 (Windows) + WSL support
-5. **Professional** - Ready for PyPI, follows modern Python packaging standards
-6. **Developer-friendly** - Consistent commands across platforms
+### "Module not found" errors
+
+**Problem**: Importing `src.models` fails.
+
+**Solution**: Install in editable mode:
+```bash
+pip install -e .
+```
+
+### Tests running slowly
+
+**Problem**: Tests take 60+ seconds.
+
+**Solution**: Use parallel execution:
+```bash
+make test-parallel          # Fast tests in parallel
+make test-all-parallel      # All tests in parallel
+```
+
+### Cache directory issues
+
+**Problem**: Cache files created in wrong location.
+
+**Solution**: The project uses centralized path management via `src/paths.py`. Cache always goes to `<project_root>/cache/` regardless of where you run commands from.
+
+### PowerShell execution policy errors
+
+**Problem**: Cannot run `.ps1` scripts.
+
+**Solution**:
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+Or use WSL instead (no execution policy restrictions).
+
+### Virtual environment not activating in VS Code
+
+**Problem**: New terminals don't have venv activated.
+
+**Solution**: Select Python interpreter once (see "Virtual Environment Management" section above).
+
+---
+
+## 🎯 Package Structure
+
+```
+synthetic-dividend/
+├── src/                    # Source code (importable package)
+│   ├── __init__.py
+│   ├── cli.py              # Main CLI entry point
+│   ├── data/               # Data providers and caching
+│   ├── models/             # Backtesting and simulation
+│   ├── compare/            # Batch comparison tools
+│   ├── research/           # Research modules
+│   ├── tools/              # GUI and utilities
+│   └── paths.py            # Centralized path management
+├── tests/                  # Test suite
+│   ├── test_backtest.py
+│   ├── test_portfolio_algorithms.py
+│   └── ...
+├── cache/                  # Downloaded price data (auto-created)
+├── data/                   # Persistent data (e.g., best_sdn.json)
+├── experiments/            # Reproducible experiments
+├── pyproject.toml          # All package configuration (modern standard)
+├── Makefile                # Unix/WSL dev commands
+├── LICENSE                 # MIT License
+└── README.md               # User documentation
+```
+
+---
+
+## 🔑 Key Benefits
+
+1. **Modern Standards** - Uses `pyproject.toml` (PEP 517/518/621 compliant)
+2. **Editable Install** - Changes immediately available with `pip install -e .`
+3. **Cross-Platform** - Works on Windows, macOS, Linux, WSL
+4. **Flexible Dependencies** - Install only what you need
+5. **Professional** - Ready for PyPI publication
+6. **Developer-Friendly** - Make commands, parallel tests, auto-formatting
 
 ---
 
 ## 📚 Further Reading
 
 - [Python Packaging Guide](https://packaging.python.org/)
-- [PEP 517](https://peps.python.org/pep-0517/) - Build system specification
-- [PEP 518](https://peps.python.org/pep-0518/) - pyproject.toml specification
+- [PEP 621 - Storing project metadata in pyproject.toml](https://peps.python.org/pep-0621/)
+- [PEP 517 - Build system specification](https://peps.python.org/pep-0517/)
+- [PEP 518 - pyproject.toml specification](https://peps.python.org/pep-0518/)
+- [pytest documentation](https://docs.pytest.org/)
 - [WSL Documentation](https://docs.microsoft.com/en-us/windows/wsl/)
-- [VS Code Remote - WSL](https://code.visualstudio.com/docs/remote/wsl)
 
 ---
 
-**Last Updated**: October 2025  
-**Status**: Production-ready package structure
+**Last Updated**: November 2024
+**Status**: Production-ready, modern Python packaging

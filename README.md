@@ -251,8 +251,7 @@ synthetic-dividend/
 │   └── TODO.md                         # Development roadmap
 │
 └── ⚙️ Configuration/
-    ├── requirements.txt                # Production dependencies
-    └── requirements-dev.txt            # Development tools (pytest, mypy, black)
+    └── pyproject.toml                  # All package config & dependencies (modern standard)
 ```
 
 ## 🚀 Quick Start Guide
