@@ -156,7 +156,10 @@ class OrderCalculatorGUI:
         self.last_price_entry = ttk.Entry(input_frame, textvariable=self.last_price_var, width=12)
         self.last_price_entry.grid(row=1, column=5, sticky="we")
         self.last_price_entry.bind("<FocusOut>", self.schedule_auto_calculation)
-        ToolTip(self.last_price_entry, "Limit price from your last buy or sell order (anchors bracket position to prevent sliding)")
+        ToolTip(
+            self.last_price_entry,
+            "Limit price from your last buy or sell order (anchors bracket position to prevent sliding)",
+        )
 
         # Separator
         ttk.Separator(input_frame, orient="horizontal").grid(
@@ -219,7 +222,10 @@ class OrderCalculatorGUI:
         self.sdn_entry = ttk.Entry(input_frame, textvariable=self.sdn_var, width=12)
         self.sdn_entry.grid(row=5, column=1, sticky="we", padx=(0, 15), pady=(5, 0))
         self.sdn_entry.bind("<FocusOut>", self.schedule_auto_calculation)
-        ToolTip(self.sdn_entry, "Bracket spacing: 2-4 = tight, 6-8 = normal, 64 = ~1% apart (range: 2-64)")
+        ToolTip(
+            self.sdn_entry,
+            "Bracket spacing: 2-4 = tight, 6-8 = normal, 64 = ~1% apart (range: 2-64)",
+        )
 
         # Profit Sharing %
         ttk.Label(input_frame, text="Profit Sharing %:").grid(
@@ -1213,7 +1219,7 @@ Designed for retail traders using manual order entry.
                     )
 
                     # Place legend in upper left to avoid overlap with signals overlay (lower right)
-                    self.ax.legend(loc='upper left', framealpha=0.9)
+                    self.ax.legend(loc="upper left", framealpha=0.9)
                 else:
                     self.ax.text(
                         0.5,
