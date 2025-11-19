@@ -258,6 +258,206 @@ Good engineers use abstractions (compilers, frameworks, AI) but maintain concept
 
 ---
 
+## Principle: Names Are Worth Their Weight in Meaning
+
+**Principle**: A well-chosen name carries its own weight in meaning. Identifiers, function names, and user interface labels should be immediately understandable without requiring additional context or documentation.
+
+**Why**:
+- **Self-documenting code**: Good names eliminate the need for explanatory comments
+- **Reduced cognitive load**: Readers grasp intent instantly rather than puzzling over abbreviations
+- **User trust**: Clear UI labels build confidence that the system does what users expect
+- **Maintainability**: Future developers (including yourself) understand code without archaeology
+
+**Corollary**: User Interface labels must be carefully chosen. If you hesitate when naming a field, users will be confused when reading it.
+
+### Naming Guidelines
+
+**1. Use Full Words Over Abbreviations**
+
+Unless the abbreviation is in common use in written English (like "ID", "URL", "PDF"), spell it out.
+
+```python
+# GOOD: Clear, unambiguous
+last_transaction_price: float
+alignment_price: float
+rebalance_threshold: float
+profit_sharing_percentage: float
+
+# AVOID: Cryptic abbreviations
+last_txn_price: float  # "txn" is jargon
+align_px: float        # "px" is not universally understood
+rebal_thresh: float    # Needlessly shortened
+profit_pct: float      # "pct" vs "%" vs "percent" - which is it?
+```
+
+**2. Match Domain Terminology**
+
+When the domain has established terms, use them precisely.
+
+```python
+# GOOD: Precise domain language
+def calculate_limit_order_price(
+    last_order_price: float,  # The limit price from your last order
+    bracket_spacing: float     # Distance between price levels
+) -> float:
+    """Calculate next limit order price from last executed limit price."""
+    pass
+
+# AVOID: Ambiguous generic terms
+def calculate_price(
+    last_price: float,  # Last trade? Last order? Last market price?
+    spacing: float      # Spacing of what?
+) -> float:
+    pass
+```
+
+**3. UI Labels: Explicit Over Concise**
+
+In user interfaces, clarity trumps brevity. An extra word that prevents confusion is worth the space.
+
+```python
+# GOOD: Unambiguous to retail traders
+Label: "Last Order Price:"
+Tooltip: "Limit price from your last buy or sell order (anchors bracket position)"
+
+# AVOID: Ambiguous or technical jargon
+Label: "Last Price:"     # Which price? Market? Trade? Order?
+Label: "Bracket Seed:"   # What does "seed" mean here?
+Label: "SDN:"            # Unexplained acronym
+```
+
+**4. Distinguish Similar Concepts**
+
+When two concepts are related but different, names should make the distinction obvious.
+
+```python
+# GOOD: Clear distinction
+last_order_price: float      # Limit price from your last transaction (anchors brackets)
+current_market_price: float  # Current market price (for display/reference)
+alignment_price: float       # Price that aligns bracket grid (optional override)
+
+# AVOID: Confusing similarity
+last_price: float      # Could mean any of the above
+current_price: float   # Which "current"? Order? Market?
+seed_price: float      # "Seed" is vague without context
+```
+
+**5. Reveal Intent, Not Implementation**
+
+Names should describe what something represents, not how it's stored or calculated.
+
+```python
+# GOOD: Intent-revealing
+profit_sharing_percentage: float  # Economic concept: what % of rebalance to keep
+rebalance_frequency: int          # How often to rebalance (e.g., every 4 doublings)
+
+# AVOID: Implementation-focused
+profit_var: float       # "var" is Hungarian notation, says nothing about meaning
+sdn: int               # Acronym reveals nothing about purpose
+```
+
+**6. Avoid Hungarian Notation and Type Prefixes**
+
+Python has type annotations; don't encode type information in names.
+
+```python
+# GOOD: Clean, typed
+def calculate_order_quantity(
+    holdings: int,
+    rebalance_size: float,
+    profit_sharing: float
+) -> int:
+    pass
+
+# AVOID: Hungarian notation
+def calculate_order_quantity(
+    i_holdings: int,          # 'i' prefix is redundant
+    f_rebalance_size: float,  # 'f' prefix adds no value
+    f_profit_sharing: float
+) -> int:
+    pass
+```
+
+### Real-World Example: "Last Trade Price" → "Last Order Price"
+
+**Problem**: The GUI used "Last Trade Price" to mean "limit price from your last order." This was ambiguous:
+- Could mean the market price when the trade executed
+- Could mean the actual fill price of your trade
+- Didn't clarify it's a limit price that anchors bracket positioning
+
+**Solution**: Renamed to "Last Order Price" with explicit tooltip:
+```python
+Label: "Last Order Price:"
+Tooltip: "Limit price from your last buy or sell order (anchors bracket position to prevent sliding)"
+```
+
+**Impact**:
+- [OK] "Order" clarifies it's from a limit order, not market data
+- [OK] Tooltip explains the purpose (anchoring brackets)
+- [OK] No ambiguity about which price to enter
+- [OK] Matches underlying code: `last_transaction_price` parameter
+
+### Naming Checklist
+
+Before committing a name, ask:
+
+1. **Can a domain expert understand it?** Without reading code?
+2. **Is it unambiguous?** Could it mean two different things?
+3. **Does it use full words?** Or unnecessary abbreviations?
+4. **Does it reveal intent?** Or just implementation details?
+5. **For UI labels**: Would a non-technical user understand it?
+
+If any answer is "no," revise the name.
+
+### The Cost of Bad Names
+
+Bad naming isn't just aesthetic—it has real costs:
+
+**In Code**:
+- Maintenance time wasted deciphering intent
+- Bugs from misunderstanding what variables represent
+- Refactoring hesitation due to uncertainty about purpose
+
+**In UIs**:
+- User errors from misinterpreting field meanings
+- Support burden from confused users
+- Lost trust when system behaves unexpectedly
+
+**The Fix**: Spend 30 seconds choosing a good name now, save 30 minutes of confusion later.
+
+### Philosophy: Names Are Documentation
+
+The best documentation is code that doesn't need separate documentation. Well-chosen names make intent explicit, eliminating the need for comments that explain what poorly-named variables mean.
+
+```python
+# GOOD: Names tell the story
+def calculate_next_bracket_prices(
+    last_order_price: float,
+    bracket_spacing: float
+) -> tuple[float, float]:
+    """Calculate buy and sell prices for next bracket level."""
+    buy_price = last_order_price / (1 + bracket_spacing)
+    sell_price = last_order_price * (1 + bracket_spacing)
+    return buy_price, sell_price
+
+# No additional comments needed—names explain everything
+
+# AVOID: Cryptic names requiring comments
+def calc_prices(lp: float, bs: float) -> tuple[float, float]:
+    # lp = last price (limit price from last order, not market price!)
+    # bs = bracket spacing (rebalance threshold)
+    # Returns: (buy limit price, sell limit price)
+    bp = lp / (1 + bs)  # next buy price
+    sp = lp * (1 + bs)  # next sell price
+    return bp, sp
+
+# Comments needed because names are cryptic
+```
+
+The first version is self-documenting. The second requires comments to explain what the names mean—a red flag that names should be improved.
+
+---
+
 ## Core Tenets
 
 ### 1. Functional-Style Programming

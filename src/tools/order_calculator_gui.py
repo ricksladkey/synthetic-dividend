@@ -148,15 +148,15 @@ class OrderCalculatorGUI:
         self.holdings_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(self.holdings_entry, "Number of shares you currently own")
 
-        # Last Trade Price
-        ttk.Label(input_frame, text="Last Trade Price:").grid(
+        # Last Order Price (limit price from last transaction - anchors bracket position)
+        ttk.Label(input_frame, text="Last Order Price:").grid(
             row=1, column=4, sticky=tk.W, padx=(0, 5)
         )
         self.last_price_var = tk.StringVar()
         self.last_price_entry = ttk.Entry(input_frame, textvariable=self.last_price_var, width=12)
         self.last_price_entry.grid(row=1, column=5, sticky="we")
         self.last_price_entry.bind("<FocusOut>", self.schedule_auto_calculation)
-        ToolTip(self.last_price_entry, "Price you last bought or sold shares at")
+        ToolTip(self.last_price_entry, "Limit price from your last buy or sell order (anchors bracket position to prevent sliding)")
 
         # Separator
         ttk.Separator(input_frame, orient="horizontal").grid(
