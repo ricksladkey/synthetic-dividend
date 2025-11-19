@@ -389,6 +389,10 @@ class OrderCalculatorGUI:
             command=self.refresh_status_board
         ).pack()
 
+        # Bind tab change event to auto-refresh status board
+        self.tab_control.bind("<<NotebookTabChanged>>", self.on_tab_changed)
+        self.status_board_loaded = False  # Track if status board has been loaded
+
         # Status bar
         self.status_var = tk.StringVar()
         self.status_var.set("Ready")
@@ -1455,6 +1459,17 @@ Designed for retail traders using manual order entry.
 
         except Exception:
             pass  # Skip annotations if calculation fails
+
+    def on_tab_changed(self, _event):
+        """Handle tab change events to auto-refresh status board."""
+        # Get the currently selected tab
+        current_tab = self.tab_control.index(self.tab_control.select())
+
+        # Status Board is the third tab (index 2: 0=Chart, 1=Order Details, 2=Status Board)
+        if current_tab == 2 and not self.status_board_loaded:
+            # First time loading status board - auto refresh
+            self.refresh_status_board()
+            self.status_board_loaded = True
 
     def refresh_status_board(self):
         """Refresh the status board with all ticker positions."""
