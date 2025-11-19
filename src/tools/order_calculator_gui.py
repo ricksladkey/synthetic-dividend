@@ -1583,7 +1583,7 @@ Designed for retail traders using manual order entry.
                     row_frame,
                     text=ticker,
                     width=8,
-                    command=lambda t=ticker: self.load_ticker_from_status_board(t),
+                    command=lambda t=ticker: self.load_ticker_from_status_board(t),  # type: ignore
                 )
                 ticker_btn.grid(row=0, column=0, padx=5)
                 ToolTip(ticker_btn, f"Click to load {ticker} in calculator")

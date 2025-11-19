@@ -99,6 +99,7 @@ class Asset:
 
             # Check if we're requesting data that includes today
             from datetime import date as date_class
+
             today = date_class.today()
             requesting_today = end_date >= today
 
@@ -125,6 +126,7 @@ class Asset:
 
                             # Save the combined data (caches today, will be historical tomorrow)
                             from src.data.static_provider import StaticAssetProvider
+
                             if not isinstance(self._provider, StaticAssetProvider):
                                 self._save_price_cache(combined)
 
