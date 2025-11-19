@@ -219,7 +219,7 @@ class OrderCalculatorGUI:
         self.sdn_entry = ttk.Entry(input_frame, textvariable=self.sdn_var, width=12)
         self.sdn_entry.grid(row=5, column=1, sticky="we", padx=(0, 15), pady=(5, 0))
         self.sdn_entry.bind("<FocusOut>", self.schedule_auto_calculation)
-        ToolTip(self.sdn_entry, "Lower numbers = tighter brackets (2-4), higher = wider (6-8)")
+        ToolTip(self.sdn_entry, "Bracket spacing: 2-4 = tight, 6-8 = normal, 64 = ~1% apart (range: 2-64)")
 
         # Profit Sharing %
         ttk.Label(input_frame, text="Profit Sharing %:").grid(
@@ -581,7 +581,7 @@ Designed for retail traders using manual order entry.
                 return False
             if start_date >= end_date:
                 return False
-            if sdn < 2 or sdn > 20:
+            if sdn < 2 or sdn > 64:
                 return False
             if profit < 0 or profit > 200:
                 return False
@@ -814,8 +814,8 @@ Designed for retail traders using manual order entry.
                 raise ValueError("Last price must be positive")
             if start_date >= end_date:
                 raise ValueError("Start date must be before end date")
-            if sdn < 2 or sdn > 20:
-                raise ValueError("SDN must be between 2 and 20")
+            if sdn < 2 or sdn > 64:
+                raise ValueError("Bracket spacing must be between 2 and 64")
             if profit < 0 or profit > 200:
                 raise ValueError("Profit must be between 0 and 200")
 
