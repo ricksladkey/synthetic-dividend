@@ -209,10 +209,15 @@ class OrderCalculatorGUI:
         else:
             self.end_date_var = tk.StringVar()
             self.end_date_entry = ttk.Entry(input_frame, textvariable=self.end_date_var, width=12)
-        self.end_date_entry.grid(row=4, column=3, sticky="we", padx=(0, 15))
+        self.end_date_entry.grid(row=4, column=3, sticky="we")
         self.end_date_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         self.end_date_entry.bind("<<DateEntrySelected>>", self.schedule_auto_calculation)
         ToolTip(self.end_date_entry, "End date for price history (typically today)")
+
+        # Today button for End Date
+        today_button = ttk.Button(input_frame, text="Today", command=self.set_end_date_to_today, width=6)
+        today_button.grid(row=4, column=4, sticky=tk.W, padx=(5, 15))
+        ToolTip(today_button, "Set end date to today")
 
         # Bracket Spacing (was SDN)
         ttk.Label(input_frame, text="Bracket Spacing:").grid(
@@ -610,6 +615,20 @@ Designed for retail traders using manual order entry.
         else:
             self.start_date_var.set(one_year_ago.isoformat())
             self.end_date_var.set(today.isoformat())
+
+    def set_end_date_to_today(self):
+        """Set end date to today's date."""
+        from datetime import date
+
+        today = date.today()
+
+        if TKCALENDAR_AVAILABLE:
+            self.end_date_entry.set_date(today)
+        else:
+            self.end_date_var.set(today.isoformat())
+
+        # Trigger auto-calculation after setting the date
+        self.schedule_auto_calculation()
 
     @staticmethod
     def parse_date(date_str: str) -> date:
