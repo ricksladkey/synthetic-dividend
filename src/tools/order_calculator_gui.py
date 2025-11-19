@@ -138,6 +138,7 @@ class OrderCalculatorGUI:
         self.ticker_combo["values"] = [t for t in self.history.keys() if t != "last_ticker"]
         self.ticker_combo.bind("<<ComboboxSelected>>", self.on_ticker_selected)
         self.ticker_combo.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.ticker_combo.bind("<Return>", self.schedule_auto_calculation)
         ToolTip(self.ticker_combo, "Stock ticker symbol (e.g., NVDA, SPY, AAPL)")
 
         # Holdings
@@ -146,6 +147,7 @@ class OrderCalculatorGUI:
         self.holdings_entry = ttk.Entry(input_frame, textvariable=self.holdings_var, width=12)
         self.holdings_entry.grid(row=1, column=3, sticky="we", padx=(0, 15))
         self.holdings_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.holdings_entry.bind("<Return>", self.schedule_auto_calculation)
         ToolTip(self.holdings_entry, "Number of shares you currently own")
 
         # Last Order Price (limit price from last transaction - anchors bracket position)
@@ -156,6 +158,7 @@ class OrderCalculatorGUI:
         self.last_price_entry = ttk.Entry(input_frame, textvariable=self.last_price_var, width=12)
         self.last_price_entry.grid(row=1, column=5, sticky="we")
         self.last_price_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.last_price_entry.bind("<Return>", self.schedule_auto_calculation)
         ToolTip(
             self.last_price_entry,
             "Limit price from your last buy or sell order (anchors bracket position to prevent sliding)",
@@ -191,6 +194,7 @@ class OrderCalculatorGUI:
             )
         self.start_date_entry.grid(row=4, column=1, sticky="we", padx=(0, 15))
         self.start_date_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.start_date_entry.bind("<Return>", self.schedule_auto_calculation)
         self.start_date_entry.bind("<<DateEntrySelected>>", self.schedule_auto_calculation)
         ToolTip(self.start_date_entry, "Start date for price history (YYYY-MM-DD)")
 
@@ -211,6 +215,7 @@ class OrderCalculatorGUI:
             self.end_date_entry = ttk.Entry(input_frame, textvariable=self.end_date_var, width=12)
         self.end_date_entry.grid(row=4, column=3, sticky="we")
         self.end_date_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.end_date_entry.bind("<Return>", self.schedule_auto_calculation)
         self.end_date_entry.bind("<<DateEntrySelected>>", self.schedule_auto_calculation)
         ToolTip(self.end_date_entry, "End date for price history (typically today)")
 
@@ -229,6 +234,7 @@ class OrderCalculatorGUI:
         self.sdn_entry = ttk.Entry(input_frame, textvariable=self.sdn_var, width=12)
         self.sdn_entry.grid(row=5, column=1, sticky="we", padx=(0, 15), pady=(5, 0))
         self.sdn_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.sdn_entry.bind("<Return>", self.schedule_auto_calculation)
         ToolTip(
             self.sdn_entry,
             "Bracket spacing: 2-4 = tight, 6-8 = normal, 64 = ~1% apart (range: 2-64)",
@@ -242,6 +248,7 @@ class OrderCalculatorGUI:
         self.profit_entry = ttk.Entry(input_frame, textvariable=self.profit_var, width=12)
         self.profit_entry.grid(row=5, column=3, sticky="we", padx=(0, 15), pady=(5, 0))
         self.profit_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.profit_entry.bind("<Return>", self.schedule_auto_calculation)
         ToolTip(
             self.profit_entry,
             "Percentage of profits to take (25-75% typical, >100% for overselling). Range: 0-10000%",
@@ -257,6 +264,7 @@ class OrderCalculatorGUI:
         )
         self.bracket_seed_entry.grid(row=5, column=5, sticky="we", pady=(5, 0))
         self.bracket_seed_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.bracket_seed_entry.bind("<Return>", self.schedule_auto_calculation)
         ToolTip(
             self.bracket_seed_entry,
             "Reference price that controls bracket alignment. Any price in the geometric sequence will suffice.",
