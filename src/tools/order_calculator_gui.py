@@ -1537,7 +1537,7 @@ Designed for retail traders using manual order entry.
                 start_date = self.parse_date(start_date_str)
                 end_date = self.parse_date(end_date_str)
 
-                # Fetch current price
+                # Fetch current price (Asset automatically fetches fresh data for today)
                 asset = Asset(ticker)
                 price_df = asset.get_prices(start_date, end_date)
 

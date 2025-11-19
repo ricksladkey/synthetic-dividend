@@ -96,6 +96,42 @@ class Asset:
 
         if getattr(self, "_provider", None) is not None:
             assert self._provider is not None
+
+            # Check if we're requesting data that includes today
+            from datetime import date as date_class
+            today = date_class.today()
+            requesting_today = end_date >= today
+
+            # If requesting today, check cache for historical data and fetch fresh for today
+            if requesting_today and start_date < today:
+                # Get cached historical data (everything before today)
+                cached = self._load_price_cache()
+                if cached is not None and not cached.empty:
+                    cached_dates = pd.to_datetime(cached.index).date
+                    # Filter cached data to only include dates before today
+                    historical_mask = [d < today for d in cached_dates]
+                    historical_data = cached.loc[historical_mask]
+
+                    # Check if cache covers the historical range
+                    if not historical_data.empty and min(cached_dates) <= start_date:
+                        # Fetch only today's data from provider
+                        fresh_result = self._provider.get_prices(today, end_date)
+
+                        if not fresh_result.empty:
+                            # Combine historical cache with fresh today data
+                            combined = pd.concat([historical_data, fresh_result], axis=0)
+                            combined = combined[~combined.index.duplicated(keep="last")]
+                            combined = combined.sort_index()
+
+                            # Save the combined data (caches today, will be historical tomorrow)
+                            from src.data.static_provider import StaticAssetProvider
+                            if not isinstance(self._provider, StaticAssetProvider):
+                                self._save_price_cache(combined)
+
+                            # Return only the requested range
+                            return self._filter_range(combined, start_date, end_date)
+
+            # Standard path: fetch from provider
             result = self._provider.get_prices(start_date, end_date)
             # If primary provider returns empty data, try fallback providers
             if not result.empty:
