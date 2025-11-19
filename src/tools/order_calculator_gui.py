@@ -231,7 +231,7 @@ class OrderCalculatorGUI:
         self.profit_entry.bind("<FocusOut>", self.schedule_auto_calculation)
         ToolTip(
             self.profit_entry,
-            "Percentage of profits to take (25-75%). Higher = more aggressive profit-taking",
+            "Percentage of profits to take (25-75% typical, >100% for overselling). Range: 0-10000%",
         )
 
         # Alignment Price (controls bracket alignment)
@@ -583,7 +583,7 @@ Designed for retail traders using manual order entry.
                 return False
             if sdn < 2 or sdn > 64:
                 return False
-            if profit < 0 or profit > 200:
+            if profit < 0 or profit > 10000:
                 return False
 
             return True
@@ -816,8 +816,8 @@ Designed for retail traders using manual order entry.
                 raise ValueError("Start date must be before end date")
             if sdn < 2 or sdn > 64:
                 raise ValueError("Bracket spacing must be between 2 and 64")
-            if profit < 0 or profit > 200:
-                raise ValueError("Profit must be between 0 and 200")
+            if profit < 0 or profit > 10000:
+                raise ValueError("Profit must be between 0 and 10000")
 
             # Fetch current price from market data
             asset = Asset(ticker)
