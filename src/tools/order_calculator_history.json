@@ -9,13 +9,13 @@
     "bracket_seed": 197.87
   },
   "SOUN": {
-    "holdings": 4009.0,
-    "last_price": 12.06,
-    "start_date": "2024-01-01",
-    "end_date": "2025-11-14",
-    "sdn": 8,
+    "holdings": 4168.0,
+    "last_price": 11.06,
+    "start_date": "2025-01-01",
+    "end_date": "2025-11-18",
+    "sdn": 4,
     "profit": 50.0,
-    "bracket_seed": 12.06
+    "bracket_seed": 11.06
   },
   "MSTR": {
     "holdings": 150.0,
@@ -35,5 +35,14 @@
     "profit": 50.0,
     "bracket_seed": 124447.26
   },
-  "last_ticker": "SOUN"
+  "VOO": {
+    "holdings": 921.0,
+    "last_price": 605.04,
+    "start_date": "2025-01-01",
+    "end_date": "2025-11-18",
+    "sdn": 48,
+    "profit": 625.0,
+    "bracket_seed": 605.04
+  },
+  "last_ticker": "VOO"
 }
