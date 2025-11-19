@@ -1485,18 +1485,27 @@ Designed for retail traders using manual order entry.
         ttk.Label(header_frame, text="Ticker", font=("TkDefaultFont", 10, "bold"), width=8).grid(
             row=0, column=0, padx=5
         )
+        ttk.Label(header_frame, text="sdN", font=("TkDefaultFont", 10, "bold"), width=6).grid(
+            row=0, column=1, padx=5
+        )
         ttk.Label(
             header_frame, text="Buy Price", font=("TkDefaultFont", 10, "bold"), width=12
-        ).grid(row=0, column=1, padx=5)
+        ).grid(row=0, column=2, padx=5)
+        ttk.Label(header_frame, text="Buy Qty", font=("TkDefaultFont", 10, "bold"), width=8).grid(
+            row=0, column=3, padx=5
+        )
         ttk.Label(
             header_frame, text="Current Price", font=("TkDefaultFont", 10, "bold"), width=12
-        ).grid(row=0, column=2, padx=5)
+        ).grid(row=0, column=4, padx=5)
         ttk.Label(
             header_frame, text="Sell Price", font=("TkDefaultFont", 10, "bold"), width=12
-        ).grid(row=0, column=3, padx=5)
+        ).grid(row=0, column=5, padx=5)
+        ttk.Label(header_frame, text="Sell Qty", font=("TkDefaultFont", 10, "bold"), width=8).grid(
+            row=0, column=6, padx=5
+        )
         ttk.Label(
             header_frame, text="Bracket Position", font=("TkDefaultFont", 10, "bold"), width=40
-        ).grid(row=0, column=4, padx=5)
+        ).grid(row=0, column=7, padx=5)
 
         # Get all tickers from history
         tickers = sorted([t for t in self.history.keys() if t != "last_ticker"])
@@ -1537,8 +1546,8 @@ Designed for retail traders using manual order entry.
 
                 current_price = float(price_df.iloc[-1]["Close"])
 
-                # Calculate buy and sell prices
-                buy_price, _, sell_price, _ = calculate_orders_for_manual_entry(
+                # Calculate buy and sell prices and quantities
+                buy_price, buy_qty, sell_price, sell_qty = calculate_orders_for_manual_entry(
                     ticker=ticker,
                     holdings=holdings,
                     last_transaction_price=last_price,
@@ -1557,14 +1566,24 @@ Designed for retail traders using manual order entry.
                     row_frame,
                     text=ticker,
                     width=8,
-                    command=lambda t=ticker: self.load_ticker_from_status_board(t),  # type: ignore
+                    command=lambda t=ticker: self.load_ticker_from_status_board(t),
                 )
                 ticker_btn.grid(row=0, column=0, padx=5)
                 ToolTip(ticker_btn, f"Click to load {ticker} in calculator")
 
+                # Bracket spacing (sdN)
+                ttk.Label(row_frame, text=f"sd{sdn}", width=6, anchor="center").grid(
+                    row=0, column=1, padx=5
+                )
+
                 # Buy price
                 ttk.Label(row_frame, text=f"${buy_price:.2f}", width=12, anchor="e").grid(
-                    row=0, column=1, padx=5
+                    row=0, column=2, padx=5
+                )
+
+                # Buy quantity
+                ttk.Label(row_frame, text=str(buy_qty), width=8, anchor="e").grid(
+                    row=0, column=3, padx=5
                 )
 
                 # Current price
@@ -1574,18 +1593,23 @@ Designed for retail traders using manual order entry.
                     width=12,
                     anchor="e",
                     font=("TkDefaultFont", 10, "bold"),
-                ).grid(row=0, column=2, padx=5)
+                ).grid(row=0, column=4, padx=5)
 
                 # Sell price
                 ttk.Label(row_frame, text=f"${sell_price:.2f}", width=12, anchor="e").grid(
-                    row=0, column=3, padx=5
+                    row=0, column=5, padx=5
+                )
+
+                # Sell quantity
+                ttk.Label(row_frame, text=str(sell_qty), width=8, anchor="e").grid(
+                    row=0, column=6, padx=5
                 )
 
                 # Bracket meter visualization
                 meter_canvas = tk.Canvas(
                     row_frame, width=400, height=30, bg="white", highlightthickness=1
                 )
-                meter_canvas.grid(row=0, column=4, padx=5)
+                meter_canvas.grid(row=0, column=7, padx=5)
                 self.draw_bracket_meter(meter_canvas, buy_price, current_price, sell_price)
 
             except Exception as e:
