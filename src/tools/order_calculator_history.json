@@ -44,5 +44,14 @@
     "profit": 625.0,
     "bracket_seed": 605.04
   },
-  "last_ticker": "VOO"
+  "GLDM": {
+    "holdings": 2614.0,
+    "last_price": 81.78,
+    "start_date": "2024-01-01",
+    "end_date": "2025-11-19",
+    "sdn": 16,
+    "profit": 50.0,
+    "bracket_seed": 81.78
+  },
+  "last_ticker": "GLDM"
 }
