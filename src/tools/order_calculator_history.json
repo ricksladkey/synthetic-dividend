@@ -21,7 +21,7 @@
     "holdings": 170.0,
     "last_price": 190.92,
     "start_date": "2024-01-01",
-    "end_date": "2025-11-17",
+    "end_date": "2025-11-19",
     "sdn": 8,
     "profit": 50.0,
     "bracket_seed": 208.2
@@ -53,5 +53,14 @@
     "profit": 50.0,
     "bracket_seed": 81.78
   },
-  "last_ticker": "GLDM"
+  "PLTR": {
+    "holdings": 425.0,
+    "last_price": 163.35,
+    "start_date": "2024-01-01",
+    "end_date": "2025-11-19",
+    "sdn": 8,
+    "profit": 50.0,
+    "bracket_seed": 163.35
+  },
+  "last_ticker": "PLTR"
 }
