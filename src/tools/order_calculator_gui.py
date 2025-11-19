@@ -393,6 +393,8 @@ class OrderCalculatorGUI:
         # Bind tab change event to auto-refresh status board
         self.tab_control.bind("<<NotebookTabChanged>>", self.on_tab_changed)
         self.status_board_loaded = False  # Track if status board has been loaded
+        self.status_board_timer: Optional[str] = None  # Timer for periodic refresh
+        self.status_board_refresh_interval = 60000  # Refresh every 60 seconds (in milliseconds)
 
         # Status bar
         self.status_var = tk.StringVar()
@@ -1467,10 +1469,17 @@ Designed for retail traders using manual order entry.
         current_tab = self.tab_control.index(self.tab_control.select())
 
         # Status Board is the third tab (index 2: 0=Chart, 1=Order Details, 2=Status Board)
-        if current_tab == 2 and not self.status_board_loaded:
-            # First time loading status board - auto refresh
-            self.refresh_status_board()
-            self.status_board_loaded = True
+        if current_tab == 2:
+            # Switched to Status Board tab
+            if not self.status_board_loaded:
+                # First time loading status board - auto refresh
+                self.refresh_status_board()
+                self.status_board_loaded = True
+            # Start periodic refresh timer
+            self.start_status_board_timer()
+        else:
+            # Switched away from Status Board tab - stop timer to save resources
+            self.stop_status_board_timer()
 
     def refresh_status_board(self):
         """Refresh the status board with all ticker positions."""
@@ -1717,6 +1726,36 @@ Designed for retail traders using manual order entry.
             anchor="center",
             font=("TkDefaultFont", 8, "bold"),
         )
+
+    def start_status_board_timer(self):
+        """Start the periodic refresh timer for the Status Board."""
+        # Cancel any existing timer
+        self.stop_status_board_timer()
+        # Schedule next refresh
+        self.status_board_timer = self.root.after(
+            self.status_board_refresh_interval, self.periodic_status_board_refresh
+        )
+
+    def stop_status_board_timer(self):
+        """Stop the periodic refresh timer for the Status Board."""
+        if self.status_board_timer is not None:
+            self.root.after_cancel(self.status_board_timer)
+            self.status_board_timer = None
+
+    def periodic_status_board_refresh(self):
+        """Periodic refresh callback - refreshes Status Board and reschedules."""
+        try:
+            self.refresh_status_board()
+        except Exception as e:
+            # Log error but don't crash the timer
+            print(f"Error during periodic status board refresh: {e}")
+        finally:
+            # Reschedule the next refresh (only if still on Status Board tab)
+            current_tab = self.tab_control.index(self.tab_control.select())
+            if current_tab == 2:  # Status Board tab
+                self.status_board_timer = self.root.after(
+                    self.status_board_refresh_interval, self.periodic_status_board_refresh
+                )
 
     def load_ticker_from_status_board(self, ticker):
         """Load a ticker from the status board into the calculator."""
