@@ -1212,7 +1212,8 @@ Designed for retail traders using manual order entry.
                         end_date,
                     )
 
-                    self.ax.legend()
+                    # Place legend in upper left to avoid overlap with signals overlay (lower right)
+                    self.ax.legend(loc='upper left', framealpha=0.9)
                 else:
                     self.ax.text(
                         0.5,
