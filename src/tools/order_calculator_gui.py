@@ -1614,32 +1614,34 @@ Designed for retail traders using manual order entry.
         position = (current_price - buy_price) / total_range
         position = max(0, min(1, position))  # Clamp to [0, 1]
 
-        # Draw background (full bracket range)
-        canvas.create_rectangle(
-            padding, padding, width - padding, height - padding,
-            fill="#e0e0e0", outline="#808080"
-        )
+        # Calculate pixel position of current price
+        bar_width = width - 2 * padding
+        current_x = padding + bar_width * position
 
-        # Draw filled portion (from buy to current)
-        fill_width = (width - 2 * padding) * position
-
-        # Color based on position (green near buy, red near sell)
-        if position < 0.5:
-            # Green zone (closer to buy price)
-            color = "#90EE90"  # Light green
-        else:
-            # Red zone (closer to sell price)
-            color = "#FFB6C1"  # Light red
-
+        # Draw left section (red - approaching buy price)
         canvas.create_rectangle(
             padding, padding,
-            padding + fill_width, height - padding,
-            fill=color, outline=""
+            current_x, height - padding,
+            fill="#FFB6C1",  # Light red
+            outline=""
+        )
+
+        # Draw right section (green - approaching sell price)
+        canvas.create_rectangle(
+            current_x, padding,
+            width - padding, height - padding,
+            fill="#90EE90",  # Light green
+            outline=""
+        )
+
+        # Draw border around entire bar
+        canvas.create_rectangle(
+            padding, padding, width - padding, height - padding,
+            fill="", outline="#808080"
         )
 
         # Draw tick marks at buy, mid, and sell
         mid_x = padding + (width - 2 * padding) / 2
-        current_x = padding + fill_width
 
         # Buy tick (left)
         canvas.create_line(padding, padding, padding, height - padding, fill="#006400", width=2)
