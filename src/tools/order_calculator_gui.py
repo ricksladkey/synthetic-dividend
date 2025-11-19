@@ -215,7 +215,9 @@ class OrderCalculatorGUI:
         ToolTip(self.end_date_entry, "End date for price history (typically today)")
 
         # Today button for End Date
-        today_button = ttk.Button(input_frame, text="Today", command=self.set_end_date_to_today, width=6)
+        today_button = ttk.Button(
+            input_frame, text="Today", command=self.set_end_date_to_today, width=6
+        )
         today_button.grid(row=4, column=4, sticky=tk.W, padx=(5, 15))
         ToolTip(today_button, "Set end date to today")
 
@@ -366,12 +368,13 @@ class OrderCalculatorGUI:
 
         # Create scrollable frame for status board
         status_canvas = tk.Canvas(status_board_tab)
-        status_scrollbar = ttk.Scrollbar(status_board_tab, orient="vertical", command=status_canvas.yview)
+        status_scrollbar = ttk.Scrollbar(
+            status_board_tab, orient="vertical", command=status_canvas.yview
+        )
         self.status_board_frame = ttk.Frame(status_canvas)
 
         self.status_board_frame.bind(
-            "<Configure>",
-            lambda _: status_canvas.configure(scrollregion=status_canvas.bbox("all"))
+            "<Configure>", lambda _: status_canvas.configure(scrollregion=status_canvas.bbox("all"))  # type: ignore
         )
 
         status_canvas.create_window((0, 0), window=self.status_board_frame, anchor="nw")
@@ -384,9 +387,7 @@ class OrderCalculatorGUI:
         refresh_frame = ttk.Frame(status_board_tab)
         refresh_frame.grid(row=1, column=0, columnspan=2, pady=5)
         ttk.Button(
-            refresh_frame,
-            text="Refresh All Positions",
-            command=self.refresh_status_board
+            refresh_frame, text="Refresh All Positions", command=self.refresh_status_board
         ).pack()
 
         # Bind tab change event to auto-refresh status board
@@ -794,7 +795,7 @@ Designed for retail traders using manual order entry.
             # Trigger auto-calculation after loading ticker data
             self.schedule_auto_calculation()
 
-    def on_ticker_selected(self, event):
+    def on_ticker_selected(self, event=None):
         """Handle ticker selection - load defaults and trigger auto-calculation."""
         ticker = self.ticker_var.get()
         if ticker in self.history:
@@ -1484,18 +1485,18 @@ Designed for retail traders using manual order entry.
         ttk.Label(header_frame, text="Ticker", font=("TkDefaultFont", 10, "bold"), width=8).grid(
             row=0, column=0, padx=5
         )
-        ttk.Label(header_frame, text="Buy Price", font=("TkDefaultFont", 10, "bold"), width=12).grid(
-            row=0, column=1, padx=5
-        )
-        ttk.Label(header_frame, text="Current Price", font=("TkDefaultFont", 10, "bold"), width=12).grid(
-            row=0, column=2, padx=5
-        )
-        ttk.Label(header_frame, text="Sell Price", font=("TkDefaultFont", 10, "bold"), width=12).grid(
-            row=0, column=3, padx=5
-        )
-        ttk.Label(header_frame, text="Bracket Position", font=("TkDefaultFont", 10, "bold"), width=40).grid(
-            row=0, column=4, padx=5
-        )
+        ttk.Label(
+            header_frame, text="Buy Price", font=("TkDefaultFont", 10, "bold"), width=12
+        ).grid(row=0, column=1, padx=5)
+        ttk.Label(
+            header_frame, text="Current Price", font=("TkDefaultFont", 10, "bold"), width=12
+        ).grid(row=0, column=2, padx=5)
+        ttk.Label(
+            header_frame, text="Sell Price", font=("TkDefaultFont", 10, "bold"), width=12
+        ).grid(row=0, column=3, padx=5)
+        ttk.Label(
+            header_frame, text="Bracket Position", font=("TkDefaultFont", 10, "bold"), width=40
+        ).grid(row=0, column=4, padx=5)
 
         # Get all tickers from history
         tickers = sorted([t for t in self.history.keys() if t != "last_ticker"])
@@ -1504,7 +1505,7 @@ Designed for retail traders using manual order entry.
             ttk.Label(
                 self.status_board_frame,
                 text="No positions saved yet. Calculate orders for a ticker to see it here.",
-                font=("TkDefaultFont", 10)
+                font=("TkDefaultFont", 10),
             ).grid(row=1, column=0, padx=20, pady=20)
             return
 
@@ -1517,7 +1518,7 @@ Designed for retail traders using manual order entry.
                 # Extract parameters
                 holdings = float(params.get("holdings", 0))
                 last_price = float(params.get("last_price", 0))
-                sdn = float(params.get("sdn", 8))
+                sdn = int(params.get("sdn", 8))
                 profit = float(params.get("profit", 50))
                 bracket_seed = float(params.get("bracket_seed", last_price))
 
@@ -1556,7 +1557,7 @@ Designed for retail traders using manual order entry.
                     row_frame,
                     text=ticker,
                     width=8,
-                    command=lambda t=ticker: self.load_ticker_from_status_board(t)
+                    command=lambda t=ticker: self.load_ticker_from_status_board(t),  # type: ignore
                 )
                 ticker_btn.grid(row=0, column=0, padx=5)
                 ToolTip(ticker_btn, f"Click to load {ticker} in calculator")
@@ -1572,7 +1573,7 @@ Designed for retail traders using manual order entry.
                     text=f"${current_price:.2f}",
                     width=12,
                     anchor="e",
-                    font=("TkDefaultFont", 10, "bold")
+                    font=("TkDefaultFont", 10, "bold"),
                 ).grid(row=0, column=2, padx=5)
 
                 # Sell price
@@ -1581,7 +1582,9 @@ Designed for retail traders using manual order entry.
                 )
 
                 # Bracket meter visualization
-                meter_canvas = tk.Canvas(row_frame, width=400, height=30, bg="white", highlightthickness=1)
+                meter_canvas = tk.Canvas(
+                    row_frame, width=400, height=30, bg="white", highlightthickness=1
+                )
                 meter_canvas.grid(row=0, column=4, padx=5)
                 self.draw_bracket_meter(meter_canvas, buy_price, current_price, sell_price)
 
@@ -1590,11 +1593,9 @@ Designed for retail traders using manual order entry.
                 error_frame = ttk.Frame(self.status_board_frame)
                 error_frame.grid(row=idx, column=0, sticky="we", padx=5, pady=2)
                 ttk.Label(error_frame, text=ticker, width=8).grid(row=0, column=0, padx=5)
-                ttk.Label(
-                    error_frame,
-                    text=f"Error: {str(e)}",
-                    foreground="red"
-                ).grid(row=0, column=1, padx=5)
+                ttk.Label(error_frame, text=f"Error: {str(e)}", foreground="red").grid(
+                    row=0, column=1, padx=5
+                )
 
         self.status_var.set(f"Status Board refreshed: {len(tickers)} positions")
 
@@ -1620,24 +1621,22 @@ Designed for retail traders using manual order entry.
 
         # Draw left section (red - approaching buy price)
         canvas.create_rectangle(
-            padding, padding,
-            current_x, height - padding,
-            fill="#FFB6C1",  # Light red
-            outline=""
+            padding, padding, current_x, height - padding, fill="#FFB6C1", outline=""  # Light red
         )
 
         # Draw right section (green - approaching sell price)
         canvas.create_rectangle(
-            current_x, padding,
-            width - padding, height - padding,
+            current_x,
+            padding,
+            width - padding,
+            height - padding,
             fill="#90EE90",  # Light green
-            outline=""
+            outline="",
         )
 
         # Draw border around entire bar
         canvas.create_rectangle(
-            padding, padding, width - padding, height - padding,
-            fill="", outline="#808080"
+            padding, padding, width - padding, height - padding, fill="", outline="#808080"
         )
 
         # Draw tick marks at buy, mid, and sell
@@ -1648,52 +1647,57 @@ Designed for retail traders using manual order entry.
 
         # Sell tick (right)
         canvas.create_line(
-            width - padding, padding,
-            width - padding, height - padding,
-            fill="#8B0000", width=2
+            width - padding, padding, width - padding, height - padding, fill="#8B0000", width=2
         )
 
         # Current price indicator (triangle)
         triangle_size = 6
         canvas.create_polygon(
-            current_x, padding - 2,
-            current_x - triangle_size, padding - triangle_size - 2,
-            current_x + triangle_size, padding - triangle_size - 2,
-            fill="black", outline="black"
+            current_x,
+            padding - 2,
+            current_x - triangle_size,
+            padding - triangle_size - 2,
+            current_x + triangle_size,
+            padding - triangle_size - 2,
+            fill="black",
+            outline="black",
         )
 
         # Labels (below the bar)
         # Buy label
         canvas.create_text(
-            padding + 5, height - padding + 12,
+            padding + 5,
+            height - padding + 12,
             text=f"${buy_price:.2f}",
             anchor="w",
             font=("TkDefaultFont", 8),
-            fill="#006400"
+            fill="#006400",
         )
 
         # Sell label
         canvas.create_text(
-            width - padding - 5, height - padding + 12,
+            width - padding - 5,
+            height - padding + 12,
             text=f"${sell_price:.2f}",
             anchor="e",
             font=("TkDefaultFont", 8),
-            fill="#8B0000"
+            fill="#8B0000",
         )
 
         # Current price percentage
         percentage = position * 100
         canvas.create_text(
-            mid_x, height - padding + 12,
+            mid_x,
+            height - padding + 12,
             text=f"{percentage:.1f}%",
             anchor="center",
-            font=("TkDefaultFont", 8, "bold")
+            font=("TkDefaultFont", 8, "bold"),
         )
 
     def load_ticker_from_status_board(self, ticker):
         """Load a ticker from the status board into the calculator."""
         self.ticker_var.set(ticker)
-        self.on_ticker_changed()
+        self.on_ticker_selected()
         # Switch to the Chart tab
         self.tab_control.select(0)
 
