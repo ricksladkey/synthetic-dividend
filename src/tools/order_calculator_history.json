@@ -63,7 +63,7 @@
     "bracket_seed": 163.35
   },
   "GOOG": {
-    "holdings": 1300.0,
+    "holdings": 817.0,
     "last_price": 283.81,
     "start_date": "2024-01-01",
     "end_date": "2025-11-19",
@@ -80,5 +80,5 @@
     "profit": 50.0,
     "bracket_seed": 3013.05
   },
-  "last_ticker": "NVDA"
+  "last_ticker": "GOOG"
 }
