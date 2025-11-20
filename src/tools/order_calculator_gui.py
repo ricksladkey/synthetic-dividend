@@ -1666,13 +1666,17 @@ Designed for retail traders using manual order entry.
 
         # Draw empty rectangle (border only, no fill)
         canvas.create_rectangle(
-            padding, padding, width - padding, height - padding, fill="white", outline="#808080", width=2
+            padding,
+            padding,
+            width - padding,
+            height - padding,
+            fill="white",
+            outline="#808080",
+            width=2,
         )
 
         # Draw current price line (vertical black line)
-        canvas.create_line(
-            current_x, padding, current_x, height - padding, fill="black", width=3
-        )
+        canvas.create_line(current_x, padding, current_x, height - padding, fill="black", width=3)
 
         # Draw red dot at buy price (left side)
         dot_radius = 6
