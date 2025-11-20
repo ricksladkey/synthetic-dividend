@@ -116,10 +116,14 @@ class OrderCalculatorGUI:
         self.load_history()
 
         # Store calculated order values for buy/sell buttons
+        # These are the raw calculated quantities (may be fractional)
         self.current_buy_price = 0.0
         self.current_buy_qty = 0.0
         self.current_sell_price = 0.0
         self.current_sell_qty = 0.0
+        # These are the actual tradeable quantities (rounded for non-fractional assets)
+        self.current_buy_qty_tradeable = 0.0
+        self.current_sell_qty_tradeable = 0.0
 
         # Auto-calculation debouncing
         self.calculation_timer: Optional[str] = None
@@ -760,24 +764,23 @@ Designed for retail traders using manual order entry.
         return float(s)
 
     @staticmethod
-    def format_holdings(holdings: float, ticker: str = "") -> str:
+    def format_holdings(holdings: float) -> str:
         """Format holdings with commas for readability.
 
-        For assets that support fractional shares, shows decimal places.
-        For assets that don't support fractional shares, rounds to whole numbers.
+        Always preserves fractional holdings (e.g., from dividend reinvestment).
+        Shows up to 4 decimal places if fractional, otherwise whole numbers.
+
+        Note: Even stocks/ETFs that don't support fractional TRADING can have
+        fractional HOLDINGS due to dividend reinvestment programs (DRIPs).
         """
-        if ticker:
-            try:
-                from src.data.asset import Asset
-
-                asset = Asset(ticker)
-                if asset.supports_fractional_shares:
-                    return f"{holdings:,.4f}"
-            except Exception:
-                pass  # Fall back to whole number formatting on error
-
-        # Default: format as whole numbers with commas
-        return f"{holdings:,.0f}"
+        # Check if holdings has a fractional component
+        if holdings != int(holdings):
+            # Has fractional part: show up to 4 decimal places
+            # Strip trailing zeros for cleaner display
+            return f"{holdings:,.4f}".rstrip('0').rstrip('.')
+        else:
+            # Whole number: no decimal places
+            return f"{holdings:,.0f}"
 
     def load_history(self) -> None:
         """Load calculation history from JSON file.
@@ -857,7 +860,7 @@ Designed for retail traders using manual order entry.
             params = self.history[ticker]
             self.ticker_var.set(ticker)
             self.holdings_var.set(
-                self.format_holdings(params.get("holdings", 0), ticker)
+                self.format_holdings(params.get("holdings", 0))
                 if params.get("holdings")
                 else ""
             )
@@ -904,7 +907,7 @@ Designed for retail traders using manual order entry.
         if ticker in self.history:
             params = self.history[ticker]
             self.holdings_var.set(
-                self.format_holdings(params.get("holdings", 0), ticker)
+                self.format_holdings(params.get("holdings", 0))
                 if params.get("holdings")
                 else ""
             )
@@ -1019,7 +1022,7 @@ Designed for retail traders using manual order entry.
             )
 
             # Update fields to canonical format
-            self.holdings_var.set(self.format_holdings(holdings, ticker))
+            self.holdings_var.set(self.format_holdings(holdings))
             self.last_price_var.set(self.format_price(last_price))
             # Note: current_price is now fetched from market data, not displayed in UI
             self.bracket_seed_var.set(self.format_price(bracket_seed))
@@ -1050,6 +1053,9 @@ Designed for retail traders using manual order entry.
             if supports_fractional:
                 buy_qty_display = f"{buy_qty:.4f}"
                 sell_qty_display = f"{sell_qty:.4f}"
+                # For fractional assets, tradeable quantity = calculated quantity
+                self.current_buy_qty_tradeable = buy_qty
+                self.current_sell_qty_tradeable = sell_qty
                 # For fractional assets, use cent arithmetic to avoid floating-point errors
                 # Prices are always in whole cents, so multiply by 100 to get integer cents
                 buy_price_cents = round(buy_price * 100)
@@ -1065,6 +1071,9 @@ Designed for retail traders using manual order entry.
                 sell_qty_rounded = int(sell_qty)
                 buy_qty_display = f"{buy_qty_rounded}"
                 sell_qty_display = f"{sell_qty_rounded}"
+                # Store the actual tradeable (rounded) quantities for execute_buy/sell_order
+                self.current_buy_qty_tradeable = float(buy_qty_rounded)
+                self.current_sell_qty_tradeable = float(sell_qty_rounded)
                 # Calculate amounts using cent arithmetic (whole cents × whole shares)
                 # This ensures exact arithmetic: 27178 cents × 18 shares = 489204 cents = $4892.04
                 buy_price_cents = round(buy_price * 100)
@@ -1152,7 +1161,8 @@ Designed for retail traders using manual order entry.
             current_holdings = float(holdings_str.replace(",", "")) if holdings_str else 0.0
 
             # Update holdings (add bought shares)
-            new_holdings = current_holdings + self.current_buy_qty
+            # Use tradeable quantity (rounded for non-fractional assets) to preserve fractional holdings
+            new_holdings = current_holdings + self.current_buy_qty_tradeable
 
             # Update last price and current price to the buy execution price
             execution_price = self.current_buy_price
@@ -1162,17 +1172,18 @@ Designed for retail traders using manual order entry.
             )
 
             # Update holdings
-            self.holdings_var.set(self.format_holdings(new_holdings, self.ticker_var.get().strip()))
+            self.holdings_var.set(self.format_holdings(new_holdings))
 
             # Recalculate orders with new position
             self.calculate_orders()
 
             # Format quantity for status message based on asset type
+            # Use tradeable quantity (which is already rounded for non-fractional assets)
             asset = Asset(self.ticker_var.get().strip())
             if asset.supports_fractional_shares:
-                qty_display = f"{self.current_buy_qty:.4f}"
+                qty_display = f"{self.current_buy_qty_tradeable:.4f}"
             else:
-                qty_display = f"{int(self.current_buy_qty)}"
+                qty_display = f"{int(self.current_buy_qty_tradeable)}"
 
             self.status_var.set(f"Executed BUY: {qty_display} shares @ ${execution_price:.2f}")
 
@@ -1193,15 +1204,17 @@ Designed for retail traders using manual order entry.
             current_holdings = float(holdings_str.replace(",", "")) if holdings_str else 0.0
 
             # Check if we have enough shares to sell
-            if current_holdings < self.current_sell_qty:
+            # Use tradeable quantity (rounded for non-fractional assets)
+            if current_holdings < self.current_sell_qty_tradeable:
                 messagebox.showwarning(
                     "Warning",
-                    f"Insufficient holdings. Have {current_holdings:.0f} shares, trying to sell {self.current_sell_qty:.0f} shares.",
+                    f"Insufficient holdings. Have {current_holdings:.0f} shares, trying to sell {self.current_sell_qty_tradeable:.0f} shares.",
                 )
                 return
 
             # Update holdings (subtract sold shares)
-            new_holdings = current_holdings - self.current_sell_qty
+            # Use tradeable quantity (rounded for non-fractional assets) to preserve fractional holdings
+            new_holdings = current_holdings - self.current_sell_qty_tradeable
 
             # Update last price and current price to the sell execution price
             execution_price = self.current_sell_price
@@ -1211,17 +1224,18 @@ Designed for retail traders using manual order entry.
             )
 
             # Update holdings
-            self.holdings_var.set(self.format_holdings(new_holdings, self.ticker_var.get().strip()))
+            self.holdings_var.set(self.format_holdings(new_holdings))
 
             # Recalculate orders with new position
             self.calculate_orders()
 
             # Format quantity for status message based on asset type
+            # Use tradeable quantity (which is already rounded for non-fractional assets)
             asset = Asset(self.ticker_var.get().strip())
             if asset.supports_fractional_shares:
-                qty_display = f"{self.current_sell_qty:.4f}"
+                qty_display = f"{self.current_sell_qty_tradeable:.4f}"
             else:
-                qty_display = f"{int(self.current_sell_qty)}"
+                qty_display = f"{int(self.current_sell_qty_tradeable)}"
 
             self.status_var.set(f"Executed SELL: {qty_display} shares @ ${execution_price:.2f}")
 
