@@ -135,7 +135,7 @@ class OrderCalculatorGUI:
         self.ticker_var = tk.StringVar()
         self.ticker_combo = ttk.Combobox(input_frame, textvariable=self.ticker_var, width=12)
         self.ticker_combo.grid(row=1, column=1, sticky="we", padx=(0, 15))
-        self.ticker_combo["values"] = [t for t in self.history.keys() if t != "last_ticker"]
+        self.ticker_combo["values"] = sorted([t for t in self.history.keys() if t != "last_ticker"])
         self.ticker_combo.bind("<<ComboboxSelected>>", self.on_ticker_selected)
         self.ticker_combo.bind("<FocusOut>", self.schedule_auto_calculation)
         self.ticker_combo.bind("<Return>", self.schedule_auto_calculation)
@@ -1010,7 +1010,7 @@ Designed for retail traders using manual order entry.
             self.save_history()
 
             # Update ticker list
-            self.ticker_combo["values"] = [t for t in self.history.keys() if t != "last_ticker"]
+            self.ticker_combo["values"] = sorted([t for t in self.history.keys() if t != "last_ticker"])
 
             # Update chart
             self.update_chart(
