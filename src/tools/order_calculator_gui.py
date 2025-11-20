@@ -948,21 +948,26 @@ Designed for retail traders using manual order entry.
             self.current_sell_price = sell_price
             self.current_sell_qty = sell_qty
 
-            # Format broker syntax orders
-            buy_amount = buy_price * buy_qty
-            sell_amount = sell_price * sell_qty
-
             # Check if asset supports fractional shares
             asset = Asset(ticker)
             supports_fractional = asset.supports_fractional_shares
 
-            # Format quantity: use int() only for assets that don't support fractional shares
+            # Format quantity and calculate amounts using the actual quantity that will be traded
+            # (rounded for non-fractional assets to match broker behavior)
             if supports_fractional:
                 buy_qty_display = f"{buy_qty:.4f}"
                 sell_qty_display = f"{sell_qty:.4f}"
+                buy_amount = buy_price * buy_qty
+                sell_amount = sell_price * sell_qty
             else:
-                buy_qty_display = f"{int(buy_qty)}"
-                sell_qty_display = f"{int(sell_qty)}"
+                # Round quantities to whole shares for non-fractional assets
+                buy_qty_rounded = int(buy_qty)
+                sell_qty_rounded = int(sell_qty)
+                buy_qty_display = f"{buy_qty_rounded}"
+                sell_qty_display = f"{sell_qty_rounded}"
+                # Calculate amounts using rounded quantities so math is consistent
+                buy_amount = buy_price * buy_qty_rounded
+                sell_amount = sell_price * sell_qty_rounded
 
             buy_order_text = (
                 f"BUY {ticker} {buy_qty_display} @ ${buy_price:.2f} = ${buy_amount:.2f}"
