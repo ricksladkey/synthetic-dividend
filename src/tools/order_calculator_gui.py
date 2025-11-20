@@ -957,17 +957,29 @@ Designed for retail traders using manual order entry.
             if supports_fractional:
                 buy_qty_display = f"{buy_qty:.4f}"
                 sell_qty_display = f"{sell_qty:.4f}"
-                buy_amount = buy_price * buy_qty
-                sell_amount = sell_price * sell_qty
+                # For fractional assets, use cent arithmetic to avoid floating-point errors
+                # Prices are always in whole cents, so multiply by 100 to get integer cents
+                buy_price_cents = round(buy_price * 100)
+                sell_price_cents = round(sell_price * 100)
+                buy_qty_cents = round(buy_qty * 10000)  # 4 decimal places = 10000x
+                sell_qty_cents = round(sell_qty * 10000)
+                # Integer arithmetic in cents (exact, no rounding errors)
+                buy_amount = (buy_price_cents * buy_qty_cents) / 1000000.0  # Back to dollars
+                sell_amount = (sell_price_cents * sell_qty_cents) / 1000000.0
             else:
                 # Round quantities to whole shares for non-fractional assets
                 buy_qty_rounded = int(buy_qty)
                 sell_qty_rounded = int(sell_qty)
                 buy_qty_display = f"{buy_qty_rounded}"
                 sell_qty_display = f"{sell_qty_rounded}"
-                # Calculate amounts using rounded quantities so math is consistent
-                buy_amount = buy_price * buy_qty_rounded
-                sell_amount = sell_price * sell_qty_rounded
+                # Calculate amounts using cent arithmetic (whole cents × whole shares)
+                # This ensures exact arithmetic: 27178 cents × 18 shares = 489204 cents = $4892.04
+                buy_price_cents = round(buy_price * 100)
+                sell_price_cents = round(sell_price * 100)
+                buy_amount_cents = buy_price_cents * buy_qty_rounded
+                sell_amount_cents = sell_price_cents * sell_qty_rounded
+                buy_amount = buy_amount_cents / 100.0
+                sell_amount = sell_amount_cents / 100.0
 
             buy_order_text = (
                 f"BUY {ticker} {buy_qty_display} @ ${buy_price:.2f} = ${buy_amount:.2f}"
