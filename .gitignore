@@ -69,6 +69,12 @@ cache/TEST.*
 cache/SYNTHETIC.*
 cache/USD.*
 
+# User-specific cache updates (binary and csv files)
+# These are generated from testdata/ + live API fetches
+# Only testdata/*.csv should be committed (see exception below)
+cache/*.pkl
+cache/*.csv
+
 # Output images (charts, plots) - root level only
 # Subfolders can have their own .gitignore to track specific images
 /*.png
@@ -112,3 +118,9 @@ optimal_rebalancing_*.csv
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Personal trading configuration (migrated to ~/.synthetic-dividend/)
+# These are legacy files that may exist before migration
+# New installations store these in user's home directory
+src/tools/order_calculator_history.json
+src/tools/window_settings.json

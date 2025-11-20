@@ -9,6 +9,31 @@ import pytest
 
 
 @pytest.fixture(scope="session", autouse=True)
+def isolated_test_cache(tmp_path_factory):
+    """Force all tests to use an isolated cache directory.
+
+    This prevents tests from modifying the committed cache/ directory,
+    ensuring clean git status after running pytest.
+
+    The fixture creates a temporary directory that is automatically
+    cleaned up after the test session ends.
+    """
+    # Create isolated test cache directory
+    test_cache = tmp_path_factory.mktemp("test_cache")
+
+    # Monkey-patch get_cache_dir to return test cache
+    import src.paths
+
+    original_get_cache_dir = src.paths.get_cache_dir
+    src.paths.get_cache_dir = lambda: test_cache
+
+    yield test_cache
+
+    # Restore original function after tests
+    src.paths.get_cache_dir = original_get_cache_dir
+
+
+@pytest.fixture(scope="session", autouse=True)
 def setup_static_provider_for_ci():
     """Auto-register StaticAssetProvider when running in CI environment.
 
