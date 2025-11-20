@@ -1661,6 +1661,7 @@ Designed for retail traders using manual order entry.
         buy_x = padding
         sell_x = width - padding
         current_x = padding + bar_width * position
+        mid_x = padding + bar_width / 2
         center_y = (padding + height - padding) / 2
 
         # Draw empty rectangle (border only, no fill)
