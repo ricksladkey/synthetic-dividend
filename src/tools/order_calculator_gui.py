@@ -1656,52 +1656,44 @@ Designed for retail traders using manual order entry.
         position = (current_price - buy_price) / total_range
         position = max(0, min(1, position))  # Clamp to [0, 1]
 
-        # Calculate pixel position of current price
+        # Calculate pixel positions
         bar_width = width - 2 * padding
+        buy_x = padding
+        sell_x = width - padding
         current_x = padding + bar_width * position
+        center_y = (padding + height - padding) / 2
 
-        # Draw left section (red - approaching buy price)
+        # Draw empty rectangle (border only, no fill)
         canvas.create_rectangle(
-            padding, padding, current_x, height - padding, fill="#FFB6C1", outline=""  # Light red
+            padding, padding, width - padding, height - padding, fill="white", outline="#808080", width=2
         )
 
-        # Draw right section (green - approaching sell price)
-        canvas.create_rectangle(
-            current_x,
-            padding,
-            width - padding,
-            height - padding,
-            fill="#90EE90",  # Light green
-            outline="",
-        )
-
-        # Draw border around entire bar
-        canvas.create_rectangle(
-            padding, padding, width - padding, height - padding, fill="", outline="#808080"
-        )
-
-        # Draw tick marks at buy, mid, and sell
-        mid_x = padding + (width - 2 * padding) / 2
-
-        # Buy tick (left)
-        canvas.create_line(padding, padding, padding, height - padding, fill="#006400", width=2)
-
-        # Sell tick (right)
+        # Draw current price line (vertical black line)
         canvas.create_line(
-            width - padding, padding, width - padding, height - padding, fill="#8B0000", width=2
+            current_x, padding, current_x, height - padding, fill="black", width=3
         )
 
-        # Current price indicator (triangle)
-        triangle_size = 6
-        canvas.create_polygon(
-            current_x,
-            padding - 2,
-            current_x - triangle_size,
-            padding - triangle_size - 2,
-            current_x + triangle_size,
-            padding - triangle_size - 2,
-            fill="black",
-            outline="black",
+        # Draw red dot at buy price (left side)
+        dot_radius = 6
+        canvas.create_oval(
+            buy_x - dot_radius,
+            center_y - dot_radius,
+            buy_x + dot_radius,
+            center_y + dot_radius,
+            fill="#DC143C",  # Crimson red
+            outline="#8B0000",  # Dark red border
+            width=2,
+        )
+
+        # Draw green dot at sell price (right side)
+        canvas.create_oval(
+            sell_x - dot_radius,
+            center_y - dot_radius,
+            sell_x + dot_radius,
+            center_y + dot_radius,
+            fill="#32CD32",  # Lime green
+            outline="#006400",  # Dark green border
+            width=2,
         )
 
         # Labels (below the bar)
