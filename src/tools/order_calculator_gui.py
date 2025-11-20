@@ -26,6 +26,20 @@ except ImportError:
 from src.data.asset import Asset
 from src.tools.order_calculator import calculate_orders_for_manual_entry, format_order_display
 
+
+def get_config_dir() -> str:
+    """Get the user's config directory for storing personal settings.
+
+    Returns:
+        Path to ~/.synthetic-dividend/ directory (creates if needed)
+    """
+    from pathlib import Path
+
+    config_dir = Path.home() / ".synthetic-dividend"
+    config_dir.mkdir(exist_ok=True)
+    return str(config_dir)
+
+
 # Optional imports for enhanced help display
 try:
     import markdown  # type: ignore
@@ -86,8 +100,17 @@ class OrderCalculatorGUI:
         # Load window settings
         self.load_window_settings()
 
-        # History file path
-        self.history_file = os.path.join(os.path.dirname(__file__), "order_calculator_history.json")
+        # History file paths
+        # Personal file in user's home directory (~/.synthetic-dividend/)
+        self.history_file = os.path.join(get_config_dir(), "order_calculator_history.json")
+        # Example template in repo (for new users)
+        script_dir = os.path.dirname(__file__)
+        self.example_history_file = os.path.join(
+            script_dir, "order_calculator_history.example.json"
+        )
+        # Legacy location (for migration)
+        self.legacy_history_file = os.path.join(script_dir, "order_calculator_history.json")
+
         self.history: Dict[str, Dict] = {}
         self.last_ticker: Optional[str] = None
         self.load_history()
@@ -463,20 +486,43 @@ class OrderCalculatorGUI:
         self.root.bind("<F1>", lambda e: self.show_help())
 
     def load_window_settings(self):
-        """Load window size and position settings."""
-        settings_file = os.path.join(os.path.dirname(__file__), "window_settings.json")
+        """Load window size and position settings.
+
+        Migrates from legacy location if needed.
+        """
+        # New location in home directory
+        settings_file = os.path.join(get_config_dir(), "window_settings.json")
+        # Legacy location in repo
+        legacy_settings_file = os.path.join(os.path.dirname(__file__), "window_settings.json")
+
+        # Try new location first
         if os.path.exists(settings_file):
             try:
                 with open(settings_file, "r") as f:
                     settings = json.load(f)
                     geometry = settings.get("geometry", "1200x800")
                     self.root.geometry(geometry)
+                return
+            except Exception:
+                pass  # Use default geometry
+
+        # Migrate from legacy location if it exists
+        if os.path.exists(legacy_settings_file):
+            try:
+                with open(legacy_settings_file, "r") as f:
+                    settings = json.load(f)
+                    geometry = settings.get("geometry", "1200x800")
+                    self.root.geometry(geometry)
+                # Save to new location
+                with open(settings_file, "w") as f:
+                    json.dump(settings, f, indent=2)
+                print(f"Migrated window settings from {legacy_settings_file} to {settings_file}")
             except Exception:
                 pass  # Use default geometry
 
     def save_window_settings(self):
-        """Save window size and position settings."""
-        settings_file = os.path.join(os.path.dirname(__file__), "window_settings.json")
+        """Save window size and position settings to home directory."""
+        settings_file = os.path.join(get_config_dir(), "window_settings.json")
         try:
             geometry = self.root.geometry()
             settings = {"geometry": geometry}
@@ -734,7 +780,15 @@ Designed for retail traders using manual order entry.
         return f"{holdings:,.0f}"
 
     def load_history(self) -> None:
-        """Load calculation history from JSON file."""
+        """Load calculation history from JSON file.
+
+        Migration path:
+        1. Try personal file in ~/.synthetic-dividend/
+        2. Migrate from legacy location (src/tools/) if exists
+        3. Fall back to example file
+        4. Start with empty history
+        """
+        # Try personal file first (new location)
         if os.path.exists(self.history_file):
             try:
                 with open(self.history_file, "r") as f:
@@ -743,8 +797,47 @@ Designed for retail traders using manual order entry.
                     self.history = {k: v for k, v in data.items() if k != "last_ticker"}
                     # Store last_ticker separately
                     self.last_ticker = data.get("last_ticker")
+                return
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to load history: {e}")
+                return
+
+        # Check for legacy file (old location in repo)
+        if os.path.exists(self.legacy_history_file):
+            try:
+                # Migrate from legacy location
+                with open(self.legacy_history_file, "r") as f:
+                    data = json.load(f)
+                    self.history = {k: v for k, v in data.items() if k != "last_ticker"}
+                    self.last_ticker = data.get("last_ticker")
+
+                # Save to new location
+                self.save_history()
+                print(f"Migrated history from {self.legacy_history_file} to {self.history_file}")
+                return
+            except Exception:
+                # Migration failed, fall through to example
+                pass
+
+        # No personal file, try example file
+        if os.path.exists(self.example_history_file):
+            try:
+                # Load example data
+                with open(self.example_history_file, "r") as f:
+                    data = json.load(f)
+                    self.history = {k: v for k, v in data.items() if k != "last_ticker"}
+                    self.last_ticker = data.get("last_ticker")
+
+                # Save as personal file (user will customize)
+                self.save_history()
+                return
+            except Exception:
+                # Example file corrupted, start fresh
+                pass
+
+        # No config at all: start with empty history
+        self.history = {}
+        self.last_ticker = None
 
     def save_history(self):
         """Save calculation history to JSON file."""
