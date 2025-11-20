@@ -1027,7 +1027,9 @@ Designed for retail traders using manual order entry.
             self.save_history()
 
             # Update ticker list
-            self.ticker_combo["values"] = sorted([t for t in self.history.keys() if t != "last_ticker"])
+            self.ticker_combo["values"] = sorted(
+                [t for t in self.history.keys() if t != "last_ticker"]
+            )
 
             # Update chart
             self.update_chart(
