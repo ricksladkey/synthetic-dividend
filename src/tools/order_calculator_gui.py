@@ -589,7 +589,7 @@ Designed for retail traders using manual order entry.
                 return False
             if sdn < 2 or sdn > 64:
                 return False
-            if profit < 0 or profit > 10000:
+            if profit < -1000 or profit > 1000:
                 return False
 
             return True
