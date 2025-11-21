@@ -157,6 +157,12 @@ These files provide comprehensive coverage of specific topics. Read after comple
 
 ### Applications (Use Cases & Strategies)
 
+**[accurate-intraday-bracket-crossings.md](accurate-intraday-bracket-crossings.md)** - Liquidity Management
+- Cash-raising strategies for closed systems
+- Avoiding sequence-of-returns risk when raising liquidity
+- "Cash Trap" vs "Profit Skim" methodologies
+- Strategic guidance for protecting underperformers
+
 **[WITHDRAWAL_POLICY.md](WITHDRAWAL_POLICY.md)** - Optimal Withdrawals
 - 10% sustainable withdrawal discovery
 - Experiment 004 results
