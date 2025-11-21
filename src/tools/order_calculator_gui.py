@@ -26,6 +26,20 @@ except ImportError:
 from src.data.asset import Asset
 from src.tools.order_calculator import calculate_orders_for_manual_entry, format_order_display
 
+
+def get_config_dir() -> str:
+    """Get the user's config directory for storing personal settings.
+
+    Returns:
+        Path to ~/.synthetic-dividend/ directory (creates if needed)
+    """
+    from pathlib import Path
+
+    config_dir = Path.home() / ".synthetic-dividend"
+    config_dir.mkdir(exist_ok=True)
+    return str(config_dir)
+
+
 # Optional imports for enhanced help display
 try:
     import markdown  # type: ignore
@@ -86,17 +100,30 @@ class OrderCalculatorGUI:
         # Load window settings
         self.load_window_settings()
 
-        # History file path
-        self.history_file = os.path.join(os.path.dirname(__file__), "order_calculator_history.json")
+        # History file paths
+        # Personal file in user's home directory (~/.synthetic-dividend/)
+        self.history_file = os.path.join(get_config_dir(), "order_calculator_history.json")
+        # Example template in repo (for new users)
+        script_dir = os.path.dirname(__file__)
+        self.example_history_file = os.path.join(
+            script_dir, "order_calculator_history.example.json"
+        )
+        # Legacy location (for migration)
+        self.legacy_history_file = os.path.join(script_dir, "order_calculator_history.json")
+
         self.history: Dict[str, Dict] = {}
         self.last_ticker: Optional[str] = None
         self.load_history()
 
         # Store calculated order values for buy/sell buttons
+        # These are the raw calculated quantities (may be fractional)
         self.current_buy_price = 0.0
         self.current_buy_qty = 0.0
         self.current_sell_price = 0.0
         self.current_sell_qty = 0.0
+        # These are the actual tradeable quantities (rounded for non-fractional assets)
+        self.current_buy_qty_tradeable = 0.0
+        self.current_sell_qty_tradeable = 0.0
 
         # Auto-calculation debouncing
         self.calculation_timer: Optional[str] = None
@@ -126,7 +153,7 @@ class OrderCalculatorGUI:
 
         # === GROUP 1: POSITION (Most Important - Top Row) ===
         position_label = ttk.Label(
-            input_frame, text="Your Holdings", font=("TkDefaultFont", 9, "bold")
+            input_frame, text="Your Position", font=("TkDefaultFont", 9, "bold")
         )
         position_label.grid(row=0, column=0, columnspan=6, sticky=tk.W, pady=(0, 5))
 
@@ -135,9 +162,10 @@ class OrderCalculatorGUI:
         self.ticker_var = tk.StringVar()
         self.ticker_combo = ttk.Combobox(input_frame, textvariable=self.ticker_var, width=12)
         self.ticker_combo.grid(row=1, column=1, sticky="we", padx=(0, 15))
-        self.ticker_combo["values"] = [t for t in self.history.keys() if t != "last_ticker"]
+        self.ticker_combo["values"] = sorted([t for t in self.history.keys() if t != "last_ticker"])
         self.ticker_combo.bind("<<ComboboxSelected>>", self.on_ticker_selected)
         self.ticker_combo.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.ticker_combo.bind("<Return>", self.schedule_auto_calculation)
         ToolTip(self.ticker_combo, "Stock ticker symbol (e.g., NVDA, SPY, AAPL)")
 
         # Holdings
@@ -146,6 +174,7 @@ class OrderCalculatorGUI:
         self.holdings_entry = ttk.Entry(input_frame, textvariable=self.holdings_var, width=12)
         self.holdings_entry.grid(row=1, column=3, sticky="we", padx=(0, 15))
         self.holdings_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.holdings_entry.bind("<Return>", self.schedule_auto_calculation)
         ToolTip(self.holdings_entry, "Number of shares you currently own")
 
         # Last Order Price (limit price from last transaction - anchors bracket position)
@@ -156,6 +185,7 @@ class OrderCalculatorGUI:
         self.last_price_entry = ttk.Entry(input_frame, textvariable=self.last_price_var, width=12)
         self.last_price_entry.grid(row=1, column=5, sticky="we")
         self.last_price_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.last_price_entry.bind("<Return>", self.schedule_auto_calculation)
         ToolTip(
             self.last_price_entry,
             "Limit price from your last buy or sell order (anchors bracket position to prevent sliding)",
@@ -191,6 +221,7 @@ class OrderCalculatorGUI:
             )
         self.start_date_entry.grid(row=4, column=1, sticky="we", padx=(0, 15))
         self.start_date_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.start_date_entry.bind("<Return>", self.schedule_auto_calculation)
         self.start_date_entry.bind("<<DateEntrySelected>>", self.schedule_auto_calculation)
         ToolTip(self.start_date_entry, "Start date for price history (YYYY-MM-DD)")
 
@@ -209,10 +240,18 @@ class OrderCalculatorGUI:
         else:
             self.end_date_var = tk.StringVar()
             self.end_date_entry = ttk.Entry(input_frame, textvariable=self.end_date_var, width=12)
-        self.end_date_entry.grid(row=4, column=3, sticky="we", padx=(0, 15))
+        self.end_date_entry.grid(row=4, column=3, sticky="we")
         self.end_date_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.end_date_entry.bind("<Return>", self.schedule_auto_calculation)
         self.end_date_entry.bind("<<DateEntrySelected>>", self.schedule_auto_calculation)
         ToolTip(self.end_date_entry, "End date for price history (typically today)")
+
+        # Today button for End Date
+        today_button = ttk.Button(
+            input_frame, text="Today", command=self.set_end_date_to_today, width=6
+        )
+        today_button.grid(row=4, column=4, sticky=tk.W, padx=(5, 15))
+        ToolTip(today_button, "Set end date to today")
 
         # Bracket Spacing (was SDN)
         ttk.Label(input_frame, text="Bracket Spacing:").grid(
@@ -222,6 +261,7 @@ class OrderCalculatorGUI:
         self.sdn_entry = ttk.Entry(input_frame, textvariable=self.sdn_var, width=12)
         self.sdn_entry.grid(row=5, column=1, sticky="we", padx=(0, 15), pady=(5, 0))
         self.sdn_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.sdn_entry.bind("<Return>", self.schedule_auto_calculation)
         ToolTip(
             self.sdn_entry,
             "Bracket spacing: 2-4 = tight, 6-8 = normal, 64 = ~1% apart (range: 2-64)",
@@ -235,6 +275,7 @@ class OrderCalculatorGUI:
         self.profit_entry = ttk.Entry(input_frame, textvariable=self.profit_var, width=12)
         self.profit_entry.grid(row=5, column=3, sticky="we", padx=(0, 15), pady=(5, 0))
         self.profit_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.profit_entry.bind("<Return>", self.schedule_auto_calculation)
         ToolTip(
             self.profit_entry,
             "Percentage of profits to take (25-75% typical, >100% for overselling). Range: 0-10000%",
@@ -250,6 +291,7 @@ class OrderCalculatorGUI:
         )
         self.bracket_seed_entry.grid(row=5, column=5, sticky="we", pady=(5, 0))
         self.bracket_seed_entry.bind("<FocusOut>", self.schedule_auto_calculation)
+        self.bracket_seed_entry.bind("<Return>", self.schedule_auto_calculation)
         ToolTip(
             self.bracket_seed_entry,
             "Reference price that controls bracket alignment. Any price in the geometric sequence will suffice.",
@@ -353,6 +395,42 @@ class OrderCalculatorGUI:
         self.output_text = scrolledtext.ScrolledText(order_tab, wrap=tk.WORD, height=20)
         self.output_text.grid(row=0, column=0, sticky="wens", padx=5, pady=5)
 
+        # Status Board tab
+        status_board_tab = ttk.Frame(self.tab_control)
+        self.tab_control.add(status_board_tab, text="Status Board")
+        status_board_tab.columnconfigure(0, weight=1)
+        status_board_tab.rowconfigure(0, weight=1)
+
+        # Create scrollable frame for status board
+        status_canvas = tk.Canvas(status_board_tab)
+        status_scrollbar = ttk.Scrollbar(
+            status_board_tab, orient="vertical", command=status_canvas.yview
+        )
+        self.status_board_frame = ttk.Frame(status_canvas)
+
+        self.status_board_frame.bind(
+            "<Configure>", lambda _: status_canvas.configure(scrollregion=status_canvas.bbox("all"))  # type: ignore
+        )
+
+        status_canvas.create_window((0, 0), window=self.status_board_frame, anchor="nw")
+        status_canvas.configure(yscrollcommand=status_scrollbar.set)
+
+        status_canvas.grid(row=0, column=0, sticky="wens", padx=5, pady=5)
+        status_scrollbar.grid(row=0, column=1, sticky="ns")
+
+        # Refresh button for status board
+        refresh_frame = ttk.Frame(status_board_tab)
+        refresh_frame.grid(row=1, column=0, columnspan=2, pady=5)
+        ttk.Button(
+            refresh_frame, text="Refresh All Positions", command=self.refresh_status_board
+        ).pack()
+
+        # Bind tab change event to auto-refresh status board
+        self.tab_control.bind("<<NotebookTabChanged>>", self.on_tab_changed)
+        self.status_board_loaded = False  # Track if status board has been loaded
+        self.status_board_timer: Optional[str] = None  # Timer for periodic refresh
+        self.status_board_refresh_interval = 60000  # Refresh every 60 seconds (in milliseconds)
+
         # Status bar
         self.status_var = tk.StringVar()
         self.status_var.set("Ready")
@@ -412,20 +490,43 @@ class OrderCalculatorGUI:
         self.root.bind("<F1>", lambda e: self.show_help())
 
     def load_window_settings(self):
-        """Load window size and position settings."""
-        settings_file = os.path.join(os.path.dirname(__file__), "window_settings.json")
+        """Load window size and position settings.
+
+        Migrates from legacy location if needed.
+        """
+        # New location in home directory
+        settings_file = os.path.join(get_config_dir(), "window_settings.json")
+        # Legacy location in repo
+        legacy_settings_file = os.path.join(os.path.dirname(__file__), "window_settings.json")
+
+        # Try new location first
         if os.path.exists(settings_file):
             try:
                 with open(settings_file, "r") as f:
                     settings = json.load(f)
                     geometry = settings.get("geometry", "1200x800")
                     self.root.geometry(geometry)
+                return
+            except Exception:
+                pass  # Use default geometry
+
+        # Migrate from legacy location if it exists
+        if os.path.exists(legacy_settings_file):
+            try:
+                with open(legacy_settings_file, "r") as f:
+                    settings = json.load(f)
+                    geometry = settings.get("geometry", "1200x800")
+                    self.root.geometry(geometry)
+                # Save to new location
+                with open(settings_file, "w") as f:
+                    json.dump(settings, f, indent=2)
+                print(f"Migrated window settings from {legacy_settings_file} to {settings_file}")
             except Exception:
                 pass  # Use default geometry
 
     def save_window_settings(self):
-        """Save window size and position settings."""
-        settings_file = os.path.join(os.path.dirname(__file__), "window_settings.json")
+        """Save window size and position settings to home directory."""
+        settings_file = os.path.join(get_config_dir(), "window_settings.json")
         try:
             geometry = self.root.geometry()
             settings = {"geometry": geometry}
@@ -611,6 +712,20 @@ Designed for retail traders using manual order entry.
             self.start_date_var.set(one_year_ago.isoformat())
             self.end_date_var.set(today.isoformat())
 
+    def set_end_date_to_today(self):
+        """Set end date to today's date."""
+        from datetime import date
+
+        today = date.today()
+
+        if TKCALENDAR_AVAILABLE:
+            self.end_date_entry.set_date(today)
+        else:
+            self.end_date_var.set(today.isoformat())
+
+        # Trigger auto-calculation after setting the date
+        self.schedule_auto_calculation()
+
     @staticmethod
     def parse_date(date_str: str) -> date:
         """Parse a date string in YYYY-MM-DD format."""
@@ -649,27 +764,34 @@ Designed for retail traders using manual order entry.
         return float(s)
 
     @staticmethod
-    def format_holdings(holdings: float, ticker: str = "") -> str:
+    def format_holdings(holdings: float) -> str:
         """Format holdings with commas for readability.
 
-        For assets that support fractional shares, shows decimal places.
-        For assets that don't support fractional shares, rounds to whole numbers.
+        Always preserves fractional holdings (e.g., from dividend reinvestment).
+        Shows up to 4 decimal places if fractional, otherwise whole numbers.
+
+        Note: Even stocks/ETFs that don't support fractional TRADING can have
+        fractional HOLDINGS due to dividend reinvestment programs (DRIPs).
         """
-        if ticker:
-            try:
-                from src.data.asset import Asset
-
-                asset = Asset(ticker)
-                if asset.supports_fractional_shares:
-                    return f"{holdings:,.4f}"
-            except Exception:
-                pass  # Fall back to whole number formatting on error
-
-        # Default: format as whole numbers with commas
-        return f"{holdings:,.0f}"
+        # Check if holdings has a fractional component
+        if holdings != int(holdings):
+            # Has fractional part: show up to 4 decimal places
+            # Strip trailing zeros for cleaner display
+            return f"{holdings:,.4f}".rstrip('0').rstrip('.')
+        else:
+            # Whole number: no decimal places
+            return f"{holdings:,.0f}"
 
     def load_history(self) -> None:
-        """Load calculation history from JSON file."""
+        """Load calculation history from JSON file.
+
+        Migration path:
+        1. Try personal file in ~/.synthetic-dividend/
+        2. Migrate from legacy location (src/tools/) if exists
+        3. Fall back to example file
+        4. Start with empty history
+        """
+        # Try personal file first (new location)
         if os.path.exists(self.history_file):
             try:
                 with open(self.history_file, "r") as f:
@@ -678,8 +800,47 @@ Designed for retail traders using manual order entry.
                     self.history = {k: v for k, v in data.items() if k != "last_ticker"}
                     # Store last_ticker separately
                     self.last_ticker = data.get("last_ticker")
+                return
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to load history: {e}")
+                return
+
+        # Check for legacy file (old location in repo)
+        if os.path.exists(self.legacy_history_file):
+            try:
+                # Migrate from legacy location
+                with open(self.legacy_history_file, "r") as f:
+                    data = json.load(f)
+                    self.history = {k: v for k, v in data.items() if k != "last_ticker"}
+                    self.last_ticker = data.get("last_ticker")
+
+                # Save to new location
+                self.save_history()
+                print(f"Migrated history from {self.legacy_history_file} to {self.history_file}")
+                return
+            except Exception:
+                # Migration failed, fall through to example
+                pass
+
+        # No personal file, try example file
+        if os.path.exists(self.example_history_file):
+            try:
+                # Load example data
+                with open(self.example_history_file, "r") as f:
+                    data = json.load(f)
+                    self.history = {k: v for k, v in data.items() if k != "last_ticker"}
+                    self.last_ticker = data.get("last_ticker")
+
+                # Save as personal file (user will customize)
+                self.save_history()
+                return
+            except Exception:
+                # Example file corrupted, start fresh
+                pass
+
+        # No config at all: start with empty history
+        self.history = {}
+        self.last_ticker = None
 
     def save_history(self):
         """Save calculation history to JSON file."""
@@ -699,7 +860,7 @@ Designed for retail traders using manual order entry.
             params = self.history[ticker]
             self.ticker_var.set(ticker)
             self.holdings_var.set(
-                self.format_holdings(params.get("holdings", 0), ticker)
+                self.format_holdings(params.get("holdings", 0))
                 if params.get("holdings")
                 else ""
             )
@@ -740,13 +901,13 @@ Designed for retail traders using manual order entry.
             # Trigger auto-calculation after loading ticker data
             self.schedule_auto_calculation()
 
-    def on_ticker_selected(self, event):
+    def on_ticker_selected(self, event=None):
         """Handle ticker selection - load defaults and trigger auto-calculation."""
         ticker = self.ticker_var.get()
         if ticker in self.history:
             params = self.history[ticker]
             self.holdings_var.set(
-                self.format_holdings(params.get("holdings", 0), ticker)
+                self.format_holdings(params.get("holdings", 0))
                 if params.get("holdings")
                 else ""
             )
@@ -861,7 +1022,7 @@ Designed for retail traders using manual order entry.
             )
 
             # Update fields to canonical format
-            self.holdings_var.set(self.format_holdings(holdings, ticker))
+            self.holdings_var.set(self.format_holdings(holdings))
             self.last_price_var.set(self.format_price(last_price))
             # Note: current_price is now fetched from market data, not displayed in UI
             self.bracket_seed_var.set(self.format_price(bracket_seed))
@@ -883,21 +1044,44 @@ Designed for retail traders using manual order entry.
             self.current_sell_price = sell_price
             self.current_sell_qty = sell_qty
 
-            # Format broker syntax orders
-            buy_amount = buy_price * buy_qty
-            sell_amount = sell_price * sell_qty
-
             # Check if asset supports fractional shares
             asset = Asset(ticker)
             supports_fractional = asset.supports_fractional_shares
 
-            # Format quantity: use int() only for assets that don't support fractional shares
+            # Format quantity and calculate amounts using the actual quantity that will be traded
+            # (rounded for non-fractional assets to match broker behavior)
             if supports_fractional:
                 buy_qty_display = f"{buy_qty:.4f}"
                 sell_qty_display = f"{sell_qty:.4f}"
+                # For fractional assets, tradeable quantity = calculated quantity
+                self.current_buy_qty_tradeable = buy_qty
+                self.current_sell_qty_tradeable = sell_qty
+                # For fractional assets, use cent arithmetic to avoid floating-point errors
+                # Prices are always in whole cents, so multiply by 100 to get integer cents
+                buy_price_cents = round(buy_price * 100)
+                sell_price_cents = round(sell_price * 100)
+                buy_qty_cents = round(buy_qty * 10000)  # 4 decimal places = 10000x
+                sell_qty_cents = round(sell_qty * 10000)
+                # Integer arithmetic in cents (exact, no rounding errors)
+                buy_amount = (buy_price_cents * buy_qty_cents) / 1000000.0  # Back to dollars
+                sell_amount = (sell_price_cents * sell_qty_cents) / 1000000.0
             else:
-                buy_qty_display = f"{int(buy_qty)}"
-                sell_qty_display = f"{int(sell_qty)}"
+                # Round quantities to whole shares for non-fractional assets
+                buy_qty_rounded = int(buy_qty)
+                sell_qty_rounded = int(sell_qty)
+                buy_qty_display = f"{buy_qty_rounded}"
+                sell_qty_display = f"{sell_qty_rounded}"
+                # Store the actual tradeable (rounded) quantities for execute_buy/sell_order
+                self.current_buy_qty_tradeable = float(buy_qty_rounded)
+                self.current_sell_qty_tradeable = float(sell_qty_rounded)
+                # Calculate amounts using cent arithmetic (whole cents × whole shares)
+                # This ensures exact arithmetic: 27178 cents × 18 shares = 489204 cents = $4892.04
+                buy_price_cents = round(buy_price * 100)
+                sell_price_cents = round(sell_price * 100)
+                buy_amount_cents = buy_price_cents * buy_qty_rounded
+                sell_amount_cents = sell_price_cents * sell_qty_rounded
+                buy_amount = buy_amount_cents / 100.0
+                sell_amount = sell_amount_cents / 100.0
 
             buy_order_text = (
                 f"BUY {ticker} {buy_qty_display} @ ${buy_price:.2f} = ${buy_amount:.2f}"
@@ -945,7 +1129,9 @@ Designed for retail traders using manual order entry.
             self.save_history()
 
             # Update ticker list
-            self.ticker_combo["values"] = [t for t in self.history.keys() if t != "last_ticker"]
+            self.ticker_combo["values"] = sorted(
+                [t for t in self.history.keys() if t != "last_ticker"]
+            )
 
             # Update chart
             self.update_chart(
@@ -975,7 +1161,8 @@ Designed for retail traders using manual order entry.
             current_holdings = float(holdings_str.replace(",", "")) if holdings_str else 0.0
 
             # Update holdings (add bought shares)
-            new_holdings = current_holdings + self.current_buy_qty
+            # Use tradeable quantity (rounded for non-fractional assets) to preserve fractional holdings
+            new_holdings = current_holdings + self.current_buy_qty_tradeable
 
             # Update last price and current price to the buy execution price
             execution_price = self.current_buy_price
@@ -985,17 +1172,18 @@ Designed for retail traders using manual order entry.
             )
 
             # Update holdings
-            self.holdings_var.set(self.format_holdings(new_holdings, self.ticker_var.get().strip()))
+            self.holdings_var.set(self.format_holdings(new_holdings))
 
             # Recalculate orders with new position
             self.calculate_orders()
 
             # Format quantity for status message based on asset type
+            # Use tradeable quantity (which is already rounded for non-fractional assets)
             asset = Asset(self.ticker_var.get().strip())
             if asset.supports_fractional_shares:
-                qty_display = f"{self.current_buy_qty:.4f}"
+                qty_display = f"{self.current_buy_qty_tradeable:.4f}"
             else:
-                qty_display = f"{int(self.current_buy_qty)}"
+                qty_display = f"{int(self.current_buy_qty_tradeable)}"
 
             self.status_var.set(f"Executed BUY: {qty_display} shares @ ${execution_price:.2f}")
 
@@ -1016,15 +1204,17 @@ Designed for retail traders using manual order entry.
             current_holdings = float(holdings_str.replace(",", "")) if holdings_str else 0.0
 
             # Check if we have enough shares to sell
-            if current_holdings < self.current_sell_qty:
+            # Use tradeable quantity (rounded for non-fractional assets)
+            if current_holdings < self.current_sell_qty_tradeable:
                 messagebox.showwarning(
                     "Warning",
-                    f"Insufficient holdings. Have {current_holdings:.0f} shares, trying to sell {self.current_sell_qty:.0f} shares.",
+                    f"Insufficient holdings. Have {current_holdings:.0f} shares, trying to sell {self.current_sell_qty_tradeable:.0f} shares.",
                 )
                 return
 
             # Update holdings (subtract sold shares)
-            new_holdings = current_holdings - self.current_sell_qty
+            # Use tradeable quantity (rounded for non-fractional assets) to preserve fractional holdings
+            new_holdings = current_holdings - self.current_sell_qty_tradeable
 
             # Update last price and current price to the sell execution price
             execution_price = self.current_sell_price
@@ -1034,17 +1224,18 @@ Designed for retail traders using manual order entry.
             )
 
             # Update holdings
-            self.holdings_var.set(self.format_holdings(new_holdings, self.ticker_var.get().strip()))
+            self.holdings_var.set(self.format_holdings(new_holdings))
 
             # Recalculate orders with new position
             self.calculate_orders()
 
             # Format quantity for status message based on asset type
+            # Use tradeable quantity (which is already rounded for non-fractional assets)
             asset = Asset(self.ticker_var.get().strip())
             if asset.supports_fractional_shares:
-                qty_display = f"{self.current_sell_qty:.4f}"
+                qty_display = f"{self.current_sell_qty_tradeable:.4f}"
             else:
-                qty_display = f"{int(self.current_sell_qty)}"
+                qty_display = f"{int(self.current_sell_qty_tradeable)}"
 
             self.status_var.set(f"Executed SELL: {qty_display} shares @ ${execution_price:.2f}")
 
@@ -1405,6 +1596,304 @@ Designed for retail traders using manual order entry.
 
         except Exception:
             pass  # Skip annotations if calculation fails
+
+    def on_tab_changed(self, _event):
+        """Handle tab change events to auto-refresh status board."""
+        # Get the currently selected tab
+        current_tab = self.tab_control.index(self.tab_control.select())
+
+        # Status Board is the third tab (index 2: 0=Chart, 1=Order Details, 2=Status Board)
+        if current_tab == 2:
+            # Switched to Status Board tab
+            if not self.status_board_loaded:
+                # First time loading status board - auto refresh
+                self.refresh_status_board()
+                self.status_board_loaded = True
+            # Start periodic refresh timer
+            self.start_status_board_timer()
+        else:
+            # Switched away from Status Board tab - stop timer to save resources
+            self.stop_status_board_timer()
+
+    def refresh_status_board(self):
+        """Refresh the status board with all ticker positions."""
+        # Clear existing widgets
+        for widget in self.status_board_frame.winfo_children():
+            widget.destroy()
+
+        # Header row
+        header_frame = ttk.Frame(self.status_board_frame)
+        header_frame.grid(row=0, column=0, sticky="we", padx=5, pady=5)
+
+        ttk.Label(header_frame, text="Ticker", font=("TkDefaultFont", 10, "bold"), width=8).grid(
+            row=0, column=0, padx=5
+        )
+        ttk.Label(header_frame, text="sdN", font=("TkDefaultFont", 10, "bold"), width=6).grid(
+            row=0, column=1, padx=5
+        )
+        ttk.Label(
+            header_frame, text="Buy Price", font=("TkDefaultFont", 10, "bold"), width=12
+        ).grid(row=0, column=2, padx=5)
+        ttk.Label(header_frame, text="Buy Qty", font=("TkDefaultFont", 10, "bold"), width=8).grid(
+            row=0, column=3, padx=5
+        )
+        ttk.Label(
+            header_frame, text="Current Price", font=("TkDefaultFont", 10, "bold"), width=12
+        ).grid(row=0, column=4, padx=5)
+        ttk.Label(
+            header_frame, text="Sell Price", font=("TkDefaultFont", 10, "bold"), width=12
+        ).grid(row=0, column=5, padx=5)
+        ttk.Label(header_frame, text="Sell Qty", font=("TkDefaultFont", 10, "bold"), width=8).grid(
+            row=0, column=6, padx=5
+        )
+        ttk.Label(
+            header_frame, text="Bracket Position", font=("TkDefaultFont", 10, "bold"), width=40
+        ).grid(row=0, column=7, padx=5)
+
+        # Get all tickers from history
+        tickers = sorted([t for t in self.history.keys() if t != "last_ticker"])
+
+        if not tickers:
+            ttk.Label(
+                self.status_board_frame,
+                text="No positions saved yet. Calculate orders for a ticker to see it here.",
+                font=("TkDefaultFont", 10),
+            ).grid(row=1, column=0, padx=20, pady=20)
+            return
+
+        # Create a row for each ticker
+        today = date.today()
+        for idx, ticker in enumerate(tickers, start=1):
+            try:
+                params = self.history[ticker]
+
+                # Extract parameters
+                holdings = float(params.get("holdings", 0))
+                last_price = float(params.get("last_price", 0))
+                sdn = int(params.get("sdn", 8))
+                profit = float(params.get("profit", 50))
+                bracket_seed = float(params.get("bracket_seed", last_price))
+
+                # Get start and end dates
+                start_date_str = params.get("start_date", (today - timedelta(days=365)).isoformat())
+                end_date_str = params.get("end_date", today.isoformat())
+                start_date = self.parse_date(start_date_str)
+                end_date = self.parse_date(end_date_str)
+
+                # Fetch current price (Asset automatically fetches fresh data for today)
+                asset = Asset(ticker)
+                price_df = asset.get_prices(start_date, end_date)
+
+                if price_df.empty:
+                    continue
+
+                current_price = float(price_df.iloc[-1]["Close"])
+
+                # Calculate buy and sell prices and quantities
+                buy_price, buy_qty, sell_price, sell_qty = calculate_orders_for_manual_entry(
+                    ticker=ticker,
+                    holdings=holdings,
+                    last_transaction_price=last_price,
+                    current_price=current_price,
+                    bracket_seed=bracket_seed,
+                    sdn=sdn,
+                    profit_sharing_pct=profit,
+                )
+
+                # Create row frame
+                row_frame = ttk.Frame(self.status_board_frame)
+                row_frame.grid(row=idx, column=0, sticky="we", padx=5, pady=2)
+
+                # Ticker (clickable to load in calculator)
+                ticker_btn = ttk.Button(
+                    row_frame,
+                    text=ticker,
+                    width=8,
+                    command=lambda t=ticker: self.load_ticker_from_status_board(t),  # type: ignore
+                )
+                ticker_btn.grid(row=0, column=0, padx=5)
+                ToolTip(ticker_btn, f"Click to load {ticker} in calculator")
+
+                # Bracket spacing (sdN)
+                ttk.Label(row_frame, text=f"sd{sdn}", width=6, anchor="center").grid(
+                    row=0, column=1, padx=5
+                )
+
+                # Buy price
+                ttk.Label(row_frame, text=f"${buy_price:.2f}", width=12, anchor="e").grid(
+                    row=0, column=2, padx=5
+                )
+
+                # Buy quantity
+                ttk.Label(row_frame, text=str(buy_qty), width=8, anchor="e").grid(
+                    row=0, column=3, padx=5
+                )
+
+                # Current price
+                ttk.Label(
+                    row_frame,
+                    text=f"${current_price:.2f}",
+                    width=12,
+                    anchor="e",
+                    font=("TkDefaultFont", 10, "bold"),
+                ).grid(row=0, column=4, padx=5)
+
+                # Sell price
+                ttk.Label(row_frame, text=f"${sell_price:.2f}", width=12, anchor="e").grid(
+                    row=0, column=5, padx=5
+                )
+
+                # Sell quantity
+                ttk.Label(row_frame, text=str(sell_qty), width=8, anchor="e").grid(
+                    row=0, column=6, padx=5
+                )
+
+                # Bracket meter visualization
+                meter_canvas = tk.Canvas(
+                    row_frame, width=400, height=30, bg="white", highlightthickness=1
+                )
+                meter_canvas.grid(row=0, column=7, padx=5)
+                self.draw_bracket_meter(meter_canvas, buy_price, current_price, sell_price)
+
+            except Exception as e:
+                # Show error row
+                error_frame = ttk.Frame(self.status_board_frame)
+                error_frame.grid(row=idx, column=0, sticky="we", padx=5, pady=2)
+                ttk.Label(error_frame, text=ticker, width=8).grid(row=0, column=0, padx=5)
+                ttk.Label(error_frame, text=f"Error: {str(e)}", foreground="red").grid(
+                    row=0, column=1, padx=5
+                )
+
+        self.status_var.set(f"Status Board refreshed: {len(tickers)} positions")
+
+    def draw_bracket_meter(self, canvas, buy_price, current_price, sell_price):
+        """Draw a visual meter showing where current price is between buy and sell."""
+        # Canvas dimensions
+        width = 400
+        height = 30
+        padding = 5
+
+        # Calculate positions
+        total_range = sell_price - buy_price
+        if total_range <= 0:
+            return  # Invalid range
+
+        # Position of current price (0 to 1)
+        position = (current_price - buy_price) / total_range
+        position = max(0, min(1, position))  # Clamp to [0, 1]
+
+        # Calculate pixel positions
+        bar_width = width - 2 * padding
+        buy_x = padding
+        sell_x = width - padding
+        current_x = padding + bar_width * position
+        mid_x = padding + bar_width / 2
+        center_y = (padding + height - padding) / 2
+
+        # Draw empty rectangle (border only, no fill)
+        canvas.create_rectangle(
+            padding,
+            padding,
+            width - padding,
+            height - padding,
+            fill="white",
+            outline="#808080",
+            width=2,
+        )
+
+        # Draw current price line (vertical black line)
+        canvas.create_line(current_x, padding, current_x, height - padding, fill="black", width=3)
+
+        # Draw red dot at buy price (left side)
+        dot_radius = 6
+        canvas.create_oval(
+            buy_x - dot_radius,
+            center_y - dot_radius,
+            buy_x + dot_radius,
+            center_y + dot_radius,
+            fill="#DC143C",  # Crimson red
+            outline="#8B0000",  # Dark red border
+            width=2,
+        )
+
+        # Draw green dot at sell price (right side)
+        canvas.create_oval(
+            sell_x - dot_radius,
+            center_y - dot_radius,
+            sell_x + dot_radius,
+            center_y + dot_radius,
+            fill="#32CD32",  # Lime green
+            outline="#006400",  # Dark green border
+            width=2,
+        )
+
+        # Labels (below the bar)
+        # Buy label
+        canvas.create_text(
+            padding + 5,
+            height - padding + 12,
+            text=f"${buy_price:.2f}",
+            anchor="w",
+            font=("TkDefaultFont", 8),
+            fill="#006400",
+        )
+
+        # Sell label
+        canvas.create_text(
+            width - padding - 5,
+            height - padding + 12,
+            text=f"${sell_price:.2f}",
+            anchor="e",
+            font=("TkDefaultFont", 8),
+            fill="#8B0000",
+        )
+
+        # Current price percentage
+        percentage = position * 100
+        canvas.create_text(
+            mid_x,
+            height - padding + 12,
+            text=f"{percentage:.1f}%",
+            anchor="center",
+            font=("TkDefaultFont", 8, "bold"),
+        )
+
+    def start_status_board_timer(self):
+        """Start the periodic refresh timer for the Status Board."""
+        # Cancel any existing timer
+        self.stop_status_board_timer()
+        # Schedule next refresh
+        self.status_board_timer = self.root.after(
+            self.status_board_refresh_interval, self.periodic_status_board_refresh
+        )
+
+    def stop_status_board_timer(self):
+        """Stop the periodic refresh timer for the Status Board."""
+        if self.status_board_timer is not None:
+            self.root.after_cancel(self.status_board_timer)
+            self.status_board_timer = None
+
+    def periodic_status_board_refresh(self):
+        """Periodic refresh callback - refreshes Status Board and reschedules."""
+        try:
+            self.refresh_status_board()
+        except Exception as e:
+            # Log error but don't crash the timer
+            print(f"Error during periodic status board refresh: {e}")
+        finally:
+            # Reschedule the next refresh (only if still on Status Board tab)
+            current_tab = self.tab_control.index(self.tab_control.select())
+            if current_tab == 2:  # Status Board tab
+                self.status_board_timer = self.root.after(
+                    self.status_board_refresh_interval, self.periodic_status_board_refresh
+                )
+
+    def load_ticker_from_status_board(self, ticker):
+        """Load a ticker from the status board into the calculator."""
+        self.ticker_var.set(ticker)
+        self.on_ticker_selected()
+        # Switch to the Chart tab
+        self.tab_control.select(0)
 
 
 def main():
