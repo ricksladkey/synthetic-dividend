@@ -153,7 +153,7 @@ class OrderCalculatorGUI:
 
         # === GROUP 1: POSITION (Most Important - Top Row) ===
         position_label = ttk.Label(
-            input_frame, text="Your Holdings", font=("TkDefaultFont", 9, "bold")
+            input_frame, text="Your Position", font=("TkDefaultFont", 9, "bold")
         )
         position_label.grid(row=0, column=0, columnspan=6, sticky=tk.W, pady=(0, 5))
 
@@ -1605,11 +1605,12 @@ Designed for retail traders using manual order entry.
         # Status Board is the third tab (index 2: 0=Chart, 1=Order Details, 2=Status Board)
         if current_tab == 2:
             # Switched to Status Board tab
-            # Note: Auto-refresh disabled for faster startup
-            # User must click "Refresh All Positions" to load data
-            # Start periodic refresh timer (only if already loaded)
-            if self.status_board_loaded:
-                self.start_status_board_timer()
+            if not self.status_board_loaded:
+                # First time loading status board - auto refresh
+                self.refresh_status_board()
+                self.status_board_loaded = True
+            # Start periodic refresh timer
+            self.start_status_board_timer()
         else:
             # Switched away from Status Board tab - stop timer to save resources
             self.stop_status_board_timer()
@@ -1762,10 +1763,6 @@ Designed for retail traders using manual order entry.
                 ttk.Label(error_frame, text=f"Error: {str(e)}", foreground="red").grid(
                     row=0, column=1, padx=5
                 )
-
-        # Mark status board as loaded and enable periodic refresh
-        self.status_board_loaded = True
-        self.start_status_board_timer()
 
         self.status_var.set(f"Status Board refreshed: {len(tickers)} positions")
 
