@@ -511,9 +511,24 @@ Asset breakdown:
 
 **For live trading**: Calculate exact limit orders to place in your broker:
 
+**GUI Version** (Recommended):
+```bash
+# Interactive GUI with persistent settings and visual chart
+sd-calc-orders-gui
+```
+
+**Features**:
+- Interactive GUI with persistent defaults per ticker
+- Dropdown of all previously calculated tickers
+- Visual logarithmic price chart with bracket annotations
+- Accepts currency symbols and commas in inputs ($1,234.56)
+- Current price defaults to last transaction price
+- Execute button to update holdings after trading
+
+**CLI Version** (for scripting):
 ```bash
 # Calculate buy/sell orders based on current position
-python -m src.tools.order_calculator \
+sd-calc-orders \
  --ticker NVDA \
  --holdings 1000 \
  --last-price 120.50 \
@@ -539,11 +554,6 @@ python -m src.tools.order_calculator \
  SELL NVDA 41 @ $131.41 (LIMIT GTC)
 
 TIP: TIP: Set both orders as GTC, cancel and replace when either executes
-```
-
-**Quick shortcut** (Windows):
-```bash
-.\calc-orders.bat NVDA 1000 120.50 125.30 8 50
 ```
 
 ### 🔬 Run Research Analysis

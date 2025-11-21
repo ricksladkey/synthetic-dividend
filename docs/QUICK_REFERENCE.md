@@ -37,17 +37,6 @@ run_algorithm_backtest(
 )
 ```
 
-### Order Calculator
-```bash
-sd-calc-orders \
- --ticker NVDA \
- --holdings 1000 \
- --last-price 120.50 \
- --current-price 125.30 \
- --sdn 8 \
- --profit 50
-```
-
 ### Order Calculator GUI
 ```bash
 sd-calc-orders-gui
@@ -60,6 +49,17 @@ sd-calc-orders-gui
 - Accepts currency symbols and commas in price inputs ($1,234.56)
 - Logarithmic price chart with bracket annotations
 - Bracket seed supports 'none'/'nil' for no seed alignment
+
+### Order Calculator (CLI)
+```bash
+sd-calc-orders \
+ --ticker NVDA \
+ --holdings 1000 \
+ --last-price 120.50 \
+ --current-price 125.30 \
+ --sdn 8 \
+ --profit 50
+```
 
 ---
 
