@@ -1625,30 +1625,33 @@ Designed for retail traders using manual order entry.
         header_frame = ttk.Frame(self.status_board_frame)
         header_frame.grid(row=0, column=0, sticky="we", padx=5, pady=5)
 
-        ttk.Label(header_frame, text="Ticker", font=("TkDefaultFont", 10, "bold"), width=8).grid(
-            row=0, column=0, padx=5
-        )
-        ttk.Label(header_frame, text="sdN", font=("TkDefaultFont", 10, "bold"), width=6).grid(
-            row=0, column=1, padx=5
-        )
         ttk.Label(
-            header_frame, text="Buy Price", font=("TkDefaultFont", 10, "bold"), width=12
+            header_frame, text="Ticker", font=("TkDefaultFont", 10, "bold"), width=10, anchor="center"
+        ).grid(row=0, column=0, padx=5)
+        ttk.Label(
+            header_frame, text="Holdings", font=("TkDefaultFont", 10, "bold"), width=12, anchor="e"
+        ).grid(row=0, column=1, padx=5)
+        ttk.Label(
+            header_frame, text="sdN", font=("TkDefaultFont", 10, "bold"), width=6, anchor="center"
         ).grid(row=0, column=2, padx=5)
-        ttk.Label(header_frame, text="Buy Qty", font=("TkDefaultFont", 10, "bold"), width=8).grid(
-            row=0, column=3, padx=5
-        )
         ttk.Label(
-            header_frame, text="Current Price", font=("TkDefaultFont", 10, "bold"), width=12
+            header_frame, text="Buy Price", font=("TkDefaultFont", 10, "bold"), width=14, anchor="e"
+        ).grid(row=0, column=3, padx=5)
+        ttk.Label(
+            header_frame, text="Buy Qty", font=("TkDefaultFont", 10, "bold"), width=10, anchor="e"
         ).grid(row=0, column=4, padx=5)
         ttk.Label(
-            header_frame, text="Sell Price", font=("TkDefaultFont", 10, "bold"), width=12
+            header_frame, text="Current Price", font=("TkDefaultFont", 10, "bold"), width=14, anchor="e"
         ).grid(row=0, column=5, padx=5)
-        ttk.Label(header_frame, text="Sell Qty", font=("TkDefaultFont", 10, "bold"), width=8).grid(
-            row=0, column=6, padx=5
-        )
         ttk.Label(
-            header_frame, text="Bracket Position", font=("TkDefaultFont", 10, "bold"), width=40
+            header_frame, text="Sell Price", font=("TkDefaultFont", 10, "bold"), width=14, anchor="e"
+        ).grid(row=0, column=6, padx=5)
+        ttk.Label(
+            header_frame, text="Sell Qty", font=("TkDefaultFont", 10, "bold"), width=10, anchor="e"
         ).grid(row=0, column=7, padx=5)
+        ttk.Label(
+            header_frame, text="Bracket Position", font=("TkDefaultFont", 10, "bold"), width=40, anchor="center"
+        ).grid(row=0, column=8, padx=5)
 
         # Get all tickers from history
         tickers = sorted([t for t in self.history.keys() if t != "last_ticker"])
@@ -1704,55 +1707,72 @@ Designed for retail traders using manual order entry.
                 row_frame = ttk.Frame(self.status_board_frame)
                 row_frame.grid(row=idx, column=0, sticky="we", padx=5, pady=2)
 
+                # Determine if asset supports fractional shares for proper formatting
+                supports_fractional = asset.supports_fractional_shares
+
+                # Format quantities based on asset type
+                if supports_fractional:
+                    buy_qty_display = f"{buy_qty:.4f}".rstrip('0').rstrip('.')
+                    sell_qty_display = f"{sell_qty:.4f}".rstrip('0').rstrip('.')
+                else:
+                    # Stocks/ETFs: round to whole numbers
+                    buy_qty_display = f"{int(round(buy_qty)):,}"
+                    sell_qty_display = f"{int(round(sell_qty)):,}"
+
                 # Ticker (clickable to load in calculator)
                 ticker_btn = ttk.Button(
                     row_frame,
                     text=ticker,
-                    width=8,
+                    width=10,
                     command=lambda t=ticker: self.load_ticker_from_status_board(t),  # type: ignore
                 )
                 ticker_btn.grid(row=0, column=0, padx=5)
                 ToolTip(ticker_btn, f"Click to load {ticker} in calculator")
 
+                # Holdings
+                ttk.Label(
+                    row_frame, text=self.format_holdings(holdings), width=12, anchor="e"
+                ).grid(row=0, column=1, padx=5)
+
                 # Bracket spacing (sdN)
                 ttk.Label(row_frame, text=f"sd{sdn}", width=6, anchor="center").grid(
-                    row=0, column=1, padx=5
-                )
-
-                # Buy price
-                ttk.Label(row_frame, text=f"${buy_price:.2f}", width=12, anchor="e").grid(
                     row=0, column=2, padx=5
                 )
 
-                # Buy quantity
-                ttk.Label(row_frame, text=str(buy_qty), width=8, anchor="e").grid(
+                # Buy price
+                ttk.Label(row_frame, text=f"${buy_price:,.2f}", width=14, anchor="e").grid(
                     row=0, column=3, padx=5
+                )
+
+                # Buy quantity
+                ttk.Label(row_frame, text=buy_qty_display, width=10, anchor="e").grid(
+                    row=0, column=4, padx=5
                 )
 
                 # Current price
                 ttk.Label(
                     row_frame,
-                    text=f"${current_price:.2f}",
-                    width=12,
+                    text=f"${current_price:,.2f}",
+                    width=14,
                     anchor="e",
                     font=("TkDefaultFont", 10, "bold"),
-                ).grid(row=0, column=4, padx=5)
+                ).grid(row=0, column=5, padx=5)
 
                 # Sell price
-                ttk.Label(row_frame, text=f"${sell_price:.2f}", width=12, anchor="e").grid(
-                    row=0, column=5, padx=5
+                ttk.Label(row_frame, text=f"${sell_price:,.2f}", width=14, anchor="e").grid(
+                    row=0, column=6, padx=5
                 )
 
                 # Sell quantity
-                ttk.Label(row_frame, text=str(sell_qty), width=8, anchor="e").grid(
-                    row=0, column=6, padx=5
+                ttk.Label(row_frame, text=sell_qty_display, width=10, anchor="e").grid(
+                    row=0, column=7, padx=5
                 )
 
                 # Bracket meter visualization
                 meter_canvas = tk.Canvas(
                     row_frame, width=400, height=30, bg="white", highlightthickness=1
                 )
-                meter_canvas.grid(row=0, column=7, padx=5)
+                meter_canvas.grid(row=0, column=8, padx=5)
                 self.draw_bracket_meter(meter_canvas, buy_price, current_price, sell_price)
 
             except Exception as e:
