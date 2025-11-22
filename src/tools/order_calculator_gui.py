@@ -297,18 +297,32 @@ class OrderCalculatorGUI:
             "Reference price that controls bracket alignment. Any price in the geometric sequence will suffice.",
         )
 
+        # ATH-Only Mode checkbox
+        self.ath_only_var = tk.BooleanVar(value=False)
+        self.ath_only_checkbox = ttk.Checkbutton(
+            input_frame,
+            text="ATH-Only Mode (no buy orders)",
+            variable=self.ath_only_var,
+            command=self.schedule_auto_calculation,
+        )
+        self.ath_only_checkbox.grid(row=6, column=0, columnspan=3, sticky=tk.W, pady=(5, 0))
+        ToolTip(
+            self.ath_only_checkbox,
+            "Only sell at all-time highs, never buy back. Removes buy orders and red dots from chart.",
+        )
+
         # Separator
         ttk.Separator(input_frame, orient="horizontal").grid(
-            row=6, column=0, columnspan=6, sticky="we", pady=(10, 10)
+            row=7, column=0, columnspan=6, sticky="we", pady=(10, 10)
         )
 
         # === GROUP 3: ACTIONS ===
         actions_label = ttk.Label(input_frame, text="Actions", font=("TkDefaultFont", 9, "bold"))
-        actions_label.grid(row=7, column=0, columnspan=6, sticky=tk.W, pady=(0, 5))
+        actions_label.grid(row=8, column=0, columnspan=6, sticky=tk.W, pady=(0, 5))
 
         # Create a frame for buttons to center them nicely
         button_frame = ttk.Frame(input_frame)
-        button_frame.grid(row=8, column=0, columnspan=6, pady=(0, 5))
+        button_frame.grid(row=9, column=0, columnspan=6, pady=(0, 5))
 
         # Buy button
         self.buy_button = ttk.Button(
@@ -904,6 +918,9 @@ Designed for retail traders using manual order entry.
                 else:
                     self.bracket_seed_var.set("")
 
+            # Load ATH-only mode (default to False for backward compatibility)
+            self.ath_only_var.set(params.get("ath_only", False))
+
             # Trigger auto-calculation after loading ticker data
             self.schedule_auto_calculation()
 
@@ -950,6 +967,9 @@ Designed for retail traders using manual order entry.
                     self.bracket_seed_var.set(self.format_price(last_price))
                 else:
                     self.bracket_seed_var.set("")
+
+            # Load ATH-only mode (default to False for backward compatibility)
+            self.ath_only_var.set(params.get("ath_only", False))
 
             # Trigger auto-calculation after loading ticker data
             self.schedule_auto_calculation()
@@ -1089,9 +1109,16 @@ Designed for retail traders using manual order entry.
                 buy_amount = buy_amount_cents / 100.0
                 sell_amount = sell_amount_cents / 100.0
 
-            buy_order_text = (
-                f"BUY {ticker} {buy_qty_display} @ ${buy_price:.2f} = ${buy_amount:.2f}"
-            )
+            # Check if ATH-only mode is enabled
+            ath_only = self.ath_only_var.get()
+
+            if ath_only:
+                buy_order_text = "ATH-Only Mode: No buy orders"
+            else:
+                buy_order_text = (
+                    f"BUY {ticker} {buy_qty_display} @ ${buy_price:.2f} = ${buy_amount:.2f}"
+                )
+
             sell_order_text = (
                 f"SELL {ticker} {sell_qty_display} @ ${sell_price:.2f} = ${sell_amount:.2f}"
             )
@@ -1129,6 +1156,7 @@ Designed for retail traders using manual order entry.
                 "sdn": sdn,
                 "profit": profit,
                 "bracket_seed": bracket_seed,
+                "ath_only": self.ath_only_var.get(),
             }
             # Update last ticker
             self.last_ticker = ticker
@@ -1141,7 +1169,7 @@ Designed for retail traders using manual order entry.
 
             # Update chart
             self.update_chart(
-                ticker, last_price, current_price, buy_price, sell_price, sdn, bracket_seed
+                ticker, last_price, current_price, buy_price, sell_price, sdn, bracket_seed, ath_only
             )
 
             self.status_var.set(f"Calculated orders for {ticker}")
@@ -1347,6 +1375,7 @@ Designed for retail traders using manual order entry.
         sell_price: float,
         sdn: int,
         bracket_seed: Optional[float],
+        ath_only: bool,
     ):
         """Update the price chart with brackets and backtest signals."""
         try:
@@ -1375,14 +1404,15 @@ Designed for retail traders using manual order entry.
                     self.ax.set_ylabel("Price ($)")
                     self.ax.grid(True, alpha=0.3)
 
-                    # Add bracket lines
-                    self.ax.axhline(
-                        y=buy_price,
-                        color="red",
-                        linestyle="--",
-                        alpha=0.7,
-                        label=f"Buy: ${buy_price:.2f}",
-                    )
+                    # Add bracket lines (skip buy bracket if ATH-only mode)
+                    if not ath_only:
+                        self.ax.axhline(
+                            y=buy_price,
+                            color="red",
+                            linestyle="--",
+                            alpha=0.7,
+                            label=f"Buy: ${buy_price:.2f}",
+                        )
                     self.ax.axhline(
                         y=sell_price,
                         color="green",
@@ -1413,6 +1443,7 @@ Designed for retail traders using manual order entry.
                         df,
                         start_date,
                         end_date,
+                        ath_only,
                     )
 
                     # Place legend in upper left to avoid overlap with signals overlay (lower right)
@@ -1451,6 +1482,7 @@ Designed for retail traders using manual order entry.
         df: pd.DataFrame,
         start_date: date,
         end_date: date,
+        ath_only: bool,
     ):
         """Run backtest and add buy/sell signal dots to the chart."""
         try:
@@ -1465,13 +1497,13 @@ Designed for retail traders using manual order entry.
             holdings_str = self.holdings_var.get().strip()
             holdings = float(holdings_str.replace(",", "")) if holdings_str else 1000.0
 
-            # Create algorithm
+            # Create algorithm (use ATH-only mode if checkbox is checked)
             from src.algorithms.synthetic_dividend import SyntheticDividendAlgorithm
 
             algo = SyntheticDividendAlgorithm(
                 rebalance_size=rebalance_size,
                 profit_sharing=profit_sharing,
-                buyback_enabled=True,
+                buyback_enabled=not ath_only,  # ATH-only = no buybacks
                 bracket_seed=bracket_seed,
             )
 
@@ -1498,8 +1530,8 @@ Designed for retail traders using manual order entry.
                 elif txn.action == "SELL":
                     sell_signals.append((txn.transaction_date, txn.price))
 
-            # Plot signals as dots
-            if buy_signals:
+            # Plot signals as dots (skip buy signals if ATH-only mode)
+            if buy_signals and not ath_only:
                 buy_dates, buy_prices = zip(*buy_signals)
                 self.ax.scatter(
                     buy_dates,
@@ -1682,6 +1714,7 @@ Designed for retail traders using manual order entry.
                 sdn = int(params.get("sdn", 8))
                 profit = float(params.get("profit", 50))
                 bracket_seed = float(params.get("bracket_seed", last_price))
+                ath_only = params.get("ath_only", False)
 
                 # Get start and end dates
                 start_date_str = params.get("start_date", (today - timedelta(days=365)).isoformat())
@@ -1725,6 +1758,13 @@ Designed for retail traders using manual order entry.
                     buy_qty_display = f"{int(round(buy_qty)):,}"
                     sell_qty_display = f"{int(round(sell_qty)):,}"
 
+                # Override buy displays if ATH-only mode
+                if ath_only:
+                    buy_price_display = "--"
+                    buy_qty_display = "--"
+                else:
+                    buy_price_display = f"${buy_price:,.2f}"
+
                 # Ticker (clickable to load in calculator)
                 ticker_btn = ttk.Button(
                     row_frame,
@@ -1746,7 +1786,7 @@ Designed for retail traders using manual order entry.
                 )
 
                 # Buy price
-                ttk.Label(row_frame, text=f"${buy_price:,.2f}", width=14, anchor="e").grid(
+                ttk.Label(row_frame, text=buy_price_display, width=14, anchor="e").grid(
                     row=0, column=3, padx=5
                 )
 
