@@ -797,7 +797,7 @@ Designed for retail traders using manual order entry.
         if holdings != int(holdings):
             # Has fractional part: show up to 4 decimal places
             # Strip trailing zeros for cleaner display
-            return f"{holdings:,.4f}".rstrip('0').rstrip('.')
+            return f"{holdings:,.4f}".rstrip("0").rstrip(".")
         else:
             # Whole number: no decimal places
             return f"{holdings:,.0f}"
@@ -880,9 +880,7 @@ Designed for retail traders using manual order entry.
             params = self.history[ticker]
             self.ticker_var.set(ticker)
             self.holdings_var.set(
-                self.format_holdings(params.get("holdings", 0))
-                if params.get("holdings")
-                else ""
+                self.format_holdings(params.get("holdings", 0)) if params.get("holdings") else ""
             )
             self.last_price_var.set(
                 self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
@@ -896,7 +894,7 @@ Designed for retail traders using manual order entry.
                     self.start_date_entry.set_date(datetime.fromisoformat(start_date).date())
                 else:
                     self.start_date_var.set(start_date)
-            end_date = None # params.get("end_date")
+            end_date = None  # params.get("end_date")
             if end_date:
                 if TKCALENDAR_AVAILABLE:
                     from datetime import datetime
@@ -930,9 +928,7 @@ Designed for retail traders using manual order entry.
         if ticker in self.history:
             params = self.history[ticker]
             self.holdings_var.set(
-                self.format_holdings(params.get("holdings", 0))
-                if params.get("holdings")
-                else ""
+                self.format_holdings(params.get("holdings", 0)) if params.get("holdings") else ""
             )
             self.last_price_var.set(
                 self.format_price(params.get("last_price", 0)) if params.get("last_price") else ""
@@ -946,7 +942,7 @@ Designed for retail traders using manual order entry.
                     self.start_date_entry.set_date(datetime.fromisoformat(start_date).date())
                 else:
                     self.start_date_var.set(start_date)
-            end_date = None # params.get("end_date")
+            end_date = None  # params.get("end_date")
             if end_date:
                 if TKCALENDAR_AVAILABLE:
                     from datetime import datetime
@@ -1169,7 +1165,14 @@ Designed for retail traders using manual order entry.
 
             # Update chart
             self.update_chart(
-                ticker, last_price, current_price, buy_price, sell_price, sdn, bracket_seed, ath_only
+                ticker,
+                last_price,
+                current_price,
+                buy_price,
+                sell_price,
+                sdn,
+                bracket_seed,
+                ath_only,
             )
 
             self.status_var.set(f"Calculated orders for {ticker}")
@@ -1664,7 +1667,11 @@ Designed for retail traders using manual order entry.
         header_frame.grid(row=0, column=0, sticky="we", padx=5, pady=5)
 
         ttk.Label(
-            header_frame, text="Ticker", font=("TkDefaultFont", 10, "bold"), width=10, anchor="center"
+            header_frame,
+            text="Ticker",
+            font=("TkDefaultFont", 10, "bold"),
+            width=10,
+            anchor="center",
         ).grid(row=0, column=0, padx=5)
         ttk.Label(
             header_frame, text="Holdings", font=("TkDefaultFont", 10, "bold"), width=12, anchor="e"
@@ -1679,16 +1686,28 @@ Designed for retail traders using manual order entry.
             header_frame, text="Buy Qty", font=("TkDefaultFont", 10, "bold"), width=10, anchor="e"
         ).grid(row=0, column=4, padx=5)
         ttk.Label(
-            header_frame, text="Current Price", font=("TkDefaultFont", 10, "bold"), width=14, anchor="e"
+            header_frame,
+            text="Current Price",
+            font=("TkDefaultFont", 10, "bold"),
+            width=14,
+            anchor="e",
         ).grid(row=0, column=5, padx=5)
         ttk.Label(
-            header_frame, text="Sell Price", font=("TkDefaultFont", 10, "bold"), width=14, anchor="e"
+            header_frame,
+            text="Sell Price",
+            font=("TkDefaultFont", 10, "bold"),
+            width=14,
+            anchor="e",
         ).grid(row=0, column=6, padx=5)
         ttk.Label(
             header_frame, text="Sell Qty", font=("TkDefaultFont", 10, "bold"), width=10, anchor="e"
         ).grid(row=0, column=7, padx=5)
         ttk.Label(
-            header_frame, text="Bracket Position", font=("TkDefaultFont", 10, "bold"), width=40, anchor="center"
+            header_frame,
+            text="Bracket Position",
+            font=("TkDefaultFont", 10, "bold"),
+            width=40,
+            anchor="center",
         ).grid(row=0, column=8, padx=5)
 
         # Get all tickers from history
@@ -1751,8 +1770,8 @@ Designed for retail traders using manual order entry.
 
                 # Format quantities based on asset type
                 if supports_fractional:
-                    buy_qty_display = f"{buy_qty:.4f}".rstrip('0').rstrip('.')
-                    sell_qty_display = f"{sell_qty:.4f}".rstrip('0').rstrip('.')
+                    buy_qty_display = f"{buy_qty:.4f}".rstrip("0").rstrip(".")
+                    sell_qty_display = f"{sell_qty:.4f}".rstrip("0").rstrip(".")
                 else:
                     # Stocks/ETFs: round to whole numbers
                     buy_qty_display = f"{int(round(buy_qty)):,}"
