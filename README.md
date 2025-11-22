@@ -262,28 +262,28 @@ The **Synthetic Dividend CLI** provides a comprehensive interface to all functio
 
 ```bash
 # Show all available commands and options
-synthetic-dividend --help
+sd --help
 
 # List all available portfolio algorithms with detailed descriptions
-synthetic-dividend --list-algorithms
+sd --list-algorithms
 
 # List all available named portfolios with allocations
-synthetic-dividend --list-portfolios
+sd --list-portfolios
 
 # Run single-asset backtest
-synthetic-dividend backtest NVDA 2024-10-22 2025-10-22 sd-9.05,50
+sd backtest NVDA 2024-10-22 2025-10-22 sd8
 
 # Run batch comparison of strategies
-synthetic-dividend compare NVDA 2024-10-22 2025-10-22 buy-and-hold sd-9.05,50
+sd compare NVDA 2024-10-22 2025-10-22 buy-and-hold sd8
 
 # Run research experiments
-synthetic-dividend research volatility-alpha --ticker NVDA --start 2023-01-01 --end 2023-12-31
+sd research volatility-alpha --ticker NVDA --start 2023-01-01 --end 2023-12-31
 
 # Run the test suite
-synthetic-dividend test
+sd test
 
 # Launch the GUI
-synthetic-dividend gui
+sd gui
 ```
 
 **Available Commands**:
@@ -302,9 +302,9 @@ synthetic-dividend gui
 pip install -e .
 
 # Use the unified CLI (works on Windows/macOS/Linux)
-synthetic-dividend backtest NVDA 2024-10-22 2025-10-22 sd-9.05,50
-synthetic-dividend --list-algorithms
-synthetic-dividend --list-portfolios
+sd backtest NVDA 2024-10-22 2025-10-22 sd8
+sd --list-algorithms
+sd --list-portfolios
 
 # Or use convenience shell scripts
 ./scripts/shell/run-model.sh NVDA 2024-10-22 2025-10-22 sd-9.05,50
@@ -340,13 +340,13 @@ source .venv/bin/activate
 pip install -e .
 
 # 5. Verify installation
-synthetic-dividend --help
+sd --help
 ```
 
 **Quick Test**:
 ```bash
 # Run a quick backtest
-synthetic-dividend backtest NVDA 2024-10-22 2025-10-22 buy-and-hold
+sd backtest NVDA 2024-10-22 2025-10-22 buy-and-hold
 
 # Or use shell scripts
 ./scripts/shell/test-buy-and-hold.sh
@@ -421,43 +421,17 @@ Initial Investment: $450,500.00 (10,000 shares @ $45.05)
 **Run diversified portfolios with algorithmic strategies:**
 
 ```bash
-<<<<<<< Updated upstream
-# Named portfolio: Classic 60/40 stocks/bonds
-.\synthetic-dividend-tool.bat portfolio --allocations classic --start 2024-01-01 --end 2025-01-01
-
-# Named portfolio with parameters: Buffett 95/5
-.\synthetic-dividend-tool.bat portfolio --allocations buffet-95,5 --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
-
-# Custom JSON allocation
-.\synthetic-dividend-tool.bat portfolio --allocations '{"NVDA": 0.4, "VOO": 0.6}' --start 2024-01-01 --end 2025-01-01
-=======
 # Auto algorithm (default) - intelligently selects per-asset strategies
-.\synthetic-dividend-tool.bat run portfolio --allocations '{"VOO": 0.6, "BIL": 0.3, "BTC-USD": 0.1}' --start 2019-01-01 --end 2024-12-31
->>>>>>> Stashed changes
+sd run portfolio --allocations '{"VOO": 0.6, "BIL": 0.3, "BTC-USD": 0.1}' --start 2019-01-01 --end 2024-12-31
 
 # Traditional quarterly rebalancing (like 60/40 portfolios)
-.\synthetic-dividend-tool.bat run portfolio --allocations '{"VOO": 0.6, "BIL": 0.4}' --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
+sd run portfolio --allocations '{"VOO": 0.6, "BIL": 0.4}' --algo quarterly-rebalance --start 2024-01-01 --end 2025-01-01
 
 # Apply same strategy to all assets
-.\synthetic-dividend-tool.bat run portfolio --allocations '{"NVDA": 0.5, "VOO": 0.5}' --algo "per-asset:sd8" --start 2024-01-01 --end 2025-01-01
+sd run portfolio --allocations '{"NVDA": 0.5, "VOO": 0.5}' --algo "per-asset:sd8" --start 2024-01-01 --end 2025-01-01
 ```
 
-<<<<<<< Updated upstream
-**Named Portfolios** (supports parameterization like `classic-70,30`, `buffet-95,5`):
-- `classic` - Traditional 60/40 stocks/bonds (VOO/BIL)
-- `buffet` - Buffett's 90/10 allocation (VOO/BIL)
-- `classic-plus-crypto` - Classic with crypto exposure (VOO/BIL/BTC-USD)
-- `three-fund` - Bogleheads three-fund (VTI/VXUS/BND)
-- `all-weather` - Ray Dalio's All-Weather
-- `golden-butterfly` - Tyler's Golden Butterfly
-- `tech-growth` - Tech-heavy growth (QQQ/VOO)
-- `high-growth` - High-growth tech (NVDA/QQQ/VOO)
-- `crypto-heavy` - Crypto-dominant (BTC-USD/ETH-USD/VOO/BIL)
-
-**Example Output** (Realistic Portfolio):
-=======
 **Example Output** (Auto Algorithm with 60/30/10 Portfolio):
->>>>>>> Stashed changes
 ```
 Running portfolio backtest...
 Period: 2019-01-01 to 2024-12-31
@@ -492,20 +466,11 @@ Asset breakdown:
 ```
 
 **Key Features**:
-<<<<<<< Updated upstream
-- [OK] **Named portfolios** with parameterization (e.g., `classic-70,30`)
-- [OK] **Unified interface** for both simple buy-and-hold and algorithmic portfolios
-- [OK] **Multi-asset coordination** with proper date alignment
-- [OK] **All algorithm features** (dividends, withdrawals, margin, etc.) available
-- [OK] **Backward compatible** - existing `simulate_portfolio` calls still work
-- [OK] **CLI and programmatic** access through `run_portfolio_backtest()`
-=======
 - [OK] **Auto algorithm** intelligently selects optimal per-asset strategies based on volatility
 - [OK] **+120% volatility alpha** proven across withdrawal rates (see [VALIDATION_RESULTS.md](docs/VALIDATION_RESULTS.md))
 - [OK] **Multi-asset coordination** with shared cash pool and proper date alignment
 - [OK] **Portfolio-level algorithms** (quarterly-rebalance, monthly-rebalance, etc.)
 - [OK] **Per-asset algorithms** with unified syntax (per-asset:sd8, per-asset:buy-and-hold)
->>>>>>> Stashed changes
 
 ### 🧮 Calculate Orders for Manual Trading
 
@@ -615,10 +580,10 @@ Controls the balance between **cash flow** and **position growth**:
 
 ```bash
 # Format: sd-<trigger_pct>,<profit_pct>
-synthetic-dividend backtest NVDA 2023-10-23 2024-10-23 sd-7.5,50 --qty 10000
+sd backtest NVDA 2023-10-23 2024-10-23 sd-7.5,50 --qty 10000
 
 # ATH-only mode (no buybacks)
-synthetic-dividend backtest NVDA 2023-10-23 2024-10-23 sd-ath-only-9.05,50 --qty 10000
+sd backtest NVDA 2023-10-23 2024-10-23 sd-ath-only-9.05,50 --qty 10000
 ```
 
 📖 **[Deep dive into strategy theory →](INVESTING_THEORY.md)**
@@ -629,7 +594,7 @@ This project maintains **rigorous engineering standards**:
 
 | Tool | Status | Coverage |
 |------|--------|----------|
-| [OK] **pytest** | 44 tests | Core algorithm, buyback stack, margin modes, withdrawals, edge cases |
+| [OK] **pytest** | 309 tests | Core algorithm, buyback stack, margin modes, withdrawals, edge cases |
 | [OK] **mypy** | Type checking | 100% clean, strict mode |
 | [OK] **flake8** | Linting | 0 warnings |
 | [OK] **black** | Formatting | 100 char lines, consistent style |
