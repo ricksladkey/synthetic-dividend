@@ -421,12 +421,18 @@ class OrderCalculatorGUI:
         # Refresh button for status board
         refresh_frame = ttk.Frame(status_board_tab)
         refresh_frame.grid(row=1, column=0, columnspan=2, pady=5)
-        ttk.Button(
+        refresh_btn = ttk.Button(
             refresh_frame, text="Refresh All Positions", command=self.refresh_status_board
-        ).pack()
+        )
+        refresh_btn.pack()
 
         # Bind tab change event to auto-refresh status board
         self.tab_control.bind("<<NotebookTabChanged>>", self.on_tab_changed)
+
+        # Prevent Alt+Key from triggering buttons (fixes Tk bug where Alt-Space invokes buttons)
+        # See: http://core.tcl-lang.org/tk/tktview/1692755
+        # This preserves Windows system menu functionality (Alt+Space)
+        self.root.bind_class("Button", "<Alt-Key>", lambda _: None)
         self.status_board_loaded = False  # Track if status board has been loaded
         self.status_board_timer: Optional[str] = None  # Timer for periodic refresh
         self.status_board_refresh_interval = 60000  # Refresh every 60 seconds (in milliseconds)
