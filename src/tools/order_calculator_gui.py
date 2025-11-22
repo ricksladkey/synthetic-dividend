@@ -896,7 +896,7 @@ Designed for retail traders using manual order entry.
                     self.start_date_entry.set_date(datetime.fromisoformat(start_date).date())
                 else:
                     self.start_date_var.set(start_date)
-            end_date = params.get("end_date")
+            end_date = None # params.get("end_date")
             if end_date:
                 if TKCALENDAR_AVAILABLE:
                     from datetime import datetime
@@ -946,7 +946,7 @@ Designed for retail traders using manual order entry.
                     self.start_date_entry.set_date(datetime.fromisoformat(start_date).date())
                 else:
                     self.start_date_var.set(start_date)
-            end_date = params.get("end_date")
+            end_date = None # params.get("end_date")
             if end_date:
                 if TKCALENDAR_AVAILABLE:
                     from datetime import datetime
