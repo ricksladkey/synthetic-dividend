@@ -86,6 +86,9 @@ sd-compare-table = "src.compare.table:main"
 # Order calculator CLI (command-line interface)
 sd-calc-orders = "src.tools.order_calculator:main"
 
+# Strategy testing and analysis tools
+sd-test-accumulation = "src.tools.test_accumulation_strategies:main"
+
 # Test convenience scripts
 sd-test-sd = "src.cli:test_sd_command"
 sd-test-buy-and-hold = "src.cli:test_buy_and_hold_command"
