@@ -1646,7 +1646,7 @@ Designed for retail traders using manual order entry.
 
             # Generate brackets around last_price
             num_brackets_each_side = 10  # Show 10 brackets above and below
-            brackets = []
+            brackets: list[tuple[float, float, str]] = []
 
             # Generate brackets below last_price (descending)
             price = last_price

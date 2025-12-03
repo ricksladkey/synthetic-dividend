@@ -18,7 +18,7 @@ def calculate_cagr(initial_value: float, final_value: float, years: float) -> fl
     """Calculate compound annual growth rate."""
     if initial_value <= 0 or years <= 0:
         return 0.0
-    return ((final_value / initial_value) ** (1.0 / years)) - 1.0
+    return float(((final_value / initial_value) ** (1.0 / years)) - 1.0)
 
 
 def simulate_accumulation(
@@ -207,8 +207,8 @@ Examples:
     args = parser.parse_args()
 
     # Run experiment
-    print(f"Accumulation Strategy Test")
-    print(f"=" * 60)
+    print("Accumulation Strategy Test")
+    print("=" * 60)
     print(f"Ticker: {args.ticker}")
     print(f"Capital: ${args.capital:,.2f}")
     print()
