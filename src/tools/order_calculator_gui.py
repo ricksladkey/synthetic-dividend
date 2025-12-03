@@ -432,6 +432,42 @@ class OrderCalculatorGUI:
         status_canvas.grid(row=0, column=0, sticky="wens", padx=5, pady=5)
         status_scrollbar.grid(row=0, column=1, sticky="ns")
 
+        # Surrounding Brackets tab
+        brackets_tab = ttk.Frame(self.tab_control)
+        self.tab_control.add(brackets_tab, text="Surrounding Brackets")
+        brackets_tab.columnconfigure(0, weight=1)
+        brackets_tab.rowconfigure(0, weight=1)
+
+        # Create frame for bracket table
+        brackets_frame = ttk.Frame(brackets_tab)
+        brackets_frame.grid(row=0, column=0, sticky="wens", padx=10, pady=10)
+        brackets_frame.columnconfigure(0, weight=1)
+
+        # Create Text widget for bracket display (better for color coding than Treeview)
+        self.brackets_text = tk.Text(
+            brackets_frame,
+            wrap=tk.NONE,
+            width=40,
+            height=25,
+            font=("Courier New", 10),
+            state=tk.DISABLED,
+        )
+        self.brackets_text.grid(row=0, column=0, sticky="wens")
+
+        # Configure color tags for the brackets text widget
+        self.brackets_text.tag_configure("header", font=("Courier New", 10, "bold"))
+        self.brackets_text.tag_configure("buy", background="#ffcccc", foreground="darkred")
+        self.brackets_text.tag_configure("sell", background="#ccffcc", foreground="darkgreen")
+        self.brackets_text.tag_configure("last", background="#ffffcc", foreground="black")
+        self.brackets_text.tag_configure("normal", foreground="black")
+
+        # Scrollbar for brackets
+        brackets_scrollbar = ttk.Scrollbar(
+            brackets_frame, orient="vertical", command=self.brackets_text.yview
+        )
+        brackets_scrollbar.grid(row=0, column=1, sticky="ns")
+        self.brackets_text.configure(yscrollcommand=brackets_scrollbar.set)
+
         # Refresh button for status board
         refresh_frame = ttk.Frame(status_board_tab)
         refresh_frame.grid(row=1, column=0, columnspan=2, pady=5)
@@ -1175,6 +1211,17 @@ Designed for retail traders using manual order entry.
                 ath_only,
             )
 
+            # Update bracket ladder
+            self.update_bracket_ladder(
+                last_price,
+                buy_price,
+                sell_price,
+                sdn,
+                holdings,
+                profit,
+                ath_only,
+            )
+
             self.status_var.set(f"Calculated orders for {ticker}")
 
         except Exception as e:
@@ -1579,6 +1626,88 @@ Designed for retail traders using manual order entry.
         except Exception as e:
             # Silently skip signal plotting on error
             print(f"Warning: Could not add backtest signals: {e}")
+            pass
+
+    def update_bracket_ladder(
+        self,
+        last_price: float,
+        buy_price: float,
+        sell_price: float,
+        sdn: int,
+        holdings: float,
+        profit: float,
+        ath_only: bool,
+    ):
+        """Update the Surrounding Brackets tab with a color-coded bracket ladder."""
+        try:
+            # Calculate rebalance size
+            rebalance_size = (2.0 ** (1.0 / float(sdn))) - 1.0
+            profit_sharing = profit / 100.0
+
+            # Generate brackets around last_price
+            num_brackets_each_side = 10  # Show 10 brackets above and below
+            brackets = []
+
+            # Generate brackets below last_price (descending)
+            price = last_price
+            for _ in range(num_brackets_each_side):
+                price_below = price / (1 + rebalance_size)
+                # Calculate buy quantity at this price
+                qty = rebalance_size * holdings * profit_sharing
+                brackets.insert(0, (price_below, qty, "buy"))
+                price = price_below
+
+            # Add last_price bracket
+            brackets.append((last_price, 0.0, "last"))
+
+            # Generate brackets above last_price (ascending)
+            price = last_price
+            for _ in range(num_brackets_each_side):
+                price_above = price * (1 + rebalance_size)
+                # Calculate sell quantity at this price
+                qty = rebalance_size * holdings * profit_sharing / (1 + rebalance_size)
+                brackets.append((price_above, qty, "sell"))
+                price = price_above
+
+            # Clear the text widget
+            self.brackets_text.config(state=tk.NORMAL)
+            self.brackets_text.delete(1.0, tk.END)
+
+            # Add header
+            header = f"{'Price':>15}  {'Qty':>12}  {'Type':>6}\n"
+            header += "-" * 40 + "\n"
+            self.brackets_text.insert(tk.END, header, "header")
+
+            # Add each bracket with appropriate color coding
+            for price, qty, bracket_type in brackets:
+                # Determine the tag based on whether this is the current buy/sell order
+                tag = "normal"
+                type_str = ""
+
+                if bracket_type == "last":
+                    tag = "last"
+                    type_str = "LAST"
+                    line = f"${price:>14,.2f}  {type_str:>12}  {type_str:>6}\n"
+                elif bracket_type == "buy":
+                    # Check if this is the current buy order
+                    if abs(price - buy_price) < 0.01 and not ath_only:
+                        tag = "buy"
+                        type_str = "BUY"
+                    line = f"${price:>14,.2f}  {int(qty):>12,}  {type_str:>6}\n"
+                elif bracket_type == "sell":
+                    # Check if this is the current sell order
+                    if abs(price - sell_price) < 0.01:
+                        tag = "sell"
+                        type_str = "SELL"
+                    line = f"${price:>14,.2f}  {int(qty):>12,}  {type_str:>6}\n"
+
+                self.brackets_text.insert(tk.END, line, tag)
+
+            self.brackets_text.config(state=tk.DISABLED)
+
+        except Exception as e:
+            # Silently fail if bracket update fails
+            print(f"Warning: Could not update bracket ladder: {e}")
             pass
 
     def add_bracket_annotations(
