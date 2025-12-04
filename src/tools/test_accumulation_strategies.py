@@ -218,7 +218,9 @@ def run_experiment(
     for strategy in strategies:
         cagr_years_pairs = results[strategy]
         # Separate successful from failed accumulations (effective_years > 0 means capital was deployed)
-        successful_cagrs = [c for c, years in cagr_years_pairs if years > 0.01]  # At least 3.65 days invested
+        successful_cagrs = [
+            c for c, years in cagr_years_pairs if years > 0.01
+        ]  # At least 3.65 days invested
         success_rate = len(successful_cagrs) / len(cagr_years_pairs) if cagr_years_pairs else 0.0
 
         stats[strategy] = {

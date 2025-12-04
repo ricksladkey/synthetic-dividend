@@ -14,7 +14,8 @@ This document provides practical examples for using the Synthetic Dividend Algor
 6. [Batch Comparisons](#batch-comparisons)
 7. [Dividend Tracking](#dividend-tracking)
 8. [Withdrawal Policies](#withdrawal-policies)
-9. [Advanced Scenarios](#advanced-scenarios)
+9. [Position Accumulation Strategy Testing](#position-accumulation-strategy-testing)
+10. [Advanced Scenarios](#advanced-scenarios)
 
 ---
 
@@ -1104,6 +1105,148 @@ Coverage Ratio = (Synthetic Dividends + Real Dividends) / Withdrawals
 - **100-120%**: Adequate - sustainable but tight, monitor closely
 - **80-100%**: Marginal - bank depleting slowly, reducing equity exposure
 - **<80%**: Unsustainable - rapidly selling shares, risk of portfolio depletion
+
+---
+
+## Position Accumulation Strategy Testing
+
+The **accumulation strategy tester** compares different approaches to building a position: lump sum (bulk), dollar-cost averaging (DCA), and "wait for dip" strategies. Uses **time-weighted CAGR** for fair comparison.
+
+### Basic Test: Lump Sum vs DCA
+
+**Objective**: Compare bulk purchase vs gradual accumulation on NVDA.
+
+**Command**:
+```bash
+sd-test-accumulation --ticker NVDA
+```
+
+**Output**:
+```
+Results (Average across successful windows):
+Strategy                Success     Avg CAGR      Std Dev     Min CAGR     Max CAGR
+bulk                      13/13      64.21%      62.39%      17.61%     208.20%
+dca-weekly-4              13/13      59.80%      57.26%      11.94%     203.17%
+dca-monthly-10            13/13      54.08%      47.65%      -7.36%     148.21%
+
+Winner: bulk with 64.21% average CAGR
+```
+
+**Interpretation**:
+- **bulk** (100% on day 1) has slight edge: 64.21% CAGR
+- **dca-weekly-4** (4 weekly purchases) achieves 59.80% CAGR (93% of bulk)
+- **dca-monthly-10** (10 monthly purchases) achieves 54.08% CAGR (84% of bulk)
+- Gap is **much smaller** with time-weighted CAGR than naive calculation
+
+### Index Fund Comparison
+
+**Objective**: Test on stable VOO to see if DCA penalty exists for low-volatility assets.
+
+**Command**:
+```bash
+sd-test-accumulation --ticker VOO
+```
+
+**Output**:
+```
+Results (Average across successful windows):
+Strategy                Success     Avg CAGR      Std Dev     Min CAGR     Max CAGR
+bulk                      13/13      16.59%       6.33%       8.80%      32.26%
+dca-weekly-4              13/13      16.24%       5.99%       9.26%      30.38%
+dca-monthly-10            13/13      16.19%       9.20%       1.22%      29.96%
+
+Winner: bulk with 16.59% average CAGR
+```
+
+**Interpretation**:
+- **Only 0.40pp difference** between bulk and DCA-monthly-10!
+- Time-weighted analysis shows DCA is **nearly identical** to bulk on stable assets
+- **Challenges conventional wisdom**: "Lump sum beats DCA" is technically true but negligible
+
+### "Wait for Dip" Strategy Test
+
+**Objective**: Test whether waiting for a 10% discount is worthwhile on Bitcoin.
+
+**Command**:
+```bash
+sd-test-accumulation --ticker BTC-USD --strategies bulk dip-10 dip-20
+```
+
+**Output**:
+```
+Results (Average across successful windows):
+Strategy                Success     Avg CAGR      Std Dev     Min CAGR     Max CAGR
+dip-20                     1/13     116.68%        nan%     116.68%     116.68%
+dip-10                     7/13      95.80%      32.84%      45.91%     156.01%
+bulk                      13/13      70.94%      40.96%      -4.95%     133.08%
+
+Winner: dip-20 with 116.68% average CAGR (7.7% success rate)
+```
+
+**Interpretation**:
+- **dip-20** highest return (116.68%) but only 1/13 success (7.7%)
+- **dip-10** beats bulk (95.80% vs 70.94%) when successful, 54% success rate
+- **bulk** has 100% success rate with 70.94% CAGR
+- **BTC is only asset** where dip strategy is viable (54% success for dip-10)
+
+### Custom Strategy Comparison
+
+**Objective**: Test specific strategies with custom parameters.
+
+**Command**:
+```bash
+sd-test-accumulation \
+  --ticker NVDA \
+  --strategies bulk dca-weekly-4 dca-monthly-4 dca-monthly-10 dip-10 \
+  --capital 100000 \
+  --lookback 3
+```
+
+**Parameters**:
+- `--ticker`: Asset symbol
+- `--strategies`: Space-separated list of strategies
+  - `bulk`: 100% on day 1
+  - `dca-weekly-N`: Deploy over N weeks
+  - `dca-monthly-N`: Deploy over N months
+  - `dip-X`: Wait for X% discount (30-day window)
+- `--capital`: Total capital to deploy (default: $10,000)
+- `--lookback`: Years of historical data to test (default: 2)
+
+**Output**:
+```
+Testing 25 rolling 12-month windows from 2022-12-03 to 2025-12-03
+...
+Results (Average across successful windows):
+[Detailed comparison table]
+```
+
+### Key Findings
+
+**Time-Weighted CAGR is Critical**:
+- Traditional CAGR unfairly penalizes DCA by assuming all capital was at risk for full period
+- Time-weighted CAGR accounts for uninvested capital earning risk-free rate (~5%)
+- **94% gap reduction** on VOO when using time-weighted calculation
+
+**DCA Performance**:
+- **VOO**: 0.40pp difference (negligible)
+- **BTC**: 3.35pp difference (99.5% of bulk performance)
+- **NVDA**: 10.13pp difference (84% of bulk performance)
+- **Conclusion**: DCA is viable when capital has alternative uses
+
+**"Wait for Dip" Viability**:
+- **Terrible success rates** on stocks/ETFs (0-31%)
+- **Only viable on crypto**: BTC dip-10 has 54% success with 96% CAGR
+- **High upside, low probability**: Expected value often negative due to opportunity cost
+
+**Retirement Planning Implications**:
+- Building position from salary/income? **DCA performs nearly identically**
+- Large windfall to deploy? **Bulk has slight edge** (0.4-10pp)
+- Waiting for dip? **Only if crypto**, otherwise opportunity cost too high
+
+### Theory Documentation
+
+For detailed analysis of time-weighted CAGR and empirical results, see:
+- [theory/position-accumulation-strategies.md](../theory/position-accumulation-strategies.md)
 
 ---
 

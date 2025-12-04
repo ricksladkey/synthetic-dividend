@@ -163,6 +163,12 @@ These files provide comprehensive coverage of specific topics. Read after comple
 - "Cash Trap" vs "Profit Skim" methodologies
 - Strategic guidance for protecting underperformers
 
+**[position-accumulation-strategies.md](position-accumulation-strategies.md)** - Position Building Analysis
+- Time-weighted CAGR for fair DCA vs bulk comparison
+- Empirical evidence: DCA performs nearly identically to bulk (0.4-10pp gap)
+- "Wait for dip" paradox: high upside, low success rates
+- Retirement planning implications for gradual accumulation
+
 **[WITHDRAWAL_POLICY.md](WITHDRAWAL_POLICY.md)** - Optimal Withdrawals
 - 10% sustainable withdrawal discovery
 - Experiment 004 results
