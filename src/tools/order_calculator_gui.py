@@ -311,6 +311,20 @@ class OrderCalculatorGUI:
             "Only sell at all-time highs, never buy back. Removes buy orders and red dots from chart.",
         )
 
+        # Show Trend Line checkbox
+        self.show_trend_var = tk.BooleanVar(value=True)
+        self.show_trend_checkbox = ttk.Checkbutton(
+            input_frame,
+            text="Show trend line with CAGR",
+            variable=self.show_trend_var,
+            command=self.schedule_auto_calculation,
+        )
+        self.show_trend_checkbox.grid(row=6, column=3, columnspan=3, sticky=tk.W, pady=(5, 0))
+        ToolTip(
+            self.show_trend_checkbox,
+            "Display exponential trend line fitted to price data with annualized growth rate.",
+        )
+
         # Separator
         ttk.Separator(input_frame, orient="horizontal").grid(
             row=7, column=0, columnspan=6, sticky="we", pady=(10, 10)
@@ -955,6 +969,9 @@ Designed for retail traders using manual order entry.
             # Load ATH-only mode (default to False for backward compatibility)
             self.ath_only_var.set(params.get("ath_only", False))
 
+            # Load show trend line preference (default to True)
+            self.show_trend_var.set(params.get("show_trend", True))
+
             # Trigger auto-calculation after loading ticker data
             self.schedule_auto_calculation()
 
@@ -1002,6 +1019,9 @@ Designed for retail traders using manual order entry.
 
             # Load ATH-only mode (default to False for backward compatibility)
             self.ath_only_var.set(params.get("ath_only", False))
+
+            # Load show trend line preference (default to True)
+            self.show_trend_var.set(params.get("show_trend", True))
 
             # Trigger auto-calculation after loading ticker data
             self.schedule_auto_calculation()
@@ -1189,6 +1209,7 @@ Designed for retail traders using manual order entry.
                 "profit": profit,
                 "bracket_seed": bracket_seed,
                 "ath_only": self.ath_only_var.get(),
+                "show_trend": self.show_trend_var.get(),
             }
             # Update last ticker
             self.last_ticker = ticker
@@ -1453,6 +1474,55 @@ Designed for retail traders using manual order entry.
                     self.ax.set_xlabel("Date")
                     self.ax.set_ylabel("Price ($)")
                     self.ax.grid(True, alpha=0.3)
+
+                    # Add exponential trend line if enabled
+                    if self.show_trend_var.get() and len(df) > 1:
+                        import numpy as np
+
+                        # Linear regression in log space (exponential fit)
+                        x = np.arange(len(df))
+                        y = np.log(df["Close"].values)
+
+                        # Remove any NaN/inf values
+                        mask = np.isfinite(y)
+                        if np.sum(mask) > 1:
+                            x_clean = x[mask]
+                            y_clean = y[mask]
+
+                            # Fit linear regression
+                            slope, intercept = np.polyfit(x_clean, y_clean, 1)
+
+                            # Generate trend line
+                            trend_line = np.exp(slope * x + intercept)
+
+                            # Plot trend line
+                            self.ax.plot(
+                                df.index,
+                                trend_line,
+                                "--",
+                                color="gray",
+                                alpha=0.6,
+                                linewidth=1.5,
+                                label="Trend",
+                            )
+
+                            # Calculate CAGR from slope (days to years)
+                            days_in_period = len(df)
+                            years = days_in_period / 365.25
+                            if years > 0:
+                                cagr = (np.exp(slope * 365.25) - 1) * 100
+
+                                # Add CAGR annotation (upper right corner)
+                                self.ax.text(
+                                    0.98,
+                                    0.98,
+                                    f"CAGR: {cagr:.1f}%",
+                                    transform=self.ax.transAxes,
+                                    verticalalignment="top",
+                                    horizontalalignment="right",
+                                    bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.7),
+                                    fontsize=9,
+                                )
 
                     # Add bracket lines (skip buy bracket if ATH-only mode)
                     if not ath_only:
