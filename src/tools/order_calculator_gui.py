@@ -1480,7 +1480,10 @@ Designed for retail traders using manual order entry.
                         import numpy as np
 
                         # Linear regression in log space (exponential fit)
-                        x = np.arange(len(df))
+                        # Use actual calendar days for x-axis (not trading day count)
+                        dates = df.index
+                        days_from_start = (dates - dates[0]).days.values
+                        x = days_from_start.astype(float)
                         y = np.log(df["Close"].values)
 
                         # Remove any NaN/inf values
@@ -1506,23 +1509,23 @@ Designed for retail traders using manual order entry.
                                 label="Trend",
                             )
 
-                            # Calculate CAGR from slope (days to years)
-                            days_in_period = len(df)
-                            years = days_in_period / 365.25
-                            if years > 0:
-                                cagr = (np.exp(slope * 365.25) - 1) * 100
+                            # Calculate CAGR from slope
+                            # Fitted line: log(price) = slope * calendar_day + intercept
+                            # slope = daily log growth rate (per calendar day)
+                            # CAGR = exp(slope * 365.25) - 1
+                            cagr = (np.exp(slope * 365.25) - 1) * 100
 
-                                # Add CAGR annotation (upper right corner)
-                                self.ax.text(
-                                    0.98,
-                                    0.98,
-                                    f"CAGR: {cagr:.1f}%",
-                                    transform=self.ax.transAxes,
-                                    verticalalignment="top",
-                                    horizontalalignment="right",
-                                    bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.7),
-                                    fontsize=9,
-                                )
+                            # Add CAGR annotation (upper right corner)
+                            self.ax.text(
+                                0.98,
+                                0.98,
+                                f"CAGR: {cagr:.1f}%",
+                                transform=self.ax.transAxes,
+                                verticalalignment="top",
+                                horizontalalignment="right",
+                                bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.7),
+                                fontsize=9,
+                            )
 
                     # Add bracket lines (skip buy bracket if ATH-only mode)
                     if not ath_only:
